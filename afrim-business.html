@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#06040f"/>
+<title>AFRIM PAY — Business</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#06040f;--s:#0d0a1a;--c:#110e1f;--b:#1e1a30;--a:#6366f1;--a2:#4f46e5;--t:#ede9ff;--m:#4a4580;--d:#252040;--r:#ef4444;--g:#22c55e;--am:#f59e0b}
+html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--t);overflow-x:hidden}
+::-webkit-scrollbar{width:0}
+#app{width:100%;max-width:420px;min-height:100vh;margin:0 auto;background:var(--bg)}
+.scr{display:none;flex-direction:column;min-height:100vh;padding-bottom:80px}
+.scr.on{display:flex}
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;background:var(--bg);border-top:1px solid var(--b);display:flex;z-index:100;padding:8px 0 22px}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;padding:6px 0;color:var(--d);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;transition:color .2s}
+.nb.on{color:var(--a)}
+.nb svg{width:22px;height:22px}
+.inp{width:100%;background:var(--bg);border:1.5px solid var(--b);border-radius:13px;padding:13px 16px;color:var(--t);font-size:15px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s}
+.inp:focus{border-color:var(--a)}
+.inp::placeholder{color:var(--d)}
+.btn{width:100%;padding:14px;border-radius:13px;border:none;font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity .15s}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn-a{background:linear-gradient(135deg,var(--a2),var(--a));color:#fff}
+.btn-ghost{background:transparent;border:1.5px solid var(--b);color:var(--a)}
+.btn-r{background:#180404;border:1px solid #7f1d1d;color:#f87171}
+.card{background:var(--c);border:1px solid var(--b);border-radius:16px;padding:16px}
+.lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--a);display:block;margin-bottom:6px}
+.info{border-radius:12px;padding:11px 14px;margin-bottom:14px;font-size:13px;font-weight:500;line-height:1.5}
+.info-g{background:#052010;border:1px solid rgba(34,197,94,.2);color:#86efac}
+.info-r{background:#180404;border:1px solid rgba(239,68,68,.2);color:#fca5a5}
+.info-a{background:#0d0a1a;border:1px solid rgba(99,102,241,.2);color:#a5b4fc}
+.ph{padding:52px 22px 18px}
+.sc{padding:0 22px 20px}
+.row{display:flex;justify-content:space-between;align-items:center}
+.srow{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--b)}
+.spin{width:22px;height:22px;border:2px solid var(--b);border-top-color:var(--a);border-radius:50%;animation:sp .7s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--c);border:1px solid var(--a);border-radius:12px;padding:10px 22px;color:var(--a);font-size:13px;font-weight:700;z-index:9999;transition:transform .3s;white-space:nowrap;max-width:90%}
+#toast.on{transform:translateX(-50%) translateY(0)}
+#toast.err{border-color:var(--r);color:var(--r)}
+.sh-ov{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.sh-ov.on{display:flex}
+.sh{width:100%;max-width:420px;background:var(--bg);border-radius:22px 22px 0 0;border-top:2px solid var(--a);padding:0 22px 100px;max-height:92vh;overflow-y:auto}
+.sh-bar{width:40px;height:4px;background:var(--b);border-radius:4px;margin:14px auto}
+.sh-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.sh-title{font-size:22px;font-weight:800}
+.sh-x{background:var(--s);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--m);font-size:15px;display:flex;align-items:center;justify-content:center}
+.pin-dot{width:52px;height:52px;border-radius:14px;background:var(--s);border:2px solid var(--b);display:flex;align-items:center;justify-content:center;font-size:24px;transition:all .2s}
+.pin-dot.on{border-color:var(--a);background:rgba(99,102,241,.08)}
+.pin-key{padding:16px;border-radius:14px;border:1.5px solid var(--b);background:var(--s);color:var(--t);font-size:22px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s}
+.pin-key:active{background:var(--b)}
+.pin-key.empty{background:transparent;border-color:transparent;cursor:default}
+.stat-card{background:var(--c);border:1px solid var(--b);border-radius:16px;padding:16px;flex:1}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="toast"></div>
+<script>
+const API='https://afrim-pay-backend.onrender.com/api/v1';
+let G={token:localStorage.getItem('afrim_token'),refresh:localStorage.getItem('afrim_refresh'),user:null,compte:null,pin:''};
+try{G.user=JSON.parse(localStorage.getItem('afrim_user')||'null')}catch(e){}
+async function api(path,opts){opts=opts||{};var h={'Content-Type':'application/json'};if(G.token)h['Authorization']='Bearer '+G.token;var r=await fetch(API+path,Object.assign({headers:h},opts));var d=await r.json();if(!r.ok){if(r.status===401&&!opts._retry&&G.refresh){var ok=await doRefresh();if(ok)return api(path,Object.assign({},opts,{_retry:true}));}throw new Error(d.message||'Erreur '+r.status);}return d;}
+var get=p=>api(p);
+var post=(p,b)=>api(p,{method:'POST',body:JSON.stringify(b)});
+async function doRefresh(){try{var r=await fetch(API+'/auth/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refreshToken:G.refresh})});var d=await r.json();if(!r.ok)throw 0;G.token=d.data.accessToken;G.refresh=d.data.refreshToken;localStorage.setItem('afrim_token',G.token);localStorage.setItem('afrim_refresh',G.refresh);return true;}catch(e){logout();return false;}}
+function T(msg,err){var el=document.getElementById('toast');el.textContent=msg;el.className=err?'on err':'on';clearTimeout(T._t);T._t=setTimeout(()=>el.className='',2800);}
+function F(n){return Number(n||0).toLocaleString('fr-FR')+' FCFA';}
+function FD(d){if(!d)return'—';return new Date(d).toLocaleString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}
+function S(id){document.querySelectorAll('.scr').forEach(e=>e.classList.remove('on'));document.getElementById(id).classList.add('on');window.scrollTo(0,0);}
+function openSh(id){document.getElementById('sh-'+id).classList.add('on');}
+function closeSh(id){document.getElementById('sh-'+id).classList.remove('on');}
+function setTab(t){document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));document.querySelectorAll('#nb-'+t).forEach(b=>b.classList.add('on'));if(t==='home')chargerAccueil();else if(t==='history')chargerHistorique();else if(t==='profile')chargerProfil();}
+</script>
+
+<!-- LOGIN -->
+<div class="scr" id="s-login" style="align-items:center;justify-content:center;padding:40px 22px;min-height:100vh;background:radial-gradient(ellipse at 50% 0%,rgba(99,102,241,.08),transparent 55%)">
+  <div style="width:100%;max-width:360px;text-align:center">
+    <div style="width:72px;height:72px;border-radius:22px;background:linear-gradient(135deg,var(--a2),var(--a));display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 12px 32px rgba(99,102,241,.3);font-size:36px">🏪</div>
+    <div style="font-size:36px;font-weight:900;letter-spacing:-.5px;margin-bottom:4px">AFRIM PAY</div>
+    <div style="color:var(--m);font-size:13px;margin-bottom:8px">Espace commerçant</div>
+    <div style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.3);border-radius:20px;padding:4px 16px;display:inline-block;margin-bottom:28px">
+      <span style="color:var(--a);font-size:11px;font-weight:800;letter-spacing:.14em">ESPACE BUSINESS</span>
+    </div>
+    <div class="card" style="padding:28px;text-align:left">
+      <div id="err-login" class="info info-r" style="display:none"></div>
+      <span class="lbl">Numéro de téléphone</span>
+      <div style="margin-bottom:14px"><input class="inp" id="lg-tel" type="tel" placeholder="+225 07 XX XX XX" oninput="document.getElementById('lg-btn').disabled=this.value.replace(/\D/g,'').length<8"/></div>
+      <button class="btn btn-a" id="lg-btn" disabled onclick="goPin()">Continuer →</button>
+    </div>
+  </div>
+</div>
+
+<!-- PIN -->
+<div class="scr" id="s-pin" style="align-items:center;justify-content:center;padding:40px 22px;min-height:100vh">
+  <div style="width:100%;max-width:360px">
+    <button onclick="S('s-login')" style="background:none;border:none;color:var(--m);cursor:pointer;font-size:13px;margin-bottom:24px;font-family:'DM Sans',sans-serif">← Retour</button>
+    <div style="text-align:center;margin-bottom:28px"><div style="font-size:24px;font-weight:800">Code PIN</div><div style="color:var(--m);font-size:12px;margin-top:4px" id="pin-sub"></div></div>
+    <div id="err-pin" class="info info-r" style="display:none;margin-bottom:16px"></div>
+    <div id="pin-loading" style="display:none;text-align:center;padding:20px"><div class="spin" style="width:36px;height:36px;border-width:3px"></div><div style="color:var(--m);font-size:13px;margin-top:12px">Connexion...</div></div>
+    <div id="pin-keys">
+      <div style="display:flex;gap:12px;justify-content:center;margin-bottom:28px">
+        <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div><div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+        <button class="pin-key" onclick="PIN(1)">1</button><button class="pin-key" onclick="PIN(2)">2</button><button class="pin-key" onclick="PIN(3)">3</button>
+        <button class="pin-key" onclick="PIN(4)">4</button><button class="pin-key" onclick="PIN(5)">5</button><button class="pin-key" onclick="PIN(6)">6</button>
+        <button class="pin-key" onclick="PIN(7)">7</button><button class="pin-key" onclick="PIN(8)">8</button><button class="pin-key" onclick="PIN(9)">9</button>
+        <button class="pin-key empty"></button><button class="pin-key" onclick="PIN(0)">0</button><button class="pin-key" onclick="DELP()">⌫</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div class="scr" id="s-home">
+  <div style="background:linear-gradient(160deg,#0d0a1a,var(--bg));padding:52px 22px 22px;border-radius:0 0 28px 28px;margin-bottom:18px">
+    <div class="row" style="margin-bottom:20px">
+      <div>
+        <div style="color:var(--m);font-size:13px;margin-bottom:2px">Business AFRIM PAY</div>
+        <div style="font-size:20px;font-weight:800" id="h-name">—</div>
+        <div style="color:var(--d);font-size:11px;font-family:monospace" id="h-code">—</div>
+      </div>
+      <button onclick="rafraichir()" style="background:var(--s);border:1px solid var(--b);border-radius:11px;width:38px;height:38px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">🔄</button>
+    </div>
+    <div style="background:linear-gradient(135deg,var(--a2),var(--a));border-radius:20px;padding:20px 22px;box-shadow:0 10px 32px rgba(99,102,241,.25)">
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Solde disponible</div>
+      <div style="font-size:28px;font-weight:900;color:#fff;margin-bottom:12px" id="h-solde">—</div>
+      <div style="display:flex;gap:18px">
+        <div><div style="font-size:16px;font-weight:800;color:#fff" id="h-nb">—</div><div style="font-size:10px;color:rgba(255,255,255,.5)">Paiements mois</div></div>
+        <div style="width:1px;background:rgba(255,255,255,.15)"></div>
+        <div><div style="font-size:16px;font-weight:800;color:#fff" id="h-vol">—</div><div style="font-size:10px;color:rgba(255,255,255,.5)">Volume mois</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="sc">
+    <span class="lbl">Encaisser un paiement</span>
+    <div class="card" style="margin-bottom:18px;border-color:rgba(99,102,241,.2);background:#0d0a1a">
+      <div class="info info-a" style="margin-bottom:12px">💳 Frais de 0,8% à votre charge. Le client paie le montant exact affiché.</div>
+      <span class="lbl">Montant à encaisser (FCFA)</span>
+      <div style="position:relative;margin-bottom:8px"><input class="inp" id="enc-amt" type="number" placeholder="0" style="padding-right:55px;font-size:20px;font-weight:700" oninput="calcEnc()"/><span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--a);font-size:12px;font-weight:700">FCFA</span></div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <button onclick="setEnc(500)" style="padding:8px 14px;border-radius:99px;background:var(--s);border:1px solid var(--b);color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">500</button>
+        <button onclick="setEnc(1000)" style="padding:8px 14px;border-radius:99px;background:var(--s);border:1px solid var(--b);color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">1k</button>
+        <button onclick="setEnc(2500)" style="padding:8px 14px;border-radius:99px;background:var(--s);border:1px solid var(--b);color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">2,5k</button>
+        <button onclick="setEnc(5000)" style="padding:8px 14px;border-radius:99px;background:var(--s);border:1px solid var(--b);color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">5k</button>
+        <button onclick="setEnc(10000)" style="padding:8px 14px;border-radius:99px;background:var(--s);border:1px solid var(--b);color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">10k</button>
+      </div>
+      <div id="enc-recap" style="display:none;background:var(--bg);border:1px solid var(--b);border-radius:12px;padding:14px;margin-bottom:14px"></div>
+      <button class="btn btn-a" id="enc-btn" disabled onclick="openQR()" style="opacity:.4">Générer le QR de paiement</button>
+    </div>
+
+    <span class="lbl">Actions</span>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
+      <button onclick="openSh('inscription')" style="background:var(--s);border:1px solid rgba(99,102,241,.15);border-radius:16px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer">
+        <div style="width:42px;height:42px;border-radius:12px;background:rgba(99,102,241,.12);display:flex;align-items:center;justify-content:center;color:var(--a);font-size:20px">👤</div>
+        <div style="text-align:center"><div style="font-size:12px;font-weight:700;color:var(--a)">Inscrire client</div><div style="font-size:10px;color:var(--m);margin-top:2px">Nouveau compte</div></div>
+      </button>
+      <button onclick="setTab('history')" style="background:var(--s);border:1px solid rgba(99,102,241,.15);border-radius:16px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer">
+        <div style="width:42px;height:42px;border-radius:12px;background:rgba(99,102,241,.12);display:flex;align-items:center;justify-content:center;color:var(--a);font-size:20px">📊</div>
+        <div style="text-align:center"><div style="font-size:12px;font-weight:700;color:var(--a)">Historique</div><div style="font-size:10px;color:var(--m);margin-top:2px">Toutes les ventes</div></div>
+      </button>
+    </div>
+
+    <span class="lbl">Transactions récentes</span>
+    <div id="h-txns"><div style="text-align:center;padding:20px"><div class="spin"></div></div></div>
+  </div>
+  <nav class="bnav">
+    <button class="nb on" id="nb-home" onclick="setTab('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Accueil</button>
+    <button class="nb" id="nb-history" onclick="setTab('history')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Ventes</button>
+    <button class="nb" id="nb-profile" onclick="setTab('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</button>
+  </nav>
+</div>
+
+<!-- HISTORY -->
+<div class="scr" id="s-history">
+  <div class="ph"><div style="font-size:24px;font-weight:800;margin-bottom:4px">Ventes</div><div style="color:var(--m);font-size:13px">Paiements reçus</div></div>
+  <div class="sc"><div id="hist-list"><div style="text-align:center;padding:20px"><div class="spin"></div></div></div></div>
+  <nav class="bnav">
+    <button class="nb" id="nb-home" onclick="setTab('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Accueil</button>
+    <button class="nb on" id="nb-history" onclick="setTab('history')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Ventes</button>
+    <button class="nb" id="nb-profile" onclick="setTab('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</button>
+  </nav>
+</div>
+
+<!-- PROFILE -->
+<div class="scr" id="s-profile">
+  <div class="ph"><div style="font-size:24px;font-weight:800">Mon Commerce</div></div>
+  <div class="sc">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="width:80px;height:80px;border-radius:20px;background:linear-gradient(135deg,var(--a2),var(--a));display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 12px;box-shadow:0 8px 24px rgba(99,102,241,.2)">🏪</div>
+      <div style="font-size:20px;font-weight:800" id="prof-name">—</div>
+      <div style="color:var(--m);font-size:13px;margin-top:2px" id="prof-tel">—</div>
+    </div>
+    <div class="card" style="margin-bottom:14px" id="prof-info"></div>
+    <button class="btn btn-r" onclick="logout()">← Se déconnecter</button>
+  </div>
+  <nav class="bnav">
+    <button class="nb" id="nb-home" onclick="setTab('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Accueil</button>
+    <button class="nb" id="nb-history" onclick="setTab('history')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Ventes</button>
+    <button class="nb on" id="nb-profile" onclick="setTab('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</button>
+  </nav>
+</div>
+
+<!-- SHEET QR PAIEMENT -->
+<div class="sh-ov" id="sh-qr">
+  <div class="sh">
+    <div class="sh-bar"></div>
+    <div class="sh-top"><div><div class="sh-title">QR de paiement</div><div style="color:var(--m);font-size:12px">À faire scanner par le client</div></div><button class="sh-x" onclick="closeSh('qr')">✕</button></div>
+    <div style="text-align:center;padding:20px 0">
+      <div style="background:#f0fdf4;border-radius:20px;padding:20px;display:inline-block;margin-bottom:16px">
+        <canvas id="qr-pay" width="180" height="180"></canvas>
+      </div>
+      <div style="font-size:28px;font-weight:900;color:var(--a);margin-bottom:4px" id="qr-amt-disp">—</div>
+      <div style="color:var(--m);font-size:13px;margin-bottom:4px">Montant à payer par le client</div>
+      <div style="color:var(--d);font-size:12px;margin-bottom:4px">Frais 0,8% à votre charge</div>
+      <div style="font-family:monospace;font-size:14px;color:var(--a);margin-bottom:20px" id="qr-code-disp">—</div>
+      <div id="pay-confirm" style="display:none">
+        <div class="info info-g">✅ Paiement reçu ! Demandez au client de confirmer avec son PIN.</div>
+        <button class="btn btn-a" onclick="closeSh('qr');rafraichir()">Fermer</button>
+      </div>
+      <div id="pay-attente">
+        <div class="info info-a">⏳ En attente du paiement client... Le client doit entrer votre code dans son app AFRIM PAY.</div>
+        <button class="btn btn-ghost" onclick="closeSh('qr')">Annuler</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SHEET INSCRIPTION CLIENT UNIQUEMENT -->
+<div class="sh-ov" id="sh-inscription">
+  <div class="sh">
+    <div class="sh-bar"></div>
+    <div class="sh-top"><div><div class="sh-title">Inscrire un client</div><div style="color:var(--m);font-size:12px">Compte client uniquement</div></div><button class="sh-x" onclick="closeSh('inscription');rstIns()">✕</button></div>
+    <div class="info info-a">ℹ️ En tant que Business, vous pouvez uniquement inscrire des <strong>clients</strong>.</div>
+    <div id="ins-form">
+      <div id="ins-err" class="info info-r" style="display:none"></div>
+      <span class="lbl">Prénom *</span><div style="margin-bottom:13px"><input class="inp" id="ins-prenom" type="text" placeholder="Prénom"/></div>
+      <span class="lbl">Nom *</span><div style="margin-bottom:13px"><input class="inp" id="ins-nom" type="text" placeholder="Nom de famille"/></div>
+      <span class="lbl">Téléphone *</span><div style="margin-bottom:13px"><input class="inp" id="ins-tel" type="tel" placeholder="+225 07 XX XX XX"/></div>
+      <span class="lbl">Code PIN (4 chiffres) *</span><div style="margin-bottom:13px"><input class="inp" id="ins-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••"/></div>
+      <div style="margin-bottom:14px">
+        <span class="lbl">Selfie client (recommandé)</span>
+        <div id="selfie-slot" onclick="document.getElementById('ph-selfie').click()" style="border:2px dashed var(--b);border-radius:13px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;background:var(--bg)">
+          <span style="font-size:28px">🤳</span>
+          <span style="font-size:12px;font-weight:600;color:var(--m)">Selfie du client</span>
+          <span style="font-size:10px;color:var(--d)">Recommandé pour KYC</span>
+        </div>
+        <input type="file" id="ph-selfie" accept="image/*" capture="user" style="display:none" onchange="phSelfie(this)"/>
+      </div>
+      <button class="btn btn-a" onclick="doInscrire()">Créer le compte client</button>
+    </div>
+    <div id="ins-loading" style="display:none;text-align:center;padding:32px 0"><div class="spin" style="width:36px;height:36px;border-width:3px"></div><div style="color:var(--m);font-size:13px;margin-top:12px">Création...</div></div>
+    <div id="ins-success" style="display:none;text-align:center;padding:28px 0">
+      <div style="width:72px;height:72px;border-radius:50%;background:var(--a);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:34px;color:#fff">✓</div>
+      <div style="font-size:22px;font-weight:800;margin-bottom:6px">Client inscrit !</div>
+      <div id="ins-succ-txt" style="color:var(--m);font-size:13px;margin-bottom:22px"></div>
+      <div style="display:flex;gap:8px"><button class="btn btn-a" style="flex:1" onclick="rstIns()">Nouveau</button><button class="btn btn-ghost" style="flex:1" onclick="closeSh('inscription');rstIns()">Fermer</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var selfieFile=null;
+function phSelfie(input){if(input.files&&input.files[0]){selfieFile=input.files[0];document.getElementById('selfie-slot').innerHTML='<span style="font-size:28px">✅</span><span style="font-size:12px;font-weight:600;color:var(--a)">Selfie enregistré</span>';T('✓ Selfie enregistré !');}}
+
+async function doInscrire(){
+  var prenom=document.getElementById('ins-prenom').value.trim();
+  var nom=document.getElementById('ins-nom').value.trim();
+  var tel=document.getElementById('ins-tel').value.trim();
+  var pin=document.getElementById('ins-pin').value.trim();
+  var errEl=document.getElementById('ins-err');errEl.style.display='none';
+  if(!prenom||!nom){errEl.textContent='Prénom et nom requis';errEl.style.display='';return;}
+  if(tel.replace(/\D/g,'').length<8){errEl.textContent='Numéro invalide';errEl.style.display='';return;}
+  if(!/^\d{4}$/.test(pin)){errEl.textContent='PIN : 4 chiffres';errEl.style.display='';return;}
+  document.getElementById('ins-form').style.display='none';document.getElementById('ins-loading').style.display='';
+  try{
+    var r=await post('/auth/register',{prenom,nom,telephone:tel,pin,role:'client',kycNiveau:'KYC1',parrainCode:G.user&&G.user.codeParrainage||undefined});
+    document.getElementById('ins-loading').style.display='none';document.getElementById('ins-success').style.display='';
+    document.getElementById('ins-succ-txt').textContent='Code : '+(r.data.codeParrainage||'')+'  ·  PIN : '+pin;
+  }catch(e){
+    document.getElementById('ins-loading').style.display='none';document.getElementById('ins-form').style.display='';
+    errEl.textContent=e.message;errEl.style.display='';
+  }
+}
+
+function rstIns(){
+  selfieFile=null;
+  ['ins-prenom','ins-nom','ins-tel','ins-pin'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('selfie-slot').innerHTML='<span style="font-size:28px">🤳</span><span style="font-size:12px;font-weight:600;color:var(--m)">Selfie du client</span><span style="font-size:10px;color:var(--d)">Recommandé pour KYC</span>';
+  document.getElementById('ins-form').style.display='';document.getElementById('ins-loading').style.display='none';
+  document.getElementById('ins-success').style.display='none';document.getElementById('ins-err').style.display='none';
+}
+
+// PAIEMENT QR
+var encAmt=0;
+function setEnc(v){document.getElementById('enc-amt').value=v;calcEnc();}
+function calcEnc(){
+  var v=Number(document.getElementById('enc-amt').value),ok=v>0;
+  encAmt=v;
+  var frais=Math.round(v*0.008);var net=v-frais;
+  document.getElementById('enc-recap').style.display=ok?'':'none';
+  if(ok)document.getElementById('enc-recap').innerHTML='<div class="srow"><span style="color:var(--m);font-size:13px">Montant client</span><span style="font-size:13px;font-weight:700">'+F(v)+'</span></div><div class="srow"><span style="color:var(--m);font-size:13px">Frais 0,8% (votre charge)</span><span style="color:#f87171;font-size:13px;font-weight:700">−'+F(frais)+'</span></div><div style="display:flex;justify-content:space-between;padding:8px 0"><span style="font-size:13px">Vous recevez</span><span style="color:var(--a);font-size:16px;font-weight:800;font-family:monospace">'+F(net)+'</span></div>';
+  document.getElementById('enc-btn').disabled=!ok;document.getElementById('enc-btn').style.opacity=ok?'1':'.4';
+}
+
+function openQR(){
+  if(!encAmt||encAmt<=0)return;
+  openSh('qr');
+  document.getElementById('qr-amt-disp').textContent=F(encAmt);
+  document.getElementById('qr-code-disp').textContent=G.user&&G.user.codeParrainage||'—';
+  document.getElementById('pay-confirm').style.display='none';
+  document.getElementById('pay-attente').style.display='';
+  dessinerQR(G.user&&G.user.codeParrainage||'AFRIM',encAmt);
+}
+
+function dessinerQR(code,amt){
+  var c=document.getElementById('qr-pay');if(!c)return;
+  var ctx=c.getContext('2d');
+  ctx.fillStyle='#f0fdf4';ctx.fillRect(0,0,180,180);
+  ctx.fillStyle='#4f46e5';
+  [[6,6],[126,6],[6,126]].forEach(function(p){ctx.fillRect(p[0],p[1],48,48);ctx.fillStyle='#f0fdf4';ctx.fillRect(p[0]+6,p[1]+6,36,36);ctx.fillStyle='#4f46e5';ctx.fillRect(p[0]+12,p[1]+12,24,24);ctx.fillStyle='#f0fdf4';ctx.fillRect(p[0]+16,p[1]+16,16,16);ctx.fillStyle='#4f46e5';});
+  ctx.fillStyle='#4f46e5';ctx.fillRect(66,66,48,48);
+  ctx.fillStyle='#4f46e5';ctx.font='bold 10px sans-serif';ctx.textAlign='center';
+  ctx.fillStyle='#030d1a';ctx.fillText(code.slice(0,8),90,86);
+  ctx.font='bold 9px sans-serif';ctx.fillText(F(amt).replace(' FCFA',''),90,100);
+}
+
+// LOGIN
+function goPin(){G.pin='';document.getElementById('pin-sub').textContent=document.getElementById('lg-tel').value;document.getElementById('err-pin').style.display='none';rDots();S('s-pin');}
+function PIN(n){if(G.pin.length>=4)return;G.pin+=String(n);rDots();if(G.pin.length===4)setTimeout(doLogin,300);}
+function DELP(){G.pin=G.pin.slice(0,-1);rDots();}
+function rDots(){for(var i=0;i<4;i++){var d=document.getElementById('d'+i);d.textContent=G.pin.length>i?'●':'';d.classList.toggle('on',G.pin.length>i);}}
+
+async function doLogin(){
+  var tel=document.getElementById('lg-tel').value;
+  document.getElementById('pin-loading').style.display='';document.getElementById('pin-keys').style.display='none';
+  var errEl=document.getElementById('err-pin');errEl.style.display='none';
+  try{
+    var r=await post('/auth/login',{telephone:tel,pin:G.pin});
+    var d=r.data;
+    if(d.user.role!=='business')throw new Error('Cette app est réservée aux Business AFRIM PAY.');
+    G.token=d.accessToken;G.refresh=d.refreshToken;G.user=d.user;G.compte=d.user.comptes&&d.user.comptes[0];
+    localStorage.setItem('afrim_token',G.token);localStorage.setItem('afrim_refresh',G.refresh);localStorage.setItem('afrim_user',JSON.stringify(G.user));
+    entrerApp();
+  }catch(e){
+    G.pin='';rDots();errEl.textContent=e.message;errEl.style.display='';
+    document.getElementById('pin-loading').style.display='none';document.getElementById('pin-keys').style.display='';
+  }
+}
+
+function entrerApp(){document.getElementById('pin-loading').style.display='none';document.getElementById('pin-keys').style.display='';S('s-home');chargerAccueil();}
+
+async function chargerAccueil(){
+  var u=G.user;if(!u)return;
+  document.getElementById('h-name').textContent=(u.prenom||'')+' '+(u.nom||'');
+  document.getElementById('h-code').textContent='Code : '+(u.codeParrainage||'—');
+  try{
+    var[cr,ur]=await Promise.all([get('/accounts/me'),get('/users/me')]);
+    G.compte=cr.data;G.user=ur.data;localStorage.setItem('afrim_user',JSON.stringify(G.user));
+    document.getElementById('h-solde').textContent=F(cr.data.solde);
+  }catch(e){document.getElementById('h-solde').textContent=G.compte?F(G.compte.solde):'—';}
+  chargerTxns();
+}
+function rafraichir(){chargerAccueil();}
+
+function txRow(tx){
+  var isIn=tx.compteDestId===(G.compte&&G.compte.id);
+  var col=isIn?'#22c55e':'#f87171';
+  var sign=isIn?'+':'−';
+  return '<div style="background:var(--c);border:1px solid var(--b);border-radius:13px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">'
+    +'<div style="display:flex;align-items:center;gap:10px">'
+    +'<div style="width:36px;height:36px;border-radius:10px;background:rgba(99,102,241,.12);color:var(--a);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">◈</div>'
+    +'<div><div style="font-size:13px;font-weight:600">'+(tx.type==='paiement_marchand'?'Paiement':'Opération')+'</div>'
+    +'<div style="color:var(--m);font-size:11px">'+FD(tx.dateCreation)+'</div></div></div>'
+    +'<div style="text-align:right"><div style="color:'+col+';font-size:14px;font-weight:800;font-family:monospace">'+sign+F(tx.montant)+'</div>'
+    +'<div style="color:var(--d);font-size:10px;font-family:monospace">'+(tx.reference||'')+'</div></div></div>';
+}
+
+async function chargerTxns(){
+  var el=document.getElementById('h-txns');
+  try{var r=await get('/transactions?limit=5&type=paiement_marchand');var list=r.data||[];el.innerHTML=list.length?list.map(txRow).join(''):'<div style="text-align:center;padding:20px;color:var(--m);font-size:13px">Aucune vente pour l\'instant</div>';}
+  catch(e){el.innerHTML='<div class="info info-r">'+e.message+'</div>';}
+}
+
+async function chargerHistorique(){
+  S('s-history');
+  var el=document.getElementById('hist-list');
+  el.innerHTML='<div style="text-align:center;padding:20px"><div class="spin"></div></div>';
+  try{var r=await get('/transactions?limit=50');var list=r.data||[];el.innerHTML=list.length?list.map(txRow).join(''):'<div style="text-align:center;padding:20px;color:var(--m);font-size:13px">Aucune vente</div>';}
+  catch(e){el.innerHTML='<div class="info info-r">'+e.message+'</div>';}
+}
+
+function chargerProfil(){
+  S('s-profile');var u=G.user;if(!u)return;
+  document.getElementById('prof-name').textContent=(u.prenom||'')+' '+(u.nom||'');
+  document.getElementById('prof-tel').textContent=u.telephone;
+  var html='';
+  [['Téléphone',u.telephone,true],['Code QR',u.codeParrainage,true],['KYC',u.kycNiveau,false],['Statut',u.statut,false],['Solde',G.compte?F(G.compte.solde):'—',false]].forEach(function(r){html+='<div class="srow"><span style="color:var(--m);font-size:13px">'+r[0]+'</span><span style="color:'+(r[0]==='Solde'?'var(--a)':'var(--t)')+';font-size:'+(r[2]?'12':'13')+'px;font-weight:700;font-family:'+(r[2]?'monospace':'inherit')+'">'+r[1]+'</span></div>';});
+  document.getElementById('prof-info').innerHTML=html;
+}
+
+async function logout(){
+  try{await post('/auth/logout',{refreshToken:G.refresh});}catch(e){}
+  G.token=G.refresh=G.user=G.compte=null;
+  localStorage.removeItem('afrim_token');localStorage.removeItem('afrim_refresh');localStorage.removeItem('afrim_user');
+  S('s-login');
+}
+
+document.querySelectorAll('.sh-ov').forEach(function(el){el.addEventListener('click',function(e){if(e.target===el){var id=el.id.replace('sh-','');closeSh(id);}});});
+
+(function init(){
+  if(G.token&&G.user&&G.user.role==='business'){S('s-home');chargerAccueil();return;}
+  S('s-login');
+})();
+</script>
+</div>
+</body>
+</html>

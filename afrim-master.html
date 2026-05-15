@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#0a0800"/>
+<title>AFRIM PAY — Master</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0800;--s:#150f00;--c:#1a1300;--b:#2d2000;--a:#d4a017;--a2:#b8860b;--t:#fefce8;--m:#713f12;--d:#431407;--r:#ef4444;--g:#22c55e;--bl:#3b82f6;--p:#a855f7}
+html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--t);overflow-x:hidden}
+::-webkit-scrollbar{width:0}
+#app{width:100%;max-width:420px;min-height:100vh;margin:0 auto;background:var(--bg)}
+.scr{display:none;flex-direction:column;min-height:100vh;padding-bottom:80px}
+.scr.on{display:flex}
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;background:var(--bg);border-top:1px solid var(--b);display:flex;z-index:100;padding:8px 0 22px}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;padding:6px 0;color:var(--d);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;transition:color .2s}
+.nb.on{color:var(--a)}
+.nb svg{width:22px;height:22px}
+.inp{width:100%;background:var(--bg);border:1.5px solid var(--b);border-radius:13px;padding:13px 16px;color:var(--t);font-size:15px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s}
+.inp:focus{border-color:var(--a)}
+.inp::placeholder{color:var(--d)}
+.btn{width:100%;padding:14px;border-radius:13px;border:none;font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn-a{background:linear-gradient(135deg,var(--a2),var(--a));color:#030200}
+.btn-ghost{background:transparent;border:1.5px solid var(--b);color:var(--a)}
+.btn-g{background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff}
+.btn-r{background:#180404;border:1px solid #7f1d1d;color:#f87171}
+.btn-o{background:linear-gradient(135deg,#c2410c,#f97316);color:#fff}
+.card{background:var(--c);border:1px solid var(--b);border-radius:16px;padding:16px}
+.lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--a);display:block;margin-bottom:6px}
+.info{border-radius:12px;padding:11px 14px;margin-bottom:14px;font-size:13px;font-weight:500;line-height:1.5}
+.info-g{background:#052010;border:1px solid rgba(34,197,94,.2);color:#86efac}
+.info-r{background:#180404;border:1px solid rgba(239,68,68,.2);color:#fca5a5}
+.info-a{background:#180a00;border:1px solid rgba(245,158,11,.2);color:#fcd34d}
+.ph{padding:52px 22px 18px}
+.sc{padding:0 22px 20px}
+.row{display:flex;justify-content:space-between;align-items:center}
+.srow{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--b)}
+.spin{width:22px;height:22px;border:2px solid var(--b);border-top-color:var(--a);border-radius:50%;animation:sp .7s linear infinite;display:inline-block}
+@keyframes sp{to{transform:rotate(360deg)}}
+#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--c);border:1px solid var(--a);border-radius:12px;padding:10px 22px;color:var(--a);font-size:13px;font-weight:700;z-index:9999;transition:transform .3s;white-space:nowrap;max-width:90%}
+#toast.on{transform:translateX(-50%) translateY(0)}
+#toast.err{border-color:var(--r);color:var(--r)}
+.sh-ov{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.sh-ov.on{display:flex}
+.sh{width:100%;max-width:420px;background:var(--bg);border-radius:22px 22px 0 0;border-top:2px solid var(--a);padding:0 22px 100px;max-height:92vh;overflow-y:auto}
+.sh-bar{width:40px;height:4px;background:var(--b);border-radius:4px;margin:14px auto}
+.sh-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.sh-title{font-size:22px;font-weight:800}
+.sh-x{background:var(--s);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--m);font-size:15px;display:flex;align-items:center;justify-content:center}
+.tx{display:flex;justify-content:space-between;align-items:center;padding:12px 13px;border-radius:13px;margin-bottom:8px}
+.pin-dot{width:52px;height:52px;border-radius:14px;background:var(--s);border:2px solid var(--b);display:flex;align-items:center;justify-content:center;font-size:24px;transition:all .2s}
+.pin-dot.on{border-color:var(--a);background:rgba(245,158,11,.08)}
+.pin-key{padding:16px;border-radius:14px;border:1.5px solid var(--b);background:var(--s);color:var(--t);font-size:22px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .15s}
+.pin-key:active{background:var(--b)}
+.pin-key.empty{background:transparent;border-color:transparent;cursor:default}
+.photo-slot{border:2px dashed var(--b);border-radius:13px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;background:var(--bg);min-height:100px;justify-content:center;transition:all .2s;position:relative}
+.photo-slot.done{border-style:solid;border-color:var(--a);background:rgba(245,158,11,.05)}
+.badge-req{position:absolute;top:5px;left:6px;padding:2px 7px;border-radius:99px;font-size:9px;font-weight:800;background:rgba(245,158,11,.15);color:var(--a)}
+.badge-opt{position:absolute;top:5px;left:6px;padding:2px 7px;border-radius:99px;font-size:9px;font-weight:800;background:rgba(100,100,100,.2);color:var(--m)}
+.photo-ok{position:absolute;top:5px;right:6px;width:20px;height:20px;border-radius:50%;background:var(--a);color:#030200;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="toast"></div>
+<script>
+const API='https://afrim-pay-backend.onrender.com/api/v1';
+let G={token:localStorage.getItem('afrim_token'),refresh:localStorage.getItem('afrim_refresh'),user:null,compte:null,pin:'',tab:'home'};
+try{G.user=JSON.parse(localStorage.getItem('afrim_user')||'null')}catch(e){}
+
+async function api(path,opts){
+  opts=opts||{};
+  var h={'Content-Type':'application/json'};
+  if(G.token)h['Authorization']='Bearer '+G.token;
+  var r=await fetch(API+path,Object.assign({headers:h},opts));
+  var d=await r.json();
+  if(!r.ok){
+    if(r.status===401&&!opts._retry&&G.refresh){var ok=await doRefresh();if(ok)return api(path,Object.assign({},opts,{_retry:true}));}
+    throw new Error(d.message||'Erreur '+r.status);
+  }
+  return d;
+}
+var get=(p)=>api(p);
+var post=(p,b)=>api(p,{method:'POST',body:JSON.stringify(b)});
+
+async function doRefresh(){
+  try{var r=await fetch(API+'/auth/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refreshToken:G.refresh})});var d=await r.json();if(!r.ok)throw 0;G.token=d.data.accessToken;G.refresh=d.data.refreshToken;localStorage.setItem('afrim_token',G.token);localStorage.setItem('afrim_refresh',G.refresh);return true;}
+  catch(e){logout();return false;}
+}
+
+function T(msg,err){var el=document.getElementById('toast');el.textContent=msg;el.className=err?'on err':'on';clearTimeout(T._t);T._t=setTimeout(()=>el.className='',2800);}
+function F(n){return Number(n||0).toLocaleString('fr-FR')+' FCFA';}
+function FD(d){if(!d)return'—';return new Date(d).toLocaleString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}
+function S(id){document.querySelectorAll('.scr').forEach(e=>e.classList.remove('on'));document.getElementById(id).classList.add('on');window.scrollTo(0,0);}
+function openSh(id){document.getElementById('sh-'+id).classList.add('on');}
+function closeSh(id){document.getElementById('sh-'+id).classList.remove('on');}
+function setTab(t){
+  G.tab=t;
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('#nb-'+t).forEach(b=>b.classList.add('on'));
+  if(t==='home')chargerAccueil();
+  else if(t==='history')chargerHistorique();
+  else if(t==='network')chargerReseau();
+  else if(t==='profile')chargerProfil();
+}
+</script>
+
+<!-- LOGIN -->
+<div class="scr" id="s-login" style="align-items:center;justify-content:center;padding:40px 22px;min-height:100vh;background:radial-gradient(ellipse at 50% 0%,rgba(245,158,11,.07),transparent 55%)">
+  <div style="width:100%;max-width:360px;text-align:center">
+    <div style="width:72px;height:72px;border-radius:22px;background:linear-gradient(135deg,var(--a2),var(--a));display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 12px 32px rgba(245,158,11,.25);font-size:36px">◈</div>
+    <div style="font-size:36px;font-weight:900;letter-spacing:-.5px;margin-bottom:4px">AFRIM PAY</div>
+    <div style="color:var(--m);font-size:13px;margin-bottom:8px">Interface Master</div>
+    <div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:20px;padding:4px 16px;display:inline-block;margin-bottom:28px">
+      <span style="color:var(--a);font-size:11px;font-weight:800;letter-spacing:.14em">ESPACE MASTER</span>
+    </div>
+    <div class="card" style="padding:28px;text-align:left">
+      <div id="err-login" class="info info-r" style="display:none"></div>
+      <span class="lbl">Numéro de téléphone</span>
+      <div style="margin-bottom:14px"><input class="inp" id="lg-tel" type="tel" placeholder="+225 07 XX XX XX" oninput="document.getElementById('lg-btn').disabled=this.value.replace(/\D/g,'').length<8"/></div>
+      <button class="btn btn-a" id="lg-btn" disabled onclick="goPin()">Continuer →</button>
+    </div>
+  </div>
+</div>
+
+<!-- PIN -->
+<div class="scr" id="s-pin" style="align-items:center;justify-content:center;padding:40px 22px;min-height:100vh">
+  <div style="width:100%;max-width:360px">
+    <button onclick="S('s-login')" style="background:none;border:none;color:var(--m);cursor:pointer;font-size:13px;margin-bottom:24px;font-family:'DM Sans',sans-serif">← Retour</button>
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="font-size:24px;font-weight:800">Code PIN</div>
+      <div style="color:var(--m);font-size:12px;margin-top:4px" id="pin-sub"></div>
+    </div>
+    <div id="err-pin" class="info info-r" style="display:none;margin-bottom:16px"></div>
+    <div id="pin-loading" style="display:none;text-align:center;padding:20px"><div class="spin" style="width:36px;height:36px;border-width:3px"></div><div style="color:var(--m);font-size:13px;margin-top:12px">Connexion...</div></div>
+    <div id="pin-keys">
+      <div style="display:flex;gap:12px;justify-content:center;margin-bottom:28px">
+        <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div><div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+        <button class="pin-key" onclick="PIN(1)">1</button><button class="pin-key" onclick="PIN(2)">2</button><button class="pin-key" onclick="PIN(3)">3</button>
+        <button class="pin-key" onclick="PIN(4)">4</button><button class="pin-key" onclick="PIN(5)">5</button><button class="pin-key" onclick="PIN(6)">6</button>
+        <button class="pin-key" onclick="PIN(7)">7</button><button class="pin-key" onclick="PIN(8)">8</button><button class="pin-key" onclick="PIN(9)">9</button>
+        <button class="pin-key empty"></button><button class="pin-key" onclick="PIN(0)">0</button><button class="pin-key" onclick="DELP()">⌫</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div class="scr" id="s-home">
+  <div style="background:linear-gradient(160deg,#1a1000,var(--bg));padding:52px 22px 22px;border-radius:0 0 28px 28px;margin-bottom:18px">
+    <div class="row" style="margin-bottom:20px">
+      <div>
+        <div style="color:var(--m);font-size:13px;margin-bottom:2px">Master AFRIM PAY</div>
+        <div style="font-size:22px;font-weight:800" id="h-name">—</div>
+        <div style="color:var(--d);font-size:11px" id="h-zone">—</div>
+      </div>
+      <button onclick="rafraichir()" style="background:var(--s);border:1px solid var(--b);border-radius:11px;width:38px;height:38px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">🔄</button>
+    </div>
+    <div style="background:linear-gradient(135deg,var(--a2),var(--a));border-radius:20px;padding:20px 22px;box-shadow:0 10px 32px rgba(245,158,11,.2)">
+      <div style="font-size:10px;font-weight:700;color:#030200;opacity:.6;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Liquidité disponible</div>
+      <div style="font-size:28px;font-weight:900;color:#030200;margin-bottom:12px" id="h-solde">—</div>
+      <div style="display:flex;gap:18px" id="h-stats">
+        <div><div style="font-size:16px;font-weight:800;color:#030200" id="h-dep">—</div><div style="font-size:10px;color:rgba(3,2,0,.5)">Dépôts mois</div></div>
+        <div style="width:1px;background:rgba(3,2,0,.15)"></div>
+        <div><div style="font-size:16px;font-weight:800;color:#030200" id="h-gains">—</div><div style="font-size:10px;color:rgba(3,2,0,.5)">Gains mois</div></div>
+        <div style="width:1px;background:rgba(3,2,0,.15)"></div>
+        <div><div style="font-size:16px;font-weight:800;color:#030200" id="h-ret">—</div><div style="font-size:10px;color:rgba(3,2,0,.5)">Retraits mois</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="sc">
+    <span class="lbl">Opérations</span>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+      <button onclick="openSh('depot')" style="background:#071a08;border:1px solid rgba(34,197,94,.15);border-radius:16px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer">
+        <div style="width:46px;height:46px;border-radius:13px;background:rgba(34,197,94,.12);display:flex;align-items:center;justify-content:center;color:#22c55e;font-size:24px">↓</div>
+        <div style="text-align:center"><div style="font-size:13px;font-weight:700;color:#4ade80">Dépôt Client</div><div style="font-size:10px;color:var(--m);margin-top:2px">Commission 0,2%</div></div>
+      </button>
+      <button onclick="openSh('retrait')" style="background:#180a00;border:1px solid rgba(249,115,22,.15);border-radius:16px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer">
+        <div style="width:46px;height:46px;border-radius:13px;background:rgba(249,115,22,.12);display:flex;align-items:center;justify-content:center;color:#f97316;font-size:24px">↑</div>
+        <div style="text-align:center"><div style="font-size:13px;font-weight:700;color:#fb923c">Retrait Client</div><div style="font-size:10px;color:var(--m);margin-top:2px">35% des frais</div></div>
+      </button>
+      <button onclick="openSh('inscription')" style="background:var(--s);border:1px solid rgba(245,158,11,.15);border-radius:16px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer">
+        <div style="width:46px;height:46px;border-radius:13px;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center;color:var(--a);font-size:24px">👤</div>
+        <div style="text-align:center"><div style="font-size:13px;font-weight:700;color:var(--a)">Inscrire</div><div style="font-size:10px;color:var(--m);margin-top:2px">Client · Business · Agent · Mini-Master</div></div>
+      </button>
+      <button onclick="openSh('transfert')" style="background:#030d1a;border:1px solid rgba(59,130,246,.15);border-radius:16px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer">
+        <div style="width:46px;height:46px;border-radius:13px;background:rgba(59,130,246,.12);display:flex;align-items:center;justify-content:center;color:#3b82f6;font-size:24px">⇄</div>
+        <div style="text-align:center"><div style="font-size:13px;font-weight:700;color:#60a5fa">Transfert</div><div style="font-size:10px;color:var(--m);margin-top:2px">Liquidité · Gratuit</div></div>
+      </button>
+    </div>
+    <span class="lbl">Transactions récentes</span>
+    <div id="h-txns"><div style="text-align:center;padding:20px"><div class="spin"></div></div></div>
+  </div>
+  <nav class="bnav">
+    <button class="nb on" id="nb-home" onclick="setTab('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Accueil</button>
+    <button class="nb" id="nb-history" onclick="setTab('history')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historique</button>
+    <button class="nb" id="nb-network" onclick="setTab('network')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><line x1="12" y1="8" x2="5" y2="16"/><line x1="12" y1="8" x2="19" y2="16"/></svg>Réseau</button>
+    <button class="nb" id="nb-profile" onclick="setTab('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</button>
+  </nav>
+</div>
+
+<!-- HISTORY -->
+<div class="scr" id="s-history">
+  <div class="ph"><div style="font-size:24px;font-weight:800;margin-bottom:4px">Historique</div><div style="color:var(--m);font-size:13px">Vos opérations</div></div>
+  <div class="sc"><div id="hist-list"><div style="text-align:center;padding:20px"><div class="spin"></div></div></div></div>
+  <nav class="bnav">
+    <button class="nb" id="nb-home" onclick="setTab('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Accueil</button>
+    <button class="nb on" id="nb-history" onclick="setTab('history')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historique</button>
+    <button class="nb" id="nb-network" onclick="setTab('network')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><line x1="12" y1="8" x2="5" y2="16"/><line x1="12" y1="8" x2="19" y2="16"/></svg>Réseau</button>
+    <button class="nb" id="nb-profile" onclick="setTab('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</button>
+  </nav>
+</div>
+
+<!-- NETWORK -->
+<div class="scr" id="s-network">
+  <div class="ph"><div style="font-size:24px;font-weight:800;margin-bottom:4px">Mon Réseau</div><div style="color:var(--m);font-size:13px">Clients inscrits via vous</div></div>
+  <div class="sc"><div id="net-list"><div style="text-align:center;padding:20px"><div class="spin"></div></div></div></div>
+  <nav class="bnav">
+    <button class="nb" id="nb-home" onclick="setTab('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Accueil</button>
+    <button class="nb" id="nb-history" onclick="setTab('history')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historique</button>
+    <button class="nb on" id="nb-network" onclick="setTab('network')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><line x1="12" y1="8" x2="5" y2="16"/><line x1="12" y1="8" x2="19" y2="16"/></svg>Réseau</button>
+    <button class="nb" id="nb-profile" onclick="setTab('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</button>
+  </nav>
+</div>
+
+<!-- PROFILE -->
+<div class="scr" id="s-profile">
+  <div class="ph"><div style="font-size:24px;font-weight:800">Mon Profil</div></div>
+  <div class="sc">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--a2),var(--a));display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:900;color:#030200;margin:0 auto 12px;box-shadow:0 8px 24px rgba(245,158,11,.2)" id="prof-av">?</div>
+      <div style="font-size:20px;font-weight:800" id="prof-name">—</div>
+      <div style="color:var(--m);font-size:13px;margin-top:2px" id="prof-tel">—</div>
+    </div>
+    <div class="card" style="margin-bottom:14px" id="prof-info"></div>
+    <button class="btn btn-r" onclick="logout()">← Se déconnecter</button>
+  </div>
+  <nav class="bnav">
+    <button class="nb" id="nb-home" onclick="setTab('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Accueil</button>
+    <button class="nb" id="nb-history" onclick="setTab('history')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historique</button>
+    <button class="nb" id="nb-network" onclick="setTab('network')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><line x1="12" y1="8" x2="5" y2="16"/><line x1="12" y1="8" x2="19" y2="16"/></svg>Réseau</button>
+    <button class="nb on" id="nb-profile" onclick="setTab('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</button>
+  </nav>
+</div>
+
+<!-- SHEET DÉPÔT -->
+<div class="sh-ov" id="sh-depot">
+  <div class="sh">
+    <div class="sh-bar"></div>
+    <div class="sh-top"><div><div class="sh-title">Dépôt Client</div><div style="color:var(--m);font-size:12px">Commission 0,2% versée par AFRIM PAY</div></div><button class="sh-x" onclick="closeSh('depot');rstOp('dep')">✕</button></div>
+    <div class="info info-g">✅ Le dépôt est gratuit pour le client. Vous recevez 0,2% du montant versé par AFRIM PAY.</div>
+    <div id="dep-s1">
+      <div id="dep-err1" class="info info-r" style="display:none"></div>
+      <span class="lbl">Numéro du client</span>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <input class="inp" id="dep-tel" type="tel" placeholder="+225 07 XX XX XX" style="flex:1" oninput="document.getElementById('dep-ok').disabled=this.value.replace(/\D/g,'').length<8"/>
+        <button id="dep-ok" onclick="identClient('dep')" disabled style="padding:12px 18px;background:linear-gradient(135deg,#16a34a,#22c55e);border:none;border-radius:13px;color:#fff;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;opacity:.4">ID</button>
+      </div>
+    </div>
+    <div id="dep-s2" style="display:none">
+      <div id="dep-client" class="card" style="margin-bottom:14px;display:flex;align-items:center;gap:12px;border-color:rgba(34,197,94,.2);background:#071a08"></div>
+      <div id="dep-err2" class="info info-r" style="display:none"></div>
+      <span class="lbl">Montant du dépôt (FCFA)</span>
+      <div style="position:relative;margin-bottom:8px"><input class="inp" id="dep-amt" type="number" placeholder="0" style="padding-right:55px" oninput="calcDep()"/><span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#22c55e;font-size:12px;font-weight:700">FCFA</span></div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <button onclick="setAmt('dep',5000)" style="padding:7px 12px;border-radius:99px;background:var(--s);border:1px solid var(--b);color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">5k</button>
+        <button onclick="setAmt('dep',10000)" style="padding:7px 12px;border-radius:99px;background:var(--s);border:1px solid var(--b);color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">10k</button>
+        <button onclick="setAmt('dep',25000)" style="padding:7px 12px;border-radius:99px;background:var(--s);border:1px solid var(--b);color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">25k</button>
+        <button onclick="setAmt('dep',50000)" style="padding:7px 12px;border-radius:99px;background:var(--s);border:1px solid var(--b);color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">50k</button>
+        <button onclick="setAmt('dep',100000)" style="padding:7px 12px;border-radius:99px;background:var(--s);border:1px solid var(--b);color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">100k</button>
+      </div>
+      <div id="dep-recap" style="display:none;background:var(--bg);border:1px solid var(--b);border-radius:12px;padding:14px;margin-bottom:14px"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" style="flex:1" onclick="rstOp('dep')">← Retour</button>
+        <button class="btn btn-g" id="dep-btn" style="flex:2;opacity:.4" disabled onclick="doDepot()">Valider le dépôt</button>
+      </div>
+    </div>
+    <div id="dep-loading" style="display:none;text-align:center;padding:32px 0"><div class="spin" style="width:36px;height:36px;border-width:3px;border-top-color:#22c55e"></div><div style="color:var(--m);font-size:13px;margin-top:12px">Traitement...</div></div>
+    <div id="dep-success" style="display:none;text-align:center;padding:28px 0">
+      <div style="width:72px;height:72px;border-radius:50%;background:#22c55e;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:34px;color:#fff">✓</div>
+      <div style="font-size:22px;font-weight:800;margin-bottom:6px">Dépôt validé !</div>
+      <div id="dep-succ-txt" style="color:var(--m);font-size:13px;margin-bottom:4px"></div>
+      <div id="dep-succ-gain" style="color:var(--a);font-size:14px;font-weight:700;margin-bottom:4px"></div>
+      <div id="dep-succ-ref" style="color:var(--d);font-size:11px;font-family:monospace;margin-bottom:22px"></div>
+      <div style="display:flex;gap:8px"><button class="btn btn-g" style="flex:1" onclick="rstOp('dep')">Nouveau</button><button class="btn btn-ghost" style="flex:1" onclick="closeSh('depot');rstOp('dep');rafraichir()">Fermer</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- SHEET RETRAIT -->
+<div class="sh-ov" id="sh-retrait">
+  <div class="sh">
+    <div class="sh-bar"></div>
+    <div class="sh-top"><div><div class="sh-title">Retrait Client</div><div style="color:var(--m);font-size:12px">Vous recevez 35% des frais</div></div><button class="sh-x" onclick="closeSh('retrait');rstOp('ret')">✕</button></div>
+    <div class="info info-a">💰 Taux dégressif : 0,9% ≤50k · 0,8% ≤200k · 0,7% >200k. Vous recevez 35% des frais.</div>
+    <div id="ret-s1">
+      <div id="ret-err1" class="info info-r" style="display:none"></div>
+      <span class="lbl">Numéro du client</span>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <input class="inp" id="ret-tel" type="tel" placeholder="+225 07 XX XX XX" style="flex:1" oninput="document.getElementById('ret-ok').disabled=this.value.replace(/\D/g,'').length<8"/>
+        <button id="ret-ok" onclick="identClient('ret')" disabled style="padding:12px 18px;background:linear-gradient(135deg,#c2410c,#f97316);border:none;border-radius:13px;color:#fff;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;opacity:.4">ID</button>
+      </div>
+    </div>
+    <div id="ret-s2" style="display:none">
+      <div id="ret-client" class="card" style="margin-bottom:14px;display:flex;align-items:center;gap:12px;border-color:rgba(249,115,22,.2);background:#180a00"></div>
+      <div id="ret-err2" class="info info-r" style="display:none"></div>
+      <span class="lbl">Montant du retrait (FCFA)</span>
+      <div style="position:relative;margin-bottom:8px"><input class="inp" id="ret-amt" type="number" placeholder="0" style="padding-right:55px" oninput="calcRet()"/><span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#f97316;font-size:12px;font-weight:700">FCFA</span></div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+        <button onclick="setAmt('ret',5000)" style="padding:7px 12px;border-radius:99px;background:var(--s);border:1px solid var(--b);color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">5k</button>
+        <button onclick="setAmt('ret',10000)" style="padding:7px 12px;border-radius:99px;background:var(--s);border:1px solid var(--b);color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">10k</button>
+        <button onclick="setAmt('ret',25000)" style="padding:7px 12px;border-radius:99px;background:var(--s);border:1px solid var(--b);color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">25k</button>
+        <button onclick="setAmt('ret',50000)" style="padding:7px 12px;border-radius:99px;background:var(--s);border:1px solid var(--b);color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">50k</button>
+      </div>
+      <div id="ret-recap" style="display:none;background:var(--bg);border:1px solid var(--b);border-radius:12px;padding:14px;margin-bottom:14px"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" style="flex:1" onclick="rstOp('ret')">← Retour</button>
+        <button class="btn btn-o" id="ret-btn" style="flex:2;opacity:.4" disabled onclick="doRetrait()">Valider le retrait</button>
+      </div>
+    </div>
+    <div id="ret-loading" style="display:none;text-align:center;padding:32px 0"><div class="spin" style="width:36px;height:36px;border-width:3px;border-top-color:#f97316"></div><div style="color:var(--m);font-size:13px;margin-top:12px">Traitement...</div></div>
+    <div id="ret-success" style="display:none;text-align:center;padding:28px 0">
+      <div style="width:72px;height:72px;border-radius:50%;background:#f97316;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:34px;color:#fff">✓</div>
+      <div style="font-size:22px;font-weight:800;margin-bottom:6px">Retrait validé !</div>
+      <div id="ret-succ-txt" style="color:var(--m);font-size:13px;margin-bottom:4px"></div>
+      <div id="ret-succ-gain" style="color:var(--a);font-size:14px;font-weight:700;margin-bottom:4px"></div>
+      <div id="ret-succ-ref" style="color:var(--d);font-size:11px;font-family:monospace;margin-bottom:22px"></div>
+      <div style="display:flex;gap:8px"><button class="btn btn-o" style="flex:1" onclick="rstOp('ret')">Nouveau</button><button class="btn btn-ghost" style="flex:1" onclick="closeSh('retrait');rstOp('ret');rafraichir()">Fermer</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- SHEET TRANSFERT -->
+<div class="sh-ov" id="sh-transfert">
+  <div class="sh">
+    <div class="sh-bar"></div>
+    <div class="sh-top"><div><div class="sh-title">Transfert Liquidité</div><div style="color:var(--m);font-size:12px">Agent ↔ Agent/MM · Gratuit</div></div><button class="sh-x" onclick="closeSh('transfert');rstTrf()">✕</button></div>
+    <div class="info info-a">ℹ️ Transferts entre agents et mini-masters sont sans commission. Utile pour rééquilibrer la liquidité.</div>
+    <div id="trf-err" class="info info-r" style="display:none"></div>
+    <span class="lbl">Numéro destinataire</span>
+    <div style="margin-bottom:14px"><input class="inp" id="trf-tel" type="tel" placeholder="+225 07 XX XX XX"/></div>
+    <span class="lbl">Montant (FCFA)</span>
+    <div style="position:relative;margin-bottom:14px"><input class="inp" id="trf-amt" type="number" placeholder="0" style="padding-right:55px"/><span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--a);font-size:12px;font-weight:700">FCFA</span></div>
+    <div id="trf-loading" style="display:none;text-align:center;padding:20px"><div class="spin"></div></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeSh('transfert');rstTrf()">Annuler</button>
+      <button class="btn btn-a" style="flex:2" onclick="doTransfert()">Transférer</button>
+    </div>
+    <div id="trf-success" style="display:none;text-align:center;padding:20px 0">
+      <div style="font-size:22px;font-weight:800;margin-bottom:6px;color:var(--a)">✓ Transfert réussi !</div>
+      <button class="btn btn-ghost" onclick="closeSh('transfert');rstTrf();rafraichir()">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- SHEET INSCRIPTION -->
+<div class="sh-ov" id="sh-inscription">
+  <div class="sh">
+    <div class="sh-bar"></div>
+    <div class="sh-top"><div><div class="sh-title">Inscription</div><div style="color:var(--m);font-size:12px" id="ins-subtitle">Nouveau compte</div></div><button class="sh-x" onclick="closeSh('inscription');rstIns()">✕</button></div>
+    <div id="ins-type-sel">
+      <span class="lbl">Type de compte à créer</span>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
+        <button onclick="setInsType('client')" style="padding:14px 18px;border-radius:14px;border:1.5px solid var(--a);background:rgba(245,158,11,.08);color:var(--a);font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;display:flex;align-items:center;gap:12px"><span style="font-size:22px">👤</span><div><div>Client</div><div style="font-size:11px;font-weight:400;opacity:.7">Compte personnel</div></div></button>
+        <button onclick="setInsType('business')" style="padding:14px 18px;border-radius:14px;border:1.5px solid var(--b);background:transparent;color:var(--m);font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;display:flex;align-items:center;gap:12px"><span style="font-size:22px">🏪</span><div><div>Business</div><div style="font-size:11px;font-weight:400;opacity:.7">Commerce / Entreprise</div></div></button>
+        <button onclick="setInsType('agent')" style="padding:14px 18px;border-radius:14px;border:1.5px solid var(--b);background:transparent;color:var(--m);font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;display:flex;align-items:center;gap:12px"><span style="font-size:22px">🔶</span><div><div>Agent</div><div style="font-size:11px;font-weight:400;opacity:.7">Sous votre supervision</div></div></button>
+      </div>
+    </div>
+    <div id="ins-form" style="display:none">
+      <div id="ins-err" class="info info-r" style="display:none"></div>
+      <div id="ins-fields"></div>
+      <div id="ins-photos" style="margin-bottom:14px"></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" style="flex:1" onclick="setInsType(null)">← Retour</button>
+        <button class="btn btn-a" style="flex:2" id="btn-ins" onclick="doInscrire()">Créer le compte</button>
+      </div>
+    </div>
+    <div id="ins-loading" style="display:none;text-align:center;padding:32px 0"><div class="spin" style="width:36px;height:36px;border-width:3px"></div><div style="color:var(--m);font-size:13px;margin-top:12px">Création...</div></div>
+    <div id="ins-success" style="display:none;text-align:center;padding:28px 0">
+      <div style="width:72px;height:72px;border-radius:50%;background:var(--a);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:34px;color:#030200">✓</div>
+      <div style="font-size:22px;font-weight:800;margin-bottom:6px">Compte créé !</div>
+      <div id="ins-succ-txt" style="color:var(--m);font-size:13px;margin-bottom:22px"></div>
+      <div style="display:flex;gap:8px"><button class="btn btn-a" style="flex:1" onclick="rstIns()">Nouveau</button><button class="btn btn-ghost" style="flex:1" onclick="closeSh('inscription');rstIns()">Fermer</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ CONFIG PHOTOS PAR TYPE ════════════════════════════════════════
+var PHOTOS_CFG = {
+  client_KYC1: [{id:'selfie_1',label:'Selfie face',req:true,selfie:true},{id:'selfie_2',label:'Selfie angle',req:true,selfie:true}],
+  client_KYC2: [{id:'selfie',label:'Selfie',req:true,selfie:true},{id:'cni_r',label:'CNI recto',req:true,selfie:false},{id:'cni_v',label:'CNI verso',req:true,selfie:false}],
+  client_KYC3: [{id:'selfie',label:'Selfie',req:true,selfie:true},{id:'cni_r',label:'CNI recto',req:true,selfie:false},{id:'cni_v',label:'CNI verso',req:true,selfie:false},{id:'naissance',label:'Extrait naissance',req:true,selfie:false},{id:'domicile',label:'Justif. domicile',req:false,selfie:false}],
+  business: [{id:'selfie_gerant',label:'Selfie gérant',req:true,selfie:true},{id:'cni_r',label:'CNI gérant recto',req:true,selfie:false},{id:'cni_v',label:'CNI gérant verso',req:true,selfie:false},{id:'rccm',label:'RCCM',req:true,selfie:false},{id:'fiscal',label:'Déclaration fiscale',req:false,selfie:false}],
+  agent: [{id:'selfie',label:'Selfie',req:true,selfie:true},{id:'cni_r',label:'CNI recto',req:true,selfie:false},{id:'cni_v',label:'CNI verso',req:true,selfie:false}],
+};
+
+var insType=null, insKyc='KYC1', insPhotos={};
+
+function setInsType(type) {
+  insType=type; insPhotos={};
+  if(!type){
+    document.getElementById('ins-type-sel').style.display='';
+    document.getElementById('ins-form').style.display='none';
+    return;
+  }
+  document.getElementById('ins-type-sel').style.display='none';
+  document.getElementById('ins-form').style.display='';
+  document.getElementById('ins-subtitle').textContent='Nouveau compte '+type;
+  renderInsFields();
+}
+
+function renderInsFields() {
+  var html='';
+  html+='<span class="lbl">Prénom *</span><div style="margin-bottom:13px"><input class="inp" id="ins-prenom" type="text" placeholder="Prénom"/></div>';
+  html+='<span class="lbl">Nom *</span><div style="margin-bottom:13px"><input class="inp" id="ins-nom" type="text" placeholder="Nom de famille"/></div>';
+  html+='<span class="lbl">Téléphone *</span><div style="margin-bottom:13px"><input class="inp" id="ins-tel" type="tel" placeholder="+225 07 XX XX XX"/></div>';
+  html+='<span class="lbl">Code PIN (4 chiffres) *</span><div style="margin-bottom:13px"><input class="inp" id="ins-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••"/></div>';
+  if(insType==='client'){
+    html+='<span class="lbl">Niveau KYC</span><div style="display:flex;gap:8px;margin-bottom:14px">';
+    ['KYC1','KYC2','KYC3'].forEach(k=>{html+='<button onclick="setInsKyc(\''+k+'\')" id="kyc-btn-'+k+'" style="flex:1;padding:9px 4px;border-radius:11px;border:1.5px solid '+(k===insKyc?'var(--a)':'var(--b)')+';background:'+(k===insKyc?'rgba(245,158,11,.08)':'transparent')+';color:'+(k===insKyc?'var(--a)':'var(--m)')+';font-size:12px;font-weight:700;cursor:pointer;font-family:\'DM Sans\',sans-serif">'+k+'</button>';});
+    html+='</div>';
+  }
+  if(insType==='business'){
+    html+='<span class="lbl">Nom de l\'entreprise *</span><div style="margin-bottom:13px"><input class="inp" id="ins-biz" type="text" placeholder="Nom commercial"/></div>';
+  }
+  html+='<span class="lbl">Zone / Quartier</span><div style="margin-bottom:13px"><input class="inp" id="ins-zone" type="text" placeholder="Ex: Cocody, Adjamé..."/></div>';
+  document.getElementById('ins-fields').innerHTML=html;
+  renderInsPhotos();
+}
+
+function setInsKyc(k){
+  insKyc=k; insPhotos={};
+  ['KYC1','KYC2','KYC3'].forEach(kk=>{var b=document.getElementById('kyc-btn-'+kk);if(b){b.style.borderColor=kk===k?'var(--a)':'var(--b)';b.style.background=kk===k?'rgba(245,158,11,.08)':'transparent';b.style.color=kk===k?'var(--a)':'var(--m)';}});
+  renderInsPhotos();
+}
+
+function renderInsPhotos() {
+  var key = insType==='client'?'client_'+insKyc:insType;
+  var photos = PHOTOS_CFG[key]||[];
+  if(!photos.length){document.getElementById('ins-photos').innerHTML='';return;}
+  var html='<span class="lbl">Documents identité</span><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px">';
+  photos.forEach(function(p){
+    var done=!!insPhotos[p.id];
+    html+='<div class="photo-slot '+(done?'done':'')+'" onclick="document.getElementById(\'ph-ins-'+p.id+'\').click()">';
+    html+='<span class="'+(p.req?'badge-req':'badge-opt')+'">'+(p.req?'★ Recommandé':'Optionnel')+'</span>';
+    if(done)html+='<span class="photo-ok">✓</span>';
+    html+='<span style="font-size:'+(p.selfie?'24':'20')+'px">'+(p.selfie?'🤳':'📷')+'</span>';
+    html+='<span style="font-size:11px;font-weight:700;color:'+(done?'var(--a)':'var(--m)')+'">'+p.label+'</span>';
+    html+='<input type="file" id="ph-ins-'+p.id+'" accept="image/*" capture="'+(p.selfie?'user':'environment')+'" style="display:none" onchange="phIns(\''+p.id+'\',this)"/>';
+    html+='</div>';
+  });
+  html+='</div>';
+  document.getElementById('ins-photos').innerHTML=html;
+}
+
+function phIns(id,input){if(input.files&&input.files[0]){insPhotos[id]=input.files[0];renderInsPhotos();T('✓ Photo enregistrée !');}}
+
+function rstIns(){
+  insType=null; insKyc='KYC1'; insPhotos={};
+  document.getElementById('ins-type-sel').style.display='';
+  document.getElementById('ins-form').style.display='none';
+  document.getElementById('ins-loading').style.display='none';
+  document.getElementById('ins-success').style.display='none';
+  document.getElementById('ins-err').style.display='none';
+}
+
+async function doInscrire(){
+  var prenom=document.getElementById('ins-prenom')&&document.getElementById('ins-prenom').value.trim();
+  var nom=document.getElementById('ins-nom')&&document.getElementById('ins-nom').value.trim();
+  var tel=document.getElementById('ins-tel')&&document.getElementById('ins-tel').value.trim();
+  var pin=document.getElementById('ins-pin')&&document.getElementById('ins-pin').value.trim();
+  var zone=document.getElementById('ins-zone')&&document.getElementById('ins-zone').value.trim();
+  var errEl=document.getElementById('ins-err');
+  errEl.style.display='none';
+  if(!prenom||!nom){errEl.textContent='Prénom et nom requis';errEl.style.display='';return;}
+  if((tel||'').replace(/\D/g,'').length<8){errEl.textContent='Numéro invalide';errEl.style.display='';return;}
+  if(!/^\d{4}$/.test(pin||'')){errEl.textContent='PIN : 4 chiffres requis';errEl.style.display='';return;}
+  document.getElementById('ins-form').style.display='none';
+  document.getElementById('ins-loading').style.display='';
+  try{
+    var body={prenom,nom,telephone:tel,pin,role:insType,zone:zone||undefined,parrainCode:G.user&&G.user.codeParrainage||undefined};
+    if(insType==='client')body.kycNiveau=insKyc;
+    var r=await post('/auth/register',body);
+    document.getElementById('ins-loading').style.display='none';
+    document.getElementById('ins-success').style.display='';
+    document.getElementById('ins-succ-txt').textContent='Code : '+(r.data.codeParrainage||'')+'  ·  PIN : '+pin;
+    T('✓ Compte '+insType+' créé !');
+  }catch(e){
+    document.getElementById('ins-loading').style.display='none';
+    document.getElementById('ins-form').style.display='';
+    errEl.textContent=e.message;errEl.style.display='';
+  }
+}
+
+// ══ OPÉRATIONS DEP / RET ══════════════════════════════════════════
+var opClients={dep:null,ret:null};
+
+function identClient(op){
+  var tel=document.getElementById(op+'-tel').value;
+  opClients[op]={tel};
+  document.getElementById(op+'-s1').style.display='none';
+  document.getElementById(op+'-s2').style.display='';
+  var color=op==='dep'?'#22c55e':'#f97316';
+  var bg=op==='dep'?'#071a08':'#180a00';
+  document.getElementById(op+'-client').innerHTML='<div style="width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;color:'+color+';font-size:18px;font-weight:800;flex-shrink:0">'+tel.slice(-2)+'</div><div style="flex:1"><div style="font-size:14px;font-weight:700">Client identifié</div><div style="color:var(--m);font-size:11px">'+tel+'</div></div><button onclick="rstOp(\''+op+'\')" style="background:none;border:none;color:var(--a);font-size:12px;font-weight:600;cursor:pointer;font-family:\'DM Sans\',sans-serif">Changer</button>';
+}
+
+function setAmt(op,v){document.getElementById(op+'-amt').value=v;op==='dep'?calcDep():calcRet();}
+
+function calcDep(){
+  var v=Number(document.getElementById('dep-amt').value),ok=v>0;
+  var gain=Math.round(v*0.002);
+  document.getElementById('dep-recap').style.display=ok?'':'none';
+  if(ok)document.getElementById('dep-recap').innerHTML='<div class="srow"><span style="color:var(--m);font-size:13px">Dépôt client</span><span style="font-size:13px;font-weight:700">'+F(v)+'</span></div><div class="srow"><span style="color:var(--m);font-size:13px">Frais client</span><span style="color:#22c55e;font-size:13px;font-weight:700">Gratuit ✓</span></div><div style="display:flex;justify-content:space-between;padding:8px 0"><span style="font-size:13px">Votre commission</span><span style="color:var(--a);font-size:16px;font-weight:800;font-family:monospace">+'+F(gain)+'</span></div>';
+  document.getElementById('dep-btn').disabled=!ok;document.getElementById('dep-btn').style.opacity=ok?'1':'.4';
+}
+
+function calcRet(){
+  var v=Number(document.getElementById('ret-amt').value),ok=v>0;
+  var taux=v<=50000?0.009:v<=200000?0.008:0.007;
+  var frais=Math.round(v*taux),gain=Math.round(frais*0.35);
+  document.getElementById('ret-recap').style.display=ok?'':'none';
+  if(ok)document.getElementById('ret-recap').innerHTML='<div class="srow"><span style="color:var(--m);font-size:13px">Retrait</span><span style="font-size:13px;font-weight:700">'+F(v)+'</span></div><div class="srow"><span style="color:var(--m);font-size:13px">Frais ('+Math.round(taux*100*10)/10+'%)</span><span style="font-size:13px;font-weight:700">'+F(frais)+'</span></div><div class="srow"><span style="color:var(--m);font-size:13px">Total débité client</span><span style="font-size:13px;font-weight:700">'+F(v+frais)+'</span></div><div style="display:flex;justify-content:space-between;padding:8px 0"><span style="font-size:13px">Votre commission</span><span style="color:var(--a);font-size:16px;font-weight:800;font-family:monospace">+'+F(gain)+'</span></div>';
+  document.getElementById('ret-btn').disabled=!ok;document.getElementById('ret-btn').style.opacity=ok?'1':'.4';
+}
+
+async function doDepot(){
+  var amt=Number(document.getElementById('dep-amt').value);
+  document.getElementById('dep-s2').style.display='none';document.getElementById('dep-loading').style.display='';
+  try{
+    var r=await post('/transactions/deposit',{telephone:opClients.dep.tel,montant:amt});
+    var gain=Math.round(amt*0.002);
+    document.getElementById('dep-loading').style.display='none';document.getElementById('dep-success').style.display='';
+    document.getElementById('dep-succ-txt').textContent=F(amt)+' déposés pour '+opClients.dep.tel;
+    document.getElementById('dep-succ-gain').textContent='Commission : +'+F(gain);
+    document.getElementById('dep-succ-ref').textContent=r.data.reference;
+    rafraichir();
+  }catch(e){
+    document.getElementById('dep-loading').style.display='none';document.getElementById('dep-s2').style.display='';
+    document.getElementById('dep-err2').textContent=e.message;document.getElementById('dep-err2').style.display='';
+  }
+}
+
+async function doRetrait(){
+  var amt=Number(document.getElementById('ret-amt').value);
+  document.getElementById('ret-s2').style.display='none';document.getElementById('ret-loading').style.display='';
+  try{
+    var r=await post('/transactions/withdraw',{telephone:opClients.ret.tel,montant:amt});
+    var taux=amt<=50000?0.009:amt<=200000?0.008:0.007;var frais=Math.round(amt*taux);var gain=Math.round(frais*0.35);
+    document.getElementById('ret-loading').style.display='none';document.getElementById('ret-success').style.display='';
+    document.getElementById('ret-succ-txt').textContent=F(amt)+' remis à '+opClients.ret.tel;
+    document.getElementById('ret-succ-gain').textContent='Commission : +'+F(gain);
+    document.getElementById('ret-succ-ref').textContent=r.data.reference;
+    rafraichir();
+  }catch(e){
+    document.getElementById('ret-loading').style.display='none';document.getElementById('ret-s2').style.display='';
+    document.getElementById('ret-err2').textContent=e.message;document.getElementById('ret-err2').style.display='';
+  }
+}
+
+function rstOp(op){
+  opClients[op]=null;
+  document.getElementById(op+'-tel').value='';document.getElementById(op+'-amt').value='';
+  document.getElementById(op+'-s1').style.display='';document.getElementById(op+'-s2').style.display='none';
+  document.getElementById(op+'-loading').style.display='none';document.getElementById(op+'-success').style.display='none';
+  document.getElementById(op+'-recap').style.display='none';
+  document.getElementById(op+'-err1').style.display='none';document.getElementById(op+'-err2').style.display='none';
+  document.getElementById(op+'-ok').disabled=true;document.getElementById(op+'-ok').style.opacity='.4';
+}
+
+async function doTransfert(){
+  var tel=document.getElementById('trf-tel').value;var amt=Number(document.getElementById('trf-amt').value);
+  if(!amt||amt<=0){T('Montant invalide',true);return;}
+  document.getElementById('trf-loading').style.display='';
+  try{
+    await post('/transactions/transfer',{telephone:tel,montant:amt,motif:'Transfert liquidité agent'});
+    document.getElementById('trf-loading').style.display='none';document.getElementById('trf-success').style.display='';
+    rafraichir();
+  }catch(e){
+    document.getElementById('trf-loading').style.display='none';
+    document.getElementById('trf-err').textContent=e.message;document.getElementById('trf-err').style.display='';
+  }
+}
+function rstTrf(){document.getElementById('trf-tel').value='';document.getElementById('trf-amt').value='';document.getElementById('trf-loading').style.display='none';document.getElementById('trf-success').style.display='none';document.getElementById('trf-err').style.display='none';}
+
+// ══ LOGIN ════════════════════════════════════════════════════════
+function goPin(){G.pin='';document.getElementById('pin-sub').textContent=document.getElementById('lg-tel').value;document.getElementById('err-pin').style.display='none';rDots();S('s-pin');}
+function PIN(n){if(G.pin.length>=4)return;G.pin+=String(n);rDots();if(G.pin.length===4)setTimeout(doLogin,300);}
+function DELP(){G.pin=G.pin.slice(0,-1);rDots();}
+function rDots(){for(var i=0;i<4;i++){var d=document.getElementById('d'+i);d.textContent=G.pin.length>i?'●':'';d.classList.toggle('on',G.pin.length>i);}}
+
+async function doLogin(){
+  var tel=document.getElementById('lg-tel').value;
+  document.getElementById('pin-loading').style.display='';document.getElementById('pin-keys').style.display='none';
+  var errEl=document.getElementById('err-pin');errEl.style.display='none';
+  try{
+    var r=await post('/auth/login',{telephone:tel,pin:G.pin});
+    var d=r.data;
+    if(!['master','superviseur','admin'].includes(d.user.role))throw new Error('Cette app est réservée aux Masters AFRIM PAY.');
+    G.token=d.accessToken;G.refresh=d.refreshToken;G.user=d.user;G.compte=d.user.comptes&&d.user.comptes[0];
+    localStorage.setItem('afrim_token',G.token);localStorage.setItem('afrim_refresh',G.refresh);localStorage.setItem('afrim_user',JSON.stringify(G.user));
+    entrerApp();
+  }catch(e){
+    G.pin='';rDots();errEl.textContent=e.message;errEl.style.display='';
+    document.getElementById('pin-loading').style.display='none';document.getElementById('pin-keys').style.display='';
+  }
+}
+
+function entrerApp(){document.getElementById('pin-loading').style.display='none';document.getElementById('pin-keys').style.display='';S('s-home');chargerAccueil();}
+
+// ══ ACCUEIL ══════════════════════════════════════════════════════
+async function chargerAccueil(){
+  var u=G.user;if(!u)return;
+  document.getElementById('h-name').textContent=(u.prenom||'')+' '+(u.nom||'');
+  document.getElementById('h-zone').textContent=(u.zone||'Zone non définie')+' · '+(u.codeParrainage||'');
+  try{
+    var[cr,ur,sr]=await Promise.all([get('/accounts/me'),get('/users/me'),get('/stats/dashboard')]);
+    G.compte=cr.data;G.user=ur.data;localStorage.setItem('afrim_user',JSON.stringify(G.user));
+    document.getElementById('h-solde').textContent=F(cr.data.solde);
+    document.getElementById('h-dep').textContent=sr.data.depotsMois&&sr.data.depotsMois.count||'0';
+    document.getElementById('h-gains').textContent=F(sr.data.gainsMois||0);
+    document.getElementById('h-ret').textContent=sr.data.retraitsMois&&sr.data.retraitsMois.count||'0';
+  }catch(e){document.getElementById('h-solde').textContent=G.compte?F(G.compte.solde):'—';}
+  chargerTxns();
+}
+
+function rafraichir(){chargerAccueil();}
+
+var TX_CFG={depot:{c:'#22c55e',i:'↓',l:'Dépôt'},retrait:{c:'#f97316',i:'↑',l:'Retrait'},transfert:{c:'#3b82f6',i:'⇄',l:'Transfert'},paiement_marchand:{c:'#a855f7',i:'◈',l:'Paiement'},commission:{c:'#f59e0b',i:'★',l:'Commission'}};
+function txRow(tx){
+  var cfg=TX_CFG[tx.type]||TX_CFG.transfert;
+  var cid=G.compte?G.compte.id:'';
+  var isIn=tx.compteDestId===cid||['commission','depot'].includes(tx.type);
+  var sign=isIn?'+':'−';
+  return '<div class="tx" style="background:'+cfg.c+'0d;border:1px solid '+cfg.c+'22">'
+    +'<div style="display:flex;align-items:center;gap:10px">'
+    +'<div style="width:36px;height:36px;border-radius:10px;background:'+cfg.c+'18;color:'+cfg.c+';display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">'+cfg.i+'</div>'
+    +'<div><div style="font-size:13px;font-weight:600">'+cfg.l+'</div><div style="color:var(--m);font-size:11px">'+FD(tx.dateCreation)+'</div></div></div>'
+    +'<div style="text-align:right"><div style="color:'+(isIn?cfg.c:'#ef4444')+';font-size:14px;font-weight:800;font-family:monospace">'+sign+F(tx.montant)+'</div>'
+    +'<div style="color:var(--d);font-size:10px;font-family:monospace">'+(tx.reference||'')+'</div></div></div>';
+}
+
+async function chargerTxns(){
+  var el=document.getElementById('h-txns');
+  try{var r=await get('/transactions?limit=5');var list=r.data||[];el.innerHTML=list.length?list.map(txRow).join(''):'<div style="text-align:center;padding:20px;color:var(--m);font-size:13px">Aucune transaction</div>';}
+  catch(e){el.innerHTML='<div class="info info-r">'+e.message+'</div>';}
+}
+
+async function chargerHistorique(){
+  S('s-history');
+  var el=document.getElementById('hist-list');
+  el.innerHTML='<div style="text-align:center;padding:20px"><div class="spin"></div></div>';
+  try{var r=await get('/transactions?limit=50');var list=r.data||[];el.innerHTML=list.length?list.map(txRow).join(''):'<div style="text-align:center;padding:20px;color:var(--m);font-size:13px">Aucune transaction</div>';}
+  catch(e){el.innerHTML='<div class="info info-r">'+e.message+'</div>';}
+}
+
+async function chargerReseau(){
+  S('s-network');
+  var el=document.getElementById('net-list');
+  el.innerHTML='<div style="text-align:center;padding:20px"><div class="spin"></div></div>';
+  try{
+    var r=await get('/users/'+G.user.id+'/referrals');
+    var list=r.data.filleuls||[];
+    var html='<div class="card" style="margin-bottom:14px"><div class="srow"><span style="color:var(--m);font-size:13px">Filleuls total</span><span style="color:var(--a);font-size:16px;font-weight:800">'+list.length+'</span></div><div style="display:flex;justify-content:space-between;padding:8px 0"><span style="color:var(--m);font-size:13px">Gains parrainage</span><span style="color:var(--a);font-size:16px;font-weight:800;font-family:monospace">'+F(r.data.totalGains)+'</span></div></div>';
+    if(list.length) list.forEach(function(f){html+='<div class="tx" style="background:var(--s);border:1px solid var(--b)"><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center;color:var(--a);font-size:14px;font-weight:800">'+((f.prenom||'?')[0])+'</div><div><div style="font-size:13px;font-weight:600">'+(f.prenom||'')+' '+(f.nom||'')+'</div><div style="color:var(--m);font-size:11px">'+f.telephone+'</div></div></div><div style="color:var(--d);font-size:11px">'+FD(f.dateCreation)+'</div></div>';});
+    else html+='<div style="text-align:center;padding:24px;color:var(--m);font-size:13px">Aucun filleul pour l\'instant</div>';
+    el.innerHTML=html;
+  }catch(e){el.innerHTML='<div class="info info-r">'+e.message+'</div>';}
+}
+
+function chargerProfil(){
+  S('s-profile');
+  var u=G.user;if(!u)return;
+  document.getElementById('prof-av').textContent=u.prenom?u.prenom[0]:'?';
+  document.getElementById('prof-name').textContent=(u.prenom||'')+' '+(u.nom||'');
+  document.getElementById('prof-tel').textContent=u.telephone;
+  var html='';
+  [['Téléphone',u.telephone,true],['Zone',u.zone||'Non définie',false],['Code parrainage',u.codeParrainage,true],['KYC',u.kycNiveau,false],['Statut',u.statut,false],['Liquidité',G.compte?F(G.compte.solde):'—',false]].forEach(function(r){html+='<div class="srow"><span style="color:var(--m);font-size:13px">'+r[0]+'</span><span style="color:'+(r[0]==='Liquidité'?'var(--a)':'var(--t)')+';font-size:'+(r[2]?'12':'13')+'px;font-weight:700;font-family:'+(r[2]?'monospace':'inherit')+'">'+r[1]+'</span></div>';});
+  document.getElementById('prof-info').innerHTML=html;
+}
+
+async function logout(){
+  try{await post('/auth/logout',{refreshToken:G.refresh});}catch(e){}
+  G.token=G.refresh=G.user=G.compte=null;
+  localStorage.removeItem('afrim_token');localStorage.removeItem('afrim_refresh');localStorage.removeItem('afrim_user');
+  S('s-login');
+}
+
+document.querySelectorAll('.sh-ov').forEach(function(el){
+  el.addEventListener('click',function(e){if(e.target===el){var id=el.id.replace('sh-','');closeSh(id);}});
+});
+
+(function init(){
+  if(G.token&&G.user&&['master','superviseur','admin'].includes(G.user.role)){S('s-home');chargerAccueil();return;}
+  S('s-login');
+})();
+</script>
+</div>
+</body>
+</html>

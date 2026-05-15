@@ -133,11 +133,12 @@ function closeSh(id) { document.getElementById('sh-'+id).classList.remove('on');
 function setTab(t) {
   G.tab = t;
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
-  document.getElementById('nb-'+t).classList.add('on');
-  if(t==='home') chargerAccueil();
-  else if(t==='history') chargerHistorique();
-  else if(t==='receive') chargerReceive();
-  else if(t==='profile') chargerProfil();
+  document.querySelectorAll('#nb-'+t).forEach(b=>b.classList.add('on'));
+  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+  if(t==='home'){ document.getElementById('s-home').classList.add('on'); chargerAccueil(); }
+  else if(t==='history'){ document.getElementById('s-history').classList.add('on'); chargerHistorique(); }
+  else if(t==='receive'){ document.getElementById('s-receive').classList.add('on'); chargerReceive(); }
+  else if(t==='profile'){ document.getElementById('s-profile').classList.add('on'); chargerProfil(); }
 }
 </script>
 

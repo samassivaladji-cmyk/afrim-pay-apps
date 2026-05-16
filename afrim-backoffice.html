@@ -2,634 +2,164 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <meta name="theme-color" content="#ca8a04"/>
 <title>AFRIM PAY — Back-office</title>
-<!-- Police système en fallback si hors ligne -->
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --y:#ca8a04;--y2:#a16207;--y3:#fef3c7;--y4:#fffbeb;
-  --t:#111827;--m:#6b7280;--d:#9ca3af;--bg:#f9fafb;--card:#ffffff;
-  --r:#ef4444;--g:#22c55e;--b:#3b82f6;
-}
-html,body{height:100%;background:var(--bg);font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:var(--t);-webkit-font-smoothing:antialiased}
-::-webkit-scrollbar{width:0}
-#app{width:100%;max-width:430px;min-height:100vh;margin:0 auto;background:var(--bg)}
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--y:#ca8a04;--y2:#a16207;--y3:#fef3c7;--t:#111827;--m:#6b7280;--r:#ef4444;--g:#22c55e}
+body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,sans-serif;color:var(--t)}
+#app{max-width:430px;margin:0 auto;min-height:100vh}
 .scr{display:none;flex-direction:column;min-height:100vh}
 .scr.on{display:flex}
-.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#fff;border-top:1px solid #e5e7eb;display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
-.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px 8px;border:none;background:none;cursor:pointer;font-size:10px;font-weight:600;color:var(--m);font-family:inherit;transition:.2s}
-.nb svg{width:22px;height:22px;stroke:var(--m);fill:none;transition:.2s}
-.nb.on{color:var(--y)}
-.nb.on svg{stroke:var(--y)}
-.card{background:var(--card);border-radius:16px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
-.inp{width:100%;background:#f3f4f6;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px 16px;font-size:15px;font-family:inherit;color:var(--t);outline:none;transition:.2s}
-.inp:focus{border-color:var(--y);background:#fff}
-.inp::placeholder{color:var(--d)}
-.btn{width:100%;padding:15px;border-radius:14px;border:none;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;transition:.15s}
+.inp{width:100%;background:#f3f4f6;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px 16px;font-size:15px;font-family:inherit;color:var(--t);outline:none}
+.inp:focus{border-color:var(--y)}
+.btn{width:100%;padding:15px;border-radius:14px;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s}
 .btn-y{background:linear-gradient(135deg,var(--y2),var(--y));color:#fff}
-.btn-g{background:linear-gradient(135deg,#15803d,#22c55e);color:#fff}
-.btn-r{background:#fef2f2;color:var(--r);border:1px solid #fecaca}
-.btn-ghost{background:#f3f4f6;color:var(--t)}
-.lbl{font-size:11px;font-weight:700;color:var(--m);margin-bottom:6px;display:block;letter-spacing:.05em;text-transform:uppercase}
-.tag{padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700}
-.row{display:flex;justify-content:space-between;align-items:center}
-.srow{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f3f4f6}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid #d1d5db;display:inline-block;margin:0 6px;transition:.15s}
+.pin-dot.on{background:var(--y);border-color:var(--y)}
+.pin-key{padding:18px;border-radius:16px;border:none;background:#f3f4f6;font-size:22px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--t)}
+.pin-key:active{background:#e5e7eb}
+.pin-key.empty{background:none;cursor:default}
 .spin{width:24px;height:24px;border:3px solid #e5e7eb;border-top-color:var(--y);border-radius:50%;animation:sp .7s linear infinite;margin:0 auto}
 @keyframes sp{to{transform:rotate(360deg)}}
-#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:#111827;color:#fff;padding:10px 20px;border-radius:99px;font-size:13px;font-weight:600;z-index:9999;transition:.3s;white-space:nowrap;pointer-events:none}
+#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:#111827;color:#fff;padding:10px 20px;border-radius:99px;font-size:13px;font-weight:600;z-index:999;transition:.3s;white-space:nowrap}
 #toast.on{transform:translateX(-50%) translateY(0)}
 #toast.err{background:var(--r)}
-.sh-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
-.sh-ov.on{display:flex}
-.sh{width:100%;max-width:430px;background:#fff;border-radius:24px 24px 0 0;max-height:92vh;overflow-y:auto}
-.sh-bar{width:40px;height:4px;background:#e5e7eb;border-radius:99px;margin:12px auto 0}
-.sh-top{display:flex;justify-content:space-between;align-items:flex-start;padding:16px 20px 12px}
-.sh-title{font-size:18px;font-weight:800}
-.sh-x{background:#f3f4f6;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:15px;color:var(--m)}
-.sh-body{padding:0 20px 32px}
-.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid #d1d5db;transition:.15s}
-.pin-dot.on{background:var(--y);border-color:var(--y)}
-.pin-key{padding:18px;border-radius:16px;border:none;background:#f3f4f6;font-size:22px;font-weight:700;font-family:inherit;cursor:pointer;color:var(--t)}
-.pin-key:active{background:#e5e7eb;transform:scale(.94)}
-.pin-key.empty{background:none;cursor:default}
-.stat-card{background:#fff;border-radius:16px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.08);flex:1;min-width:0}
-.role-btn{padding:9px 4px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;color:var(--m);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s}
-.role-btn.on{border-color:var(--y);background:var(--y3);color:var(--y2)}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js" onerror="window.jsQR=null"></script>
 </head>
 <body>
 <div id="app">
 <div id="toast"></div>
 
-<!-- ═══ ÉCRAN AVERTISSEMENT OUVERTURE LOCALE ═══ -->
-<div class="scr" id="s-local-warn" style="justify-content:center;align-items:center;min-height:100vh;padding:32px 24px;background:linear-gradient(160deg,#fffbeb,#f9fafb);text-align:center">
-  <div style="max-width:340px;width:100%">
-    <div style="font-size:52px;margin-bottom:20px">⚠️</div>
-    <h2 style="font-size:22px;font-weight:900;color:#92400e;margin-bottom:10px">Fichier ouvert en local</h2>
-    <p style="color:#6b7280;font-size:14px;line-height:1.6;margin-bottom:24px">
-      Ce fichier ne peut pas s'exécuter depuis votre téléchargements.<br/>
-      Ouvrez-le depuis GitHub Pages pour qu'il fonctionne correctement.
-    </p>
-    <div style="background:#fff;border:1px solid #fde68a;border-radius:16px;padding:16px;margin-bottom:20px;text-align:left">
-      <div style="font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">🔗 URL correcte</div>
-      <div style="font-size:12px;font-family:monospace;color:#111827;word-break:break-all;line-height:1.6">https://samassivaladji-cmyk.github.io/<br/>afrim-pay-apps/<br/>afrim-backoffice.html</div>
-    </div>
-    <button onclick="window.location.href='https://samassivaladji-cmyk.github.io/afrim-pay-apps/afrim-backoffice.html?v=3'" style="width:100%;padding:15px;background:linear-gradient(135deg,#a16207,#ca8a04);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:12px">
-      Ouvrir la bonne URL →
-    </button>
-    <p style="font-size:11px;color:#9ca3af">Ou déposez d'abord le fichier sur GitHub Pages</p>
-  </div>
-</div>
-
-
-
-<!-- ═══ LOGIN ═══ -->
-<div class="scr" id="s-login" style="justify-content:center;align-items:center;min-height:100vh;padding:40px 24px;background:linear-gradient(160deg,#fffbeb 0%,#f9fafb 60%)">
-  <div style="width:100%;max-width:360px">
-    <div style="text-align:center;margin-bottom:40px">
-      <div style="width:90px;height:90px;border-radius:22px;overflow:hidden;margin:0 auto 16px;box-shadow:0 12px 32px rgba(202,138,4,.2)">
+<div class="scr" id="s-login" style="justify-content:center;align-items:center;padding:32px 24px">
+  <div style="width:100%;max-width:340px">
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="width:80px;height:80px;border-radius:20px;overflow:hidden;margin:0 auto 14px;box-shadow:0 8px 24px rgba(202,138,4,.2)">
         <img src="https://samassivaladji-cmyk.github.io/afrim-pay-apps/logo.png" style="width:100%;height:100%;object-fit:contain" alt="AFRIM PAY"/>
       </div>
-      <h1 style="font-size:26px;font-weight:900;color:var(--t)">AFRIM PAY</h1>
-      <p style="color:var(--m);font-size:13px;margin-top:4px">Africa connected to the world</p>
-      <div id="login-badge" style="margin-top:10px;display:inline-block;padding:4px 14px;border-radius:99px;background:var(--y3);border:1px solid #fde68a;color:var(--y2);font-size:11px;font-weight:700;letter-spacing:.08em">⚙️ ESPACE ADMINISTRATION</div>
-      <!-- Rôles acceptés -->
-      <div style="margin-top:16px;background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px;text-align:left">
-        <div style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Accès autorisés</div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <div style="display:flex;align-items:center;gap:10px">
-            <div style="width:32px;height:32px;border-radius:8px;background:#fef3c7;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">⚙️</div>
-            <div><div style="font-size:13px;font-weight:700;color:#111827">Administrateur</div><div style="font-size:11px;color:#6b7280">Accès complet à toutes les fonctions</div></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <div style="width:32px;height:32px;border-radius:8px;background:#fff7ed;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">👁</div>
-            <div><div style="font-size:13px;font-weight:700;color:#111827">Superviseur</div><div style="font-size:11px;color:#6b7280">Comptes et support de sa zone</div></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <div style="width:32px;height:32px;border-radius:8px;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">💬</div>
-            <div><div style="font-size:13px;font-weight:700;color:#111827">Support Client</div><div style="font-size:11px;color:#6b7280">Tickets, remboursements, réclamations</div></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <div style="width:32px;height:32px;border-radius:8px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🛠</div>
-            <div><div style="font-size:13px;font-weight:700;color:#111827">Support Technique</div><div style="font-size:11px;color:#6b7280">Logs, transactions bloquées, système</div></div>
-          </div>
-        </div>
-      </div>
+      <h1 style="font-size:24px;font-weight:900">AFRIM PAY</h1>
+      <p style="color:var(--m);font-size:13px;margin-top:4px">Back-office Administration</p>
+      <div style="margin-top:10px;background:var(--y3);border:1px solid #fde68a;border-radius:99px;padding:4px 14px;display:inline-block;font-size:11px;font-weight:700;color:var(--y2)">Admin · Superviseur · Support</div>
     </div>
-    <div id="err-login" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:12px 16px;border-radius:12px;margin-bottom:16px;font-size:13px;font-weight:600"></div>
-    <label class="lbl">Numéro de téléphone</label>
-    <input class="inp" id="lg-tel" type="tel" placeholder="+225 07 XX XX XX" inputmode="numeric" style="margin-bottom:16px" oninput="document.getElementById('lg-btn').disabled=this.value.replace(/\D/g,'').length<8;document.getElementById('lg-btn').style.opacity=this.value.replace(/\D/g,'').length>=8?'1':'.4'"/>
-    <button class="btn btn-y" id="lg-btn" onclick="goPin()" disabled style="opacity:.4">Accès sécurisé →</button>
+    <div id="err-login" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:12px;border-radius:12px;margin-bottom:14px;font-size:13px"></div>
+    <label style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:block">Numero de telephone</label>
+    <input class="inp" id="lg-tel" type="tel" placeholder="+225 07 XX XX XX" inputmode="numeric" style="margin-bottom:14px"/>
+    <button class="btn btn-y" onclick="goPin()">Continuer</button>
   </div>
 </div>
 
-<!-- ═══ PIN ═══ -->
-<div class="scr" id="s-pin" style="justify-content:center;align-items:center;min-height:100vh;padding:32px 24px;background:#fff">
+<div class="scr" id="s-pin" style="justify-content:center;align-items:center;padding:32px 24px">
   <div style="width:100%;max-width:320px;text-align:center">
-    <button onclick="S('s-login')" style="background:none;border:none;color:var(--m);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:32px;display:flex;align-items:center;gap:6px">← Retour</button>
-    <h2 style="font-size:24px;font-weight:800;margin-bottom:6px">Code PIN Admin</h2>
-    <div id="pin-sub" style="color:var(--m);font-size:15px;margin-bottom:32px;font-family:monospace"></div>
-    <div id="err-pin" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:10px 16px;border-radius:12px;margin-bottom:16px;font-size:13px"></div>
-    <div id="pin-loading" style="display:none;padding:24px"><div class="spin"></div></div>
+    <button onclick="showScr('s-login')" style="background:none;border:none;color:var(--m);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:28px;display:block">Retour</button>
+    <h2 style="font-size:22px;font-weight:800;margin-bottom:6px">Code PIN</h2>
+    <div id="pin-sub" style="color:var(--m);font-size:14px;margin-bottom:28px;font-family:monospace"></div>
+    <div id="err-pin" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:10px;border-radius:12px;margin-bottom:14px;font-size:13px"></div>
+    <div id="pin-loading" style="display:none;padding:20px"><div class="spin"></div></div>
     <div id="pin-keys">
-      <div style="display:flex;gap:16px;justify-content:center;margin-bottom:36px">
-        <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div><div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
+      <div style="margin-bottom:28px">
+        <span class="pin-dot" id="d0"></span><span class="pin-dot" id="d1"></span><span class="pin-dot" id="d2"></span><span class="pin-dot" id="d3"></span>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
         <button class="pin-key" onclick="PIN(1)">1</button><button class="pin-key" onclick="PIN(2)">2</button><button class="pin-key" onclick="PIN(3)">3</button>
         <button class="pin-key" onclick="PIN(4)">4</button><button class="pin-key" onclick="PIN(5)">5</button><button class="pin-key" onclick="PIN(6)">6</button>
         <button class="pin-key" onclick="PIN(7)">7</button><button class="pin-key" onclick="PIN(8)">8</button><button class="pin-key" onclick="PIN(9)">9</button>
-        <button class="pin-key empty"></button><button class="pin-key" onclick="PIN(0)">0</button><button class="pin-key" onclick="DELP()">⌫</button>
+        <button class="pin-key empty"></button><button class="pin-key" onclick="PIN(0)">0</button><button class="pin-key" onclick="DELP()">X</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ═══ HOME ADMIN ═══ -->
 <div class="scr" id="s-home">
-  <!-- Header gradient jaune -->
-  <div style="background:linear-gradient(135deg,var(--y2),var(--y));padding:52px 20px 28px">
-    <div class="row" style="margin-bottom:20px">
+  <div style="background:linear-gradient(135deg,var(--y2),var(--y));padding:48px 20px 28px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
       <div>
-        <div style="color:rgba(255,255,255,.75);font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase">Administration</div>
-        <div style="color:#fff;font-size:20px;font-weight:800;margin-top:2px" id="h-name">—</div>
+        <div style="color:rgba(255,255,255,.75);font-size:12px;font-weight:600;text-transform:uppercase">Administration</div>
+        <div style="color:#fff;font-size:20px;font-weight:800;margin-top:2px" id="h-name">--</div>
       </div>
-      <div style="display:flex;gap:8px">
-        <button onclick="chargerAccueil()" style="background:rgba(255,255,255,.18);border:none;border-radius:12px;width:40px;height:40px;cursor:pointer;display:flex;align-items:center;justify-content:center">
-          <svg width="18" height="18" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15"/></svg>
-        </button>
-        <button onclick="logout()" style="background:rgba(255,255,255,.18);border:none;border-radius:12px;width:40px;height:40px;cursor:pointer;display:flex;align-items:center;justify-content:center">
-          <svg width="18" height="18" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-        </button>
-      </div>
+      <button onclick="logout()" style="background:rgba(255,255,255,.18);border:none;border-radius:12px;width:40px;height:40px;cursor:pointer;color:#fff;font-size:18px">X</button>
     </div>
-    <!-- 4 stats -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:16px;padding:14px">
-        <div style="color:rgba(255,255,255,.75);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">👥 Utilisateurs</div>
-        <div style="color:#fff;font-size:28px;font-weight:900" id="h-users">—</div>
+      <div style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:14px;padding:14px">
+        <div style="color:rgba(255,255,255,.75);font-size:10px;font-weight:700;text-transform:uppercase;margin-bottom:6px">Utilisateurs</div>
+        <div style="color:#fff;font-size:26px;font-weight:900" id="h-users">--</div>
       </div>
-      <div style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:16px;padding:14px">
-        <div style="color:rgba(255,255,255,.75);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">💳 Transactions</div>
-        <div style="color:#fff;font-size:28px;font-weight:900" id="h-txns">—</div>
+      <div style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:14px;padding:14px">
+        <div style="color:rgba(255,255,255,.75);font-size:10px;font-weight:700;text-transform:uppercase;margin-bottom:6px">Transactions</div>
+        <div style="color:#fff;font-size:26px;font-weight:900" id="h-txns">--</div>
       </div>
-      <div style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:16px;padding:14px">
-        <div style="color:rgba(255,255,255,.75);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">💰 Commissions</div>
-        <div style="color:#fff;font-size:16px;font-weight:800" id="h-comm">—</div>
+      <div style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:14px;padding:14px">
+        <div style="color:rgba(255,255,255,.75);font-size:10px;font-weight:700;text-transform:uppercase;margin-bottom:6px">Commissions</div>
+        <div style="color:#fff;font-size:16px;font-weight:800" id="h-comm">--</div>
       </div>
-      <div style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:16px;padding:14px">
-        <div style="color:rgba(255,255,255,.75);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">🚨 Alertes</div>
-        <div style="color:#fff;font-size:28px;font-weight:900" id="h-alertes">—</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Navigation rapide -->
-  <div style="padding:20px 16px 0;margin-top:-4px">
-    <div class="card" style="padding:20px;margin-bottom:16px">
-      <div style="font-size:13px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px">Navigation</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-        <button onclick="setTab('users')" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:14px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer">
-          <div style="width:44px;height:44px;border-radius:12px;background:var(--y3);display:flex;align-items:center;justify-content:center;font-size:20px">👥</div>
-          <div style="font-size:11px;font-weight:700;color:var(--t)">Comptes</div>
-        </button>
-        <button onclick="setTab('txns')" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:14px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer">
-          <div style="width:44px;height:44px;border-radius:12px;background:#eff6ff;display:flex;align-items:center;justify-content:center;font-size:20px">💳</div>
-          <div style="font-size:11px;font-weight:700;color:var(--t)">Flux</div>
-        </button>
-        <button onclick="setTab('monitoring')" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:14px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer">
-          <div style="width:44px;height:44px;border-radius:12px;background:#fdf4ff;display:flex;align-items:center;justify-content:center;font-size:20px">📊</div>
-          <div style="font-size:11px;font-weight:700;color:var(--t)">Suivi</div>
-        </button>
-        <button onclick="setTab('support')" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:14px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer">
-          <div style="width:44px;height:44px;border-radius:12px;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:20px">💬</div>
-          <div style="font-size:11px;font-weight:700;color:var(--t)">Support</div>
-        </button>
-        <button onclick="openSh('inscription')" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:14px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer">
-          <div style="width:44px;height:44px;border-radius:12px;background:#ecfdf5;display:flex;align-items:center;justify-content:center;font-size:20px">➕</div>
-          <div style="font-size:11px;font-weight:700;color:var(--t)">Créer</div>
-        </button>
-        <button onclick="openSh('change-pin');rstChangePin()" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:14px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer">
-          <div style="width:44px;height:44px;border-radius:12px;background:#fef3c7;display:flex;align-items:center;justify-content:center;font-size:20px">🔐</div>
-          <div style="font-size:11px;font-weight:700;color:var(--t)">Mon PIN</div>
-        </button>
-      </div>
-    </div>
-    <!-- Info API -->
-    <div style="background:var(--y3);border:1px solid #fde68a;border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:10px">
-      <span style="font-size:18px">🔗</span>
-      <div>
-        <div style="font-size:11px;font-weight:700;color:var(--y2);text-transform:uppercase;letter-spacing:.05em">API Backend</div>
-        <div style="font-size:12px;font-family:monospace;color:var(--t);margin-top:2px">afrim-pay-backend.onrender.com</div>
+      <div style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:14px;padding:14px">
+        <div style="color:rgba(255,255,255,.75);font-size:10px;font-weight:700;text-transform:uppercase;margin-bottom:6px">Alertes</div>
+        <div style="color:#fff;font-size:26px;font-weight:900" id="h-alertes">--</div>
       </div>
     </div>
   </div>
-  <div style="height:80px"></div>
-  <nav class="bnav">
-    <button class="nb on" id="nb-home" onclick="setTab('home')"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Admin</button><button class="nb" id="nb-users" onclick="setTab('users')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Comptes</button><button class="nb" id="nb-txns" onclick="setTab('txns')"><svg viewBox="0 0 24 24" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Flux</button><button class="nb" id="nb-monitoring" onclick="setTab('monitoring')"><svg viewBox="0 0 24 24" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Suivi</button><button class="nb" id="nb-support" onclick="setTab('support')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Support</button>
-  </nav>
-</div>
-
-<!-- ═══ USERS ═══ -->
-<div class="scr" id="s-users">
-  <div style="background:#fff;padding:52px 20px 12px;border-bottom:1px solid #f3f4f6;position:sticky;top:0;z-index:10">
-    <div style="font-size:22px;font-weight:800;margin-bottom:12px">Tous les comptes</div>
-    <div style="display:flex;align-items:center;gap:10px;background:#f3f4f6;border-radius:12px;padding:10px 14px;margin-bottom:10px">
-      <svg width="16" height="16" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-      <input id="u-search" type="text" placeholder="Rechercher par nom ou téléphone..." style="border:none;background:none;font-size:14px;font-family:inherit;color:var(--t);outline:none;flex:1;" oninput="filtrerUsers(this.value)"/>
+  <div style="padding:24px;text-align:center">
+    <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:14px;padding:16px;color:#059669;font-size:14px;font-weight:600;margin-bottom:16px">
+      Connexion reussie - Suite du dashboard en cours
     </div>
-    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px" id="u-chips"></div>
-  </div>
-  <div style="padding:12px 16px 100px"><div id="u-list"><div style="padding:40px;text-align:center"><div class="spin"></div></div></div></div>
-  <nav class="bnav">
-    <button class="nb" id="nb-home" onclick="setTab('home')"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Admin</button><button class="nb on" id="nb-users" onclick="setTab('users')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Comptes</button><button class="nb" id="nb-txns" onclick="setTab('txns')"><svg viewBox="0 0 24 24" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Flux</button><button class="nb" id="nb-monitoring" onclick="setTab('monitoring')"><svg viewBox="0 0 24 24" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Suivi</button><button class="nb" id="nb-support" onclick="setTab('support')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Support</button>
-  </nav>
-</div>
-
-<!-- ═══ TRANSACTIONS ═══ -->
-<div class="scr" id="s-txns">
-  <div style="background:#fff;padding:52px 20px 16px;border-bottom:1px solid #f3f4f6;position:sticky;top:0;z-index:10">
-    <div style="font-size:22px;font-weight:800">Flux financiers</div>
-    <div style="color:var(--m);font-size:13px;margin-top:3px">Toutes les transactions</div>
-  </div>
-  <div style="padding:12px 16px 100px"><div id="t-list"><div style="padding:40px;text-align:center"><div class="spin"></div></div></div></div>
-  <nav class="bnav">
-    <button class="nb" id="nb-home" onclick="setTab('home')"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Admin</button><button class="nb" id="nb-users" onclick="setTab('users')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Comptes</button><button class="nb on" id="nb-txns" onclick="setTab('txns')"><svg viewBox="0 0 24 24" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Flux</button><button class="nb" id="nb-monitoring" onclick="setTab('monitoring')"><svg viewBox="0 0 24 24" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Suivi</button><button class="nb" id="nb-support" onclick="setTab('support')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Support</button>
-  </nav>
-</div>
-
-<!-- ═══ MONITORING ═══ -->
-<div class="scr" id="s-monitoring">
-  <div style="background:#fff;padding:52px 20px 16px;border-bottom:1px solid #f3f4f6;position:sticky;top:0;z-index:10">
-    <div style="font-size:22px;font-weight:800">Monitoring</div>
-    <div style="color:var(--m);font-size:13px;margin-top:3px">Alertes & Tickets</div>
-  </div>
-  <div style="padding:16px 16px 100px">
-    <div style="font-size:12px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Alertes actives</div>
-    <div id="m-alerts"><div style="padding:24px;text-align:center"><div class="spin"></div></div></div>
-    <div style="font-size:12px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.07em;margin:18px 0 10px">Tickets ouverts</div>
-    <div id="m-tickets"><div style="padding:24px;text-align:center"><div class="spin"></div></div></div>
-  </div>
-  <nav class="bnav">
-    <button class="nb" id="nb-home" onclick="setTab('home')"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Admin</button><button class="nb" id="nb-users" onclick="setTab('users')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Comptes</button><button class="nb" id="nb-txns" onclick="setTab('txns')"><svg viewBox="0 0 24 24" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Flux</button><button class="nb on" id="nb-monitoring" onclick="setTab('monitoring')"><svg viewBox="0 0 24 24" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Suivi</button><button class="nb" id="nb-support" onclick="setTab('support')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Support</button>
-  </nav>
-</div>
-
-<!-- ═══ SUPPORT / SERVICE CLIENT ═══ -->
-<div class="scr" id="s-support">
-  <div style="background:#fff;padding:52px 20px 16px;border-bottom:1px solid #f3f4f6;position:sticky;top:0;z-index:10">
-    <div style="font-size:22px;font-weight:800">Service Client</div>
-    <div style="color:var(--m);font-size:13px;margin-top:3px" id="sup-role-label">Tickets & Réclamations</div>
-  </div>
-  <!-- Recherche client -->
-  <div style="padding:16px 16px 0">
-    <div style="background:#fff;border-radius:14px;border:1px solid #e5e7eb;padding:16px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
-      <div style="font-size:12px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">🔍 Rechercher un client</div>
-      <div style="display:flex;gap:8px">
-        <input class="inp" id="sup-tel" type="tel" placeholder="Numéro de téléphone" inputmode="numeric" style="flex:1;padding:12px 14px;font-size:14px"/>
-        <button onclick="rechercherClient()" style="padding:0 16px;background:linear-gradient(135deg,var(--y2),var(--y));color:#fff;border:none;border-radius:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">Chercher</button>
-      </div>
-      <div id="sup-client-result" style="margin-top:12px;display:none"></div>
-    </div>
-
-    <!-- Tickets ouverts -->
-    <div style="font-size:12px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Tickets en attente</div>
-    <div id="sup-tickets"><div style="padding:24px;text-align:center"><div class="spin"></div></div></div>
-
-    <!-- Créer ticket -->
-    <button onclick="openSh('new-ticket')" style="width:100%;margin-top:16px;padding:14px;background:linear-gradient(135deg,var(--y2),var(--y));color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px">
-      <svg width="18" height="18" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-      Nouveau ticket
-    </button>
-  </div>
-  <div style="height:80px"></div>
-  <nav class="bnav">
-    <button class="nb" id="nb-home" onclick="setTab('home')"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Admin</button>
-    <button class="nb" id="nb-users" onclick="setTab('users')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Comptes</button>
-    <button class="nb" id="nb-txns" onclick="setTab('txns')"><svg viewBox="0 0 24 24" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Flux</button>
-    <button class="nb" id="nb-monitoring" onclick="setTab('monitoring')"><svg viewBox="0 0 24 24" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Suivi</button>
-    <button class="nb on" id="nb-support" onclick="setTab('support')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Support</button>
-  </nav>
-</div>
-
-<!-- SHEET NOUVEAU TICKET -->
-<div class="sh-ov" id="sh-new-ticket">
-  <div class="sh">
-    <div class="sh-bar"></div>
-    <div class="sh-top"><div><div class="sh-title">Nouveau ticket</div><div style="color:var(--m);font-size:12px">Créer une réclamation client</div></div><button class="sh-x" onclick="closeSh('new-ticket')">✕</button></div>
-    <div class="sh-body">
-      <div id="nt-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:13px"></div>
-      <label class="lbl">Téléphone client</label>
-      <input class="inp" id="nt-tel" type="tel" placeholder="07 XX XX XX" inputmode="numeric" style="margin-bottom:12px"/>
-      <label class="lbl">Sujet</label>
-      <input class="inp" id="nt-sujet" type="text" placeholder="Ex: Transfert bloqué" style="margin-bottom:12px"/>
-      <label class="lbl">Description</label>
-      <textarea class="inp" id="nt-desc" placeholder="Détails du problème..." rows="4" style="resize:none;margin-bottom:20px"></textarea>
-      <button class="btn btn-y" onclick="creerTicket()">Soumettre le ticket</button>
-    </div>
-  </div>
-</div>
-<!-- ═══ SUPPORT TECHNIQUE ═══ -->
-<div class="scr" id="s-tech">
-  <div style="background:#fff;padding:52px 20px 16px;border-bottom:1px solid #f3f4f6;position:sticky;top:0;z-index:10">
-    <div style="font-size:22px;font-weight:800">Support Technique</div>
-    <div style="color:var(--m);font-size:13px;margin-top:3px">Logs · Transactions bloquées · Statut système</div>
-  </div>
-  <div style="padding:16px 16px 100px">
-    <div style="font-size:12px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Statut système</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px">
-      <div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
-        <div style="font-size:10px;font-weight:700;color:var(--m);text-transform:uppercase;margin-bottom:6px">🔌 API Backend</div>
-        <div id="sys-api" style="font-size:13px;font-weight:700;color:#22c55e">Vérification...</div>
-      </div>
-      <div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
-        <div style="font-size:10px;font-weight:700;color:var(--m);text-transform:uppercase;margin-bottom:6px">🗄 Base de données</div>
-        <div id="sys-db" style="font-size:13px;font-weight:700;color:#22c55e">Vérification...</div>
-      </div>
-      <div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
-        <div style="font-size:10px;font-weight:700;color:var(--m);text-transform:uppercase;margin-bottom:6px">⏱ Expire BD</div>
-        <div style="font-size:13px;font-weight:700;color:#f59e0b">10 juin 2026</div>
-      </div>
-      <div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
-        <div style="font-size:10px;font-weight:700;color:var(--m);text-transform:uppercase;margin-bottom:6px">📦 Version</div>
-        <div style="font-size:13px;font-weight:700;color:var(--t)">API v1.0</div>
-      </div>
-    </div>
-    <div style="font-size:12px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Transactions bloquées / en attente</div>
-    <div id="tech-txns-bloq"><div style="padding:24px;text-align:center"><div class="spin"></div></div></div>
-    <div style="font-size:12px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.07em;margin:18px 0 10px">Alertes système</div>
-    <div id="tech-logs"><div style="padding:24px;text-align:center"><div class="spin"></div></div></div>
-  </div>
-  <nav class="bnav">
-    <button class="nb" id="nb-home" onclick="setTab('home')"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Admin</button>
-    <button class="nb" id="nb-txns" onclick="setTab('txns')"><svg viewBox="0 0 24 24" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Flux</button>
-    <button class="nb" id="nb-monitoring" onclick="setTab('monitoring')"><svg viewBox="0 0 24 24" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Suivi</button>
-    <button class="nb on" id="nb-tech" onclick="setTab('tech')"><svg viewBox="0 0 24 24" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>Tech</button>
-  </nav>
-</div>
-
-<div class="sh-ov" id="sh-inscription">
-  <div class="sh">
-    <div class="sh-bar"></div>
-    <div class="sh-top"><div><div class="sh-title">Créer un compte</div><div style="color:var(--m);font-size:12px">Admin · Tout type de rôle</div></div><button class="sh-x" onclick="closeSh('inscription');rstIns()">✕</button></div>
-    <div class="sh-body">
-      <div id="ins-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:13px"></div>
-      <div id="ins-form">
-        <label class="lbl">Rôle</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">
-          <button onclick="setInsRole('client')" id="rb-client" class="role-btn on">Client</button>
-          <button onclick="setInsRole('business')" id="rb-business" class="role-btn">Business</button>
-          <button onclick="setInsRole('agent')" id="rb-agent" class="role-btn">Agent</button>
-          <button onclick="setInsRole('mini_master')" id="rb-mini_master" class="role-btn">Mini-M.</button>
-          <button onclick="setInsRole('master')" id="rb-master" class="role-btn">Master</button>
-          <button onclick="setInsRole('superviseur')" id="rb-superviseur" class="role-btn">Superv.</button>
-        </div>
-        <label class="lbl">Prénom *</label>
-        <input class="inp" id="ins-prenom" type="text" placeholder="Prénom" style="margin-bottom:12px"/>
-        <label class="lbl">Nom *</label>
-        <input class="inp" id="ins-nom" type="text" placeholder="Nom" style="margin-bottom:12px"/>
-        <label class="lbl">Téléphone *</label>
-        <input class="inp" id="ins-tel" type="tel" placeholder="+225 07 XX XX XX" inputmode="numeric" style="margin-bottom:12px"/>
-        <label class="lbl">PIN *</label>
-        <input class="inp" id="ins-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" style="margin-bottom:12px"/>
-        <label class="lbl">Zone</label>
-        <input class="inp" id="ins-zone" type="text" placeholder="Quartier / Ville" style="margin-bottom:20px"/>
-        <button class="btn btn-y" onclick="doInscrire()">Créer le compte</button>
-      </div>
-      <div id="ins-loading" style="display:none;text-align:center;padding:40px"><div class="spin" style="width:36px;height:36px;border-width:3px"></div></div>
-      <div id="ins-success" style="display:none;text-align:center;padding:32px">
-        <div style="width:72px;height:72px;border-radius:50%;background:#ecfdf5;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:34px">✅</div>
-        <div style="font-size:20px;font-weight:800;margin-bottom:6px">Compte créé !</div>
-        <div id="ins-txt" style="color:var(--m);font-size:13px;margin-bottom:24px"></div>
-        <div style="display:flex;gap:10px"><button class="btn btn-y" style="flex:1" onclick="rstIns()">Nouveau</button><button class="btn btn-ghost" style="flex:1" onclick="closeSh('inscription');rstIns()">Fermer</button></div>
-      </div>
-    </div>
+    <button onclick="logout()" class="btn" style="background:#fef2f2;color:var(--r);border:1px solid #fecaca">Se deconnecter</button>
   </div>
 </div>
 
-<!-- ═══ SHEET USER DÉTAIL ═══ -->
-<div class="sh-ov" id="sh-user">
-  <div class="sh">
-    <div class="sh-bar"></div>
-    <div class="sh-top">
-      <div><div class="sh-title" id="sh-u-name">—</div><div style="color:var(--m);font-size:12px" id="sh-u-sub">—</div></div>
-      <button class="sh-x" onclick="closeSh('user')">✕</button>
-    </div>
-    <div class="sh-body" id="sh-u-body"></div>
-  </div>
 </div>
-
-<!-- ═══ SHEET CHANGER PIN ═══ -->
-<div class="sh-ov" id="sh-change-pin">
-  <div class="sh">
-    <div class="sh-bar"></div>
-    <div class="sh-top"><div><div class="sh-title">Changer mon PIN</div></div><button class="sh-x" onclick="closeSh('change-pin');rstChangePin()">✕</button></div>
-    <div class="sh-body">
-      <div id="change-pin-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:13px"></div>
-      <div id="change-pin-form">
-        <label class="lbl">Ancien code PIN</label>
-        <input id="old-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" style="width:100%;background:#f3f4f6;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;font-size:24px;font-family:inherit;color:var(--t);outline:none;text-align:center;letter-spacing:12px;margin-bottom:12px"/>
-        <label class="lbl">Nouveau code PIN</label>
-        <input id="new-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" style="width:100%;background:#f3f4f6;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;font-size:24px;font-family:inherit;color:var(--t);outline:none;text-align:center;letter-spacing:12px;margin-bottom:12px"/>
-        <label class="lbl">Confirmer nouveau PIN</label>
-        <input id="new-pin2" type="password" inputmode="numeric" maxlength="4" placeholder="••••" style="width:100%;background:#f3f4f6;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;font-size:24px;font-family:inherit;color:var(--t);outline:none;text-align:center;letter-spacing:12px;margin-bottom:20px"/>
-        <button onclick="doChangePin()" class="btn btn-y">Confirmer</button>
-      </div>
-      <div id="change-pin-loading" style="display:none;text-align:center;padding:32px"><div class="spin"></div></div>
-      <div id="change-pin-success" style="display:none;text-align:center;padding:24px">
-        <div style="font-size:48px;margin-bottom:12px">✅</div>
-        <div style="font-size:20px;font-weight:800;margin-bottom:8px">PIN modifié !</div>
-        <div style="color:var(--m);font-size:14px;margin-bottom:20px">Vous allez être déconnecté.</div>
-        <button onclick="closeSh('change-pin');logout()" class="btn btn-y">Se reconnecter</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-</div>
-<!-- ═══ SHEET REMBOURSEMENT ═══ -->
-<div class="sh-ov" id="sh-remboursement">
-  <div class="sh">
-    <div class="sh-bar"></div>
-    <div class="sh-top">
-      <div><div class="sh-title">Rembourser une transaction</div><div style="color:var(--m);font-size:12px">Annulation et retour des fonds</div></div>
-      <button class="sh-x" onclick="closeSh('remboursement')">✕</button>
-    </div>
-    <div class="sh-body">
-      <div id="remb-info" style="background:#f9fafb;border-radius:14px;padding:14px;margin-bottom:16px">
-        <div style="font-size:12px;color:var(--m);margin-bottom:4px">Transaction à annuler</div>
-        <div id="remb-tx-desc" style="font-size:14px;font-weight:700"></div>
-        <div id="remb-tx-montant" style="font-size:20px;font-weight:900;color:var(--r);margin-top:4px"></div>
-        <div id="remb-tx-date" style="font-size:11px;color:var(--d);margin-top:2px"></div>
-      </div>
-      <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#92400e;">
-        ⚠️ Le remboursement est possible uniquement si la transaction a moins de <strong>24h</strong> et que le destinataire a un solde suffisant.
-      </div>
-      <div id="remb-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:13px"></div>
-      <label class="lbl">Motif du remboursement</label>
-      <input class="inp" id="remb-motif" type="text" placeholder="Ex: Erreur de destinataire" style="margin-bottom:20px"/>
-      <input type="hidden" id="remb-tx-id"/>
-      <button class="btn btn-y" onclick="doRemboursement()" id="remb-btn">Confirmer le remboursement</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ SHEET CONFIRMATION SUPPRESSION ═══ -->
-<div class="sh-ov" id="sh-confirm-delete">
-  <div class="sh">
-    <div class="sh-bar"></div>
-    <div class="sh-top">
-      <div><div class="sh-title" style="color:var(--r)">⚠️ Supprimer le compte</div></div>
-      <button class="sh-x" onclick="closeSh('confirm-delete')">✕</button>
-    </div>
-    <div class="sh-body">
-      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:14px;padding:16px;margin-bottom:20px;">
-        <div style="font-size:14px;font-weight:700;color:var(--r);margin-bottom:6px">Action irréversible</div>
-        <div style="font-size:13px;color:#7f1d1d;line-height:1.5">Vous êtes sur le point de supprimer définitivement le compte de <strong id="sh-confirm-nom"></strong>. Cette action ne peut pas être annulée.</div>
-      </div>
-      <input type="hidden" id="sh-confirm-id"/>
-      <label class="lbl">Tapez SUPPRIMER pour confirmer</label>
-      <input class="inp" id="sh-confirm-input" type="text" placeholder="SUPPRIMER" style="margin-bottom:12px;border-color:#fecaca"/>
-      <div id="sh-confirm-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:13px"></div>
-      <button onclick="supprimerCompte()" style="width:100%;padding:15px;border-radius:14px;border:none;background:var(--r);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px">Supprimer définitivement</button>
-      <button onclick="closeSh('confirm-delete')" class="btn btn-ghost">Annuler</button>
-    </div>
-  </div>
-</div>
-
 
 <script>
+var API='https://afrim-pay-backend.onrender.com/api/v1';
+var G={token:null,refresh:null,user:null,pin:''};
+try{G.token=localStorage.getItem('afrim_token');G.refresh=localStorage.getItem('afrim_refresh');G.user=JSON.parse(localStorage.getItem('afrim_user')||'null');}catch(e){}
 
-// ═══ FONCTIONS DE BASE ═══
-const API='https://afrim-pay-backend.onrender.com/api/v1';
-let G={token:null,refresh:null,user:null,pin:''};
-
-// localStorage sécurisé (bloqué en local sur certains navigateurs)
-function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
-function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
-function lsDel(k){try{localStorage.removeItem(k);}catch(e){}}
-
-try{G.token=lsGet('afrim_token');G.refresh=lsGet('afrim_refresh');G.user=JSON.parse(lsGet('afrim_user')||'null');}catch(e){}
-
-async function api(path,opts){
-  opts=opts||{};
-  var h={'Content-Type':'application/json'};
-  if(G.token)h['Authorization']='Bearer '+G.token;
-  try{
-    var r=await fetch(API+path,Object.assign({headers:h},opts));
-    var d=await r.json();
-    if(!r.ok){
-      if(r.status===401&&!opts._retry&&G.refresh){var ok=await doRefresh();if(ok)return api(path,Object.assign({},opts,{_retry:true}));}
-      throw new Error(d.message||'Erreur '+r.status);
-    }
-    return d;
-  }catch(e){
-    if(e.name==='TypeError')throw new Error('Connexion impossible. Vérifiez votre réseau.');
-    throw e;
-  }
-}
-var get=p=>api(p);
-var post=(p,b)=>api(p,{method:'POST',body:JSON.stringify(b)});
-var patch=(p,b)=>api(p,{method:'PATCH',body:JSON.stringify(b)});
-
-async function doRefresh(){
-  try{
-    var r=await fetch(API+'/auth/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refreshToken:G.refresh})});
-    var d=await r.json();if(!r.ok)throw 0;
-    G.token=d.data.accessToken;G.refresh=d.data.refreshToken;
-    lsSet('afrim_token',G.token);lsSet('afrim_refresh',G.refresh);
-    return true;
-  }catch(e){logout();return false;}
+function showScr(id){
+  var all=document.querySelectorAll('.scr');
+  for(var i=0;i<all.length;i++)all[i].classList.remove('on');
+  var el=document.getElementById(id);
+  if(el)el.classList.add('on');
+  window.scrollTo(0,0);
 }
 
-function T(msg,err){var el=document.getElementById('toast');if(!el)return;el.textContent=msg;el.className=err?'on err':'on';clearTimeout(T._t);T._t=setTimeout(()=>el.className='',2800);}
-function F(n){return Number(n||0).toLocaleString('fr-FR')+' FCFA';}
-function FD(d){if(!d)return'—';return new Date(d).toLocaleString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}
-function S(id){document.querySelectorAll('.scr').forEach(e=>e.classList.remove('on'));var el=document.getElementById(id);if(el)el.classList.add('on');window.scrollTo(0,0);}
-function openSh(id){var el=document.getElementById('sh-'+id);if(el)el.classList.add('on');}
-function closeSh(id){var el=document.getElementById('sh-'+id);if(el)el.classList.remove('on');}
-function setTab(t){
-  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
-  document.querySelectorAll('#nb-'+t).forEach(b=>b.classList.add('on'));
-  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
-  if(t==='home'){document.getElementById('s-home').classList.add('on');chargerAccueil();}
-  else if(t==='users'){document.getElementById('s-users').classList.add('on');chargerUsers();}
-  else if(t==='txns'){document.getElementById('s-txns').classList.add('on');chargerTxns();}
-  else if(t==='monitoring'){document.getElementById('s-monitoring').classList.add('on');chargerMonitoring();}
-  else if(t==='support'){document.getElementById('s-support').classList.add('on');chargerSupport();}
-  else if(t==='tech'){document.getElementById('s-tech').classList.add('on');chargerTech();}
-}
-var ROLES=['client','business','agent','mini_master','master','superviseur'];
-var ROLE_C={client:'#059669',agent:'#d97706',business:'#4f46e5',mini_master:'#2563eb',master:'#92400e',superviseur:'#ea580c',admin:'#ca8a04'};
-
-function setInsRole(r){
-  insRole=r;
-  ROLES.forEach(k=>{
-    var b=document.getElementById('rb-'+k);if(!b)return;
-    b.classList.toggle('on',k===r);
-  });
+function toast(msg,err){
+  var el=document.getElementById('toast');if(!el)return;
+  el.textContent=msg;el.className=err?'on err':'on';
+  clearTimeout(toast._t);
+  toast._t=setTimeout(function(){el.className='';},2800);
 }
 
-function rstIns(){
-  insRole='client';setInsRole('client');
-  ['ins-prenom','ins-nom','ins-tel','ins-pin','ins-zone'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});
-  document.getElementById('ins-form').style.display='';
-  document.getElementById('ins-loading').style.display='none';
-  document.getElementById('ins-success').style.display='none';
-  document.getElementById('ins-err').style.display='none';
+function goPin(){
+  var tel=document.getElementById('lg-tel').value.trim();
+  if(!tel){toast('Entrez votre numero',true);return;}
+  G.pin='';
+  document.getElementById('pin-sub').textContent=tel;
+  document.getElementById('err-pin').style.display='none';
+  rDots();showScr('s-pin');
 }
 
-async function doInscrire(){
-  var prenom=document.getElementById('ins-prenom').value.trim();
-  var nom=document.getElementById('ins-nom').value.trim();
-  var tel=document.getElementById('ins-tel').value.trim();
-  var pin=document.getElementById('ins-pin').value.trim();
-  var zone=document.getElementById('ins-zone').value.trim();
-  var errEl=document.getElementById('ins-err');errEl.style.display='none';
-  if(!prenom||!nom||!tel||!pin){errEl.textContent='Champs * requis';errEl.style.display='';return;}
-  if(!/^\d{4}$/.test(pin)){errEl.textContent='PIN : 4 chiffres exactement';errEl.style.display='';return;}
-  document.getElementById('ins-form').style.display='none';
-  document.getElementById('ins-loading').style.display='';
-  try{
-    var r=await post('/auth/register',{prenom,nom,telephone:tel,pin,role:insRole,zone:zone||undefined});
-    document.getElementById('ins-loading').style.display='none';
-    document.getElementById('ins-success').style.display='';
-    document.getElementById('ins-txt').textContent=insRole+' · '+r.data.codeParrainage+'  ·  PIN : '+pin;
-    T('✓ Compte créé !');
-  }catch(e){
-    document.getElementById('ins-loading').style.display='none';
-    document.getElementById('ins-form').style.display='';
-    errEl.textContent=e.message;errEl.style.display='';
-  }
-}
-
-// LOGIN
-function goPin(){G.pin='';document.getElementById('pin-sub').textContent=document.getElementById('lg-tel').value;document.getElementById('err-pin').style.display='none';rDots();S('s-pin');}
 function PIN(n){if(G.pin.length>=4)return;G.pin+=String(n);rDots();if(G.pin.length===4)setTimeout(doLogin,300);}
 function DELP(){G.pin=G.pin.slice(0,-1);rDots();}
-function rDots(){for(var i=0;i<4;i++){var d=document.getElementById('d'+i);if(d){d.classList.toggle('on',G.pin.length>i);}}}
+function rDots(){for(var i=0;i<4;i++){var d=document.getElementById('d'+i);if(d)d.classList.toggle('on',G.pin.length>i);}}
 
 async function doLogin(){
-  var tel=document.getElementById('lg-tel').value;
+  var tel=document.getElementById('lg-tel').value.trim();
+  var errEl=document.getElementById('err-pin');errEl.style.display='none';
   document.getElementById('pin-loading').style.display='';
   document.getElementById('pin-keys').style.display='none';
-  var errEl=document.getElementById('err-pin');errEl.style.display='none';
   try{
-    var r=await post('/auth/login',{telephone:tel,pin:G.pin});
-    var d=r.data;
-    var ROLES_BO=['admin','superviseur','support_client','support_tech'];if(!ROLES_BO.includes(d.user.role))throw new Error('Accès non autorisé pour ce rôle.');
-    G.token=d.accessToken;G.refresh=d.refreshToken;G.user=d.user;
-    lsSet('afrim_token',G.token);
-    lsSet('afrim_refresh',G.refresh);
-    lsSet('afrim_user',JSON.stringify(G.user));
+    var resp=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telephone:tel,pin:G.pin})});
+    var data=await resp.json();
+    if(!resp.ok)throw new Error(data.message||'Erreur connexion');
+    var ok=['admin','superviseur','support_client','support_tech'];
+    if(ok.indexOf(data.data.user.role)===-1)throw new Error('Acces non autorise');
+    G.token=data.data.accessToken;G.refresh=data.data.refreshToken;G.user=data.data.user;
+    localStorage.setItem('afrim_token',G.token);
+    localStorage.setItem('afrim_refresh',G.refresh);
+    localStorage.setItem('afrim_user',JSON.stringify(G.user));
     document.getElementById('pin-loading').style.display='none';
     document.getElementById('pin-keys').style.display='';
     G.pin='';rDots();
-    adaptVueRole();
+    enterApp();
   }catch(e){
     G.pin='';rDots();
     errEl.textContent=e.message;errEl.style.display='';
@@ -638,438 +168,38 @@ async function doLogin(){
   }
 }
 
-// ACCUEIL
-async function chargerAccueil(){
+function enterApp(){
   var u=G.user;if(!u)return;
-  document.getElementById('h-name').textContent=(u.prenom||'')+' — '+(u.role||'').toUpperCase();
+  document.getElementById('h-name').textContent=(u.prenom||'')+' - '+(u.role||'').toUpperCase();
+  showScr('s-home');
+  setTimeout(function(){toast('Bienvenue '+u.prenom);},400);
+  loadStats();
+}
+
+async function loadStats(){
   try{
-    var[sr,or]=await Promise.all([get('/stats/dashboard'),get('/admin/overview')]);
-    document.getElementById('h-users').textContent=or.data.users||sr.data.totalUtilisateurs||'0';
-    document.getElementById('h-txns').textContent=or.data.txns||'0';
-    document.getElementById('h-comm').textContent=F(or.data.totalCommissions||0);
-    document.getElementById('h-alertes').textContent=sr.data.alertesActives||'0';
+    var resp=await fetch(API+'/admin/overview',{headers:{'Authorization':'Bearer '+G.token}});
+    var data=await resp.json();
+    if(data.data){
+      document.getElementById('h-users').textContent=data.data.users||'0';
+      document.getElementById('h-txns').textContent=data.data.txns||'0';
+      document.getElementById('h-comm').textContent=Number(data.data.totalCommissions||0).toLocaleString('fr-FR')+' F';
+      document.getElementById('h-alertes').textContent=data.data.alertes||'0';
+    }
   }catch(e){}
 }
 
-// USERS
-var usersData=[],uFilter='all';
-async function chargerUsers(){
-  var chips=['all','client','agent','business','mini_master','master','superviseur'].map(r=>{
-    var on=uFilter===r;
-    return '<button onclick="setUFilter(\''+r+'\')" style="padding:6px 14px;border-radius:99px;border:1.5px solid '+(on?'var(--y)':'#e5e7eb')+';background:'+(on?'var(--y3)':'#fff')+';color:'+(on?'var(--y2)':'var(--m)')+';font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:\'Inter\',sans-serif;flex-shrink:0">'+(r==='all'?'Tous':r)+'</button>';
-  }).join('');
-  document.getElementById('u-chips').innerHTML=chips;
-  var el=document.getElementById('u-list');
-  el.innerHTML='<div style="padding:40px;text-align:center"><div class="spin"></div></div>';
-  try{
-    var p='/users?limit=100';if(uFilter!=='all')p+='&role='+uFilter;
-    var r=await get(p);usersData=r.data||[];renderU(usersData);
-  }catch(e){el.innerHTML='<div style="background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:12px;border-radius:12px;font-size:13px">'+e.message+'</div>';}
-}
-function setUFilter(r){uFilter=r;chargerUsers();}
-function filtrerUsers(q){if(!q){renderU(usersData);return;}var f=usersData.filter(u=>(u.prenom+' '+u.nom).toLowerCase().includes(q.toLowerCase())||u.telephone.includes(q));renderU(f);}
-function renderU(list){
-  var el=document.getElementById('u-list');
-  if(!list.length){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--m);font-size:13px">Aucun résultat</div>';return;}
-  el.innerHTML=list.map(u=>{
-    var c=ROLE_C[u.role]||'#888';
-    var solde=u.comptes&&u.comptes[0]?Number(u.comptes[0].solde):0;
-    var ini=(u.prenom||'?')[0].toUpperCase();
-    return '<div onclick="voirU(\''+u.id+'\')" style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px 16px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,.05)">'
-      +'<div style="width:42px;height:42px;border-radius:12px;background:'+c+'18;color:'+c+';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0">'+ini+'</div>'
-      +'<div style="flex:1;min-width:0">'
-        +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
-          +'<span style="font-size:14px;font-weight:700">'+(u.prenom||'')+' '+(u.nom||'')+'</span>'
-          +'<span style="padding:2px 8px;border-radius:99px;font-size:9px;font-weight:700;background:'+c+'18;color:'+c+'">'+u.role+'</span>'
-        +'</div>'
-        +'<div style="color:var(--m);font-size:11px;margin-top:2px;font-family:monospace">'+u.telephone+'</div>'
-      +'</div>'
-      +'<div style="text-align:right;flex-shrink:0">'
-        +(perm('soldes')?'<div style="color:'+c+';font-size:12px;font-weight:700">'+F(solde)+'</div>':'<div style="color:#d1d5db;font-size:12px">— —</div>')
-        +'<div style="font-size:9px;font-weight:700;margin-top:2px;color:'+(u.statut==='actif'?'#22c55e':'#f59e0b')+'">'+u.statut+'</div>'
-      +'</div>'
-    +'</div>';
-  }).join('');
+function logout(){
+  try{fetch(API+'/auth/logout',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+G.token},body:JSON.stringify({refreshToken:G.refresh})});}catch(e){}
+  G.token=G.refresh=G.user=null;G.pin='';
+  try{localStorage.removeItem('afrim_token');localStorage.removeItem('afrim_refresh');localStorage.removeItem('afrim_user');}catch(e){}
+  showScr('s-login');
 }
 
-function voirU(id){
-  var u=usersData.find(x=>x.id===id);if(!u)return;
-  var c=ROLE_C[u.role]||'#888';
-  var solde=u.comptes&&u.comptes[0]?Number(u.comptes[0].solde):0;
-  document.getElementById('sh-u-name').textContent=(u.prenom||'')+' '+(u.nom||'');
-  document.getElementById('sh-u-sub').textContent=u.role+' · '+u.telephone;
-  var html='<div style="background:#f9fafb;border-radius:14px;padding:4px 0;margin-bottom:16px">';
-  [['Téléphone',u.telephone],['Code',u.codeParrainage||'—'],['Zone',u.zone||'—'],['KYC',u.kycNiveau||'—'],['Statut',u.statut],['Solde',F(solde)]].forEach(row=>{
-    var val=row[1];if(row[0]==='Solde'&&!perm('soldes'))val='••••• FCFA';
-    html+='<div class="srow" style="padding:12px 16px"><span style="color:var(--m);font-size:13px">'+row[0]+'</span><span style="font-size:13px;font-weight:700;color:'+(row[0]==='Solde'?(perm('soldes')?c:'var(--d)'):'var(--t)')+'">'+val+'</span></div>';
-  });
-  html+='</div>';
-  // Dernière transaction (async)
-  html+='<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Dernière transaction</div><div id="sh-u-lasttx" style="padding:10px;text-align:center"><div class="spin" style="width:18px;height:18px;border-width:2px"></div></div></div>';
-  // Actions selon statut
-  if(u.statut==='en_attente')
-    html+='<button class="btn btn-g" onclick="chgStatut(\''+u.id+'\',\'actif\')" style="margin-bottom:10px">✓ Activer le compte</button>';
-  if(u.statut==='actif')
-    html+='<button class="btn" onclick="chgStatut(\''+u.id+'\',\'suspendu\')" style="margin-bottom:10px;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa">⏸ Suspendre (temporaire)</button>'
-         +'<button class="btn btn-r" onclick="chgStatut(\''+u.id+'\',\'bloque\')" style="margin-bottom:10px">🔒 Bloquer le compte</button>';
-  if(u.statut==='suspendu')
-    html+='<button class="btn btn-g" onclick="chgStatut(\''+u.id+'\',\'actif\')" style="margin-bottom:10px">▶ Réactiver</button>'
-         +'<button class="btn btn-r" onclick="chgStatut(\''+u.id+'\',\'bloque\')" style="margin-bottom:10px">🔒 Bloquer définitivement</button>';
-  if(u.statut==='bloque')
-    html+='<button class="btn btn-g" onclick="chgStatut(\''+u.id+'\',\'actif\')" style="margin-bottom:10px">🔓 Débloquer le compte</button>';
-  // Remboursement (support_client + admin)
-  if(perm('rembourser'))
-    html+='<button class="btn" onclick="ouvrirRemboursement(\''+u.id+'\')" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;margin-bottom:10px">↩ Rembourser dernier transfert</button>';
-  // Supprimer — admin seulement
-  if(perm('supprimer'))
-    html+='<button class="btn" onclick="confirmerSuppression(\''+u.id+'\',\''+((u.prenom||'')+' '+(u.nom||'')).trim()+'\')" style="background:#fef2f2;color:var(--r);border:1px solid #fecaca;margin-top:6px">🗑 Supprimer le compte</button>';
-  document.getElementById('sh-u-body').innerHTML=html;
-  openSh('user');
-  chargerDerniereTx(u.id);
-}
-
-async function chargerDerniereTx(userId){
-  var el=document.getElementById('sh-u-lasttx');if(!el)return;
-  try{
-    var r=await get('/transactions?userId='+userId+'&limit=1');
-    var list=r.data||[];
-    if(!list.length){el.innerHTML='<div style="color:var(--m);font-size:12px;text-align:center;padding:8px">Aucune transaction</div>';return;}
-    var tx=list[0];
-    var TX_C={depot:'#059669',retrait:'#f97316',transfert:'#3b82f6',paiement_marchand:'#8b5cf6',commission:'#f59e0b'};
-    var c2=TX_C[tx.type]||'#888';
-    var age=(Date.now()-new Date(tx.dateCreation).getTime())/3600000;
-    var peutRembourser=tx.type==='transfert'&&age<24&&perm('rembourser');
-    el.innerHTML='<div style="background:#fff;border:1px solid #f3f4f6;border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center">'
-      +'<div><div style="font-size:12px;font-weight:700;color:'+c2+'">'+tx.type+'</div><div style="font-size:11px;color:var(--m);margin-top:2px">'+FD(tx.dateCreation)+'</div><div style="font-size:10px;color:var(--d);font-family:monospace">'+tx.reference+'</div></div>'
-      +'<div style="text-align:right"><div style="font-size:14px;font-weight:800;color:'+c2+'">'+F(tx.montant)+'</div>'
-      +(peutRembourser?'<div style="font-size:10px;color:#f59e0b;margin-top:2px;font-weight:700">↩ Remboursable</div>':'')+'</div>'
-    +'</div>';
-  }catch(e){if(el)el.innerHTML='<div style="color:var(--d);font-size:11px;text-align:center;padding:8px">—</div>';}
-}
-
-async function chgStatut(id,statut){
-  try{await patch('/users/'+id+'/status',{statut});T('✓ Statut mis à jour');closeSh('user');chargerUsers();}
-  catch(e){T('Erreur : '+e.message,true);}
-}
-
-function confirmerSuppression(id,nom){
-  closeSh('user');
-  // Sheet de confirmation
-  document.getElementById('sh-confirm-nom').textContent=nom;
-  document.getElementById('sh-confirm-id').value=id;
-  document.getElementById('sh-confirm-input').value='';
-  document.getElementById('sh-confirm-err').style.display='none';
-  openSh('confirm-delete');
-}
-
-async function supprimerCompte(){
-  var id=document.getElementById('sh-confirm-id').value;
-  var saisie=document.getElementById('sh-confirm-input').value.trim();
-  var errEl=document.getElementById('sh-confirm-err');
-  if(saisie!=='SUPPRIMER'){errEl.textContent='Tapez exactement SUPPRIMER pour confirmer';errEl.style.display='';return;}
-  try{
-    await api('/users/'+id,{method:'DELETE'});
-    T('✓ Compte supprimé');closeSh('confirm-delete');chargerUsers();
-  }catch(e){errEl.textContent=e.message;errEl.style.display='';}
-}
-
-// TRANSACTIONS
-async function chargerTxns(){
-  var el=document.getElementById('t-list');
-  el.innerHTML='<div style="padding:40px;text-align:center"><div class="spin"></div></div>';
-  try{
-    var r=await get('/transactions?limit=100');var list=r.data||[];
-    var TX_C={depot:'#059669',retrait:'#f97316',transfert:'#3b82f6',paiement_marchand:'#8b5cf6',commission:'#f59e0b'};
-    var TX_BG={depot:'#ecfdf5',retrait:'#fff7ed',transfert:'#eff6ff',paiement_marchand:'#fdf4ff',commission:'#fffbeb'};
-    var TX_L={depot:'Dépôt',retrait:'Retrait',transfert:'Transfert',paiement_marchand:'Paiement marchand',commission:'Commission'};
-    el.innerHTML=list.length?list.map(tx=>{
-      var c=TX_C[tx.type]||'#888';var bg=TX_BG[tx.type]||'#f9fafb';var l=TX_L[tx.type]||tx.type;
-      return '<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,.05)">'
-        +'<div style="width:40px;height:40px;border-radius:12px;background:'+bg+';display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">'+({depot:'📥',retrait:'📤',transfert:'↔️',paiement_marchand:'🏪',commission:'⭐'}[tx.type]||'💳')+'</div>'
-        +'<div style="flex:1"><div style="font-size:13px;font-weight:700;color:'+c+'">'+l+'</div><div style="color:var(--m);font-size:11px;margin-top:1px">'+FD(tx.dateCreation)+'</div><div style="color:var(--d);font-size:10px;font-family:monospace">'+tx.reference+'</div></div>'
-        +'<div style="text-align:right"><div style="color:'+c+';font-size:15px;font-weight:800">'+F(tx.montant)+'</div>'+(tx.frais>0?'<div style="color:var(--d);font-size:10px">Frais '+F(tx.frais)+'</div>':'')+'</div>'
-      +'</div>';
-    }).join(''):'<div style="text-align:center;padding:40px;color:var(--m);font-size:14px">Aucune transaction</div>';
-  }catch(e){el.innerHTML='<div style="background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:12px;border-radius:12px;font-size:13px">'+e.message+'</div>';}
-}
-
-// MONITORING
-async function chargerMonitoring(){
-  try{
-    var ar=await get('/alerts?limit=20');var list=ar.data||[];
-    document.getElementById('m-alerts').innerHTML=list.length
-      ?list.map(a=>'<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:14px;padding:14px 16px;margin-bottom:8px">'
-        +'<div style="font-size:13px;font-weight:700;color:var(--r);margin-bottom:4px">🚨 '+a.typeAlerte+'</div>'
-        +'<div style="font-size:12px;color:var(--m);margin-bottom:10px">'+a.description+'</div>'
-        +'<button onclick="cloturerA(\''+a.id+'\')" style="padding:7px 14px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;color:#059669;cursor:pointer;font-size:12px;font-weight:700;font-family:\'Inter\',sans-serif">✓ Clôturer</button>'
-      +'</div>').join('')
-      :'<div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:14px;padding:16px;text-align:center;color:#059669;font-size:13px;font-weight:600">✅ Aucune alerte active</div>';
-  }catch(e){document.getElementById('m-alerts').innerHTML='<div style="color:var(--r);font-size:12px">'+e.message+'</div>';}
-  try{
-    var tr=await get('/tickets?limit=20');var tlist=tr.data||[];
-    document.getElementById('m-tickets').innerHTML=tlist.length
-      ?tlist.map(t=>'<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.05)">'
-        +'<div style="font-size:13px;font-weight:700;margin-bottom:4px">'+t.sujet+'</div>'
-        +'<div style="font-size:12px;color:var(--m);margin-bottom:10px">'+t.description+'</div>'
-        +(t.statut==='ouvert'
-          ?'<button onclick="cloturerT(\''+t.id+'\')" style="padding:7px 14px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;color:#059669;cursor:pointer;font-size:12px;font-weight:700;font-family:\'Inter\',sans-serif">✓ Résoudre</button>'
-          :'<span style="color:#059669;font-size:12px;font-weight:700">✓ Résolu</span>')
-      +'</div>').join('')
-      :'<div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:14px;padding:16px;text-align:center;color:#059669;font-size:13px;font-weight:600">✅ Aucun ticket ouvert</div>';
-  }catch(e){document.getElementById('m-tickets').innerHTML='<div style="color:var(--r);font-size:12px">'+e.message+'</div>';}
-}
-
-async function cloturerA(id){try{await patch('/alerts/'+id,{statut:'resolue',actionPrise:'Clôturée par admin'});T('✓ Alerte clôturée');chargerMonitoring();}catch(e){T(e.message,true);}}
-async function cloturerT(id){try{await patch('/tickets/'+id+'/status',{statut:'ferme'});T('✓ Ticket résolu');chargerMonitoring();}catch(e){T(e.message,true);}}
-
-// CHANGER PIN
-function rstChangePin(){
-  ['old-pin','new-pin','new-pin2'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});
-  document.getElementById('change-pin-err').style.display='none';
-  document.getElementById('change-pin-form').style.display='';
-  document.getElementById('change-pin-loading').style.display='none';
-  document.getElementById('change-pin-success').style.display='none';
-}
-async function doChangePin(){
-  var a=document.getElementById('old-pin').value.trim();
-  var n=document.getElementById('new-pin').value.trim();
-  var n2=document.getElementById('new-pin2').value.trim();
-  var errEl=document.getElementById('change-pin-err');errEl.style.display='none';
-  if(!a||!n||!n2){errEl.textContent='Tous les champs sont obligatoires';errEl.style.display='';return;}
-  if(n.length!==4||isNaN(n)){errEl.textContent='Le nouveau PIN doit contenir 4 chiffres';errEl.style.display='';return;}
-  if(n!==n2){errEl.textContent='Les deux PIN ne correspondent pas';errEl.style.display='';return;}
-  document.getElementById('change-pin-form').style.display='none';
-  document.getElementById('change-pin-loading').style.display='';
-  try{
-    await post('/users/change-pin',{ancienPin:a,nouveauPin:n});
-    document.getElementById('change-pin-loading').style.display='none';
-    document.getElementById('change-pin-success').style.display='';
-  }catch(e){
-    document.getElementById('change-pin-loading').style.display='none';
-    document.getElementById('change-pin-form').style.display='';
-    errEl.textContent=e.message;errEl.style.display='';
-  }
-}
-
-// SUPPORT
-async function chargerSupport(){
-  var u=G.user;if(!u)return;
-  // Vue selon rôle
-  var isSuperviseur=u.role==='superviseur';
-  if(isSuperviseur)document.getElementById('sup-role-label').textContent='Zone : '+(u.zone||'Non définie');
-  try{
-    var zone=isSuperviseur&&u.zone?'&zone='+encodeURIComponent(u.zone):'';
-    var r=await get('/tickets?statut=ouvert&limit=50'+zone);
-    var list=r.data||[];
-    document.getElementById('sup-tickets').innerHTML=list.length
-      ?list.map(t=>'<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.05)">'
-        +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'
-          +'<div style="font-size:13px;font-weight:700;flex:1">'+t.sujet+'</div>'
-          +'<span style="padding:2px 8px;border-radius:99px;font-size:9px;font-weight:700;background:#fffbeb;color:#ca8a04;border:1px solid #fde68a;flex-shrink:0;margin-left:8px">'+t.statut+'</span>'
-        +'</div>'
-        +'<div style="font-size:12px;color:var(--m);margin-bottom:10px">'+t.description+'</div>'
-        +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
-          +'<button onclick="repondreTicket(\''+t.id+'\')" style="padding:6px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;color:#1d4ed8;cursor:pointer;font-size:11px;font-weight:700;font-family:\'Inter\',sans-serif">💬 Répondre</button>'
-          +'<button onclick="cloturerT(\''+t.id+'\')" style="padding:6px 12px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;color:#059669;cursor:pointer;font-size:11px;font-weight:700;font-family:\'Inter\',sans-serif">✓ Résoudre</button>'
-        +'</div>'
-      +'</div>').join('')
-      :'<div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:14px;padding:16px;text-align:center;color:#059669;font-size:13px;font-weight:600">✅ Aucun ticket en attente</div>';
-  }catch(e){document.getElementById('sup-tickets').innerHTML='<div style="color:var(--r);font-size:12px">'+e.message+'</div>';}
-}
-
-async function rechercherClient(){
-  var tel=document.getElementById('sup-tel').value.trim();if(!tel)return;
-  var el=document.getElementById('sup-client-result');
-  el.style.display='';el.innerHTML='<div style="padding:12px;text-align:center"><div class="spin" style="width:20px;height:20px;border-width:2px"></div></div>';
-  try{
-    var r=await get('/users?telephone='+encodeURIComponent(tel));
-    var list=r.data||[];
-    if(!list.length){el.innerHTML='<div style="color:var(--m);font-size:13px;padding:8px">Aucun client trouvé pour ce numéro.</div>';return;}
-    var u=list[0];var c=ROLE_C[u.role]||'#888';
-    var solde=u.comptes&&u.comptes[0]?Number(u.comptes[0].solde):0;
-    el.innerHTML='<div style="background:#f9fafb;border-radius:12px;padding:14px">'
-      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'
-        +'<div style="width:40px;height:40px;border-radius:10px;background:'+c+'18;color:'+c+';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800">'+(u.prenom||'?')[0]+'</div>'
-        +'<div><div style="font-size:14px;font-weight:700">'+(u.prenom||'')+' '+(u.nom||'')+'</div><div style="font-size:11px;color:var(--m)">'+(u.role)+' · '+u.statut+'</div></div>'
-      +'</div>'
-      +'<div style="font-size:12px;color:var(--t);margin-bottom:4px">Solde : <strong style="color:'+c+'">'+F(solde)+'</strong></div>'
-      +'<div style="font-size:12px;color:var(--m)">KYC : '+(u.kycNiveau||'—')+'</div>'
-    +'</div>';
-  }catch(e){el.innerHTML='<div style="color:var(--r);font-size:12px;padding:8px">'+e.message+'</div>';}
-}
-
-async function creerTicket(){
-  var tel=document.getElementById('nt-tel').value.trim();
-  var sujet=document.getElementById('nt-sujet').value.trim();
-  var desc=document.getElementById('nt-desc').value.trim();
-  var errEl=document.getElementById('nt-err');errEl.style.display='none';
-  if(!sujet||!desc){errEl.textContent='Sujet et description requis';errEl.style.display='';return;}
-  try{
-    await post('/tickets',{telephone:tel||undefined,sujet,description:desc});
-    T('✓ Ticket créé');closeSh('new-ticket');
-    ['nt-tel','nt-sujet','nt-desc'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});
-    chargerSupport();
-  }catch(e){errEl.textContent=e.message;errEl.style.display='';}
-}
-
-// ═══ SUPPORT TECHNIQUE ═══
-async function chargerTech(){
-  // Ping API
-  try{
-    var t0=Date.now();await get('/health');var ms=Date.now()-t0;
-    document.getElementById('sys-api').textContent='✅ En ligne ('+ms+'ms)';
-    document.getElementById('sys-api').style.color='#22c55e';
-    document.getElementById('sys-db').textContent='✅ Connectée';
-    document.getElementById('sys-db').style.color='#22c55e';
-  }catch(e){
-    document.getElementById('sys-api').textContent='❌ Hors ligne';
-    document.getElementById('sys-api').style.color='#ef4444';
-    document.getElementById('sys-db').textContent='❓ Inconnu';
-    document.getElementById('sys-db').style.color='#f59e0b';
-  }
-  // Transactions bloquées
-  try{
-    var r=await get('/transactions?statut=en_attente&limit=20');var list=r.data||[];
-    document.getElementById('tech-txns-bloq').innerHTML=list.length
-      ?list.map(tx=>'<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.05)">'
-        +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'
-          +'<div><div style="font-size:13px;font-weight:700;color:#f59e0b">⏳ '+tx.type+'</div><div style="font-size:11px;color:var(--m);margin-top:1px">'+FD(tx.dateCreation)+'</div></div>'
-          +'<div style="font-size:14px;font-weight:800;color:var(--t)">'+F(tx.montant)+'</div>'
-        +'</div>'
-        +'<div style="font-size:10px;color:var(--d);font-family:monospace;margin-bottom:10px">'+tx.reference+'</div>'
-        +'<div style="display:flex;gap:8px">'
-          +'<button onclick="forcerTx(\''+tx.id+'\',\'completee\')" style="padding:6px 12px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;color:#059669;cursor:pointer;font-size:11px;font-weight:700;font-family:\'Inter\',sans-serif">✓ Forcer succès</button>'
-          +'<button onclick="forcerTx(\''+tx.id+'\',\'echec\')" style="padding:6px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:var(--r);cursor:pointer;font-size:11px;font-weight:700;font-family:\'Inter\',sans-serif">✕ Marquer échoué</button>'
-        +'</div>'
-      +'</div>').join('')
-      :'<div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:14px;padding:16px;text-align:center;color:#059669;font-size:13px;font-weight:600">✅ Aucune transaction bloquée</div>';
-  }catch(e){document.getElementById('tech-txns-bloq').innerHTML='<div style="color:var(--r);font-size:12px">'+e.message+'</div>';}
-  // Alertes système
-  try{
-    var ar=await get('/alerts?type=systeme&limit=10');var alist=ar.data||[];
-    document.getElementById('tech-logs').innerHTML=alist.length
-      ?alist.map(a=>'<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:14px;padding:12px 16px;margin-bottom:8px">'
-        +'<div style="font-size:12px;font-weight:700;color:var(--r)">'+a.typeAlerte+'</div>'
-        +'<div style="font-size:11px;color:var(--m);margin-top:3px">'+a.description+'</div>'
-        +'<div style="font-size:10px;color:var(--d);margin-top:4px">'+FD(a.dateCreation)+'</div>'
-      +'</div>').join('')
-      :'<div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:14px;padding:16px;text-align:center;color:#059669;font-size:13px;font-weight:600">✅ Aucune alerte système</div>';
-  }catch(e){document.getElementById('tech-logs').innerHTML='<div style="color:var(--r);font-size:12px">'+e.message+'</div>';}
-}
-
-async function forcerTx(id,statut){
-  if(!confirm('Forcer la transaction en statut "'+statut+'" ?'))return;
-  try{await patch('/transactions/'+id+'/status',{statut});T('✓ Transaction mise à jour');chargerTech();}
-  catch(e){T(e.message,true);}
-}
-
-// ═══ REMBOURSEMENT (dernière transaction) ═══
-var rembTxData=null;
-async function ouvrirRemboursement(userId){
-  // Charger la dernière transaction du client
-  try{
-    var r=await get('/transactions?userId='+userId+'&limit=1&type=transfert');
-    var list=r.data||[];
-    if(!list.length){T('Aucun transfert récent trouvé',true);return;}
-    var tx=list[0];
-    // Vérifier < 24h
-    var age=(Date.now()-new Date(tx.dateCreation).getTime())/3600000;
-    if(age>24){T('Transaction trop ancienne (>24h)',true);return;}
-    rembTxData=tx;
-    document.getElementById('remb-tx-id').value=tx.id;
-    document.getElementById('remb-tx-desc').textContent=(tx.compteDest&&tx.compteDest.utilisateur?'Vers '+tx.compteDest.utilisateur.prenom+' '+tx.compteDest.utilisateur.nom:tx.type);
-    document.getElementById('remb-tx-montant').textContent=F(tx.montant);
-    document.getElementById('remb-tx-date').textContent=FD(tx.dateCreation)+' ('+Math.round(age)+'h ago)';
-    document.getElementById('remb-motif').value='';
-    document.getElementById('remb-err').style.display='none';
-    closeSh('user');openSh('remboursement');
-  }catch(e){T(e.message,true);}
-}
-
-async function doRemboursement(){
-  var txId=document.getElementById('remb-tx-id').value;
-  var motif=document.getElementById('remb-motif').value.trim();
-  var errEl=document.getElementById('remb-err');errEl.style.display='none';
-  if(!motif){errEl.textContent='Motif obligatoire';errEl.style.display='';return;}
-  document.getElementById('remb-btn').disabled=true;document.getElementById('remb-btn').textContent='En cours...';
-  try{
-    await post('/transactions/'+txId+'/remboursement',{motif});
-    T('✓ Remboursement effectué');closeSh('remboursement');chargerUsers();
-  }catch(e){
-    errEl.textContent=e.message;errEl.style.display='';
-    document.getElementById('remb-btn').disabled=false;document.getElementById('remb-btn').textContent='Confirmer le remboursement';
-  }
-}
-
-function repondreTicket(id){T('Réponse aux tickets — bientôt disponible');}
-
-async function logout(){
-  try{await post('/auth/logout',{refreshToken:G.refresh});}catch(e){}
-  G.token=G.refresh=G.user=null;
-  lsDel('afrim_token');lsDel('afrim_refresh');lsDel('afrim_user');
-  S('s-login');
-}
-
-document.querySelectorAll('.sh-ov').forEach(function(el){
-  el.addEventListener('click',function(e){if(e.target===el){var id=el.id.replace('sh-','');closeSh(id);}});
-});
-
-(function init(){
-  // Détection ouverture en local (content:// ou file://)
-  var proto=window.location.protocol;
-  if(proto==='content:'||proto==='file:'){
-    var warn=document.getElementById('s-local-warn');
-    if(warn){document.querySelectorAll('.scr').forEach(e=>e.classList.remove('on'));warn.classList.add('on');return;}
-  }
-  if(G.token&&G.user&&['admin','superviseur','support_client','support_tech'].includes(G.user.role)){
-    adaptVueRole();return;
-  }
-  S('s-login');
+(function(){
+  if(G.token&&G.user){var ok=['admin','superviseur','support_client','support_tech'];if(ok.indexOf(G.user.role)>=0){enterApp();return;}}
+  showScr('s-login');
 })();
-
-// ═══ PERMISSIONS PAR RÔLE ═══
-var PERMS={
-  admin:         {home:true,users:true,txns:true,monitoring:true,support:true,tech:true,  soldes:true, supprimer:true, rembourser:true},
-  superviseur:   {home:true,users:true,txns:false,monitoring:false,support:true,tech:false, soldes:false,supprimer:false,rembourser:false},
-  support_client:{home:false,users:false,txns:false,monitoring:false,support:true,tech:false,soldes:false,supprimer:false,rembourser:true},
-  support_tech:  {home:true,users:false,txns:true,monitoring:true,support:false,tech:true,  soldes:false,supprimer:false,rembourser:false},
-};
-function perm(key){var u=G.user;if(!u)return false;var p=PERMS[u.role];return p?!!p[key]:false;}
-
-function adaptVueRole(){
-  var u=G.user;if(!u)return;
-  var r=u.role;
-  var p=PERMS[r]||{};
-
-  // Config par rôle : badge, message bienvenue, onglet de départ
-  var cfg={
-    admin:         {badge:'⚙️ ADMIN',         msg:'Connecté — Accès complet',              tab:'home'},
-    superviseur:   {badge:'👁 SUPERVISEUR',    msg:'Connecté — Zone : '+(u.zone||'Non définie'), tab:'home'},
-    support_client:{badge:'💬 SUPPORT CLIENT', msg:'Connecté — Module Service Client',      tab:'support'},
-    support_tech:  {badge:'🛠 SUPPORT TECH',   msg:'Connecté — Module Technique',           tab:'tech'},
-  };
-  var c=cfg[r]||{badge:r.toUpperCase(),msg:'Connecté',tab:'home'};
-
-  // Badge sur l'écran login
-  var badge=document.getElementById('login-badge');
-  if(badge)badge.textContent=c.badge;
-
-  // Toast de bienvenue avec rôle
-  setTimeout(function(){T('✓ '+c.msg);},500);
-
-  // Afficher/cacher onglets nav selon permissions
-  ['home','users','txns','monitoring','support'].forEach(t=>{
-    document.querySelectorAll('#nb-'+t).forEach(b=>b.style.display=p[t]?'':'none');
-  });
-  // Tech : admin et support_tech uniquement
-  document.querySelectorAll('#nb-tech').forEach(b=>{
-    b.style.display=(r==='admin'||r==='support_tech')?'':'none';
-  });
-
-  // Aller sur le bon onglet selon le rôle
-  setTab(c.tab);
-}
-
 </script>
 </body>
 </html>

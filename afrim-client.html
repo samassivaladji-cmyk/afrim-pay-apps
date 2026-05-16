@@ -119,7 +119,7 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 <!-- HOME -->
 <div class="scr" id="s-home">
   <div style="background:linear-gradient(135deg,var(--g2),var(--g));padding:20px 20px 28px">
-    <div class="row" style="margin-bottom:20px">
+    <div class="row" style="margin-bottom:16px">
       <div>
         <div style="color:rgba(255,255,255,.75);font-size:13px">Bonjour 👋</div>
         <div id="h-name" style="color:#fff;font-size:20px;font-weight:800;margin-top:2px"></div>
@@ -128,15 +128,26 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
         <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15"/></svg>
       </button>
     </div>
-    <div style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:20px">
-      <div style="color:rgba(255,255,255,.8);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">SOLDE DISPONIBLE</div>
-      <div class="row">
-        <div id="h-solde" style="color:#fff;font-size:30px;font-weight:900;letter-spacing:-.5px">••••• FCFA</div>
-        <button onclick="toggleSolde()" style="background:rgba(255,255,255,.18);border:none;border-radius:10px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center">
-          <svg width="18" height="18" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
+    <!-- QR + Solde côte à côte comme Wave -->
+    <div style="display:flex;gap:12px;align-items:stretch">
+      <!-- QR Code cliquable -->
+      <div onclick="ouvrirScanner(function(tel,parts){document.getElementById('send-tel').value=tel;openSh('send');selDest(tel);})" style="cursor:pointer;flex-shrink:0">
+        <div style="background:#fff;border-radius:14px;padding:8px;box-shadow:0 4px 16px rgba(0,0,0,.2)">
+          <canvas id="h-qr-canvas" width="80" height="80" style="display:block;border-radius:6px"></canvas>
+        </div>
+        <div style="color:rgba(255,255,255,.7);font-size:9px;font-weight:600;text-align:center;margin-top:5px">Scanner</div>
       </div>
-      <div id="h-badges" style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap"></div>
+      <!-- Solde -->
+      <div style="flex:1;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:16px;padding:16px">
+        <div style="color:rgba(255,255,255,.8);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">SOLDE DISPONIBLE</div>
+        <div class="row">
+          <div id="h-solde" style="color:#fff;font-size:24px;font-weight:900;letter-spacing:-.5px">••••• FCFA</div>
+          <button onclick="toggleSolde()" style="background:rgba(255,255,255,.18);border:none;border-radius:10px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="16" height="16" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+        <div id="h-badges" style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"></div>
+      </div>
     </div>
   </div>
 
@@ -489,6 +500,10 @@ async function chargerAccueil(){
   document.getElementById('h-name').textContent=(u.prenom||'')+' '+(u.nom||'');
   try{var cr=await get('/accounts/me');G.compte=cr.data;var ur=await get('/users/me');G.user=ur.data;localStorage.setItem('afrim_user',JSON.stringify(G.user));}catch(e){}
   afficherSolde();
+  // Dessiner QR sur accueil
+  if(document.getElementById('h-qr-canvas') && u.telephone) {
+    dessinerQRHome('h-qr-canvas', u.telephone+'|'+(u.codeParrainage||'')+'|client', '#059669');
+  }
   var b='';
   if(u.kycNiveau)b+='<span class="tag" style="background:rgba(255,255,255,.25);color:#fff">'+u.kycNiveau+'</span> ';
   b+='<span class="tag" style="background:rgba(255,255,255,.18);color:rgba(255,255,255,.9)">'+u.telephone+'</span>';
@@ -580,8 +595,6 @@ function chargerProfil(){
   if(document.getElementById('prof-name-top'))document.getElementById('prof-name-top').textContent=(u.prenom||'')+' '+(u.nom||'');
   if(document.getElementById('prof-tel-top'))document.getElementById('prof-tel-top').textContent=u.telephone;
   if(document.getElementById('qr-profil-canvas'))dessinerQRHome('qr-profil-canvas',u.telephone+'|'+(u.codeParrainage||'')+'|'+(u.role||''),null);
-});
-  document.getElementById('prof-info').innerHTML=html;
 }
 
 var sendDest=null;

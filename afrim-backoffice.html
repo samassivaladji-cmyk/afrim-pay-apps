@@ -96,6 +96,28 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',-apple-system,Bli
       <h1 style="font-size:26px;font-weight:900;color:var(--t)">AFRIM PAY</h1>
       <p style="color:var(--m);font-size:13px;margin-top:4px">Africa connected to the world</p>
       <div id="login-badge" style="margin-top:10px;display:inline-block;padding:4px 14px;border-radius:99px;background:var(--y3);border:1px solid #fde68a;color:var(--y2);font-size:11px;font-weight:700;letter-spacing:.08em">⚙️ ESPACE ADMINISTRATION</div>
+      <!-- Rôles acceptés -->
+      <div style="margin-top:16px;background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px;text-align:left">
+        <div style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Accès autorisés</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:8px;background:#fef3c7;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">⚙️</div>
+            <div><div style="font-size:13px;font-weight:700;color:#111827">Administrateur</div><div style="font-size:11px;color:#6b7280">Accès complet à toutes les fonctions</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:8px;background:#fff7ed;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">👁</div>
+            <div><div style="font-size:13px;font-weight:700;color:#111827">Superviseur</div><div style="font-size:11px;color:#6b7280">Comptes et support de sa zone</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:8px;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">💬</div>
+            <div><div style="font-size:13px;font-weight:700;color:#111827">Support Client</div><div style="font-size:11px;color:#6b7280">Tickets, remboursements, réclamations</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:8px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🛠</div>
+            <div><div style="font-size:13px;font-weight:700;color:#111827">Support Technique</div><div style="font-size:11px;color:#6b7280">Logs, transactions bloquées, système</div></div>
+          </div>
+        </div>
+      </div>
     </div>
     <div id="err-login" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:12px 16px;border-radius:12px;margin-bottom:16px;font-size:13px;font-weight:600"></div>
     <label class="lbl">Numéro de téléphone</label>
@@ -553,7 +575,7 @@ async function doLogin(){
     document.getElementById('pin-loading').style.display='none';
     document.getElementById('pin-keys').style.display='';
     G.pin='';rDots();
-    setTab('home');
+    adaptVueRôle();
   }catch(e){
     G.pin='';rDots();
     errEl.textContent=e.message;errEl.style.display='';
@@ -946,7 +968,7 @@ document.querySelectorAll('.sh-ov').forEach(function(el){
     if(warn){document.querySelectorAll('.scr').forEach(e=>e.classList.remove('on'));warn.classList.add('on');return;}
   }
   if(G.token&&G.user&&['admin','superviseur','support_client','support_tech'].includes(G.user.role)){
-    adaptVueRôle();setTab('home');return;
+    adaptVueRôle();return;
   }
   S('s-login');
 })();
@@ -964,24 +986,34 @@ function adaptVueRôle(){
   var u=G.user;if(!u)return;
   var r=u.role;
   var p=PERMS[r]||{};
-  // Titre badge rôle
-  var badges={admin:'⚙️ ADMIN',superviseur:'👁 SUPERVISEUR',support_client:'💬 SERVICE CLIENT',support_tech:'🛠 SUPPORT TECH'};
-  document.getElementById('login-badge').textContent=badges[r]||r.toUpperCase();
+
+  // Config par rôle : badge, message bienvenue, onglet de départ
+  var cfg={
+    admin:         {badge:'⚙️ ADMIN',         msg:'Connecté — Accès complet',              tab:'home'},
+    superviseur:   {badge:'👁 SUPERVISEUR',    msg:'Connecté — Zone : '+(u.zone||'Non définie'), tab:'home'},
+    support_client:{badge:'💬 SUPPORT CLIENT', msg:'Connecté — Module Service Client',      tab:'support'},
+    support_tech:  {badge:'🛠 SUPPORT TECH',   msg:'Connecté — Module Technique',           tab:'tech'},
+  };
+  var c=cfg[r]||{badge:r.toUpperCase(),msg:'Connecté',tab:'home'};
+
+  // Badge sur l'écran login
+  var badge=document.getElementById('login-badge');
+  if(badge)badge.textContent=c.badge;
+
+  // Toast de bienvenue avec rôle
+  setTimeout(function(){T('✓ '+c.msg);},500);
+
   // Afficher/cacher onglets nav selon permissions
-  var tabs=['home','users','txns','monitoring','support'];
-  tabs.forEach(t=>{
-    document.querySelectorAll('#nb-'+t).forEach(b=>{
-      b.style.display=p[t]?'':'none';
-    });
+  ['home','users','txns','monitoring','support'].forEach(t=>{
+    document.querySelectorAll('#nb-'+t).forEach(b=>b.style.display=p[t]?'':'none');
   });
-  // Cacher grille accueil selon rôle (support_client voit seulement support)
-  if(r==='support_client'){
-    setTab('support');return;
-  }
-  if(r==='support_tech'){
-    // Ajouter onglet Tech dans nav
-    document.querySelectorAll('#nb-tech').forEach(b=>b.style.display='');
-  }
+  // Tech : admin et support_tech uniquement
+  document.querySelectorAll('#nb-tech').forEach(b=>{
+    b.style.display=(r==='admin'||r==='support_tech')?'':'none';
+  });
+
+  // Aller sur le bon onglet selon le rôle
+  setTab(c.tab);
 }
 </script>
 </div>

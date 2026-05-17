@@ -501,39 +501,42 @@ var CLOUDINARY_PRESET = 'afrim-kyc';
 
 // Upload une photo vers Cloudinary et enregistre l URL en BDD
 async function uploadPhotoCloudinary(file, docId, userId) {
-  // 1. Upload vers Cloudinary
   var fd = new FormData();
   fd.append('file', file);
   fd.append('upload_preset', CLOUDINARY_PRESET);
-  fd.append('folder', 'afrim-pay/kyc/'+userId);
-  fd.append('public_id', userId+'_'+docId);
+  fd.append('folder', 'afrim-pay/kyc');
   var r = await fetch('https://api.cloudinary.com/v1_1/'+CLOUDINARY_CLOUD+'/image/upload', {
     method: 'POST', body: fd
   });
   var d = await r.json();
-  if (!r.ok || !d.secure_url) throw new Error('Upload Cloudinary echoue: '+(d.error&&d.error.message||'Erreur'));
+  if (!r.ok) throw new Error('Cloudinary: '+(d.error&&d.error.message||JSON.stringify(d)));
+  if (!d.secure_url) throw new Error('Cloudinary: pas de URL retournee');
   var url = d.secure_url;
-
-  // 2. Enregistrer l URL dans le backend
   var h = {'Content-Type':'application/json'};
-  if (window.G && G.token) h['Authorization'] = 'Bearer ' + G.token;
-  var r2 = await fetch(window.API + '/kyc/documents', {
+  if (G && G.token) h['Authorization'] = 'Bearer ' + G.token;
+  var r2 = await fetch(API + '/kyc/documents', {
     method: 'POST', headers: h,
     body: JSON.stringify({ userId: userId, typeDocument: docId, urlFichier: url })
   });
   var d2 = await r2.json();
+  if (!r2.ok) throw new Error('Backend KYC: '+(d2.message||'Erreur'));
   return { ok: true, url: url, docId: docId };
 }
 
-// Uploader toutes les photos KYC après inscription
+
 async function uploadKycPhotos(userId, role, kycNiveau) {
   var cfg = getKycConfig(role, kycNiveau);
   var resultats = [];
-  // Vérifier que Cloudinary est configuré
   if (CLOUDINARY_CLOUD === 'VOTRE_CLOUD_NAME') {
-    console.warn('Cloudinary non configuré - photos non uploadées');
+    toast('Cloudinary non configure', true);
     return resultats;
   }
+  var nbPhotos = 0;
+  for (var i = 0; i < cfg.docs.length; i++) {
+    if (kycPhotos[cfg.docs[i].id]) nbPhotos++;
+  }
+  if (nbPhotos === 0) return resultats;
+  toast('Upload photos en cours...');
   for (var i = 0; i < cfg.docs.length; i++) {
     var doc = cfg.docs[i];
     var file = kycPhotos[doc.id];
@@ -541,7 +544,9 @@ async function uploadKycPhotos(userId, role, kycNiveau) {
     try {
       var res = await uploadPhotoCloudinary(file, doc.id, userId);
       resultats.push(res);
+      toast('Photo '+doc.id+' uploadee');
     } catch(e) {
+      toast('Erreur photo '+doc.id+': '+e.message, true);
       resultats.push({ doc: doc.id, ok: false, msg: e.message });
     }
   }
@@ -1133,6 +1138,7 @@ async function rechercherClient(){
 
   // Stocker l'id client courant pour remboursements
   currentClientId=u.id;
+  currentClientCompteId=u.comptes&&u.comptes[0]?u.comptes[0].id:'';
 
   // Charger photo KYC selfie dans l'avatar
   chargerPhotoKyc(u.id,'sup-client-photo',ini);
@@ -1390,11 +1396,16 @@ async function uploadPhotoCloudinary(file, docId, userId) {
 async function uploadKycPhotos(userId, role, kycNiveau) {
   var cfg = getKycConfig(role, kycNiveau);
   var resultats = [];
-  // Vérifier que Cloudinary est configuré
   if (CLOUDINARY_CLOUD === 'VOTRE_CLOUD_NAME') {
-    console.warn('Cloudinary non configuré - photos non uploadées');
+    toast('Cloudinary non configure', true);
     return resultats;
   }
+  var nbPhotos = 0;
+  for (var i = 0; i < cfg.docs.length; i++) {
+    if (kycPhotos[cfg.docs[i].id]) nbPhotos++;
+  }
+  if (nbPhotos === 0) return resultats;
+  toast('Upload photos en cours...');
   for (var i = 0; i < cfg.docs.length; i++) {
     var doc = cfg.docs[i];
     var file = kycPhotos[doc.id];
@@ -1402,7 +1413,9 @@ async function uploadKycPhotos(userId, role, kycNiveau) {
     try {
       var res = await uploadPhotoCloudinary(file, doc.id, userId);
       resultats.push(res);
+      toast('Photo '+doc.id+' uploadee');
     } catch(e) {
+      toast('Erreur photo '+doc.id+': '+e.message, true);
       resultats.push({ doc: doc.id, ok: false, msg: e.message });
     }
   }
@@ -1994,6 +2007,7 @@ async function rechercherClient(){
 
   // Stocker l'id client courant pour remboursements
   currentClientId=u.id;
+  currentClientCompteId=u.comptes&&u.comptes[0]?u.comptes[0].id:'';
 
   // Charger photo KYC selfie dans l'avatar
   chargerPhotoKyc(u.id,'sup-client-photo',ini);
@@ -2169,8 +2183,12 @@ async function chargerHistoriqueClient(userId){
       var c=TC[tx.type]||'#888';var l=TL[tx.type]||tx.type;
       var row=document.createElement('div');
       row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f9fafb';
+      // Rembourser uniquement si le client est l'émetteur (compteSource)
+      var clientCompteId=currentClientCompteId||'';
+      var estEmetteur=tx.compteSource&&tx.compteSource.utilisateur&&currentClientId&&
+        (tx.compteSourceId===clientCompteId);
       var isTransfert=tx.type==='transfert'&&tx.statut==='complete';
-      var dansDelai=isTransfert&&new Date(tx.dateCreation)>=limiteRemb;
+      var dansDelai=isTransfert&&estEmetteur&&new Date(tx.dateCreation)>=limiteRemb;
       row.innerHTML='<div style="width:32px;height:32px;border-radius:8px;background:'+c+'18;color:'+c+';display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">'+(TI[tx.type]||'·')+'</div>'
         +'<div style="flex:1"><div style="font-size:12px;font-weight:700;color:'+c+'">'+l+'</div>'
         +'<div style="font-size:10px;color:#9ca3af">'+FD(tx.dateCreation)+'</div>'
@@ -2197,6 +2215,7 @@ async function chargerHistoriqueClient(userId){
 }
 
 var currentClientId=null;
+var currentClientCompteId=null;
 
 async function demanderRemboursement(userId,tel){
   if(!confirm('Rembourser le dernier transfert de '+tel+' (7 jours) ?'))return;

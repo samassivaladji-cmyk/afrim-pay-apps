@@ -2183,12 +2183,10 @@ async function chargerHistoriqueClient(userId){
       var c=TC[tx.type]||'#888';var l=TL[tx.type]||tx.type;
       var row=document.createElement('div');
       row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f9fafb';
-      // Rembourser uniquement si le client est l'émetteur (compteSource)
-      var clientCompteId=currentClientCompteId||'';
-      var estEmetteur=tx.compteSource&&tx.compteSource.utilisateur&&currentClientId&&
-        (tx.compteSourceId===clientCompteId);
+      // Afficher Rembourser sur tous les transferts dans le délai
+      // Le backend vérifie si le client est bien l'émetteur
       var isTransfert=tx.type==='transfert'&&tx.statut==='complete';
-      var dansDelai=isTransfert&&estEmetteur&&new Date(tx.dateCreation)>=limiteRemb;
+      var dansDelai=isTransfert&&new Date(tx.dateCreation)>=limiteRemb;
       row.innerHTML='<div style="width:32px;height:32px;border-radius:8px;background:'+c+'18;color:'+c+';display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">'+(TI[tx.type]||'·')+'</div>'
         +'<div style="flex:1"><div style="font-size:12px;font-weight:700;color:'+c+'">'+l+'</div>'
         +'<div style="font-size:10px;color:#9ca3af">'+FD(tx.dateCreation)+'</div>'

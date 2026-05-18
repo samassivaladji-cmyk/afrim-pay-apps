@@ -577,9 +577,16 @@ var API='https://afrim-pay-backend.onrender.com/api/v1';
 var G={token:null,refresh:null,user:null,pin:''};
 try{G.token=localStorage.getItem('afrim_token');G.refresh=localStorage.getItem('afrim_refresh');G.user=JSON.parse(localStorage.getItem('afrim_user')||'null');}catch(e){}
 
+// Super Admin : seul autorisé à supprimer et voir les stats
+// Identifié par son numéro de téléphone
+var SUPER_ADMIN_TEL = '0505414751';
+function isSuperAdmin(){
+  return G.user && G.user.role === 'admin' && G.user.telephone === SUPER_ADMIN_TEL;
+}
+
 var PERMS={
   // Admin : acces total
-  admin:         {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:1,rembourser:1,kyc:1,gels:1,logs:1},
+  admin:         {home:1,users:1,txns:1,monitoring:1,stats:0,support:1,tech:1,creer:1,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:1,logs:1},
   // Superviseur : sa zone uniquement, pas le personnel interne
   superviseur:   {home:1,users:1,txns:0,monitoring:1,stats:1,support:0,tech:0,creer:1,soldes:1,supprimer:0,rembourser:0,kyc:1,gels:0,logs:1},
   // Support Client : recherche client, remboursement, tickets
@@ -633,7 +640,10 @@ var NAV_DEFS=[
 function buildNavs(activeTab){
   var u=G.user;if(!u)return;
   var p=PERMS[u.role]||{};
-  var visible=NAV_DEFS.filter(function(n){return p[n.id];});
+  var visible=NAV_DEFS.filter(function(n){
+    if(n.id==='stats')return isSuperAdmin();
+    return p[n.id];
+  });
   var navIds=['home','users','txns','monitoring','stats','support','tech'];
   navIds.forEach(function(id){
     var el=document.getElementById('bnav-'+id);if(!el)return;
@@ -837,7 +847,7 @@ function voirU(id){
   }
   if(u.statut==='bloque')mkBtn('Debloquer','btn-g','',function(){chgStatut(id,'actif');});
   if(perm('rembourser'))mkBtn('Rembourser dernier transfert','','background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){toast('Remboursement bientot disponible');});
-  if(perm('supprimer'))mkBtn('Supprimer le compte','btn-r','margin-top:6px',function(){
+  if(isSuperAdmin())mkBtn('Supprimer le compte','btn-r','margin-top:6px',function(){
     document.getElementById('sh-confirm-nom').textContent=(u.prenom||'')+' '+(u.nom||'');
     document.getElementById('sh-confirm-id').value=id;
     document.getElementById('sh-confirm-input').value='';
@@ -1431,7 +1441,7 @@ try{G.token=localStorage.getItem('afrim_token');G.refresh=localStorage.getItem('
 
 var PERMS={
   // Admin : acces total
-  admin:         {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:1,rembourser:1,kyc:1,gels:1,logs:1},
+  admin:         {home:1,users:1,txns:1,monitoring:1,stats:0,support:1,tech:1,creer:1,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:1,logs:1},
   // Superviseur : sa zone uniquement, pas le personnel interne
   superviseur:   {home:1,users:1,txns:0,monitoring:1,stats:1,support:0,tech:0,creer:1,soldes:1,supprimer:0,rembourser:0,kyc:1,gels:0,logs:1},
   // Support Client : recherche client, remboursement, tickets
@@ -1485,7 +1495,10 @@ var NAV_DEFS=[
 function buildNavs(activeTab){
   var u=G.user;if(!u)return;
   var p=PERMS[u.role]||{};
-  var visible=NAV_DEFS.filter(function(n){return p[n.id];});
+  var visible=NAV_DEFS.filter(function(n){
+    if(n.id==='stats')return isSuperAdmin();
+    return p[n.id];
+  });
   var navIds=['home','users','txns','monitoring','stats','support','tech'];
   navIds.forEach(function(id){
     var el=document.getElementById('bnav-'+id);if(!el)return;
@@ -1513,6 +1526,8 @@ function buildNavGrid(){
   var grid=document.getElementById('nav-grid');if(!grid)return;
   grid.innerHTML='';
   allItems.forEach(function(it){
+    // Stats et suppression réservées au Super Admin
+    if(it.need==='stats'&&!isSuperAdmin())return;
     if(it.need&&!p[it.need])return;
     var btn=document.createElement('button');
     btn.onclick=new Function(it.fn);
@@ -1712,7 +1727,7 @@ function voirU(id){
   }
   if(u.statut==='bloque')mkBtn('Debloquer','btn-g','',function(){chgStatut(id,'actif');});
   if(perm('rembourser'))mkBtn('Rembourser dernier transfert','','background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){toast('Remboursement bientot disponible');});
-  if(perm('supprimer'))mkBtn('Supprimer le compte','btn-r','margin-top:6px',function(){
+  if(isSuperAdmin())mkBtn('Supprimer le compte','btn-r','margin-top:6px',function(){
     document.getElementById('sh-confirm-nom').textContent=(u.prenom||'')+' '+(u.nom||'');
     document.getElementById('sh-confirm-id').value=id;
     document.getElementById('sh-confirm-input').value='';

@@ -1016,17 +1016,20 @@ document.querySelectorAll('.sh-ov').forEach(function(el){el.addEventListener('cl
 var kycPhotosClient={};
 var kycTargetLevel=null;
 var KYC_UPGRADE_DOCS={
+  'KYC1':[
+    {id:'selfie', label:'Selfie', camera:'user', icon:'🤳', desc:'Photo de vous, visage clairement visible'}
+  ],
   'KYC2':[
-    {id:'selfie',               label:'Selfie',                  camera:'user',        icon:'🤳', desc:'Photo de vous, visage visible'},
-    {id:'cni_recto',            label:'CNI Recto',               camera:'environment', icon:'🪪', desc:'Recto de votre carte identite'},
-    {id:'cni_verso',            label:'CNI Verso',               camera:'environment', icon:'🪪', desc:'Verso de votre carte identite'}
+    {id:'selfie',    label:'Selfie',    camera:'user',        icon:'🤳', desc:'Photo de vous, visage visible'},
+    {id:'cni_recto', label:'CNI Recto', camera:'environment', icon:'🪪', desc:'Recto de votre carte identite'},
+    {id:'cni_verso', label:'CNI Verso', camera:'environment', icon:'🪪', desc:'Verso de votre carte identite'}
   ],
   'KYC3':[
-    {id:'selfie',               label:'Selfie',                  camera:'user',        icon:'🤳', desc:'Photo de vous, visage visible'},
-    {id:'cni_recto',            label:'CNI Recto',               camera:'environment', icon:'🪪', desc:'Recto de votre carte identite'},
-    {id:'cni_verso',            label:'CNI Verso',               camera:'environment', icon:'🪪', desc:'Verso de votre carte identite'},
-    {id:'extrait_naissance',    label:'Extrait de naissance',    camera:'environment', icon:'📄', desc:'Original ou copie certifiee'},
-    {id:'justificatif_domicile',label:'Justificatif de domicile',camera:'environment', icon:'🏠', desc:'Facture ou attestation de 3 mois max'}
+    {id:'selfie',                label:'Selfie',                  camera:'user',        icon:'🤳', desc:'Photo de vous, visage visible'},
+    {id:'cni_recto',             label:'CNI Recto',               camera:'environment', icon:'🪪', desc:'Recto de votre carte identite'},
+    {id:'cni_verso',             label:'CNI Verso',               camera:'environment', icon:'🪪', desc:'Verso de votre carte identite'},
+    {id:'extrait_naissance',     label:'Extrait de naissance',    camera:'environment', icon:'📄', desc:'Original ou copie certifiee'},
+    {id:'justificatif_domicile', label:'Justificatif de domicile',camera:'environment', icon:'🏠', desc:'Facture ou attestation de 3 mois max'}
   ]
 };
 var KYC_PLAFONDS={'en_attente':'20 000','KYC1':'20 000','KYC2':'50 000','KYC3':'100 000'};
@@ -1045,25 +1048,36 @@ function ouvrirKycUpgrade(){
   if(bar)bar.style.width=progressWidths[niveau]||'33%';
   // Niveaux
   var listEl=document.getElementById('kyc-levels-list');listEl.innerHTML='';
+  var kycDemande=(G.user&&G.user.kycNiveauDemande)||null;
   var levels=[
-    {id:'KYC2',label:'KYC 2',plafond:'50 000 F/mois',docs:'Selfie + CNI recto/verso',color:'#3b82f6'},
+    {id:'KYC1',label:'KYC 1',plafond:'20 000 F/mois', docs:'Selfie uniquement',color:'#22c55e'},
+    {id:'KYC2',label:'KYC 2',plafond:'50 000 F/mois', docs:'Selfie + CNI recto + CNI verso',color:'#3b82f6'},
     {id:'KYC3',label:'KYC 3',plafond:'100 000 F/mois',docs:'Selfie + CNI + Extrait naissance + Justificatif domicile',color:'#8b5cf6'}
   ];
   levels.forEach(function(lv){
     var estActif=niveau===lv.id;
+    var enAttente=kycDemande===lv.id;
     var card=document.createElement('div');
-    card.style.cssText='background:#fff;border:1.5px solid '+(estActif?lv.color:'#e5e7eb')+';border-radius:14px;padding:14px 16px;margin-bottom:10px';
-    var badge=estActif?'<span style="background:'+lv.color+'22;color:'+lv.color+';padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">Actif</span>'
-      :'<span style="background:#f3f4f6;color:#6b7280;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">A debloquer</span>';
+    card.style.cssText='background:#fff;border:1.5px solid '+(estActif?lv.color:enAttente?'#f59e0b':'#e5e7eb')+';border-radius:14px;padding:14px 16px;margin-bottom:10px';
+    var badge=estActif
+      ?'<span style="background:'+lv.color+'22;color:'+lv.color+';padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">Actif</span>'
+      :enAttente
+        ?'<span style="background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">En attente validation</span>'
+        :'<span style="background:#f3f4f6;color:#6b7280;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">A debloquer</span>';
     card.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div style="font-size:16px;font-weight:900;color:'+lv.color+'">'+lv.label+'</div>'+badge+'</div>'
       +'<div style="font-size:12px;color:#6b7280;margin-bottom:4px">Plafond : <strong>'+lv.plafond+'</strong></div>'
       +'<div style="font-size:11px;color:#9ca3af;margin-bottom:10px">'+lv.docs+'</div>';
-    if(!estActif){
+    if(!estActif&&!enAttente){
       var btn=document.createElement('button');
       btn.textContent='Soumettre mes documents';
       btn.style.cssText='width:100%;padding:11px;background:'+lv.color+';color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
       btn.addEventListener('click',(function(lvId){return function(){lancerUploadKyc(lvId);};})(lv.id));
       card.appendChild(btn);
+    } else if(enAttente){
+      var msg=document.createElement('div');
+      msg.style.cssText='padding:8px 12px;background:#fef3c7;border-radius:10px;font-size:12px;color:#92400e;text-align:center;font-weight:600';
+      msg.textContent='Documents envoyés - validation en cours par le support';
+      card.appendChild(msg);
     }
     listEl.appendChild(card);
   });

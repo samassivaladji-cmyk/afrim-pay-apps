@@ -74,7 +74,6 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 .params-sub{font-size:12px;color:#6b7280;margin-top:1px}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 <div id="app">
@@ -335,7 +334,7 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
       </div>
       <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
     </button>
-    <button class="params-item" onclick="voirGains()">
+    <button class="params-item" onclick="setTab('commissions')">
       <div class="params-icon" style="background:#fefce8">💰</div>
       <div>
         <div class="params-label">Mes gains parrainage</div>
@@ -464,6 +463,23 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
     </button>
     <div style="font-size:18px;font-weight:800;flex:1" id="pay-det-title">Payer</div>
   </div>
+
+<!-- ÉCRAN COMMISSIONS -->
+<div class="scr" id="s-commissions">
+  <div style="background:linear-gradient(135deg,#d97706,#f59e0b);padding:52px 20px 20px;position:sticky;top:0;z-index:10">
+    <div style="font-size:22px;font-weight:800;color:#fff">Mes gains 💰</div>
+    <div style="color:rgba(255,255,255,.8);font-size:13px;margin-top:4px">Commissions de parrainage</div>
+  </div>
+  <div style="padding:16px 16px 100px" id="comm-content">
+    <div style="padding:32px;text-align:center"><div class="spin"></div></div>
+  </div>
+  <nav class="bnav">
+    <button class="nb" id="nb-home-c" onclick="setTab('home')"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Accueil</button>
+    <button class="nb" id="nb-history-c" onclick="setTab('history')"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Historique</button>
+    <button class="nb on" id="nb-commissions-c" onclick="setTab('commissions')"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Gains</button>
+    <button class="nb" id="nb-profile-c" onclick="setTab('profile')"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/></svg>Paramètres</button>
+  </nav>
+</div>
   <div style="flex:1;overflow-y:auto;padding:20px 16px 40px;">
     <!-- Carte service -->
     <div id="pay-det-card" style="display:flex;align-items:center;gap:14px;background:#f9fafb;border-radius:16px;padding:16px;margin-bottom:20px;">
@@ -521,6 +537,7 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
     </div>
   </div>
 </div>
+
 
 <!-- SH-PAY gardé vide pour compatibilité (inutilisé) -->
 <div class="sh-ov" id="sh-pay" style="display:none!important;pointer-events:none;"></div>
@@ -925,25 +942,32 @@ async function doLogin(){
 function dessinerQRHome(cid,data,color){
   var el=document.getElementById(cid);
   if(!el)return;
-  el.innerHTML=''; // Vider
-  if(window.QRCode){
-    try{
-      new QRCode(el,{
-        text:data,
-        width:200,height:200,
-        colorDark:(color&&color!=='#059669'?color:'#059669'),
-        colorLight:'#ffffff',
-        correctLevel:QRCode.CorrectLevel.M
-      });
-      return;
-    }catch(e){console.warn('QRCode.js:',e);}
-  }
-  // Fallback : image externe si QRCode.js pas dispo
-  var img=document.createElement('img');
-  img.style.cssText='width:200px;height:200px;border-radius:6px;display:block';
-  img.alt='QR Code';
+  el.innerHTML='';
   var col=(color||'#059669').replace('#','');
-  img.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(data)+'&color='+col+'&bgcolor=ffffff&qzone=1';
+  var size=200;
+  // Essayer plusieurs sources QR
+  var sources=[
+    'https://api.qrserver.com/v1/create-qr-code/?size='+size+'x'+size+'&data='+encodeURIComponent(data)+'&color='+col+'&bgcolor=ffffff&qzone=1',
+    'https://chart.googleapis.com/chart?chs='+size+'x'+size+'&cht=qr&chl='+encodeURIComponent(data)+'&choe=UTF-8'
+  ];
+  var img=document.createElement('img');
+  img.style.cssText='width:'+size+'px;height:'+size+'px;border-radius:8px;display:block;margin:0 auto';
+  img.alt='QR Code';
+  var srcIdx=0;
+  img.onerror=function(){
+    srcIdx++;
+    if(srcIdx<sources.length){img.src=sources[srcIdx];}
+    else{
+      // Fallback texte : afficher le numéro et code parrainage bien visibles
+      var parts=data.split('|');
+      el.innerHTML='<div style="background:#f0fdf4;border:2px solid #059669;border-radius:12px;padding:16px;text-align:center">'
+        +'<div style="font-size:11px;color:#6b7280;margin-bottom:6px">Votre code AFRIM PAY</div>'
+        +'<div style="font-size:18px;font-weight:900;color:#059669;font-family:monospace">'+(parts[0]||data)+'</div>'
+        +(parts[1]?'<div style="font-size:13px;color:#059669;margin-top:4px;font-family:monospace">'+parts[1]+'</div>':'')
+        +'</div>';
+    }
+  };
+  img.src=sources[0];
   el.appendChild(img);
 }
 
@@ -1015,10 +1039,8 @@ function demarrerScannerWave(){
         }catch(e){}
       },400);
     })
-    .catch(function(err){
-      console.warn('Caméra:', err.message||err);
-      // Si fichier local (content://) → ouvrir directement l'input caméra
-      var video=document.getElementById('wqr-video');
+    .catch(function(camErr){
+      console.warn('Camera error:', camErr);
       var scanZone=document.getElementById('wqr-scanner');
       if(scanZone){
         scanZone.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;background:#111;padding:20px">'
@@ -1213,96 +1235,93 @@ function inviterAmi(){
 }
 
 async function chargerCommissions(){
-  var el=document.getElementById('comm-content');if(!el)return;
-  el.innerHTML='<div style="padding:32px;text-align:center"><div class="spin"></div></div>';
+  var el=document.getElementById('comm-content');
+  if(!el){console.error('comm-content non trouvé');return;}
+
+  var u=G.user||{};
+  var kyc=u.kycNiveau||'KYC1';
+  var nbRatt=u.nbRattaches||0;
+  var nbFil=u.nbFilleuls||0;
+  var condFilleuls=kyc==='KYC3'?500:kyc==='KYC2'?200:0;
+  var couleurRatt=nbRatt>=(condFilleuls||1)?'#22c55e':'#f59e0b';
+
+  // Afficher la structure immédiatement sans attendre l'API
+  el.innerHTML=
+    '<div style="background:linear-gradient(135deg,#d97706,#f59e0b);border-radius:16px;padding:20px;margin-bottom:14px;text-align:center;color:#fff">'
+    +'<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Ce mois-ci</div>'
+    +'<div id="comm-total-mois" style="font-size:38px;font-weight:900">-- FCFA</div>'
+    +'<div style="font-size:13px;color:rgba(255,255,255,.8);margin-top:4px">de commissions</div>'
+    +'<div style="display:flex;gap:16px;justify-content:center;margin-top:14px">'
+    +'<div><div id="comm-nb-mois" style="font-size:18px;font-weight:800">--</div><div style="font-size:10px;color:rgba(255,255,255,.7)">transactions</div></div>'
+    +'<div style="width:1px;background:rgba(255,255,255,.2)"></div>'
+    +'<div><div id="comm-total-prec" style="font-size:18px;font-weight:800">-- FCFA</div><div style="font-size:10px;color:rgba(255,255,255,.7)">mois précédent</div></div>'
+    +'</div></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">'
+    +'<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px;text-align:center">'
+    +'<div style="font-size:24px;font-weight:900;color:#059669">'+nbFil+'</div>'
+    +'<div style="font-size:11px;color:#6b7280;margin-top:2px">Parrainés</div></div>'
+    +'<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px;text-align:center">'
+    +'<div style="font-size:24px;font-weight:900;color:'+couleurRatt+'">'+nbRatt+'</div>'
+    +'<div style="font-size:11px;color:#6b7280;margin-top:2px">Rattachés ✓'+(condFilleuls?'<span style="color:'+couleurRatt+';font-size:10px;display:block">'+nbRatt+'/'+condFilleuls+'</span>':'')+'</div></div></div>'
+    +'<div style="background:#fefce8;border:1px solid #fde68a;border-radius:14px;padding:14px;margin-bottom:14px">'
+    +'<div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:6px">Comment gagner ?</div>'
+    +'<div style="font-size:11px;color:#a16207;line-height:1.7">'
+    +'Parrainez des contacts avec votre code. Quand ils font un <strong>dépôt ou reçoivent un transfert</strong> de 500 F minimum, ils sont rattachés à vie.<br>'
+    +'A chaque <strong>retrait ou paiement</strong> de votre filleul rattaché, vous recevez <strong>10% des frais</strong> automatiquement.'
+    +'</div></div>'
+    +'<div id="comm-historique" style="background:#f9fafb;border-radius:12px;padding:14px;text-align:center">'
+    +'<div class="spin" style="width:16px;height:16px;border-width:2px;margin:0 auto"></div>'
+    +'</div>';
+
+  // Charger les commissions en arrière-plan
   try{
-    var r=await get('/commissions?type=commission_parrain&userId='+(G.user&&G.user.id)+'&limit=200');
-    var comms=r.data||[];
+    var resp=await fetch(API+'/commissions?type=commission_parrain&userId='+u.id+'&limit=200',{
+      headers:{Authorization:'Bearer '+(G.token||'')}
+    });
+    var txt=await resp.text();
+    var rdata;
+    try{rdata=JSON.parse(txt);}catch(e){throw new Error('API indisponible');}
+    if(!resp.ok)throw new Error(rdata.message||'Erreur API');
+    var comms=rdata.data||[];
     var now=new Date();
     var debutMois=new Date(now.getFullYear(),now.getMonth(),1);
-    var moisPrecedent=new Date(now.getFullYear(),now.getMonth()-1,1);
-    var finMoisPrec=new Date(now.getFullYear(),now.getMonth(),0);
-
-    // Calculs par période
-    var totalMois=0,totalPrec=0,totalHistorique=0,nbMois=0,nbPrec=0;
-    var commsMois=[];
+    var debutPrec=new Date(now.getFullYear(),now.getMonth()-1,1);
+    var finPrec=new Date(now.getFullYear(),now.getMonth(),0);
+    var totalMois=0,totalPrec=0,totalHist=0,nbMois=0,commsMois=[];
     comms.forEach(function(c){
       var d=new Date(c.dateCalcul||c.date_calcul||0);
       var m=Number(c.montant||0);
-      totalHistorique+=m;
+      totalHist+=m;
       if(d>=debutMois){totalMois+=m;nbMois++;commsMois.push(c);}
-      else if(d>=moisPrecedent&&d<=finMoisPrec){totalPrec+=m;nbPrec++;}
+      else if(d>=debutPrec&&d<=finPrec)totalPrec+=m;
     });
-
-    var nbRatt=(G.user&&G.user.nbRattaches)||0;
-    var nbFil=(G.user&&G.user.nbFilleuls)||0;
-    var kyc=(G.user&&G.user.kycNiveau)||'KYC1';
-    var condFilleuls=kyc==='KYC3'?500:kyc==='KYC2'?200:0;
-
-    el.innerHTML=
-      // Carte résumé ce mois
-      '<div style="background:linear-gradient(135deg,#d97706,#f59e0b);border-radius:16px;padding:20px;margin-bottom:14px;text-align:center;color:#fff">'
-      +'<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Ce mois-ci</div>'
-      +'<div style="font-size:38px;font-weight:900">'+Number(totalMois).toLocaleString('fr-FR')+'</div>'
-      +'<div style="font-size:13px;color:rgba(255,255,255,.8);margin-top:4px">FCFA de commissions</div>'
-      +'<div style="display:flex;gap:16px;justify-content:center;margin-top:14px">'
-      +'<div><div style="font-size:18px;font-weight:800">'+nbMois+'</div><div style="font-size:10px;color:rgba(255,255,255,.7)">transactions</div></div>'
-      +'<div style="width:1px;background:rgba(255,255,255,.2)"></div>'
-      +'<div><div style="font-size:18px;font-weight:800">'+Number(totalPrec).toLocaleString('fr-FR')+' FCFA</div><div style="font-size:10px;color:rgba(255,255,255,.7)">mois précédent</div></div>'
-      +'</div></div>'
-
-      // Stats filleuls
-      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">'
-      +'<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px;text-align:center">'
-      +'<div style="font-size:24px;font-weight:900;color:#059669">'+nbFil+'</div>'
-      +'<div style="font-size:11px;color:#6b7280;margin-top:2px">Parrainés</div>'
-      +'</div>'
-      +'<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px;text-align:center">'
-      +'<div style="font-size:24px;font-weight:900;color:#f59e0b">'+nbRatt+'</div>'
-      +'<div style="font-size:11px;color:#6b7280;margin-top:2px">Rattachés ✓'+(condFilleuls?'<br><span style="color:'+(nbRatt>=condFilleuls?'#22c55e':'#f59e0b')+';font-size:10px">'+nbRatt+'/'+condFilleuls+'</span>':'')+'</div>'
-      +'</div></div>'
-
-      // Comment ça marche
-      +'<div style="background:#fefce8;border:1px solid #fde68a;border-radius:14px;padding:14px;margin-bottom:14px">'
-      +'<div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:6px">💡 Comment gagner plus ?</div>'
-      +'<div style="font-size:11px;color:#a16207;line-height:1.6">'
-      +'• Parrainez des amis avec votre code<br>'
-      +'• Ils font un dépôt ou reçoivent un transfert ≥500 FCFA → <strong>rattachés à vie</strong><br>'
-      +'• À chaque retrait ou paiement de votre filleul → <strong>vous recevez 10% des frais</strong><br>'
-      +'• Atteignez 200 rattachés → plafond KYC2 (50 000 F/mois)<br>'
-      +'• Atteignez 500 rattachés → plafond KYC3 (100 000 F/mois)'
-      +'</div></div>'
-
-      // Total historique
-      +'<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">'
-      +'<div><div style="font-size:13px;font-weight:700">Total historique</div><div style="font-size:11px;color:#6b7280">Depuis votre inscription</div></div>'
-      +'<div style="font-size:18px;font-weight:800;color:#f59e0b">'+Number(totalHistorique).toLocaleString('fr-FR')+' FCFA</div>'
-      +'</div>'
-
-      // Détail transactions
-      +'<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Détail ce mois</div>';
-
+    // Mettre à jour les chiffres
+    var elM=document.getElementById('comm-total-mois');if(elM)elM.textContent=Number(totalMois).toLocaleString('fr-FR')+' FCFA';
+    var elN=document.getElementById('comm-nb-mois');if(elN)elN.textContent=nbMois;
+    var elP=document.getElementById('comm-total-prec');if(elP)elP.textContent=Number(totalPrec).toLocaleString('fr-FR')+' FCFA';
+    // Afficher le détail
+    var hist=document.getElementById('comm-historique');
+    if(!hist)return;
     if(!commsMois.length){
-      el.innerHTML+='<div style="text-align:center;padding:24px;background:#f9fafb;border-radius:14px">'
-        +'<div style="font-size:32px;margin-bottom:8px">📊</div>'
-        +'<div style="font-size:13px;font-weight:700;margin-bottom:4px">Aucune commission ce mois</div>'
-        +'<div style="font-size:12px;color:#6b7280">Parrainez des contacts — quand ils font des retraits ou paiements, vous gagnez 10% des frais automatiquement.</div>'
-        +'</div>';
-    } else {
-      commsMois.forEach(function(c){
-        var d=new Date(c.dateCalcul||c.date_calcul);
-        var dateStr=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
-        el.innerHTML+='<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#fff;border:1px solid #f3f4f6;border-radius:12px;margin-bottom:6px">'
-          +'<div style="display:flex;align-items:center;gap:10px">'
-          +'<div style="width:36px;height:36px;border-radius:10px;background:#fef3c7;display:flex;align-items:center;justify-content:center;font-size:16px">💰</div>'
-          +'<div><div style="font-size:13px;font-weight:700">Commission filleul</div>'
-          +'<div style="font-size:11px;color:#6b7280">'+dateStr+'</div></div></div>'
-          +'<div style="font-size:15px;font-weight:900;color:#f59e0b">+'+Number(c.montant).toLocaleString('fr-FR')+'</div>'
-          +'</div>';
-      });
+      hist.innerHTML='<div style="font-size:13px;font-weight:700;margin-bottom:4px">Aucune commission ce mois</div>'
+        +'<div style="font-size:12px;color:#6b7280">Total historique : '+Number(totalHist).toLocaleString('fr-FR')+' FCFA</div>';
+      return;
     }
+    hist.innerHTML='<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:8px">Détail ce mois</div>';
+    commsMois.forEach(function(c){
+      var d=new Date(c.dateCalcul||c.date_calcul);
+      var ds=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      hist.innerHTML+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #e5e7eb">'
+        +'<div><div style="font-size:13px;font-weight:600">Commission filleul</div>'
+        +'<div style="font-size:11px;color:#6b7280">'+ds+'</div></div>'
+        +'<div style="font-size:15px;font-weight:900;color:#f59e0b">+'+Number(c.montant).toLocaleString('fr-FR')+' FCFA</div></div>';
+    });
+    hist.innerHTML+='<div style="margin-top:10px;padding-top:10px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between">'
+      +'<span style="font-size:12px;color:#6b7280">Total historique</span>'
+      +'<span style="font-size:13px;font-weight:700;color:#f59e0b">'+Number(totalHist).toLocaleString('fr-FR')+' FCFA</span></div>';
   }catch(e){
-    el.innerHTML='<div style="color:var(--r);font-size:13px;padding:24px;text-align:center">'+e.message+'</div>';
+    var hist=document.getElementById('comm-historique');
+    if(hist)hist.innerHTML='<div style="color:#6b7280;font-size:12px">Données indisponibles — '+e.message+'</div>';
   }
 }
 
@@ -1681,6 +1700,7 @@ async function soumettreKyc(){
   </div>
 </div>
 
+
 <!-- SHEET GAINS PARRAINAGE -->
 <div class="sh-ov" id="sh-gains">
   <div class="sh"><div class="sh-bar"></div>
@@ -1694,22 +1714,6 @@ async function soumettreKyc(){
   </div>
 </div>
 
-<!-- ÉCRAN COMMISSIONS -->
-<div class="scr" id="s-commissions">
-  <div style="background:linear-gradient(135deg,#d97706,#f59e0b);padding:52px 20px 20px;position:sticky;top:0;z-index:10">
-    <div style="font-size:22px;font-weight:800;color:#fff">Mes gains 💰</div>
-    <div style="color:rgba(255,255,255,.8);font-size:13px;margin-top:4px">Commissions de parrainage</div>
-  </div>
-  <div style="padding:16px 16px 100px" id="comm-content">
-    <div style="padding:32px;text-align:center"><div class="spin"></div></div>
-  </div>
-  <nav class="bnav">
-    <button class="nb" id="nb-home-c" onclick="setTab('home')"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Accueil</button>
-    <button class="nb" id="nb-history-c" onclick="setTab('history')"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Historique</button>
-    <button class="nb on" id="nb-commissions-c" onclick="setTab('commissions')"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Gains</button>
-    <button class="nb" id="nb-profile-c" onclick="setTab('profile')"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/></svg>Paramètres</button>
-  </nav>
-</div>
 
 </body>
 </html>

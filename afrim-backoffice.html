@@ -198,6 +198,11 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
       <button onclick="logout()" style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:8px 12px;cursor:pointer;font-size:12px;font-weight:700;color:var(--r);font-family:inherit">Quitter</button>
     </div>
   </div>
+  <!-- KYC EN ATTENTE -->
+  <div id="kyc-pending-section" style="display:none;padding:12px 16px 0">
+    <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Demandes KYC à valider</div>
+    <div id="kyc-pending-list"></div>
+  </div>
   <div style="padding:16px 16px 0">
     <div class="card" style="margin-bottom:14px">
       <div style="font-size:12px;font-weight:700;color:var(--m);text-transform:uppercase;margin-bottom:10px">Rechercher un client</div>
@@ -1021,6 +1026,75 @@ async function cloturerA(id){try{await apiPatch('/alerts/'+id,{statut:'resolue',
 async function cloturerT(id){try{await apiPatch('/tickets/'+id+'/status',{statut:'ferme'});toast('Ticket resolu');chargerMonitoring();}catch(e){toast(e.message,true);}}
 
 // ── SUPPORT ──
+
+async function chargerTicketsKyc(){
+  var section=document.getElementById('kyc-pending-section');
+  var listEl=document.getElementById('kyc-pending-list');
+  if(!section||!listEl)return;
+  try{
+    var r=await apiGet('/tickets?statut=ouvert&limit=50');
+    var tickets=(r.data||[]).filter(function(t){return t.sujet&&t.sujet.indexOf('Demande validation KYC')>=0;});
+    if(!tickets.length){section.style.display='none';return;}
+    section.style.display='';
+    listEl.innerHTML='';
+    tickets.forEach(function(t){
+      var client=t.client;
+      var niveauMatch=t.sujet.match(/KYC\s*(\d)/);
+      var niveau=niveauMatch?'KYC'+niveauMatch[1]:'KYC?';
+      var card=document.createElement('div');
+      card.style.cssText='background:#fff;border:1.5px solid #fde68a;border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px';
+      card.innerHTML='<div style="width:36px;height:36px;border-radius:10px;background:#fef3c7;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🪪</div>'
+        +'<div style="flex:1"><div style="font-size:13px;font-weight:700">'+(client?client.prenom+' '+client.nom:'Client')+'</div>'
+        +'<div style="font-size:11px;color:#6b7280">'+(client?client.telephone:'')+' · Demande '+niveau+'</div></div>'
+        +'<div style="display:flex;flex-direction:column;gap:4px" id="kyc-btns-'+t.id+'"></div>';
+      var btnVoir=document.createElement('button');
+      btnVoir.textContent='Voir';
+      btnVoir.style.cssText='padding:6px 10px;background:#eff6ff;color:#1d4ed8;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit';
+      btnVoir.addEventListener('click',(function(cid,tid,niv){return function(){voirDossierKyc(cid,tid,niv);};})(t.clientId,t.id,niveau));
+      var btnVal=document.createElement('button');
+      btnVal.textContent='Valider';
+      btnVal.style.cssText='padding:6px 10px;background:#dcfce7;color:#15803d;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit';
+      btnVal.addEventListener('click',(function(cid,tid,niv){return function(){validerKyc(cid,tid,niv);};})(t.clientId,t.id,niveau));
+      var btnZone=document.getElementById('kyc-btns-'+t.id);
+      if(btnZone){btnZone.appendChild(btnVoir);btnZone.appendChild(btnVal);}
+      listEl.appendChild(card);
+    });
+  }catch(e){section.style.display='none';}
+}
+
+async function voirDossierKyc(clientId,ticketId,niveau){
+  // Rechercher le client et afficher sa fiche avec photos
+  var el=document.getElementById('sup-result');if(!el)return;
+  el.style.display='';
+  el.innerHTML='<div style="padding:16px;text-align:center"><div class="spin"></div></div>';
+  try{
+    var r=await apiGet('/users?userId='+clientId+'&limit=1');
+    var list=r.data||[];var u=list[0];if(!u)throw new Error('Client introuvable');
+    currentClientId=u.id;
+    // Afficher fiche + photos KYC
+    el.innerHTML='<div style="background:#fef3c7;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:13px;color:#92400e;font-weight:600">🪪 Demande '+niveau+' en attente de validation</div>';
+    chargerPhotosKycClient(u.id);
+    chargerHistoriqueClient(u.id);
+    // Scroll vers la section
+    setTimeout(function(){var sup=document.getElementById('s-support');if(sup)sup.scrollTop=sup.scrollTop+200;},300);
+  }catch(e){el.innerHTML='<div style="color:var(--r);font-size:13px;padding:10px">'+e.message+'</div>';}
+}
+
+async function validerKyc(clientId,ticketId,niveau){
+  if(!confirm('Valider le passage au niveau '+niveau+' pour ce client ?'))return;
+  try{
+    var h={'Content-Type':'application/json'};if(G.token)h['Authorization']='Bearer '+G.token;
+    // Mettre à jour le niveau KYC du client
+    await fetch(API+'/kyc/'+clientId+'/validate',{method:'GET',headers:h});
+    // Fallback : mettre à jour via PATCH statut
+    await fetch(API+'/users/'+clientId+'/kyc',{method:'PATCH',headers:h,body:JSON.stringify({kycNiveau:niveau})});
+    // Fermer le ticket
+    await apiPost('/tickets/'+ticketId+'/status',{statut:'resolu'});
+    toast('KYC '+niveau+' validé pour le client');
+    chargerTicketsKyc();
+  }catch(e){toast('Validation: '+e.message,true);}
+}
+
 async function chargerSupport(){
   var u=G.user;if(!u)return;
   // Label adapté au rôle

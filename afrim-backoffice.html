@@ -1055,8 +1055,12 @@ async function chargerTicketsKyc(){
       btnVal.textContent='Valider';
       btnVal.style.cssText='padding:6px 10px;background:#dcfce7;color:#15803d;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit';
       btnVal.addEventListener('click',(function(cid,tid,niv){return function(){validerKyc(cid,tid,niv);};})(t.clientId,t.id,niveau));
+      var btnRej=document.createElement('button');
+      btnRej.textContent='Rejeter';
+      btnRej.style.cssText='padding:6px 10px;background:#fef2f2;color:#ef4444;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit';
+      btnRej.addEventListener('click',(function(cid,tid,niv){return function(){rejeterKyc(cid,tid,niv);};})(t.clientId,t.id,niveau));
       var btnZone=document.getElementById('kyc-btns-'+t.id);
-      if(btnZone){btnZone.appendChild(btnVoir);btnZone.appendChild(btnVal);}
+      if(btnZone){btnZone.appendChild(btnVoir);btnZone.appendChild(btnVal);btnZone.appendChild(btnRej);}
       listEl.appendChild(card);
     });
   }catch(e){section.style.display='none';}
@@ -1078,6 +1082,22 @@ async function voirDossierKyc(clientId,ticketId,niveau){
     // Scroll vers la section
     setTimeout(function(){var sup=document.getElementById('s-support');if(sup)sup.scrollTop=sup.scrollTop+200;},300);
   }catch(e){el.innerHTML='<div style="color:var(--r);font-size:13px;padding:10px">'+e.message+'</div>';}
+}
+
+async function rejeterKyc(clientId,ticketId,niveau){
+  var raison=prompt('Raison du rejet (sera communiquée au client) :');
+  if(raison===null)return; // annulé
+  try{
+    var h={'Content-Type':'application/json'};if(G.token)h['Authorization']='Bearer '+G.token;
+    // Remettre kyc_niveau_demande à null (annuler la demande)
+    await fetch(API+'/kyc/'+clientId+'/reject',{method:'PATCH',headers:h,body:JSON.stringify({raison:raison||'Documents non conformes'})});
+    // Mettre à jour le ticket
+    await fetch(API+'/tickets/'+ticketId+'/status',{method:'PATCH',headers:h,body:JSON.stringify({statut:'rejete'})}).catch(function(){});
+    // Fermer le ticket normalement si rejete n'existe pas
+    await apiPost('/tickets/'+ticketId+'/status',{statut:'ferme'}).catch(function(){});
+    toast('Demande KYC rejetée - client notifié');
+    chargerTicketsKyc();
+  }catch(e){toast('Rejet: '+e.message,true);}
 }
 
 async function validerKyc(clientId,ticketId,niveau){

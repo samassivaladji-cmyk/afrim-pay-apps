@@ -176,7 +176,8 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
   </div>
 
   <div style="padding:16px 16px 0;margin-top:-4px">
-    <div class="card" style="padding:16px">
+    <div id="home-statut-banner" style="display:none;margin-bottom:12px"></div>
+  <div class="card" style="padding:16px">
       <div class="act-grid5">
         <button class="act-btn" onclick="openSh('send')">
           <div class="act-icon" style="background:#ecfdf5;width:46px;height:46px;font-size:20px;border-radius:14px">📤</div>
@@ -319,11 +320,11 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
       <div><div class="params-label">Modifier le code secret</div><div class="params-sub">Changer votre PIN de connexion</div></div>
       <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
     </button>
-    <button class="params-item" onclick="ouvrirKycUpgrade()" id="btn-kyc-upgrade">
+    <button class="params-item" onclick="ouvrirKycUpgrade()">
       <div class="params-icon" style="background:#eff6ff">🪪</div>
       <div>
-        <div class="params-label">Compléter mon KYC</div>
-        <div class="params-sub" id="kyc-status-label">Envoyer mes documents d'identité</div>
+        <div class="params-label">Completer mon KYC</div>
+        <div class="params-sub" id="kyc-status-label">Envoyer mes documents d identite</div>
       </div>
       <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
     </button>
@@ -378,6 +379,12 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
     <div class="sh-body">
       <div id="send-s1">
         <div id="send-err1" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:13px"></div>
+        <div onclick="ouvrirPopupQR(function(tel,parts){document.getElementById('send-tel').value=parts[0]||tel;document.getElementById('send-tel').dispatchEvent(new Event('input'));selDest(parts[0]||tel);})" style="background:#f0fdf4;border:2px dashed #86efac;border-radius:14px;padding:14px;text-align:center;margin-bottom:14px;cursor:pointer">
+          <div style="font-size:26px;margin-bottom:4px">📷</div>
+          <div style="font-size:13px;font-weight:700;color:#15803d">Scanner le QR du destinataire</div>
+          <div style="font-size:11px;color:var(--m);margin-top:2px">Caméra arrière · scan direct</div>
+        </div>
+        <div style="text-align:center;color:var(--m);font-size:12px;margin-bottom:12px">— ou saisir le numéro —</div>
         <label class="lbl">Numéro destinataire</label>
         <div style="display:flex;gap:8px;margin-bottom:8px">
           <input class="inp" id="send-tel" type="tel" placeholder="07 XX XX XX" inputmode="numeric" style="flex:1" oninput="var ok=!!this.value;document.getElementById('send-ok-btn').disabled=!ok;document.getElementById('send-ok-btn').style.opacity=ok?'1':'.4'"/>
@@ -597,11 +604,23 @@ async function chargerAccueil(){
     dessinerQRHome('h-qr-canvas', u.telephone+'|'+(u.codeParrainage||'')+'|client', '#059669');
   }
   if(document.getElementById('h-qr-name'))document.getElementById('h-qr-name').textContent=(u.prenom||'')+' '+(u.nom||'').toUpperCase();
+  // Bannière statut en_attente
+  var banEl=document.getElementById('home-statut-banner');
+  if(banEl){
+    if(u.statut==='en_attente'){
+      banEl.style.display='';
+      banEl.innerHTML='<div style="background:#fef3c7;border:1px solid #fde68a;border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px">'
+        +'<div style="font-size:18px">⏳</div>'
+        +'<div><div style="font-size:12px;font-weight:700;color:#92400e">Compte en attente de validation</div>'
+        +'<div style="font-size:11px;color:#a16207;margin-top:1px">Depots et retraits actifs. Parrainage actif apres validation.</div>'
+        +'</div></div>';
+    }else{banEl.style.display='none';}
+  }
   var b='';
   if(u.kycNiveau)b+='<span class="tag" style="background:rgba(255,255,255,.25);color:#fff">'+u.kycNiveau+'</span> ';
   b+='<span class="tag" style="background:rgba(255,255,255,.18);color:rgba(255,255,255,.9)">'+u.telephone+'</span>';
   document.getElementById('h-badges').innerHTML=b;
-  if(u.codeParrainage){document.getElementById('h-code').textContent=u.codeParrainage;document.getElementById('h-parrain').style.display='';}
+  if(u.codeParrainage&&u.statut==='actif'){document.getElementById('h-code').textContent=u.codeParrainage;document.getElementById('h-parrain').style.display='';}
   chargerTxns();
 }
 function afficherSolde(){var s=G.compte?Number(G.compte.solde):0;document.getElementById('h-solde').textContent=G.soldeVisible?F(s):'••••• FCFA';}
@@ -869,24 +888,20 @@ async function doLogin(){
 
 function dessinerQRHome(cid,data,color){
   var c=document.getElementById(cid);if(!c)return;
-  var ctx=c.getContext('2d');var w=c.width,h=c.height;
-  ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);
-  var seed=0;for(var i=0;i<data.length;i++)seed+=data.charCodeAt(i);
-  var cell=5;var cols=Math.floor(w/cell);var rows=Math.floor(h/cell);
-  ctx.fillStyle=color||'#111827';
-  for(var r=0;r<rows;r++){for(var col2=0;col2<cols;col2++){var v=(seed*(r+1)*(col2+1)*2654435761)&0xFFFFFFFF;if(v%3!==0)ctx.fillRect(col2*cell,r*cell,cell-1,cell-1);}}
-  // Finder patterns (carrés de positionnement)
-  var fp=50;
-  [[0,0],[w-fp-4,0],[0,h-fp-4]].forEach(function(p){
-    ctx.fillStyle=color||'#111827';ctx.fillRect(p[0],p[1],fp,fp);
-    ctx.fillStyle='#fff';ctx.fillRect(p[0]+5,p[1]+5,fp-10,fp-10);
-    ctx.fillStyle=color||'#111827';ctx.fillRect(p[0]+10,p[1]+10,fp-20,fp-20);
-    ctx.fillStyle='#fff';ctx.fillRect(p[0]+15,p[1]+15,fp-30,fp-30);
-    ctx.fillStyle=color||'#111827';ctx.fillRect(p[0]+17,p[1]+17,fp-34,fp-34);
-  });
+  var parent=c.parentNode;
+  var imgId=cid+'-img';
+  var imgEl=document.getElementById(imgId);
+  if(!imgEl){
+    imgEl=document.createElement('img');
+    imgEl.id=imgId;
+    imgEl.style.cssText='width:'+c.width+'px;height:'+c.height+'px;border-radius:8px;display:block';
+    imgEl.alt='QR Code AFRIM PAY';
+    parent.insertBefore(imgEl,c);
+    c.style.display='none';
+  }
+  imgEl.src='https://api.qrserver.com/v1/create-qr-code/?size='+c.width+'x'+c.height+'&data='+encodeURIComponent(data)+'&color='+(color||'059669').replace('#','')+'&bgcolor=ffffff&qzone=1';
+  imgEl.onerror=function(){imgEl.style.display='none';c.style.display='';};
 }
-// ——— POPUP QR STYLE WAVE ———
-var wqrStream=null,wqrInterval=null,wqrOnScan=null,wqrFlashOn=false,wqrTrack=null;
 
 function ouvrirPopupQR(scanCallback){
   wqrOnScan=scanCallback||null;
@@ -931,7 +946,7 @@ function wqrTab(tab){
 function demarrerScannerWave(){
   if(wqrStream)return;
   var video=document.getElementById('wqr-video');
-  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}})
     .then(function(stream){
       wqrStream=stream;wqrTrack=stream.getVideoTracks()[0];
       video.srcObject=stream;video.play();
@@ -985,8 +1000,8 @@ function ouvrirInfos(){
     '<div class="srow"><span style="color:var(--m);font-size:13px">Nom</span><span style="font-weight:700">'+u.nom+'</span></div>'+
     '<div class="srow"><span style="color:var(--m);font-size:13px">Telephone</span><span style="font-weight:700;font-family:monospace">'+u.telephone+'</span></div>'+
     '<div class="srow"><span style="color:var(--m);font-size:13px">Niveau KYC</span><span style="font-weight:700;color:var(--g)">'+u.kycNiveau+'</span></div>'+
-    '<div class="srow" style="border:none"><span style="color:var(--m);font-size:13px">Statut</span><span style="font-weight:700;color:'+(u.statut==='actif'?'#22c55e':'#f59e0b')+'">'+u.statut+'</span></div>'+
-    (u.codeParrainage?'<div style="margin-top:16px;background:#f0fdf4;border:1px solid #d1fae5;border-radius:12px;padding:14px;text-align:center"><div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:4px">Code parrainage</div><div style="font-size:24px;font-weight:900;font-family:monospace;color:#059669">'+u.codeParrainage+'</div></div>':'');
+    '<div class="srow" style="border:none"><span style="color:var(--m);font-size:13px">Statut</span><span style="font-weight:700;color:'+(u.statut==='actif'?'#22c55e':'#f59e0b')+'">'+(u.statut==='actif'?'Actif':'En attente de validation')+'</span></div>'+
+    (u.statut==='actif'&&u.codeParrainage?'<div style="margin-top:16px;background:#f0fdf4;border:1px solid #d1fae5;border-radius:12px;padding:14px;text-align:center"><div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:4px">Code parrainage</div><div style="font-size:24px;font-weight:900;font-family:monospace;color:#059669">'+u.codeParrainage+'</div></div>':'');
 }
 function voirPlafond(){
   var u=G.user;if(!u)return;openSh('plafond');
@@ -1012,24 +1027,33 @@ document.querySelectorAll('.sh-ov').forEach(function(el){el.addEventListener('cl
 
 (function init(){setKyc('KYC1',null);if(G.token&&G.user&&G.user.role==='client'){setTab('home');return;}S('s-login');})();
 
+// ═══ CLOUDINARY UPLOAD ═══
+async function uploadPhotoCloudinary(file, docId, userId) {
+  var fd=new FormData();fd.append('file',file);fd.append('upload_preset',CLOUDINARY_PRESET);fd.append('folder','afrim-pay/kyc');
+  var r=await fetch('https://api.cloudinary.com/v1_1/'+CLOUDINARY_CLOUD+'/image/upload',{method:'POST',body:fd});
+  var d=await r.json();
+  if(!r.ok||!d.secure_url)throw new Error('Upload echoue: '+(d.error&&d.error.message||'Erreur'));
+  var h={'Content-Type':'application/json'};if(G.token)h['Authorization']='Bearer '+G.token;
+  await fetch(API+'/kyc/documents',{method:'POST',headers:h,body:JSON.stringify({userId:userId,typeDocument:docId,urlFichier:d.secure_url})});
+  return {ok:true,url:d.secure_url};
+}
+
 // ═══ KYC UPGRADE ═══
 var kycPhotosClient={};
 var kycTargetLevel=null;
 var KYC_UPGRADE_DOCS={
-  'KYC1':[
-    {id:'selfie', label:'Selfie', camera:'user', icon:'🤳', desc:'Photo de vous, visage clairement visible'}
-  ],
+  'KYC1':[{id:'selfie',label:'Selfie',camera:'user',icon:'🤳',desc:'Photo de vous, visage visible'}],
   'KYC2':[
-    {id:'selfie',    label:'Selfie',    camera:'user',        icon:'🤳', desc:'Photo de vous, visage visible'},
-    {id:'cni_recto', label:'CNI Recto', camera:'environment', icon:'🪪', desc:'Recto de votre carte identite'},
-    {id:'cni_verso', label:'CNI Verso', camera:'environment', icon:'🪪', desc:'Verso de votre carte identite'}
+    {id:'selfie',label:'Selfie',camera:'user',icon:'🤳',desc:'Photo de vous'},
+    {id:'cni_recto',label:'CNI Recto',camera:'environment',icon:'🪪',desc:'Recto carte identite'},
+    {id:'cni_verso',label:'CNI Verso',camera:'environment',icon:'🪪',desc:'Verso carte identite'}
   ],
   'KYC3':[
-    {id:'selfie',                label:'Selfie',                  camera:'user',        icon:'🤳', desc:'Photo de vous, visage visible'},
-    {id:'cni_recto',             label:'CNI Recto',               camera:'environment', icon:'🪪', desc:'Recto de votre carte identite'},
-    {id:'cni_verso',             label:'CNI Verso',               camera:'environment', icon:'🪪', desc:'Verso de votre carte identite'},
-    {id:'extrait_naissance',     label:'Extrait de naissance',    camera:'environment', icon:'📄', desc:'Original ou copie certifiee'},
-    {id:'justificatif_domicile', label:'Justificatif de domicile',camera:'environment', icon:'🏠', desc:'Facture ou attestation de 3 mois max'}
+    {id:'selfie',label:'Selfie',camera:'user',icon:'🤳',desc:'Photo de vous'},
+    {id:'cni_recto',label:'CNI Recto',camera:'environment',icon:'🪪',desc:'Recto carte identite'},
+    {id:'cni_verso',label:'CNI Verso',camera:'environment',icon:'🪪',desc:'Verso carte identite'},
+    {id:'extrait_naissance',label:'Extrait naissance',camera:'environment',icon:'📄',desc:'Original ou copie'},
+    {id:'justificatif_domicile',label:'Justificatif domicile',camera:'environment',icon:'🏠',desc:'Facture ou attestation'}
   ]
 };
 var KYC_PLAFONDS={'en_attente':'20 000','KYC1':'20 000','KYC2':'50 000','KYC3':'100 000'};
@@ -1041,61 +1065,45 @@ async function ouvrirKycUpgrade(){
   document.getElementById('kyc-levels-list').style.display='';
   document.getElementById('kyc-success').style.display='none';
   var niveau=(G.user&&G.user.kycNiveau)||'KYC1';
-  document.getElementById('kyc-level-badge').textContent=niveau;
-  document.getElementById('kyc-level-label').textContent='Plafond : '+(KYC_PLAFONDS[niveau]||'20 000')+' F/mois';
-  var progressWidths={'en_attente':'10%','KYC1':'33%','KYC2':'66%','KYC3':'100%'};
+  var el=document.getElementById('kyc-level-badge');if(el)el.textContent=niveau;
+  var el2=document.getElementById('kyc-level-label');if(el2)el2.textContent='Plafond : '+(KYC_PLAFONDS[niveau]||'20 000')+' F/mois';
   var bar=document.getElementById('kyc-progress-bar');
-  if(bar)bar.style.width=progressWidths[niveau]||'33%';
-  // Niveaux
+  if(bar)bar.style.width={'en_attente':'10%','KYC1':'33%','KYC2':'66%','KYC3':'100%'}[niveau]||'33%';
   var listEl=document.getElementById('kyc-levels-list');listEl.innerHTML='';
   var kycDemande=(G.user&&G.user.kycNiveauDemande)||null;
+  // Vérifier selfie déjà soumis
+  var selfieOk=false;
+  try{var docs=await get('/kyc/documents?userId='+(G.user&&G.user.id));selfieOk=(docs.data||[]).some(function(d){return d.typeDocument==='selfie';});}catch(e){}
   var levels=[
-    {id:'KYC1',label:'KYC 1',plafond:'20 000 F/mois', docs:'Selfie uniquement',color:'#22c55e'},
-    {id:'KYC2',label:'KYC 2',plafond:'50 000 F/mois', docs:'Selfie + CNI recto + CNI verso',color:'#3b82f6'},
+    {id:'KYC1',label:'KYC 1',plafond:'20 000 F/mois',docs:'Selfie uniquement',color:'#22c55e'},
+    {id:'KYC2',label:'KYC 2',plafond:'50 000 F/mois',docs:'Selfie + CNI recto + CNI verso',color:'#3b82f6'},
     {id:'KYC3',label:'KYC 3',plafond:'100 000 F/mois',docs:'Selfie + CNI + Extrait naissance + Justificatif domicile',color:'#8b5cf6'}
   ];
-  // Vérifier si selfie KYC1 déjà soumis
-  var selfieDejaEnvoye=false;
-  try{
-    var docs=await apiGet('/kyc/documents?userId='+(G.user&&G.user.id));
-    selfieDejaEnvoye=(docs.data||[]).some(function(d){return d.typeDocument==='selfie';});
-  }catch(e){}
-
   levels.forEach(function(lv){
-    var estActif=niveau===lv.id;
-    var enAttente=kycDemande===lv.id;
-    // KYC1 : selfie manquant même si niveau actif
-    var selfieManquant=lv.id==='KYC1'&&estActif&&!selfieDejaEnvoye;
+    var isActive=niveau===lv.id;
+    var isPending=kycDemande===lv.id;
+    var selfieManquant=lv.id==='KYC1'&&isActive&&!selfieOk;
     var card=document.createElement('div');
-    card.style.cssText='background:#fff;border:1.5px solid '+(selfieManquant?'#f59e0b':estActif?lv.color:enAttente?'#f59e0b':'#e5e7eb')+';border-radius:14px;padding:14px 16px;margin-bottom:10px';
-    var badge=selfieManquant
-      ?'<span style="background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">Photo manquante</span>'
-      :estActif
-        ?'<span style="background:'+lv.color+'22;color:'+lv.color+';padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">Actif</span>'
-        :enAttente
-          ?'<span style="background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">En attente validation</span>'
-          :'<span style="background:#f3f4f6;color:#6b7280;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">A debloquer</span>';
+    card.style.cssText='background:#fff;border:1.5px solid '+(selfieManquant?'#f59e0b':isActive?lv.color:isPending?'#f59e0b':'#e5e7eb')+';border-radius:14px;padding:14px 16px;margin-bottom:10px';
+    var badge=selfieManquant?'<span style="background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">Photo manquante</span>'
+      :isActive?'<span style="background:'+lv.color+'22;color:'+lv.color+';padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">Actif</span>'
+      :isPending?'<span style="background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">En attente validation</span>'
+      :'<span style="background:#f3f4f6;color:#6b7280;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">A debloquer</span>';
     card.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div style="font-size:16px;font-weight:900;color:'+lv.color+'">'+lv.label+'</div>'+badge+'</div>'
       +'<div style="font-size:12px;color:#6b7280;margin-bottom:4px">Plafond : <strong>'+lv.plafond+'</strong></div>'
       +'<div style="font-size:11px;color:#9ca3af;margin-bottom:10px">'+lv.docs+'</div>';
     if(selfieManquant){
-      // KYC1 sans selfie : proposer d'envoyer le selfie
-      var btn=document.createElement('button');
-      btn.textContent='Envoyer mon selfie';
+      var btn=document.createElement('button');btn.textContent='Envoyer mon selfie';
       btn.style.cssText='width:100%;padding:11px;background:#f59e0b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
-      btn.addEventListener('click',(function(lvId){return function(){lancerUploadKycSelfie(lvId);};})(lv.id));
-      card.appendChild(btn);
-    } else if(!estActif&&!enAttente){
-      var btn=document.createElement('button');
-      btn.textContent='Soumettre mes documents';
+      btn.addEventListener('click',function(){lancerUploadKyc('KYC1');});card.appendChild(btn);
+    }else if(!isActive&&!isPending){
+      var btn=document.createElement('button');btn.textContent='Soumettre mes documents';
       btn.style.cssText='width:100%;padding:11px;background:'+lv.color+';color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
-      btn.addEventListener('click',(function(lvId){return function(){lancerUploadKyc(lvId);};})(lv.id));
-      card.appendChild(btn);
-    } else if(enAttente){
+      btn.addEventListener('click',(function(lvId){return function(){lancerUploadKyc(lvId);};})(lv.id));card.appendChild(btn);
+    }else if(isPending){
       var msg=document.createElement('div');
       msg.style.cssText='padding:8px 12px;background:#fef3c7;border-radius:10px;font-size:12px;color:#92400e;text-align:center;font-weight:600';
-      msg.textContent='Documents envoyes - validation en cours par le support';
-      card.appendChild(msg);
+      msg.textContent='Documents envoyes - validation en cours par le support';card.appendChild(msg);
     }
     listEl.appendChild(card);
   });
@@ -1105,21 +1113,19 @@ function lancerUploadKyc(niveau){
   kycTargetLevel=niveau;kycPhotosClient={};
   document.getElementById('kyc-levels-list').style.display='none';
   document.getElementById('kyc-upload-zone').style.display='';
-  document.getElementById('kyc-upload-title').textContent='Documents pour '+niveau+' ('+KYC_PLAFONDS[niveau]+' F/mois)';
+  document.getElementById('kyc-upload-title').textContent='Documents pour '+niveau+' ('+(KYC_PLAFONDS[niveau]||'')+'F/mois)';
   document.getElementById('kyc-upload-err').style.display='none';
   var listEl=document.getElementById('kyc-docs-list');listEl.innerHTML='';
   var docs=KYC_UPGRADE_DOCS[niveau]||[];
   docs.forEach(function(doc){
-    var slot=document.createElement('div');
-    slot.id='kyc-slot-'+doc.id;
+    var slot=document.createElement('div');slot.id='kyc-slot-'+doc.id;
     slot.style.cssText='display:flex;align-items:center;gap:12px;padding:11px 12px;background:#f9fafb;border-radius:12px;border:1.5px solid #e5e7eb;margin-bottom:8px;cursor:pointer';
     slot.innerHTML='<div id="kyc-ico-'+doc.id+'" style="width:40px;height:40px;border-radius:10px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">'+doc.icon+'</div>'
       +'<div style="flex:1"><div style="font-size:13px;font-weight:700">'+doc.label+'</div><div id="kyc-lbl-'+doc.id+'" style="font-size:11px;color:#9ca3af;margin-top:1px">'+doc.desc+'</div></div>'
       +'<div id="kyc-chk-'+doc.id+'" style="color:#d1d5db;font-size:18px">📷</div>';
     slot.addEventListener('click',(function(d){return function(){document.getElementById('kyc-inp-'+d.id).click();};})(doc));
     listEl.appendChild(slot);
-    var inp=document.createElement('input');
-    inp.type='file';inp.accept='image/*';inp.capture=doc.camera;inp.id='kyc-inp-'+doc.id;inp.style.display='none';
+    var inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.capture=doc.camera;inp.id='kyc-inp-'+doc.id;inp.style.display='none';
     inp.addEventListener('change',(function(d){return function(){
       if(this.files&&this.files[0]){
         kycPhotosClient[d.id]=this.files[0];
@@ -1133,81 +1139,29 @@ function lancerUploadKyc(niveau){
   });
 }
 
-async function lancerUploadKycSelfie(niveau){
-  // Upload selfie seul pour compléter KYC1 sans ticket de validation
-  kycTargetLevel=niveau;kycPhotosClient={};
-  document.getElementById('kyc-levels-list').style.display='none';
-  document.getElementById('kyc-upload-zone').style.display='';
-  document.getElementById('kyc-upload-title').textContent='Votre selfie KYC1';
-  document.getElementById('kyc-upload-err').style.display='none';
-  var listEl=document.getElementById('kyc-docs-list');listEl.innerHTML='';
-  // Un seul document : selfie
-  var doc={id:'selfie',label:'Selfie',camera:'user',icon:'🤳',desc:'Photo de vous, visage clairement visible'};
-  var slot=document.createElement('div');
-  slot.id='kyc-slot-selfie';
-  slot.style.cssText='display:flex;align-items:center;gap:12px;padding:11px 12px;background:#f9fafb;border-radius:12px;border:1.5px solid #e5e7eb;margin-bottom:8px;cursor:pointer';
-  slot.innerHTML='<div id="kyc-ico-selfie" style="width:40px;height:40px;border-radius:10px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🤳</div>'
-    +'<div style="flex:1"><div style="font-size:13px;font-weight:700">Selfie</div><div id="kyc-lbl-selfie" style="font-size:11px;color:#9ca3af;margin-top:1px">Photo de vous, visage visible</div></div>'
-    +'<div id="kyc-chk-selfie" style="color:#d1d5db;font-size:18px">📷</div>';
-  slot.addEventListener('click',function(){document.getElementById('kyc-inp-selfie-solo').click();});
-  listEl.appendChild(slot);
-  var inp=document.createElement('input');
-  inp.type='file';inp.accept='image/*';inp.capture='user';inp.id='kyc-inp-selfie-solo';inp.style.display='none';
-  inp.addEventListener('change',function(){
-    if(this.files&&this.files[0]){
-      kycPhotosClient['selfie']=this.files[0];
-      var sl=document.getElementById('kyc-slot-selfie');if(sl){sl.style.border='1.5px solid #22c55e';sl.style.background='#f0fdf4';}
-      var ic=document.getElementById('kyc-ico-selfie');if(ic){ic.textContent='✅';}
-      var lb=document.getElementById('kyc-lbl-selfie');if(lb){lb.style.color='#22c55e';lb.textContent='Selfie pris';}
-      var ck=document.getElementById('kyc-chk-selfie');if(ck){ck.textContent='✓';ck.style.color='#22c55e';}
-    }
-  });
-  listEl.appendChild(inp);
-  // Changer le bouton pour ne pas créer de ticket
-  var submitBtn=document.getElementById('kyc-submit-btn');
-  if(submitBtn)submitBtn.setAttribute('data-selfie-only','1');
-}
-
 async function soumettreKyc(){
   var docs=KYC_UPGRADE_DOCS[kycTargetLevel]||[];
   var manquants=docs.filter(function(d){return !kycPhotosClient[d.id];});
   var errEl=document.getElementById('kyc-upload-err');
   if(manquants.length){errEl.textContent='Photos manquantes : '+manquants.map(function(d){return d.label;}).join(', ');errEl.style.display='';return;}
   errEl.style.display='none';
-  var btn=document.getElementById('kyc-submit-btn');
-  btn.disabled=true;btn.textContent='Envoi en cours...';
+  var btn=document.getElementById('kyc-submit-btn');btn.disabled=true;btn.textContent='Envoi en cours...';
   var userId=G.user&&G.user.id;
   for(var i=0;i<docs.length;i++){
     var doc=docs[i];var file=kycPhotosClient[doc.id];if(!file)continue;
-    try{
-      var fd=new FormData();fd.append('file',file);fd.append('upload_preset',CLOUDINARY_PRESET);fd.append('folder','afrim-pay/kyc');
-      var r=await fetch('https://api.cloudinary.com/v1_1/'+CLOUDINARY_CLOUD+'/image/upload',{method:'POST',body:fd});
-      var d=await r.json();
-      if(!r.ok||!d.secure_url)throw new Error('Upload echoue');
-      var h={'Content-Type':'application/json'};if(G.token)h['Authorization']='Bearer '+G.token;
-      await fetch(API+'/kyc/documents',{method:'POST',headers:h,body:JSON.stringify({userId:userId,typeDocument:doc.id,urlFichier:d.secure_url})});
-    }catch(e){
-      errEl.textContent='Erreur '+doc.label+' : '+e.message;errEl.style.display='';
-      btn.disabled=false;btn.textContent='Envoyer';return;
-    }
+    try{await uploadPhotoCloudinary(file,doc.id,userId);}
+    catch(e){errEl.textContent='Erreur '+doc.label+' : '+e.message;errEl.style.display='';btn.disabled=false;btn.textContent='Envoyer';return;}
   }
-  var submitBtn=document.getElementById('kyc-submit-btn');
-  var selfieOnly=submitBtn&&submitBtn.getAttribute('data-selfie-only')==='1';
-  if(!selfieOnly){
-    // Notifier le backend de la demande de montée KYC
+  var isSelfieOnly=kycTargetLevel==='KYC1';
+  if(!isSelfieOnly){
     try{
-      var h2={'Content-Type':'application/json'};if(G.token)h2['Authorization']='Bearer '+G.token;
-      await fetch(API+'/kyc/request',{method:'POST',headers:h2,body:JSON.stringify({userId:userId,niveauDemande:kycTargetLevel})});
+      var h={'Content-Type':'application/json'};if(G.token)h['Authorization']='Bearer '+G.token;
+      await fetch(API+'/kyc/request',{method:'POST',headers:h,body:JSON.stringify({userId:userId,niveauDemande:kycTargetLevel})});
     }catch(e){console.warn('kyc request:',e.message);}
-    var lbl=document.getElementById('kyc-status-label');
-    if(lbl)lbl.textContent=kycTargetLevel+' en attente de validation';
-  } else {
-    var lbl=document.getElementById('kyc-status-label');
-    if(lbl)lbl.textContent='KYC1 actif - Selfie enregistre';
-    if(submitBtn)submitBtn.removeAttribute('data-selfie-only');
   }
   document.getElementById('kyc-upload-zone').style.display='none';
   document.getElementById('kyc-success').style.display='';
+  btn.disabled=false;btn.textContent='Envoyer';
 }
 </script>
 </div>
@@ -1252,25 +1206,16 @@ async function soumettreKyc(){
 <div class="sh-ov" id="sh-kyc-upgrade">
   <div class="sh"><div class="sh-bar"></div>
     <div class="sh-top">
-      <div>
-        <div class="sh-title">Compléter mon KYC</div>
-        <div style="color:var(--m);font-size:12px">Augmentez votre plafond mensuel</div>
-      </div>
+      <div><div class="sh-title">Completer mon KYC</div><div style="color:var(--m);font-size:12px">Augmentez votre plafond mensuel</div></div>
       <button class="sh-x" onclick="closeSh('kyc-upgrade')">✕</button>
     </div>
     <div class="sh-body">
-
-      <!-- Niveau actuel -->
       <div id="kyc-current-level" style="background:#f9fafb;border-radius:14px;padding:14px 16px;margin-bottom:16px">
-        <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Niveau actuel</div>
+        <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">NIVEAU ACTUEL</div>
         <div style="display:flex;align-items:center;gap:10px">
           <div style="font-size:24px;font-weight:900" id="kyc-level-badge">KYC1</div>
-          <div>
-            <div style="font-size:13px;font-weight:700" id="kyc-level-label">Plafond 20 000 F/mois</div>
-            <div style="font-size:11px;color:#6b7280" id="kyc-level-status">Actif</div>
-          </div>
+          <div><div style="font-size:13px;font-weight:700" id="kyc-level-label">Plafond 20 000 F/mois</div></div>
         </div>
-        <!-- Barre progression -->
         <div style="background:#e5e7eb;border-radius:99px;height:6px;margin-top:12px">
           <div id="kyc-progress-bar" style="background:var(--g);border-radius:99px;height:6px;width:33%;transition:width .4s"></div>
         </div>
@@ -1280,11 +1225,7 @@ async function soumettreKyc(){
           <span style="font-size:9px;color:#6b7280;font-weight:700">KYC3</span>
         </div>
       </div>
-
-      <!-- Niveaux à débloquer -->
       <div id="kyc-levels-list"></div>
-
-      <!-- Zone upload -->
       <div id="kyc-upload-zone" style="display:none">
         <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px" id="kyc-upload-title">Documents requis</div>
         <div id="kyc-docs-list"></div>
@@ -1294,18 +1235,14 @@ async function soumettreKyc(){
           <button class="btn btn-g" style="flex:2" id="kyc-submit-btn" onclick="soumettreKyc()">Envoyer</button>
         </div>
       </div>
-
-      <!-- Succès -->
       <div id="kyc-success" style="display:none;text-align:center;padding:20px">
         <div style="font-size:48px;margin-bottom:12px">✅</div>
-        <div style="font-size:17px;font-weight:800;margin-bottom:8px">Documents envoyés !</div>
-        <div style="font-size:13px;color:var(--m);margin-bottom:6px">Votre demande est en cours d'examen.</div>
-        <div style="font-size:13px;color:var(--m);margin-bottom:20px">Le support client validera vos documents sous 24h. Vous serez notifié.</div>
-        <button class="btn btn-g" onclick="closeSh('kyc-upgrade');chargerProfil()">Fermer</button>
+        <div style="font-size:17px;font-weight:800;margin-bottom:8px">Documents envoyes !</div>
+        <div style="font-size:13px;color:var(--m);margin-bottom:20px">Le support client validera vos documents sous 24h.</div>
+        <button class="btn btn-g" onclick="closeSh('kyc-upgrade')">Fermer</button>
       </div>
     </div>
   </div>
 </div>
-
 </body>
 </html>

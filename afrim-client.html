@@ -1034,7 +1034,7 @@ var KYC_UPGRADE_DOCS={
 };
 var KYC_PLAFONDS={'en_attente':'20 000','KYC1':'20 000','KYC2':'50 000','KYC3':'100 000'};
 
-function ouvrirKycUpgrade(){
+async function ouvrirKycUpgrade(){
   openSh('kyc-upgrade');
   kycPhotosClient={};kycTargetLevel=null;
   document.getElementById('kyc-upload-zone').style.display='none';
@@ -1054,20 +1054,38 @@ function ouvrirKycUpgrade(){
     {id:'KYC2',label:'KYC 2',plafond:'50 000 F/mois', docs:'Selfie + CNI recto + CNI verso',color:'#3b82f6'},
     {id:'KYC3',label:'KYC 3',plafond:'100 000 F/mois',docs:'Selfie + CNI + Extrait naissance + Justificatif domicile',color:'#8b5cf6'}
   ];
+  // Vérifier si selfie KYC1 déjà soumis
+  var selfieDejaEnvoye=false;
+  try{
+    var docs=await apiGet('/kyc/documents?userId='+(G.user&&G.user.id));
+    selfieDejaEnvoye=(docs.data||[]).some(function(d){return d.typeDocument==='selfie';});
+  }catch(e){}
+
   levels.forEach(function(lv){
     var estActif=niveau===lv.id;
     var enAttente=kycDemande===lv.id;
+    // KYC1 : selfie manquant même si niveau actif
+    var selfieManquant=lv.id==='KYC1'&&estActif&&!selfieDejaEnvoye;
     var card=document.createElement('div');
-    card.style.cssText='background:#fff;border:1.5px solid '+(estActif?lv.color:enAttente?'#f59e0b':'#e5e7eb')+';border-radius:14px;padding:14px 16px;margin-bottom:10px';
-    var badge=estActif
-      ?'<span style="background:'+lv.color+'22;color:'+lv.color+';padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">Actif</span>'
-      :enAttente
-        ?'<span style="background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">En attente validation</span>'
-        :'<span style="background:#f3f4f6;color:#6b7280;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">A debloquer</span>';
+    card.style.cssText='background:#fff;border:1.5px solid '+(selfieManquant?'#f59e0b':estActif?lv.color:enAttente?'#f59e0b':'#e5e7eb')+';border-radius:14px;padding:14px 16px;margin-bottom:10px';
+    var badge=selfieManquant
+      ?'<span style="background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">Photo manquante</span>'
+      :estActif
+        ?'<span style="background:'+lv.color+'22;color:'+lv.color+';padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">Actif</span>'
+        :enAttente
+          ?'<span style="background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">En attente validation</span>'
+          :'<span style="background:#f3f4f6;color:#6b7280;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">A debloquer</span>';
     card.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div style="font-size:16px;font-weight:900;color:'+lv.color+'">'+lv.label+'</div>'+badge+'</div>'
       +'<div style="font-size:12px;color:#6b7280;margin-bottom:4px">Plafond : <strong>'+lv.plafond+'</strong></div>'
       +'<div style="font-size:11px;color:#9ca3af;margin-bottom:10px">'+lv.docs+'</div>';
-    if(!estActif&&!enAttente){
+    if(selfieManquant){
+      // KYC1 sans selfie : proposer d'envoyer le selfie
+      var btn=document.createElement('button');
+      btn.textContent='Envoyer mon selfie';
+      btn.style.cssText='width:100%;padding:11px;background:#f59e0b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
+      btn.addEventListener('click',(function(lvId){return function(){lancerUploadKycSelfie(lvId);};})(lv.id));
+      card.appendChild(btn);
+    } else if(!estActif&&!enAttente){
       var btn=document.createElement('button');
       btn.textContent='Soumettre mes documents';
       btn.style.cssText='width:100%;padding:11px;background:'+lv.color+';color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
@@ -1076,7 +1094,7 @@ function ouvrirKycUpgrade(){
     } else if(enAttente){
       var msg=document.createElement('div');
       msg.style.cssText='padding:8px 12px;background:#fef3c7;border-radius:10px;font-size:12px;color:#92400e;text-align:center;font-weight:600';
-      msg.textContent='Documents envoyés - validation en cours par le support';
+      msg.textContent='Documents envoyes - validation en cours par le support';
       card.appendChild(msg);
     }
     listEl.appendChild(card);
@@ -1115,6 +1133,41 @@ function lancerUploadKyc(niveau){
   });
 }
 
+async function lancerUploadKycSelfie(niveau){
+  // Upload selfie seul pour compléter KYC1 sans ticket de validation
+  kycTargetLevel=niveau;kycPhotosClient={};
+  document.getElementById('kyc-levels-list').style.display='none';
+  document.getElementById('kyc-upload-zone').style.display='';
+  document.getElementById('kyc-upload-title').textContent='Votre selfie KYC1';
+  document.getElementById('kyc-upload-err').style.display='none';
+  var listEl=document.getElementById('kyc-docs-list');listEl.innerHTML='';
+  // Un seul document : selfie
+  var doc={id:'selfie',label:'Selfie',camera:'user',icon:'🤳',desc:'Photo de vous, visage clairement visible'};
+  var slot=document.createElement('div');
+  slot.id='kyc-slot-selfie';
+  slot.style.cssText='display:flex;align-items:center;gap:12px;padding:11px 12px;background:#f9fafb;border-radius:12px;border:1.5px solid #e5e7eb;margin-bottom:8px;cursor:pointer';
+  slot.innerHTML='<div id="kyc-ico-selfie" style="width:40px;height:40px;border-radius:10px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🤳</div>'
+    +'<div style="flex:1"><div style="font-size:13px;font-weight:700">Selfie</div><div id="kyc-lbl-selfie" style="font-size:11px;color:#9ca3af;margin-top:1px">Photo de vous, visage visible</div></div>'
+    +'<div id="kyc-chk-selfie" style="color:#d1d5db;font-size:18px">📷</div>';
+  slot.addEventListener('click',function(){document.getElementById('kyc-inp-selfie-solo').click();});
+  listEl.appendChild(slot);
+  var inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*';inp.capture='user';inp.id='kyc-inp-selfie-solo';inp.style.display='none';
+  inp.addEventListener('change',function(){
+    if(this.files&&this.files[0]){
+      kycPhotosClient['selfie']=this.files[0];
+      var sl=document.getElementById('kyc-slot-selfie');if(sl){sl.style.border='1.5px solid #22c55e';sl.style.background='#f0fdf4';}
+      var ic=document.getElementById('kyc-ico-selfie');if(ic){ic.textContent='✅';}
+      var lb=document.getElementById('kyc-lbl-selfie');if(lb){lb.style.color='#22c55e';lb.textContent='Selfie pris';}
+      var ck=document.getElementById('kyc-chk-selfie');if(ck){ck.textContent='✓';ck.style.color='#22c55e';}
+    }
+  });
+  listEl.appendChild(inp);
+  // Changer le bouton pour ne pas créer de ticket
+  var submitBtn=document.getElementById('kyc-submit-btn');
+  if(submitBtn)submitBtn.setAttribute('data-selfie-only','1');
+}
+
 async function soumettreKyc(){
   var docs=KYC_UPGRADE_DOCS[kycTargetLevel]||[];
   var manquants=docs.filter(function(d){return !kycPhotosClient[d.id];});
@@ -1138,15 +1191,23 @@ async function soumettreKyc(){
       btn.disabled=false;btn.textContent='Envoyer';return;
     }
   }
-  // Notifier le backend de la demande de montée KYC
-  try{
-    var h2={'Content-Type':'application/json'};if(G.token)h2['Authorization']='Bearer '+G.token;
-    await fetch(API+'/kyc/request',{method:'POST',headers:h2,body:JSON.stringify({userId:userId,niveauDemande:kycTargetLevel})});
-  }catch(e){console.warn('kyc request:',e.message);}
+  var submitBtn=document.getElementById('kyc-submit-btn');
+  var selfieOnly=submitBtn&&submitBtn.getAttribute('data-selfie-only')==='1';
+  if(!selfieOnly){
+    // Notifier le backend de la demande de montée KYC
+    try{
+      var h2={'Content-Type':'application/json'};if(G.token)h2['Authorization']='Bearer '+G.token;
+      await fetch(API+'/kyc/request',{method:'POST',headers:h2,body:JSON.stringify({userId:userId,niveauDemande:kycTargetLevel})});
+    }catch(e){console.warn('kyc request:',e.message);}
+    var lbl=document.getElementById('kyc-status-label');
+    if(lbl)lbl.textContent=kycTargetLevel+' en attente de validation';
+  } else {
+    var lbl=document.getElementById('kyc-status-label');
+    if(lbl)lbl.textContent='KYC1 actif - Selfie enregistre';
+    if(submitBtn)submitBtn.removeAttribute('data-selfie-only');
+  }
   document.getElementById('kyc-upload-zone').style.display='none';
   document.getElementById('kyc-success').style.display='';
-  var lbl=document.getElementById('kyc-status-label');
-  if(lbl)lbl.textContent=kycTargetLevel+' en attente de validation';
 }
 </script>
 </div>

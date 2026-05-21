@@ -270,7 +270,7 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
     <!-- Vidéo en plein écran derrière -->
     <video id="wqr-video" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none" autoplay playsinline muted></video>
     <!-- Overlay avec cadre -->
-    <div id="wqr-overlay" style="position:relative;width:240px;height:240px;z-index:2">
+    <div id="wqr-overlay" style="position:relative;width:240px;height:240px;z-index:2;pointer-events:none;box-shadow:0 0 0 9999px rgba(0,0,0,.5);">
       <div style="position:absolute;top:0;left:0;width:44px;height:44px;border-top:3px solid #059669;border-left:3px solid #059669;border-radius:6px 0 0 0"></div>
       <div style="position:absolute;top:0;right:0;width:44px;height:44px;border-top:3px solid #059669;border-right:3px solid #059669;border-radius:0 6px 0 0"></div>
       <div style="position:absolute;bottom:0;left:0;width:44px;height:44px;border-bottom:3px solid #059669;border-left:3px solid #059669;border-radius:0 0 0 6px"></div>
@@ -910,9 +910,15 @@ function dessinerQRHome(cid,data,color){
 var _scanStream=null,_scanInterval=null;
 
 function ouvrirPopupQR(){
-  document.getElementById('wave-qr-popup').style.display='flex';
+  var popup=document.getElementById('wave-qr-popup');
+  popup.style.display='flex';
   wqrTab('scan');
-  _lancerCamera();
+  // Attendre que le navigateur ait rendu le popup avant de lancer la caméra
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      _lancerCamera();
+    });
+  });
 }
 function fermerPopupQR(){
   _arreterCamera();
@@ -928,7 +934,9 @@ function _lancerCamera(){
     navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}})
     .then(function(stream){
       _scanStream=stream;
-      video.srcObject=stream;video.style.display='block';video.play();
+      video.srcObject=stream;
+      video.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block';
+      video.play().catch(function(){});
       if(msg)msg.textContent='Pointez vers le QR code';
       _scanInterval=setInterval(function(){
         if(video.readyState<2)return;
@@ -953,7 +961,9 @@ function _lancerCamera(){
     navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}})
     .then(function(stream){
       _scanStream=stream;
-      video.srcObject=stream;video.style.display='block';video.play();
+      video.srcObject=stream;
+      video.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block';
+      video.play().catch(function(){});
       if(msg)msg.textContent='Pointez vers le QR code';
       _scanInterval=setInterval(function(){_lireQRVideo();},300);
     })

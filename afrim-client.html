@@ -74,6 +74,7 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 .params-sub{font-size:12px;color:#6b7280;margin-top:1px}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
 </head>
 <body>
 <div id="app">
@@ -163,9 +164,13 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
         <div style="position:absolute;top:10px;right:10px;width:22px;height:22px;border-top:3px solid #fff;border-right:3px solid #fff;border-radius:0 4px 0 0"></div>
         <div style="position:absolute;bottom:32px;left:10px;width:22px;height:22px;border-bottom:3px solid #fff;border-left:3px solid #fff;border-radius:0 0 0 4px"></div>
         <div style="position:absolute;bottom:32px;right:10px;width:22px;height:22px;border-bottom:3px solid #fff;border-right:3px solid #fff;border-radius:0 0 4px 0"></div>
-        <div style="background:#fff;border-radius:12px;padding:12px">
+        <div style="background:#fff;border-radius:12px;padding:12px;cursor:pointer" onclick="ouvrirPopupQR()">
           <div id="h-qr-canvas" style="width:200px;height:200px;margin:0 auto"></div>
         </div>
+        <button onclick="ouvrirPopupQR()" style="margin-top:10px;background:rgba(255,255,255,.2);border:none;border-radius:12px;padding:10px 24px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;margin-left:auto;margin-right:auto">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="7" height="7" rx="1"/><rect x="15" y="3" width="7" height="7" rx="1"/><rect x="2" y="14" width="7" height="7" rx="1"/><path d="M15 14h2m0 0h5m-5 0v2m0 3v2m5-7v7h-3"/></svg>
+          Scanner QR
+        </button>
         <div style="text-align:center;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:6px">
           <svg width="14" height="14" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2" viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
           <span style="color:rgba(255,255,255,.85);font-size:12px;font-weight:700">Appuyer pour scanner</span>
@@ -178,7 +183,7 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
   <div style="padding:16px 16px 0;margin-top:-4px">
     <div class="card" style="padding:16px">
       <div class="act-grid5">
-        <button class="act-btn" onclick="openSh('send')">
+        <button class="act-btn" onclick="ouvrirTransfert()">
           <div class="act-icon" style="background:#ecfdf5;width:46px;height:46px;font-size:20px;border-radius:14px">📤</div>
           <span class="act-label" style="font-size:10px">Transfert</span>
         </button>
@@ -225,6 +230,9 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
   <nav class="bnav">
     <button class="nb on" id="nb-home" onclick="setTab('home')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Accueil</button>
     <button class="nb" id="nb-history" onclick="setTab('history')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Historique</button>
+    
+    
+    <button class="nb" id="nb-commissions-n1" onclick="setTab('commissions')"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Gains</button>
     <button class="nb" id="nb-profile" onclick="setTab('profile')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/></svg>Paramètres</button>
   </nav>
 </div>
@@ -242,6 +250,7 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
   <nav class="bnav">
     <button class="nb" id="nb-home" onclick="setTab('home')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Accueil</button>
     <button class="nb on" id="nb-history" onclick="setTab('history')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Historique</button>
+    <button class="nb" id="nb-commissions-h" onclick="setTab('commissions')"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Gains</button>
     <button class="nb" id="nb-profile" onclick="setTab('profile')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/></svg>Paramètres</button>
   </nav>
 </div>
@@ -256,23 +265,18 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
     <button id="wqr-flash-btn" onclick="toggleFlash()" style="position:absolute;top:20px;right:20px;background:rgba(255,255,255,.15);border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;">
       <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
     </button>
-    <div style="position:relative;width:260px;height:260px;border-radius:20px;overflow:hidden;">
-      <input type="file" id="wqr-native-input" accept="image/*" capture="environment" style="display:none"/>
-      <div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px">
-        <div style="color:rgba(255,255,255,.8);font-size:13px;font-weight:600;text-align:center">Scannez le QR code du destinataire</div>
-        <button onclick="document.getElementById('wqr-native-input').click()" style="background:#059669;color:#fff;border:none;border-radius:14px;padding:14px 32px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;max-width:240px">📷 Ouvrir la caméra</button>
-        <div style="color:rgba(255,255,255,.5);font-size:11px;text-align:center">Ou saisissez le numéro manuellement</div>
-      </div>
-      <video id="wqr-video" style="display:none" autoplay playsinline muted></video>
-      <canvas id="wqr-canvas" style="display:none;"></canvas>
-      <div style="position:absolute;inset:0;pointer-events:none;">
-        <div style="position:absolute;top:14px;left:14px;width:34px;height:34px;border-top:3px solid #fff;border-left:3px solid #fff;border-radius:4px 0 0 0;"></div>
-        <div style="position:absolute;top:14px;right:14px;width:34px;height:34px;border-top:3px solid #fff;border-right:3px solid #fff;border-radius:0 4px 0 0;"></div>
-        <div style="position:absolute;bottom:14px;left:14px;width:34px;height:34px;border-bottom:3px solid #fff;border-left:3px solid #fff;border-radius:0 0 0 4px;"></div>
-        <div style="position:absolute;bottom:14px;right:14px;width:34px;height:34px;border-bottom:3px solid #fff;border-right:3px solid #fff;border-radius:0 0 4px 0;"></div>
-      </div>
+    <input type="file" id="wqr-native-input" accept="image/*" style="display:none"/>
+    <canvas id="wqr-canvas" style="display:none"></canvas>
+    <!-- Vidéo en plein écran derrière -->
+    <video id="wqr-video" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none" autoplay playsinline muted></video>
+    <!-- Overlay avec cadre -->
+    <div id="wqr-overlay" style="position:relative;width:240px;height:240px;z-index:2">
+      <div style="position:absolute;top:0;left:0;width:44px;height:44px;border-top:3px solid #059669;border-left:3px solid #059669;border-radius:6px 0 0 0"></div>
+      <div style="position:absolute;top:0;right:0;width:44px;height:44px;border-top:3px solid #059669;border-right:3px solid #059669;border-radius:0 6px 0 0"></div>
+      <div style="position:absolute;bottom:0;left:0;width:44px;height:44px;border-bottom:3px solid #059669;border-left:3px solid #059669;border-radius:0 0 0 6px"></div>
+      <div style="position:absolute;bottom:0;right:0;width:44px;height:44px;border-bottom:3px solid #059669;border-right:3px solid #059669;border-radius:0 0 6px 0"></div>
     </div>
-    <div style="color:rgba(255,255,255,.8);font-size:14px;font-weight:600;margin-top:22px;text-align:center;padding:0 40px;">Scanner un Code QR pour payer ou envoyer</div>
+    <div id="wqr-scan-msg" style="color:rgba(255,255,255,.7);font-size:13px;margin-top:16px;z-index:2">Chargement caméra...</div>
     <div class="wave-tab-bar" style="position:absolute;bottom:36px;left:50%;transform:translateX(-50%);">
       <button class="wave-tab-btn on" id="wtab-scan" onclick="wqrTab('scan')">Scanner un code</button>
       <button class="wave-tab-btn" id="wtab-carte" onclick="wqrTab('carte')">Ma carte</button>
@@ -289,7 +293,7 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
         <div style="background:#fff;border-radius:16px;padding:14px;margin-bottom:14px;">
           <div id="wqr-carte-canvas" style="width:200px;height:200px;margin:0 auto"></div>
         </div>
-        <div id="wqr-carte-name"> style="color:#fff;font-size:17px;font-weight:800;margin-bottom:4px;"></div>
+        <div id="wqr-carte-name" style="color:#fff;font-size:17px;font-weight:800;margin-bottom:4px;"></div>
         <div id="wqr-carte-tel" style="color:rgba(255,255,255,.8);font-size:13px;font-family:monospace;"></div>
       </div>
     </div>
@@ -320,15 +324,15 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
       <div><div class="params-label">Mes informations</div><div class="params-sub">Nom, Prenom, Telephone, KYC</div></div>
       <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
     </button>
+    <button class="params-item" onclick="ouvrirKycUpgrade()">
+      <div class="params-icon" style="background:#eff6ff">🪪</div>
+      <div><div class="params-label">Compléter mon KYC</div><div class="params-sub" id="kyc-sub-label">Documents d'identité</div></div>
+      <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
     <button class="params-item" onclick="openSh('change-pin')">
       <div class="params-icon" style="background:#fef3c7">🔐</div>
       <div><div class="params-label">Modifier le code secret</div><div class="params-sub">Changer votre PIN de connexion</div></div>
       <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
-    </button>
-    <button class="params-item" onclick="ouvrirKycUpgrade()">
-      <div class="params-icon" style="background:#eff6ff">🪪</div>
-      <div><div class="params-label">Compléter mon KYC</div><div class="params-sub" id="kyc-status-label">Envoyer mes documents</div></div>
-      <svg style="margin-left:auto" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
     </button>
     <button class="params-item" onclick="voirPlafond()">
       <div class="params-icon" style="background:#eff6ff">📊</div>
@@ -368,6 +372,8 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
   <nav class="bnav">
     <button class="nb" id="nb-home" onclick="setTab('home')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Accueil</button>
     <button class="nb" id="nb-history" onclick="setTab('history')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Historique</button>
+    
+    <button class="nb" id="nb-commissions-a0" onclick="setTab('commissions')"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Gains</button>
     <button class="nb on" id="nb-profile" onclick="setTab('profile')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/></svg>Paramètres</button>
   </nav>
 </div>
@@ -375,22 +381,21 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 
 <!-- SHEET ENVOYER -->
 
-<!-- ÉCRAN COMMISSIONS -->
+<!-- ÉCRAN GAINS -->
 <div class="scr" id="s-commissions">
   <div style="background:linear-gradient(135deg,#d97706,#f59e0b);padding:52px 20px 20px;position:sticky;top:0;z-index:10">
     <div style="font-size:22px;font-weight:800;color:#fff">Mes gains 💰</div>
-    <div style="color:rgba(255,255,255,.8);font-size:13px;margin-top:4px">Commissions de parrainage</div>
+    <div style="color:rgba(255,255,255,.8);font-size:13px">Commissions de parrainage</div>
   </div>
-  <div style="padding:16px 16px 100px" id="comm-content">
-    <div style="padding:32px;text-align:center"><div class="spin"></div></div>
-  </div>
+  <div id="comm-content" style="padding:16px 16px 100px"><div style="padding:32px;text-align:center"><div class="spin"></div></div></div>
   <nav class="bnav">
-    <button class="nb" id="nb-home-c" onclick="setTab('home')"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Accueil</button>
-    <button class="nb" id="nb-history-c" onclick="setTab('history')"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Historique</button>
+    <button class="nb" id="nb-home-c" onclick="setTab('home')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Accueil</button>
+    <button class="nb" id="nb-history-c" onclick="setTab('history')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Historique</button>
     <button class="nb on" id="nb-commissions-c" onclick="setTab('commissions')"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Gains</button>
-    <button class="nb" id="nb-profile-c" onclick="setTab('profile')"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/></svg>Paramètres</button>
+    <button class="nb" id="nb-profile-c" onclick="setTab('profile')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/></svg>Paramètres</button>
   </nav>
 </div>
+
 <div class="sh-ov" id="sh-send">
   <div class="sh">
     <div class="sh-bar"></div>
@@ -537,7 +542,9 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
         <label class="lbl">Téléphone *</label>
         <input class="inp" id="ins-tel" type="tel" placeholder="+225 07 XX XX XX" inputmode="numeric" style="margin-bottom:12px"/>
         <label class="lbl">Code PIN (4 chiffres) *</label>
-        <input class="inp" id="ins-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" style="margin-bottom:12px"/>
+        <input class="inp" id="ins-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••"/>
+        <label class="lbl" style="margin-top:12px;display:block">Confirmer le code secret *</label>
+        <input class="inp" id="ins-pin2" type="password" inputmode="numeric" maxlength="4" placeholder="••••" style="margin-bottom:12px"/>
         <label class="lbl">Code parrainage (optionnel)</label>
         <input class="inp" id="ins-parrain" type="text" placeholder="Ex: VAL-430Y" style="margin-bottom:16px"/>
         <label class="lbl">Niveau KYC</label>
@@ -562,13 +569,9 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 
 <script>
 const API='https://afrim-pay-backend.onrender.com/api/v1';
-var CLOUDINARY_CLOUD='dzofjvhwu';
-var CLOUDINARY_PRESET='afrim-kyc';
-function get(p){return api(p);}
-function post(p,b){return api(p,{method:'POST',body:JSON.stringify(b)});}
-function patch(p,b){return api(p,{method:'PATCH',body:JSON.stringify(b)});}
-let G={token:localStorage.getItem('afrim_token'),refresh:localStorage.getItem('afrim_refresh'),user:null,compte:null,pin:'',soldeVisible:false,tab:'home',loginTel:''};
-try{G.user=JSON.parse(localStorage.getItem('afrim_user'));}catch(e){}
+var LS={get:function(k){try{return localStorage.getItem(k);}catch(e){return null;}},set:function(k,v){try{localStorage.setItem(k,v);}catch(e){}},remove:function(k){try{localStorage.removeItem(k);}catch(e){}}};
+let G={token:LS.get('afrim_token'),refresh:LS.get('afrim_refresh'),user:null,compte:null,pin:'',soldeVisible:false,tab:'home',loginTel:''};
+try{G.user=JSON.parse(LS.get('afrim_user'));}catch(e){}
 
 async function api(path,opts){
   opts=opts||{};
@@ -583,7 +586,7 @@ var get=p=>api(p);
 var post=(p,b)=>api(p,{method:'POST',body:JSON.stringify(b)});
 
 async function doRefresh(){
-  try{var r=await fetch(API+'/auth/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refreshToken:G.refresh})});var d=await r.json();if(!r.ok)throw 0;G.token=d.data.accessToken;G.refresh=d.data.refreshToken;localStorage.setItem('afrim_token',G.token);localStorage.setItem('afrim_refresh',G.refresh);return true;}
+  try{var r=await fetch(API+'/auth/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refreshToken:G.refresh})});var d=await r.json();if(!r.ok)throw 0;G.token=d.data.accessToken;G.refresh=d.data.refreshToken;LS.set('afrim_token',G.token);LS.set('afrim_refresh',G.refresh);return true;}
   catch(e){logout();return false;}
 }
 
@@ -597,9 +600,9 @@ function closeSh(id){document.getElementById('sh-'+id).classList.remove('on');}
 
 function setTab(t){
   G.tab=t;
-  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
-  document.querySelectorAll('#nb-'+t).forEach(b=>b.classList.add('on'));
-  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on');});
+  document.querySelectorAll('[id^="nb-'+t+'"]').forEach(function(b){b.classList.add('on');});
+  document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});
   if(t==='home'){document.getElementById('s-home').classList.add('on');chargerAccueil();}
   else if(t==='history'){document.getElementById('s-history').classList.add('on');chargerHistorique();}
   else if(t==='receive'){ouvrirPopupQR();return;}
@@ -614,7 +617,7 @@ function chkLogin(){var v=document.getElementById('login-tel').value.trim();docu
 async function chargerAccueil(){
   var u=G.user;if(!u)return;
   document.getElementById('h-name').textContent=(u.prenom||'')+' '+(u.nom||'');
-  try{var cr=await get('/accounts/me');G.compte=cr.data;var ur=await get('/users/me');G.user=ur.data;localStorage.setItem('afrim_user',JSON.stringify(G.user));}catch(e){}
+  try{var cr=await get('/accounts/me');G.compte=cr.data;var ur=await get('/users/me');G.user=ur.data;LS.set('afrim_user',JSON.stringify(G.user));}catch(e){}
   afficherSolde();
   // Grand QR centré sur accueil
   if(document.getElementById('h-qr-canvas') && u.telephone) {
@@ -872,7 +875,10 @@ function rstIns(){['ins-prenom','ins-nom','ins-tel','ins-pin','ins-parrain'].for
 async function doInscrire(){
   var prenom=document.getElementById('ins-prenom').value.trim();var nom=document.getElementById('ins-nom').value.trim();var telephone=document.getElementById('ins-tel').value.trim();var pin=document.getElementById('ins-pin').value.trim();var parrainCode=document.getElementById('ins-parrain').value.trim();
   var errEl=document.getElementById('ins-err');errEl.style.display='none';
+  var pin2=document.getElementById('ins-pin2');var pin2val=pin2?pin2.value.trim():'';
   if(!prenom||!nom||!telephone||!pin){errEl.textContent='Tous les champs obligatoires doivent être remplis';errEl.style.display='';return;}
+  if(pin.length!==4){errEl.textContent='Le code secret doit avoir exactement 4 chiffres';errEl.style.display='';return;}
+  if(pin2val&&pin!==pin2val){errEl.textContent='Les codes secrets ne correspondent pas';errEl.style.display='';return;}
   if(!/^\d{4}$/.test(pin)){errEl.textContent='Le PIN doit contenir exactement 4 chiffres';errEl.style.display='';return;}
   document.getElementById('ins-form').style.display='none';document.getElementById('ins-loading').style.display='';
   try{var r=await post('/auth/register',{prenom,nom,telephone,pin,role:'client',kycNiveau:kycLevel,parrainCode:parrainCode||undefined});document.getElementById('ins-loading').style.display='none';document.getElementById('ins-success').style.display='';document.getElementById('ins-succ-txt').textContent='Votre compte a été créé ! Code parrainage : '+(r.data.codeParrainage||'');}
@@ -886,89 +892,118 @@ function rDots(){for(var i=0;i<4;i++){var d=document.getElementById('d'+i);if(d)
 
 async function doLogin(){
   document.getElementById('pin-keys').style.display='none';document.getElementById('pin-loading').style.display='';document.getElementById('err-pin').style.display='none';
-  try{var r=await post('/auth/login',{telephone:G.loginTel,pin:G.pin});G.token=r.data.accessToken;G.refresh=r.data.refreshToken;G.user=r.data.user;localStorage.setItem('afrim_token',G.token);localStorage.setItem('afrim_refresh',G.refresh);localStorage.setItem('afrim_user',JSON.stringify(G.user));document.getElementById('pin-loading').style.display='none';document.getElementById('pin-keys').style.display='';G.pin='';rDots();setTab('home');}
+  try{var r=await post('/auth/login',{telephone:G.loginTel,pin:G.pin});G.token=r.data.accessToken;G.refresh=r.data.refreshToken;G.user=r.data.user;LS.set('afrim_token',G.token);LS.set('afrim_refresh',G.refresh);LS.set('afrim_user',JSON.stringify(G.user));document.getElementById('pin-loading').style.display='none';document.getElementById('pin-keys').style.display='';G.pin='';rDots();setTab('home');}
   catch(e){document.getElementById('pin-loading').style.display='none';document.getElementById('pin-keys').style.display='';document.getElementById('err-pin').textContent=e.message;document.getElementById('err-pin').style.display='';G.pin='';rDots();}
 }
 
 
 function dessinerQRHome(cid,data,color){
-  var el=document.getElementById(cid);
-  if(!el)return;
+  var el=document.getElementById(cid);if(!el)return;
   el.innerHTML='';
-  var col=(color||'#059669').replace('#','');
   var img=document.createElement('img');
-  img.style.cssText='width:200px;height:200px;border-radius:8px;display:block;margin:0 auto';
-  img.alt='QR Code';
-  img.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(data)+'&color='+col+'&bgcolor=ffffff&qzone=1';
-  img.onerror=function(){
-    var parts=data.split('|');
-    el.innerHTML='<div style="padding:12px;background:#f0fdf4;border-radius:8px;text-align:center;font-size:13px;color:#059669;font-weight:700">'+(parts[0]||data)+'</div>';
-  };
+  img.style.cssText='width:200px;height:200px;display:block;margin:0 auto;border-radius:8px';
+  img.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(data)+'&color=000000&bgcolor=ffffff&qzone=1';
+  img.onerror=function(){var p=data.split('|');el.innerHTML='<div style="padding:16px;text-align:center;font-size:15px;font-weight:900;color:#059669;font-family:monospace">'+(p[0]||data)+'</div>';};
   el.appendChild(img);
 }
 
-function ouvrirPopupQR(scanCallback){
-  wqrOnScan=scanCallback||null;
-  document.getElementById('wave-qr-popup').classList.add('on');
+var _scanStream=null,_scanInterval=null;
+
+function ouvrirPopupQR(){
+  document.getElementById('wave-qr-popup').style.display='flex';
   wqrTab('scan');
+  _lancerCamera();
 }
-
 function fermerPopupQR(){
-  document.getElementById('wave-qr-popup').classList.remove('on');
-  if(wqrStream){wqrStream.getTracks().forEach(t=>t.stop());wqrStream=null;}
-  if(wqrInterval){clearInterval(wqrInterval);wqrInterval=null;}
-  wqrTrack=null;wqrFlashOn=false;
+  _arreterCamera();
+  document.getElementById('wave-qr-popup').style.display='none';
 }
-
-function wqrTab(tab){
-  var scanner=document.getElementById('wqr-scanner');
-  var carte=document.getElementById('wqr-carte');
-  var btn1=document.getElementById('wtab-scan');
-  var btn2=document.getElementById('wtab-carte');
-  var btn3=document.getElementById('wtab-scan2');
-  var btn4=document.getElementById('wtab-carte2');
-  if(tab==='scan'){
-    scanner.style.display='flex';carte.style.display='none';
-    btn1.classList.add('on');btn2.classList.remove('on');
-    if(btn3)btn3.classList.remove('on');if(btn4)btn4.classList.remove('on');
-    demarrerScannerWave();
-  } else {
-    scanner.style.display='none';carte.style.display='flex';
-    btn2.classList.add('on');btn1.classList.remove('on');
-    if(btn3)btn3.classList.add('on');if(btn4)btn4.classList.add('on');
-    if(wqrStream){wqrStream.getTracks().forEach(t=>t.stop());wqrStream=null;}
-    if(wqrInterval){clearInterval(wqrInterval);wqrInterval=null;}
-    afficherCarteQR();
-}
-
-function demarrerScannerWave(){
-  if(wqrStream)return;
+function _lancerCamera(){
   var video=document.getElementById('wqr-video');
-  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
+  var msg=document.getElementById('wqr-scan-msg');
+  var overlay=document.getElementById('wqr-overlay');
+  // Essayer BarcodeDetector d'abord (API native Android Chrome 83+)
+  if('BarcodeDetector' in window){
+    var bd=new BarcodeDetector({formats:['qr_code']});
+    navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}})
     .then(function(stream){
-      wqrStream=stream;wqrTrack=stream.getVideoTracks()[0];
-      video.srcObject=stream;video.play();
-      wqrInterval=setInterval(function(){
-        var canvas=document.getElementById('wqr-canvas');
-        var ctx=canvas.getContext('2d');
-        canvas.width=video.videoWidth;canvas.height=video.videoHeight;
-        if(!canvas.width)return;
-        ctx.drawImage(video,0,0);
-        try{
-          if(window.jsQR){
-            var img=ctx.getImageData(0,0,canvas.width,canvas.height);
-            var code=jsQR(img.data,img.width,img.height);
-            if(code&&code.data){
-              var parts=code.data.split('|');
-              fermerPopupQR();
-              if(typeof wqrOnScan==='function')wqrOnScan(parts[0],parts);
-              else{document.getElementById('send-tel').value=parts[0];openSh('send');selDest(parts[0]);}
-            }
+      _scanStream=stream;
+      video.srcObject=stream;video.style.display='block';video.play();
+      if(msg)msg.textContent='Pointez vers le QR code';
+      _scanInterval=setInterval(function(){
+        if(video.readyState<2)return;
+        bd.detect(video).then(function(codes){
+          if(codes.length>0&&codes[0].rawValue){
+            _arreterCamera();
+            var parts=codes[0].rawValue.split('|'),tel=parts[0]||codes[0].rawValue;
+            fermerPopupQR();
+            var st=document.getElementById('send-tel');
+            if(st){st.value=tel;st.dispatchEvent(new Event('input'));}
+            openSh('send');
+            if(typeof selDest==='function')selDest(tel);
           }
-        }catch(e){}
-      },400);
+        }).catch(function(){});
+      },300);
     })
-    .catch(function(){T('Caméra non disponible',true);fermerPopupQR();});
+    .catch(function(){_fallbackScanner(video,msg,overlay);});
+    return;
+  }
+  // getUserMedia + jsQR
+  if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
+    navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}})
+    .then(function(stream){
+      _scanStream=stream;
+      video.srcObject=stream;video.style.display='block';video.play();
+      if(msg)msg.textContent='Pointez vers le QR code';
+      _scanInterval=setInterval(function(){_lireQRVideo();},300);
+    })
+    .catch(function(){_fallbackScanner(video,msg,overlay);});
+    return;
+  }
+  _fallbackScanner(video,msg,overlay);
+}
+function _fallbackScanner(video,msg,overlay){
+  if(msg)msg.textContent='Appuyez pour scanner';
+  if(overlay){overlay.style.cursor='pointer';overlay.onclick=function(){document.getElementById('wqr-native-input').click();};}
+}
+function _arreterCamera(){
+  if(_scanInterval){clearInterval(_scanInterval);_scanInterval=null;}
+  if(_scanStream){_scanStream.getTracks().forEach(function(t){t.stop();});_scanStream=null;}
+  var video=document.getElementById('wqr-video');
+  if(video){video.srcObject=null;video.style.display='none';}
+}
+function _lireQRVideo(){
+  var video=document.getElementById('wqr-video');
+  if(!video||video.readyState<2||!window.jsQR)return;
+  var cvs=document.getElementById('wqr-canvas');
+  cvs.width=video.videoWidth;cvs.height=video.videoHeight;
+  var ctx=cvs.getContext('2d');ctx.drawImage(video,0,0);
+  var d=ctx.getImageData(0,0,cvs.width,cvs.height);
+  var code=jsQR(d.data,d.width,d.height);
+  if(code&&code.data){
+    _arreterCamera();
+    var parts=code.data.split('|'),tel=parts[0]||code.data;
+    fermerPopupQR();
+    var st=document.getElementById('send-tel');
+    if(st){st.value=tel;st.dispatchEvent(new Event('input'));}
+    openSh('send');
+    if(typeof selDest==='function')selDest(tel);
+  }
+}
+function wqrTab(tab){
+  var sc=document.getElementById('wqr-scanner');
+  var ca=document.getElementById('wqr-carte');
+  if(!sc||!ca)return;
+  if(tab==='carte'){sc.style.display='none';ca.style.display='flex';afficherCarteQR();}
+  else{ca.style.display='none';sc.style.display='flex';}
+  ['wtab-scan','wtab-scan2'].forEach(function(id){var b=document.getElementById(id);if(b){b.classList.toggle('on',tab==='scan');}});
+  ['wtab-carte','wtab-carte2'].forEach(function(id){var b=document.getElementById(id);if(b){b.classList.toggle('on',tab==='carte');}});
+}
+function afficherCarteQR(){
+  var u=G.user||JSON.parse(LS.get('afrim_user')||'null');if(!u)return;
+  var nm=document.getElementById('wqr-carte-name');if(nm)nm.textContent=(u.prenom||'')+' '+(u.nom||'');
+  var tl=document.getElementById('wqr-carte-tel');if(tl)tl.textContent=u.telephone||'';
+  dessinerQRHome('wqr-carte-canvas',(u.telephone||'')+'|'+(u.codeParrainage||u.id||'')+'|client','#059669');
 }
 
 function toggleFlash(){
@@ -1019,308 +1054,234 @@ function inviterAmi(){
   else T('Code: '+code);
 }
 
-async function logout(){try{await post('/auth/logout',{refreshToken:G.refresh});}catch(e){}G.token=G.refresh=G.user=G.compte=null;localStorage.removeItem('afrim_token');localStorage.removeItem('afrim_refresh');localStorage.removeItem('afrim_user');S('s-login');}
+function ouvrirTransfert(){
+  rstSend();
+  // Afficher étape 1 (saisie numéro)
+  var s1=document.getElementById('send-s1');if(s1)s1.style.display='';
+  var s2=document.getElementById('send-s2');if(s2)s2.style.display='none';
+  openSh('send');
+  // Focus sur le champ téléphone
+  setTimeout(function(){var t=document.getElementById('send-tel');if(t)t.focus();},300);
+}
+async function chargerCommissions(){
+  var el=document.getElementById('comm-content');
+  if(!el){if(!chargerCommissions._r){chargerCommissions._r=1;setTimeout(chargerCommissions,500);}return;}
+  chargerCommissions._r=0;
+  var u=G.user||{};
+  var kyc=u.kycNiveau||'KYC1',nbRatt=Number(u.nbRattaches)||0,nbFil=Number(u.nbFilleuls)||0;
+  var condF=kyc==='KYC3'?500:kyc==='KYC2'?200:0,cRatt=nbRatt>=(condF||1)?'#22c55e':'#f59e0b';
+  var h='<div style="background:linear-gradient(135deg,#d97706,#f59e0b);border-radius:16px;padding:20px;margin-bottom:14px;text-align:center;color:#fff">'
+    +'<div style="font-size:11px;font-weight:700;opacity:.75;text-transform:uppercase;margin-bottom:6px">CE MOIS-CI</div>'
+    +'<div id="cm-mois" style="font-size:36px;font-weight:900">-- FCFA</div>'
+    +'<div style="display:flex;gap:16px;justify-content:center;margin-top:12px">'
+    +'<div><div id="cm-nb" style="font-size:18px;font-weight:800">--</div><div style="font-size:10px;opacity:.7">opérations</div></div>'
+    +'<div style="width:1px;background:rgba(255,255,255,.2)"></div>'
+    +'<div><div id="cm-prec" style="font-size:18px;font-weight:800">--</div><div style="font-size:10px;opacity:.7">mois préc.</div></div>'
+    +'</div></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">'
+    +'<div style="background:#fff;border-radius:14px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:900;color:#059669">'+nbFil+'</div><div style="font-size:11px;color:#6b7280">Parrainés</div></div>'
+    +'<div style="background:#fff;border-radius:14px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:900;color:'+cRatt+'">'+nbRatt+'</div>'
+    +'<div style="font-size:11px;color:#6b7280">Rattachés'+(condF?'<br><span style="font-size:10px;color:'+cRatt+'">'+nbRatt+'/'+condF+'</span>':'')+'</div></div>'
+    +'</div>'
+    +'<div style="background:#fefce8;border:1px solid #fde68a;border-radius:14px;padding:14px;margin-bottom:14px">'
+    +'<div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:6px">Comment gagner ?</div>'
+    +'<div style="font-size:11px;color:#a16207;line-height:1.7">Parrainez des contacts. Ils font un <b>dépôt ou reçoivent un transfert</b> ≥500 FCFA = rattachés à vie.<br>À chaque <b>retrait ou paiement</b> de votre filleul → <b>10% des frais</b> pour vous.</div>'
+    +'</div>'
+    +'<div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px;margin-bottom:14px"><div style="font-size:12px;font-weight:700;margin-bottom:10px">Virer mes gains vers mon compte</div><div style="display:flex;gap:8px"><input id="gains-vir-amt" type="number" placeholder="Montant en FCFA" style="flex:1;padding:10px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:14px;outline:none;font-family:inherit"/><button onclick="virerGains()" style="padding:10px 18px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Virer</button></div></div>'
+    +'<div id="cm-detail" style="background:#f9fafb;border-radius:12px;padding:14px;text-align:center"><div class="spin" style="width:16px;height:16px;border-width:2px;margin:0 auto"></div></div>';
+  el.innerHTML=h;
+  try{
+    var resp=await fetch(API+'/commissions?type=commission_parrain&userId='+(u.id||'')+'&limit=200',{headers:{Authorization:'Bearer '+(G.token||'')}});
+    var rd=await resp.json();if(!resp.ok)throw new Error(rd.message||'Erreur');
+    var comms=rd.data||[],now=new Date(),d1=new Date(now.getFullYear(),now.getMonth(),1);
+    var tM=0,tP=0,tH=0,nM=0,cM=[];
+    comms.forEach(function(c){var d=new Date(c.dateCalcul||c.date_calcul||0),m=Number(c.montant||0);tH+=m;if(d>=d1){tM+=m;nM++;cM.push(c);}else tP+=m;});
+    var e=document.getElementById('cm-mois');if(e)e.textContent=tM.toLocaleString('fr-FR')+' FCFA';
+    var e2=document.getElementById('cm-nb');if(e2)e2.textContent=nM;
+    var e3=document.getElementById('cm-prec');if(e3)e3.textContent=tP.toLocaleString('fr-FR')+' FCFA';
+    var det=document.getElementById('cm-detail');if(!det)return;
+    var dh='<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:8px">Détail ce mois</div>';
+    if(!cM.length){dh+='<div style="font-size:13px;font-weight:600">Aucune commission<br><span style="font-size:12px;color:#6b7280">Total historique : '+tH.toLocaleString('fr-FR')+' FCFA</span></div>';}
+    else{cM.forEach(function(c){var d=new Date(c.dateCalcul||c.date_calcul);dh+='<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb"><div><div style="font-size:13px;font-weight:600">Commission filleul</div><div style="font-size:11px;color:#6b7280">'+d.toLocaleDateString('fr-FR')+'</div></div><div style="font-size:15px;font-weight:900;color:#f59e0b">+'+Number(c.montant).toLocaleString('fr-FR')+' FCFA</div></div>';});}
+    det.innerHTML=dh;
+  }catch(e){var det2=document.getElementById('cm-detail');if(det2)det2.innerHTML='<div style="color:#6b7280;font-size:12px">'+e.message+'</div>';}
+}
+// Listener QR natif
+document.addEventListener('DOMContentLoaded',function(){
+  var ni=document.getElementById('wqr-native-input');
+  if(!ni)return;
+  ni.addEventListener('change',function(){
+    if(!this.files||!this.files[0])return;
+    var file=this.files[0];this.value='';
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      var img=new Image();
+      img.onload=function(){
+        var cvs=document.createElement('canvas');cvs.width=img.width;cvs.height=img.height;
+        var ctx=cvs.getContext('2d');ctx.drawImage(img,0,0);
+        if(window.jsQR){
+          var d=ctx.getImageData(0,0,img.width,img.height);
+          var code=jsQR(d.data,d.width,d.height);
+          if(code&&code.data){
+            var parts=code.data.split('|'),tel=parts[0]||code.data;
+            fermerPopupQR();
+            var st=document.getElementById('send-tel');
+            if(st){st.value=tel;st.dispatchEvent(new Event('input'));}
+            openSh('send');
+            if(typeof selDest==='function')selDest(tel);
+            return;
+          }
+        }
+        T('QR non reconnu — saisissez le numéro manuellement',true);
+      };
+      img.src=ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+});
+
+function ouvrirKycUpgrade(){
+  openSh('kyc-upgrade');
+  var u=G.user||{};
+  var kyc=u.kycNiveau||'KYC1';
+  var el=document.getElementById('kyc-body');
+  if(!el)return;
+  var KYC_DOCS={
+    KYC1:[{id:'selfie',label:'Selfie',icon:'🤳',desc:'Photo de vous, visage visible',camera:'user'}],
+    KYC2:[{id:'selfie',label:'Selfie',icon:'🤳',desc:'Photo de vous',camera:'user'},{id:'cni_recto',label:'CNI Recto',icon:'🪪',desc:'Recto carte identité',camera:'environment'},{id:'cni_verso',label:'CNI Verso',icon:'🪪',desc:'Verso carte identité',camera:'environment'}],
+    KYC3:[{id:'selfie',label:'Selfie',icon:'🤳',desc:'Photo de vous',camera:'user'},{id:'cni_recto',label:'CNI Recto',icon:'🪪',desc:'Recto carte identité',camera:'environment'},{id:'cni_verso',label:'CNI Verso',icon:'🪪',desc:'Verso carte identité',camera:'environment'},{id:'extrait_naissance',label:'Extrait naissance',icon:'📄',desc:'Original ou copie certifiée',camera:'environment'},{id:'justificatif_domicile',label:'Justificatif domicile',icon:'🏠',desc:'Facture ou attestation récente',camera:'environment'}]
+  };
+  var PLAFONDS={KYC1:'20 000',KYC2:'50 000',KYC3:'100 000'};
+  var KYC_CONDITIONS={
+    KYC1:{filleuls:0,desc:'Accès de base — Valide avec un simple selfie'},
+    KYC2:{filleuls:200,desc:'200 filleuls rattachés requis pour le plafond 50 000 F'},
+    KYC3:{filleuls:500,desc:'500 filleuls rattachés requis pour le plafond 100 000 F'}
+  };
+  var nbRatt=Number((G.user&&G.user.nbRattaches)||0);
+  var niveaux=['KYC1','KYC2','KYC3'];
+  var colors={KYC1:'#22c55e',KYC2:'#3b82f6',KYC3:'#8b5cf6'};
+  window._kycPhotos={};
+  var h='<div style="background:#f9fafb;border-radius:14px;padding:14px;margin-bottom:16px">';
+  h+='<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:8px">Niveau actuel : '+kyc+'</div>';
+  h+='<div style="background:#e5e7eb;border-radius:99px;height:6px">';
+  h+='<div style="background:var(--g);border-radius:99px;height:6px;width:'+(kyc==='KYC1'?'33':kyc==='KYC2'?'66':'100')+'%"></div></div></div>';
+  niveaux.forEach(function(niv){
+    var docs=KYC_DOCS[niv]||[];
+    var isActive=kyc===niv&&u.statut==='actif';
+    var col=colors[niv];
+    h+='<div style="border:1.5px solid '+(isActive?col:'#e5e7eb')+';border-radius:14px;padding:14px;margin-bottom:10px">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
+    h+='<div style="font-size:16px;font-weight:900;color:'+col+'">'+niv+'</div>';
+    h+=(isActive?'<span style="background:'+col+'22;color:'+col+';padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">Actif ✓</span>':'<span style="background:#f3f4f6;color:#6b7280;padding:3px 10px;border-radius:99px;font-size:10px">'+PLAFONDS[niv]+' F/mois</span>');
+    h+='</div>';
+    // Conditions requises
+    var cond=KYC_CONDITIONS[niv];
+    if(cond){
+      var condOk=cond.filleuls===0||nbRatt>=cond.filleuls;
+      h+='<div style="background:'+(condOk?'#f0fdf4':'#fef3c7')+';border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:11px;color:'+(condOk?'#15803d':'#92400e')+'">';
+      h+=(condOk?'✅ ':'⚠️ ')+cond.desc;
+      if(cond.filleuls>0)h+=' <b>('+nbRatt+'/'+cond.filleuls+')</b>';
+      h+='<br><span style="opacity:.8">Un filleul est rattaché dès qu il fait un dépôt ou reçoit un transfert ≥500 FCFA</span>';
+      h+='</div>';
+    }
+    docs.forEach(function(doc){
+      var key=niv+'-'+doc.id;
+      h+='<div id="ks-'+key+'" data-niv="'+niv+'" data-doc="'+doc.id+'" data-cam="'+doc.camera+'" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f9fafb;border-radius:10px;border:1px solid #e5e7eb;margin-bottom:6px;cursor:pointer">';
+      h+='<div style="width:38px;height:38px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:18px">'+doc.icon+'</div>';
+      h+='<div style="flex:1"><div style="font-size:13px;font-weight:600">'+doc.label+'</div><div id="kl-'+key+'" style="font-size:11px;color:#9ca3af">'+doc.desc+'</div></div>';
+      h+='<div id="kc-'+key+'" style="font-size:18px">📷</div></div>';
+      h+='<input type="file" accept="image/*" capture="'+doc.camera+'" id="ki-'+key+'" style="display:none"/>';
+    });
+    if(!isActive){
+      h+='<button data-niv="'+niv+'" id="btn-kyc-'+niv+'" style="width:100%;padding:12px;background:'+col+';color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:6px">Soumettre pour '+niv+'</button>';
+    }
+    h+='</div>';
+  });
+  el.innerHTML=h;
+  // Attacher les événements après rendu
+  el.querySelectorAll('[data-niv][data-doc]').forEach(function(slot){
+    slot.addEventListener('click',function(){
+      document.getElementById('ki-'+slot.dataset.niv+'-'+slot.dataset.doc).click();
+    });
+  });
+  el.querySelectorAll('[data-file]').forEach(function(){});
+  niveaux.forEach(function(niv){
+    var docs=KYC_DOCS[niv]||[];
+    docs.forEach(function(doc){
+      var inp=document.getElementById('ki-'+niv+'-'+doc.id);
+      if(!inp)return;
+      inp.addEventListener('change',function(){
+        if(!this.files||!this.files[0])return;
+        window._kycPhotos[niv+'-'+doc.id]=this.files[0];
+        var sl=document.getElementById('ks-'+niv+'-'+doc.id);if(sl){sl.style.background='#f0fdf4';sl.style.border='1px solid #22c55e';}
+        var lb=document.getElementById('kl-'+niv+'-'+doc.id);if(lb){lb.textContent='Photo prise ✓';lb.style.color='#22c55e';}
+        var ck=document.getElementById('kc-'+niv+'-'+doc.id);if(ck)ck.textContent='✅';
+      });
+    });
+    var btn=document.getElementById('btn-kyc-'+niv);
+    if(btn)btn.addEventListener('click',function(){soumettreKyc(this.dataset.niv);});
+  });
+}
+
+function prendrePhotoKyc(niv,docId,camera){
+  document.getElementById('kyc-inp-'+niv+'-'+docId).click();
+}
+function photoKycChange(niv,docId,inp){
+  if(!inp.files||!inp.files[0])return;
+  window._kycPhotos=window._kycPhotos||{};
+  window._kycPhotos[niv+'-'+docId]=inp.files[0];
+  var slot=document.getElementById('kyc-slot-'+niv+'-'+docId);
+  if(slot){slot.style.background='#f0fdf4';slot.style.border='1px solid #22c55e';}
+  var lbl=document.getElementById('kyc-lbl-'+niv+'-'+docId);
+  if(lbl){lbl.style.color='#22c55e';lbl.textContent='Photo prise ✓';}
+  var chk=document.getElementById('kyc-chk-'+niv+'-'+docId);
+  if(chk)chk.textContent='✅';
+}
+async function soumettreKyc(niv){
+  var KYC_DOCS={
+    'KYC1':[{id:'selfie'}],
+    'KYC2':[{id:'selfie'},{id:'cni_recto'},{id:'cni_verso'}],
+    'KYC3':[{id:'selfie'},{id:'cni_recto'},{id:'cni_verso'},{id:'extrait_naissance'},{id:'justificatif_domicile'}]
+  };
+  var docs=KYC_DOCS[niv]||[];
+  var photos=window._kycPhotos||{};
+  var manq=docs.filter(function(d){return !photos[niv+'-'+d.id];}).map(function(d){return d.id;});
+  if(manq.length){T('Documents manquants : '+manq.join(', '),true);return;}
+  T('Envoi en cours...');
+  var uid=G.user&&G.user.id;
+  for(var i=0;i<docs.length;i++){
+    var doc=docs[i];var file=photos[niv+'-'+doc.id];if(!file)continue;
+    try{
+      var fd=new FormData();fd.append('file',file);fd.append('upload_preset','afrim-kyc');fd.append('folder','afrim-pay/kyc');
+      var r=await fetch('https://api.cloudinary.com/v1_1/dzofjvhwu/image/upload',{method:'POST',body:fd});
+      var d=await r.json();if(!r.ok||!d.secure_url)throw new Error('Upload échoué');
+      await post('/kyc/documents',{userId:uid,typeDocument:doc.id,urlFichier:d.secure_url});
+    }catch(e){T('Erreur '+doc.id+': '+e.message,true);return;}
+  }
+  if(niv!=='KYC1')await post('/kyc/request',{userId:uid,niveauDemande:niv}).catch(function(){});
+  T('Documents envoyés ! Validation sous 48h.');
+  closeSh('kyc-upgrade');
+}
+
+async function virerGains(){
+  var amtEl=document.getElementById('gains-vir-amt');
+  var amt=Number(amtEl?amtEl.value:0);
+  if(!amt||amt<100){T('Montant minimum 100 FCFA',true);return;}
+  try{
+    var r=await post('/accounts/transfer-gains',{montant:amt});
+    T('Virement de '+amt.toLocaleString('fr-FR')+' FCFA effectué');
+    if(amtEl)amtEl.value='';
+    chargerCommissions();
+    rafraichir();
+  }catch(e){T(e.message,true);}
+}
+
+async function logout(){try{await post('/auth/logout',{refreshToken:G.refresh});}catch(e){}G.token=G.refresh=G.user=G.compte=null;LS.remove('afrim_token');LS.remove('afrim_refresh');LS.remove('afrim_user');S('s-login');}
 
 document.querySelectorAll('.sh-ov').forEach(function(el){el.addEventListener('click',function(e){if(e.target===el){var id=el.id.replace('sh-','');closeSh(id);if(id==='send')rstSend();if(id==='pay')rstPay();if(id==='inscription')rstIns();}});});
 
 (function init(){setKyc('KYC1',null);if(G.token&&G.user&&G.user.role==='client'){setTab('home');return;}S('s-login');})();
-
-
-// ═══ SCANNER NATIF ═══
-document.addEventListener('DOMContentLoaded', function(){
-  var ni = document.getElementById('wqr-native-input');
-  if(!ni) return;
-  ni.addEventListener('change', function(){
-    if(!this.files||!this.files[0]) return;
-    var reader = new FileReader();
-    reader.onload = function(ev){
-      var img = new Image();
-      img.onload = function(){
-        var cvs = document.createElement('canvas');
-        cvs.width = img.width; cvs.height = img.height;
-        var ctx = cvs.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        if(window.jsQR){
-          var d = ctx.getImageData(0, 0, img.width, img.height);
-          var code = jsQR(d.data, d.width, d.height);
-          if(code && code.data){
-            var parts = code.data.split('|');
-            var tel = parts[0] || code.data;
-            fermerPopupQR();
-            if(typeof wqrOnScan === 'function') wqrOnScan(tel, parts);
-            else { openSh('send'); selDest(tel); }
-            return;
-          }
-        }
-        T('QR non reconnu. Saisissez le numéro.', true);
-      };
-      img.src = ev.target.result;
-    };
-    reader.readAsDataURL(this.files[0]);
-    this.value = '';
-  });
-});
-
-// ═══ COMMISSIONS ═══
-async function chargerCommissions(){
-  var el = document.getElementById('comm-content');
-  if(!el){ setTimeout(chargerCommissions, 300); return; }
-  var u = G.user || {};
-  var kyc = u.kycNiveau || 'KYC1';
-  var nbRatt = Number(u.nbRattaches) || 0;
-  var nbFil = Number(u.nbFilleuls) || 0;
-  var condF = kyc==='KYC3' ? 500 : kyc==='KYC2' ? 200 : 0;
-  var cRatt = nbRatt >= (condF||1) ? '#22c55e' : '#f59e0b';
-  function Fmt(n){ return Number(n).toLocaleString('fr-FR'); }
-
-  var h = '<div style="background:linear-gradient(135deg,#d97706,#f59e0b);border-radius:16px;padding:20px;margin-bottom:14px;text-align:center;color:#fff">';
-  h += '<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.75);text-transform:uppercase;margin-bottom:6px">CE MOIS-CI</div>';
-  h += '<div id="cm-mois" style="font-size:36px;font-weight:900">-- FCFA</div>';
-  h += '<div style="display:flex;gap:16px;justify-content:center;margin-top:12px">';
-  h += '<div><div id="cm-nb" style="font-size:18px;font-weight:800">--</div><div style="font-size:10px;color:rgba(255,255,255,.7)">opérations</div></div>';
-  h += '<div style="width:1px;background:rgba(255,255,255,.2)"></div>';
-  h += '<div><div id="cm-prec" style="font-size:18px;font-weight:800">--</div><div style="font-size:10px;color:rgba(255,255,255,.7)">mois précédent</div></div>';
-  h += '</div></div>';
-  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">';
-  h += '<div style="background:#fff;border-radius:14px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:900;color:#059669">' + nbFil + '</div><div style="font-size:11px;color:#6b7280">Parrainés</div></div>';
-  h += '<div style="background:#fff;border-radius:14px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:900;color:' + cRatt + '">' + nbRatt + '</div><div style="font-size:11px;color:#6b7280">Rattachés' + (condF ? '<br><span style="font-size:10px;color:' + cRatt + '">' + nbRatt + '/' + condF + '</span>' : '') + '</div></div>';
-  h += '</div>';
-  h += '<div style="background:#fefce8;border:1px solid #fde68a;border-radius:14px;padding:14px;margin-bottom:14px">';
-  h += '<div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:6px">Comment gagner ?</div>';
-  h += '<div style="font-size:11px;color:#a16207;line-height:1.7">Parrainez des contacts. Ils font un <b>dépôt ou reçoivent un transfert</b> ≥500 FCFA = rattachés à vie.<br>À chaque <b>retrait ou paiement</b> de votre filleul → <b>10% des frais</b> pour vous.</div>';
-  h += '</div>';
-  h += '<div id="cm-detail" style="background:#f9fafb;border-radius:12px;padding:14px;text-align:center"><div class="spin" style="width:16px;height:16px;border-width:2px;margin:0 auto"></div></div>';
-  el.innerHTML = h;
-
-  try {
-    var resp = await fetch(API + '/commissions?type=commission_parrain&userId=' + u.id + '&limit=200', {
-      headers: { Authorization: 'Bearer ' + (G.token||'') }
-    });
-    var txt = await resp.text();
-    var rd;
-    try { rd = JSON.parse(txt); } catch(e) { throw new Error('Serveur indisponible'); }
-    if(!resp.ok) throw new Error(rd.message || 'Erreur ' + resp.status);
-    var comms = rd.data || [];
-    var now = new Date();
-    var d1 = new Date(now.getFullYear(), now.getMonth(), 1);
-    var d2 = new Date(now.getFullYear(), now.getMonth()-1, 1);
-    var d3 = new Date(now.getFullYear(), now.getMonth(), 0);
-    var tM=0, tP=0, tH=0, nM=0, cM=[];
-    comms.forEach(function(c){
-      var d = new Date(c.dateCalcul || c.date_calcul || 0);
-      var m = Number(c.montant||0);
-      tH += m;
-      if(d >= d1){ tM += m; nM++; cM.push(c); }
-      else if(d >= d2 && d <= d3) tP += m;
-    });
-    var emM = document.getElementById('cm-mois'); if(emM) emM.textContent = Fmt(tM) + ' FCFA';
-    var emN = document.getElementById('cm-nb'); if(emN) emN.textContent = nM;
-    var emP = document.getElementById('cm-prec'); if(emP) emP.textContent = Fmt(tP) + ' FCFA';
-    var det = document.getElementById('cm-detail'); if(!det) return;
-    var dh = '<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:8px">Détail ce mois</div>';
-    if(!cM.length){
-      dh += '<div style="font-size:13px;font-weight:600;margin-bottom:4px">Aucune commission ce mois</div>';
-      dh += '<div style="font-size:12px;color:#6b7280">Total historique : ' + Fmt(tH) + ' FCFA</div>';
-    } else {
-      cM.forEach(function(c){
-        var d = new Date(c.dateCalcul || c.date_calcul);
-        var ds = d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}) + ' ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-        dh += '<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb">';
-        dh += '<div><div style="font-size:13px;font-weight:600">Commission filleul</div><div style="font-size:11px;color:#6b7280">' + ds + '</div></div>';
-        dh += '<div style="font-size:15px;font-weight:900;color:#f59e0b">+' + Fmt(c.montant) + ' FCFA</div></div>';
-      });
-      dh += '<div style="margin-top:10px;display:flex;justify-content:space-between"><span style="font-size:12px;color:#6b7280">Total historique</span><span style="font-size:13px;font-weight:700;color:#f59e0b">' + Fmt(tH) + ' FCFA</span></div>';
-    }
-    det.innerHTML = dh;
-  } catch(e) {
-    var det2 = document.getElementById('cm-detail');
-    if(det2) det2.innerHTML = '<div style="color:#6b7280;font-size:12px">' + e.message + '</div>';
-  }
-}
-
-// ═══ MA CARTE QR ═══
-function afficherCarteQR(){
-  var u = G.user || JSON.parse(localStorage.getItem('afrim_user') || 'null');
-  var el = document.getElementById('wqr-carte-canvas');
-  var nm = document.getElementById('wqr-carte-name');
-  var tl = document.getElementById('wqr-carte-tel');
-  function render(usr){
-    var tel = usr.telephone || '';
-    var code = usr.codeParrainage || usr.id || tel;
-    if(nm) nm.textContent = (usr.prenom||'') + ' ' + (usr.nom||'');
-    if(tl) tl.textContent = tel;
-    if(el) dessinerQRHome('wqr-carte-canvas', tel + '|' + code + '|client', '#059669');
-  }
-  if(u && u.telephone) render(u);
-  get('/users/me').then(function(r){
-    var fr = r.data || r;
-    if(fr && fr.telephone){ G.user = Object.assign(G.user||{}, fr); render(fr); }
-  }).catch(function(){});
-}
-
-// ═══ KYC UPGRADE ═══
-var kycPhotosClient = {};
-var kycTargetLevel = null;
-var KYC_UPGRADE_DOCS = {
-  'KYC1': [{id:'selfie', label:'Selfie', camera:'user', icon:'🤳', desc:'Photo de vous, visage visible'}],
-  'KYC2': [
-    {id:'selfie', label:'Selfie', camera:'user', icon:'🤳', desc:'Photo de vous'},
-    {id:'cni_recto', label:'CNI Recto', camera:'environment', icon:'🪪', desc:'Recto carte identité'},
-    {id:'cni_verso', label:'CNI Verso', camera:'environment', icon:'🪪', desc:'Verso carte identité'}
-  ],
-  'KYC3': [
-    {id:'selfie', label:'Selfie', camera:'user', icon:'🤳', desc:'Photo de vous'},
-    {id:'cni_recto', label:'CNI Recto', camera:'environment', icon:'🪪', desc:'Recto carte identité'},
-    {id:'cni_verso', label:'CNI Verso', camera:'environment', icon:'🪪', desc:'Verso carte identité'},
-    {id:'extrait_naissance', label:'Extrait naissance', camera:'environment', icon:'📄', desc:'Original ou copie'},
-    {id:'justificatif_domicile', label:'Justificatif domicile', camera:'environment', icon:'🏠', desc:'Facture ou attestation'}
-  ]
-};
-var KYC_PLAFONDS = {'KYC1':'20 000','KYC2':'50 000','KYC3':'100 000'};
-
-async function ouvrirKycUpgrade(){
-  openSh('kyc-upgrade');
-  kycPhotosClient = {}; kycTargetLevel = null;
-  document.getElementById('kyc-upload-zone').style.display = 'none';
-  document.getElementById('kyc-levels-list').style.display = '';
-  document.getElementById('kyc-success').style.display = 'none';
-  var u = G.user || {};
-  var kyc = u.kycNiveau || 'KYC1';
-  var nbRatt = u.nbRattaches || 0;
-  var bar = document.getElementById('kyc-progress-bar');
-  if(bar) bar.style.width = {KYC1:'33%',KYC2:'66%',KYC3:'100%'}[kyc] || '33%';
-  var el = document.getElementById('kyc-level-badge'); if(el) el.textContent = kyc;
-  var el2 = document.getElementById('kyc-level-label'); if(el2) el2.textContent = 'Plafond effectif : ' + (KYC_PLAFONDS[kyc]||'20 000') + ' F/mois';
-
-  var docs = [];
-  try { var r = await get('/kyc/documents?userId=' + u.id); docs = r.data || []; } catch(e){}
-  var docsIds = docs.map(function(d){ return d.typeDocument; });
-
-  function niveauOK(niv){ return (KYC_UPGRADE_DOCS[niv]||[]).every(function(d){ return docsIds.indexOf(d.id) >= 0; }); }
-
-  var listEl = document.getElementById('kyc-levels-list'); listEl.innerHTML = '';
-  var kycDem = u.kycNiveauDemande || null;
-  var LEVELS = [
-    {id:'KYC1',color:'#22c55e',plafond:'20 000 F/mois',condF:0},
-    {id:'KYC2',color:'#3b82f6',plafond:'50 000 F/mois (≥200 rattachés)',condF:200},
-    {id:'KYC3',color:'#8b5cf6',plafond:'100 000 F/mois (≥500 rattachés)',condF:500}
-  ];
-  LEVELS.forEach(function(lv){
-    var docs2 = KYC_UPGRADE_DOCS[lv.id] || [];
-    var manq = docs2.filter(function(d){ return docsIds.indexOf(d.id) < 0; });
-    var complet = manq.length === 0;
-    var isActive = kyc === lv.id && u.statut === 'actif' && complet;
-    var isPending = kycDem === lv.id;
-    var needsMore = lv.id === kyc && !complet;
-    var col = isActive ? lv.color : isPending ? '#f59e0b' : '#e5e7eb';
-    var card = document.createElement('div');
-    card.style.cssText = 'background:#fff;border:1.5px solid ' + col + ';border-radius:14px;padding:14px 16px;margin-bottom:10px';
-    var badge = isActive ? '<span style="background:' + lv.color + '22;color:' + lv.color + ';padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">Actif ✓</span>'
-      : isPending ? '<span style="background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">En attente</span>'
-      : needsMore ? '<span style="background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">Incomplet</span>'
-      : '<span style="background:#f3f4f6;color:#6b7280;padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">À débloquer</span>';
-    var docsHtml = docs2.map(function(d){ var ok = docsIds.indexOf(d.id) >= 0; return '<div style="font-size:11px;color:' + (ok?'#22c55e':'#9ca3af') + '">' + (ok?'✅':'📷') + ' ' + d.label + '</div>'; }).join('');
-    var condHtml = lv.condF ? '<div style="font-size:11px;color:' + (nbRatt>=lv.condF?'#22c55e':'#f59e0b') + ';margin-top:4px">' + (nbRatt>=lv.condF?'✅':'⚠️') + ' ' + nbRatt + '/' + lv.condF + ' filleuls rattachés</div>' : '';
-    card.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div style="font-size:16px;font-weight:900;color:' + lv.color + '">' + lv.id + '</div>' + badge + '</div><div style="font-size:12px;color:#6b7280;margin-bottom:6px">Plafond : <strong>' + lv.plafond + '</strong></div>' + docsHtml + condHtml + '<div id="kyc-btn-' + lv.id + '" style="margin-top:8px"></div>';
-    listEl.appendChild(card);
-    var btnZone = document.getElementById('kyc-btn-' + lv.id);
-    if(needsMore){
-      var btn = document.createElement('button');
-      btn.textContent = 'Compléter les documents manquants';
-      btn.style.cssText = 'width:100%;padding:10px;background:' + lv.color + ';color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
-      btn.addEventListener('click', (function(l,m){ return function(){ lancerUploadKyc(l.id, m); }; })(lv, manq));
-      btnZone.appendChild(btn);
-    } else if(!isActive && !isPending){
-      var btn = document.createElement('button');
-      btn.textContent = 'Soumettre mes documents';
-      btn.style.cssText = 'width:100%;padding:10px;background:' + lv.color + ';color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
-      btn.addEventListener('click', (function(l){ return function(){ lancerUploadKyc(l.id, KYC_UPGRADE_DOCS[l.id]); }; })(lv));
-      btnZone.appendChild(btn);
-    } else if(isPending){
-      btnZone.innerHTML = '<div style="padding:8px;background:#fef3c7;border-radius:8px;font-size:12px;color:#92400e;text-align:center">Validation en cours — sous 48h</div>';
-    }
-  });
-}
-
-function lancerUploadKyc(niveau, docsAFaire){
-  kycTargetLevel = niveau; kycPhotosClient = {};
-  document.getElementById('kyc-levels-list').style.display = 'none';
-  document.getElementById('kyc-upload-zone').style.display = '';
-  document.getElementById('kyc-upload-title').textContent = 'Documents pour ' + niveau;
-  document.getElementById('kyc-upload-err').style.display = 'none';
-  var listEl = document.getElementById('kyc-docs-list'); listEl.innerHTML = '';
-  docsAFaire.forEach(function(doc){
-    var id = doc.id || doc;
-    var label = doc.label || id;
-    var slot = document.createElement('div');
-    slot.id = 'kyc-slot-' + id;
-    slot.style.cssText = 'display:flex;align-items:center;gap:12px;padding:11px 12px;background:#f9fafb;border-radius:12px;border:1.5px solid #e5e7eb;margin-bottom:8px;cursor:pointer';
-    slot.innerHTML = '<div id="kyc-ico-' + id + '" style="width:40px;height:40px;border-radius:10px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:20px">' + (doc.icon||'📄') + '</div><div style="flex:1"><div style="font-size:13px;font-weight:700">' + label + '</div><div id="kyc-lbl-' + id + '" style="font-size:11px;color:#9ca3af">' + (doc.desc||'') + '</div></div><div id="kyc-chk-' + id + '" style="font-size:18px;color:#d1d5db">📷</div>';
-    slot.addEventListener('click', (function(d){ return function(){ document.getElementById('kyc-inp-'+d).click(); }; })(id));
-    listEl.appendChild(slot);
-    var inp = document.createElement('input');
-    inp.type='file'; inp.accept='image/*'; inp.capture=doc.camera||'environment'; inp.id='kyc-inp-'+id; inp.style.display='none';
-    inp.addEventListener('change', (function(d){ return function(){
-      if(this.files&&this.files[0]){
-        kycPhotosClient[d] = this.files[0];
-        var sl=document.getElementById('kyc-slot-'+d); if(sl){sl.style.border='1.5px solid #22c55e';sl.style.background='#f0fdf4';}
-        var ic=document.getElementById('kyc-ico-'+d); if(ic){ic.textContent='✅';}
-        var lb=document.getElementById('kyc-lbl-'+d); if(lb){lb.style.color='#22c55e';lb.textContent='Photo prise';}
-        var ck=document.getElementById('kyc-chk-'+d); if(ck){ck.textContent='✓';ck.style.color='#22c55e';}
-      }
-    }; })(id));
-    listEl.appendChild(inp);
-  });
-}
-
-async function soumettreKyc(){
-  var docsAFaire = KYC_UPGRADE_DOCS[kycTargetLevel] || [];
-  var manq = docsAFaire.filter(function(d){ return !kycPhotosClient[d.id]; });
-  var errEl = document.getElementById('kyc-upload-err');
-  if(manq.length){ errEl.textContent='Manquants : '+manq.map(function(d){return d.label;}).join(', '); errEl.style.display=''; return; }
-  errEl.style.display='none';
-  var btn = document.getElementById('kyc-submit-btn'); btn.disabled=true; btn.textContent='Envoi...';
-  var uid = G.user && G.user.id;
-  for(var i=0;i<docsAFaire.length;i++){
-    var doc=docsAFaire[i]; var file=kycPhotosClient[doc.id]; if(!file) continue;
-    try{
-      var fd=new FormData(); fd.append('file',file); fd.append('upload_preset',CLOUDINARY_PRESET); fd.append('folder','afrim-pay/kyc');
-      var r=await fetch('https://api.cloudinary.com/v1_1/'+CLOUDINARY_CLOUD+'/image/upload',{method:'POST',body:fd});
-      var d=await r.json(); if(!r.ok||!d.secure_url) throw new Error('Upload échoué');
-      var h={'Content-Type':'application/json'}; if(G.token)h['Authorization']='Bearer '+G.token;
-      await fetch(API+'/kyc/documents',{method:'POST',headers:h,body:JSON.stringify({userId:uid,typeDocument:doc.id,urlFichier:d.secure_url})});
-    }catch(e){ errEl.textContent='Erreur '+doc.label+': '+e.message; errEl.style.display=''; btn.disabled=false; btn.textContent='Envoyer'; return; }
-  }
-  if(kycTargetLevel!=='KYC1'){
-    try{ var h2={'Content-Type':'application/json'}; if(G.token)h2['Authorization']='Bearer '+G.token; await fetch(API+'/kyc/request',{method:'POST',headers:h2,body:JSON.stringify({userId:uid,niveauDemande:kycTargetLevel})}); }catch(e){}
-  }
-  document.getElementById('kyc-upload-zone').style.display='none';
-  document.getElementById('kyc-success').style.display='';
-  btn.disabled=false; btn.textContent='Envoyer';
-}
-
-// Plafond dynamique
-async function voirPlafond(){
-  openSh('plafond');
-  var el=document.getElementById('sh-plafond-body');
-  el.innerHTML='<div style="padding:24px;text-align:center"><div class="spin"></div></div>';
-  try{
-    var r=await get('/users/me');
-    var u=r.data||r;
-    var kyc=u.kycNiveau||'KYC1';
-    var plafond=u.plafondEffectif||20000;
-    var nbRatt=u.nbRattaches||0;
-    var nbFil=u.nbFilleuls||0;
-    var condF=kyc==='KYC3'?500:kyc==='KYC2'?200:0;
-    el.innerHTML='<div style="background:linear-gradient(135deg,var(--g2),var(--g));border-radius:16px;padding:20px;margin-bottom:14px;text-align:center;color:#fff"><div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.7);text-transform:uppercase;margin-bottom:6px">Plafond mensuel effectif</div><div style="font-size:36px;font-weight:900">'+Number(plafond).toLocaleString('fr-FR')+'</div><div style="font-size:13px;color:rgba(255,255,255,.8);margin-top:4px">FCFA / mois</div></div>'
-      +'<div class="srow"><span style="color:#6b7280;font-size:13px">Niveau KYC</span><span style="font-weight:700;color:var(--g)">'+kyc+'</span></div>'
-      +'<div class="srow"><span style="color:#6b7280;font-size:13px">Filleuls parrainés</span><span style="font-weight:700">'+nbFil+'</span></div>'
-      +'<div class="srow" style="border:none"><span style="color:#6b7280;font-size:13px">Filleuls rattachés</span><span style="font-weight:700;color:#f59e0b">'+nbRatt+(condF?'/'+condF:'')+'</span></div>'
-      +(nbRatt<condF&&condF?'<div style="background:#fef3c7;border-radius:10px;padding:10px 14px;margin-top:8px;font-size:12px;color:#92400e">'+nbRatt+' rattachés / '+condF+' requis pour le plafond '+kyc+'</div>':'');
-  }catch(e){el.innerHTML='<div style="color:#6b7280;font-size:13px;padding:16px;text-align:center">'+e.message+'</div>';}
-}
-
-}</script>
+</script>
 </div>
 <div class="sh-ov" id="sh-change-pin">
   <div class="sh">
@@ -1359,33 +1320,17 @@ async function voirPlafond(){
   </div>
 </div>
 
-<!-- SHEET KYC UPGRADE -->
+<!-- SHEET KYC -->
 <div class="sh-ov" id="sh-kyc-upgrade">
   <div class="sh"><div class="sh-bar"></div>
-    <div class="sh-top"><div><div class="sh-title">Compléter mon KYC</div><div style="color:var(--m);font-size:12px">Augmentez votre plafond</div></div><button class="sh-x" onclick="closeSh('kyc-upgrade')">✕</button></div>
-    <div class="sh-body">
-      <div id="kyc-current-level" style="background:#f9fafb;border-radius:14px;padding:14px;margin-bottom:14px">
-        <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:8px">NIVEAU ACTUEL</div>
-        <div style="display:flex;align-items:center;gap:10px"><div style="font-size:24px;font-weight:900" id="kyc-level-badge">KYC1</div><div style="font-size:13px;font-weight:700" id="kyc-level-label">Plafond 20 000 F/mois</div></div>
-        <div style="background:#e5e7eb;border-radius:99px;height:6px;margin-top:10px"><div id="kyc-progress-bar" style="background:var(--g);border-radius:99px;height:6px;width:33%"></div></div>
-        <div style="display:flex;justify-content:space-between;margin-top:4px"><span style="font-size:9px;color:#6b7280;font-weight:700">KYC1</span><span style="font-size:9px;color:#6b7280;font-weight:700">KYC2</span><span style="font-size:9px;color:#6b7280;font-weight:700">KYC3</span></div>
-      </div>
-      <div id="kyc-levels-list"></div>
-      <div id="kyc-upload-zone" style="display:none">
-        <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:10px" id="kyc-upload-title">Documents requis</div>
-        <div id="kyc-docs-list"></div>
-        <div id="kyc-upload-err" style="display:none;background:#fef2f2;border-radius:10px;padding:10px;margin-bottom:10px;color:#ef4444;font-size:13px"></div>
-        <div style="display:flex;gap:8px"><button class="btn btn-gh" style="flex:1" onclick="document.getElementById('kyc-upload-zone').style.display='none';document.getElementById('kyc-levels-list').style.display=''">Annuler</button><button class="btn btn-g" style="flex:2" id="kyc-submit-btn" onclick="soumettreKyc()">Envoyer</button></div>
-      </div>
-      <div id="kyc-success" style="display:none;text-align:center;padding:20px">
-        <div style="font-size:48px;margin-bottom:12px">✅</div>
-        <div style="font-size:17px;font-weight:800;margin-bottom:8px">Documents envoyés !</div>
-        <div style="font-size:13px;color:var(--m);margin-bottom:20px">Validation sous 48h par le support.</div>
-        <button class="btn btn-g" onclick="closeSh('kyc-upgrade')">Fermer</button>
-      </div>
+    <div class="sh-top">
+      <div><div class="sh-title">Compléter mon KYC</div><div style="color:var(--m);font-size:12px">Augmentez votre plafond de transactions</div></div>
+      <button class="sh-x" onclick="closeSh('kyc-upgrade')">✕</button>
+    </div>
+    <div class="sh-body" id="kyc-body">
+      <div style="padding:24px;text-align:center"><div class="spin"></div></div>
     </div>
   </div>
 </div>
-
 </body>
 </html>

@@ -49,6 +49,7 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
 .role-btn{padding:9px 4px;border-radius:10px;border:1.5px solid #e5e7eb;background:#f9fafb;color:var(--m);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
 .role-btn.on{border-color:var(--y);background:var(--y3);color:var(--y2)}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
 <div id="app">
@@ -238,6 +239,15 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
       <div class="card"><div style="font-size:10px;font-weight:700;color:var(--m);text-transform:uppercase;margin-bottom:6px">Expire BD</div><div style="font-size:13px;font-weight:700;color:#f59e0b">10 juin 2026</div></div>
       <div class="card"><div style="font-size:10px;font-weight:700;color:var(--m);text-transform:uppercase;margin-bottom:6px">Version</div><div style="font-size:13px;font-weight:700">API v1.0</div></div>
     </div>
+    <!-- COMPTES PAR STATUT -->
+    <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Comptes par statut</div>
+    <div style="display:flex;gap:6px;overflow-x:auto;margin-bottom:10px" id="tech-statut-filters">
+      <button onclick="chargerClientsTech('en_attente')" id="tf-en_attente" style="padding:6px 12px;border-radius:99px;border:1.5px solid var(--y);background:var(--y3);color:var(--y2);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit">En attente</button>
+      <button onclick="chargerClientsTech('actif')" id="tf-actif" style="padding:6px 12px;border-radius:99px;border:1.5px solid #e5e7eb;background:#fff;color:var(--m);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit">Actifs</button>
+      <button onclick="chargerClientsTech('suspendu')" id="tf-suspendu" style="padding:6px 12px;border-radius:99px;border:1.5px solid #e5e7eb;background:#fff;color:var(--m);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit">Suspendus</button>
+      <button onclick="chargerClientsTech('bloque')" id="tf-bloque" style="padding:6px 12px;border-radius:99px;border:1.5px solid #e5e7eb;background:#fff;color:var(--m);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit">Bloques</button>
+    </div>
+    <div id="tech-clients-list" style="margin-bottom:14px"></div>
     <div style="font-size:12px;font-weight:700;color:var(--m);text-transform:uppercase;margin-bottom:10px">Transactions bloquees</div>
     <div id="tech-txns"><div style="padding:24px;text-align:center"><div class="spin"></div></div></div>
     <div style="font-size:12px;font-weight:700;color:var(--m);text-transform:uppercase;margin:16px 0 10px">Alertes systeme</div>
@@ -250,11 +260,23 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
 <!-- ECRAN STATISTIQUES -->
 <div class="scr" id="s-stats">
   <div style="background:#fff;padding:52px 20px 16px;border-bottom:1px solid #f3f4f6;position:sticky;top:0;z-index:10">
-    <div style="font-size:22px;font-weight:800">Statistiques</div>
-    <div style="color:var(--m);font-size:13px;margin-top:3px">Cumuls des opérations</div>
+    <div style="font-size:22px;font-weight:900">Statistiques</div>
+    <div style="color:var(--m);font-size:13px;margin-top:3px">Cumuls et courbes des opérations</div>
   </div>
   <div style="padding:12px 16px 100px" id="stats-content">
-    <div style="padding:24px;text-align:center"><div class="spin"></div></div>
+    <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Évolution sur 30 jours</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <button onclick="setChartType('depot')" id="ct-depot" style="padding:5px 12px;border-radius:99px;border:1.5px solid #22c55e;background:#f0fdf4;color:#15803d;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Dépôts</button>
+        <button onclick="setChartType('retrait')" id="ct-retrait" style="padding:5px 12px;border-radius:99px;border:1.5px solid #e5e7eb;background:#f9fafb;color:var(--m);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Retraits</button>
+        <button onclick="setChartType('transfert')" id="ct-transfert" style="padding:5px 12px;border-radius:99px;border:1.5px solid #e5e7eb;background:#f9fafb;color:var(--m);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Transferts</button>
+        <button onclick="setChartType('paiement_marchand')" id="ct-paiement_marchand" style="padding:5px 12px;border-radius:99px;border:1.5px solid #e5e7eb;background:#f9fafb;color:var(--m);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Paiements</button>
+      </div>
+      <canvas id="stats-chart" height="180"></canvas>
+    </div>
+    <div id="stats-content-inner">
+      <div style="padding:24px;text-align:center"><div class="spin"></div></div>
+    </div>
   </div>
   <nav class="bnav" id="bnav-stats"></nav>
 </div>
@@ -597,11 +619,39 @@ var PERMS={
   // Support Client : recherche client, remboursement, tickets
   support_client:{home:0,users:0,txns:0,monitoring:0,support:1,tech:0,creer:0,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:0,logs:0},
   // Support Tech : logs, transactions bloquees, alertes systeme. Pas infos perso client
-  support_tech:  {home:0,users:0,txns:1,monitoring:1,stats:1,support:0,tech:1,creer:0,soldes:0,supprimer:0,rembourser:0,kyc:0,gels:0,logs:1}
+  support_tech:  {home:0,users:1,txns:1,monitoring:1,stats:1,support:0,tech:1,creer:0,soldes:0,supprimer:0,rembourser:0,kyc:1,gels:0,logs:1}
 };
 function perm(k){var u=G.user;if(!u)return 0;var p=PERMS[u.role];return p?p[k]||0:0;}
 
 var ROLE_C={client:'#059669',agent:'#d97706',business:'#4f46e5',mini_master:'#2563eb',master:'#92400e',superviseur:'#ea580c',admin:'#ca8a04',support_client:'#2563eb',support_tech:'#059669'};
+
+// Documents requis par niveau KYC
+var KYC_DOCS_REQUIS = {
+  'KYC1': ['selfie'],
+  'KYC2': ['selfie','cni_recto','cni_verso'],
+  'KYC3': ['selfie','cni_recto','cni_verso','extrait_naissance','justificatif_domicile']
+};
+var KYC_LABELS = {
+  selfie:'Selfie', cni_recto:'CNI Recto', cni_verso:'CNI Verso',
+  extrait_naissance:'Extrait naissance', justificatif_domicile:'Justificatif domicile',
+  rccm:'RCCM', declaration_fiscale:'DFE'
+};
+
+// Calcule le niveau KYC validable selon les docs soumis
+function niveauKycValidable(docsExistants) {
+  var ids = (docsExistants||[]).map(function(d){return d.typeDocument;});
+  if (KYC_DOCS_REQUIS['KYC3'].every(function(r){return ids.indexOf(r)>=0;})) return 'KYC3';
+  if (KYC_DOCS_REQUIS['KYC2'].every(function(r){return ids.indexOf(r)>=0;})) return 'KYC2';
+  if (KYC_DOCS_REQUIS['KYC1'].every(function(r){return ids.indexOf(r)>=0;})) return 'KYC1';
+  return null; // aucun niveau validable
+}
+
+// Docs manquants pour un niveau donné
+function docsManquants(niveau, docsExistants) {
+  var ids = (docsExistants||[]).map(function(d){return d.typeDocument;});
+  return (KYC_DOCS_REQUIS[niveau]||[]).filter(function(r){return ids.indexOf(r)<0;});
+}
+
 var insRole='client';
 var usersData=[];var uFilter='all';
 
@@ -841,7 +891,51 @@ function voirU(id){
     if(extra)btn.style.cssText=extra;btn.style.marginBottom='10px';
     btn.addEventListener('click',fn);body.appendChild(btn);
   }
-  if(u.statut==='en_attente')mkBtn('Activer le compte','btn-g','',function(){chgStatut(id,'actif');});
+  if(u.statut==='en_attente'){
+    // Charger les docs pour vérifier avant d'afficher le bouton
+    var activerBtn=document.createElement('button');
+    activerBtn.textContent='Vérification docs...';
+    activerBtn.disabled=true;
+    activerBtn.style.cssText='width:100%;padding:15px;border-radius:14px;background:#f3f4f6;color:#9ca3af;border:none;font-size:15px;font-weight:700;cursor:not-allowed;font-family:inherit;margin-bottom:10px';
+    body.appendChild(activerBtn);
+    apiGet('/kyc/documents?userId='+id).then(function(r){
+      var docs=r.data||[];
+      var niveauMax=niveauKycValidable(docs);
+      var niveauDemande=u.kycNiveauDemande||u.kycNiveau||'KYC1';
+      var docsIds=docs.map(function(d){return d.typeDocument;});
+
+      // Construire l'état des docs pour chaque niveau
+      var niveaux=['KYC1','KYC2','KYC3'];
+      var infoDiv=document.createElement('div');
+      infoDiv.style.cssText='margin-bottom:12px';
+      niveaux.forEach(function(niv){
+        var requis=KYC_DOCS_REQUIS[niv]||[];
+        var manq=requis.filter(function(d){return docsIds.indexOf(d)<0;});
+        var complet=manq.length===0;
+        var isCurrent=u.kycNiveau===niv;
+        var row=document.createElement('div');
+        row.style.cssText='padding:8px 12px;border-radius:10px;margin-bottom:6px;background:'+(complet?'#f0fdf4':'#fef3c7');
+        row.innerHTML='<div style="font-size:12px;font-weight:700;color:'+(complet?'#15803d':'#92400e')+'">'+niv+' '+(complet?'✅ Complet':(isCurrent?'⏳ En cours':'🔒'))+' '+(isCurrent?'(niveau actuel)':'')+'</div>'
+          +(manq.length?'<div style="font-size:11px;color:#a16207;margin-top:2px">Manquants : '+manq.map(function(d){return KYC_LABELS[d]||d;}).join(', ')+'</div>':'');
+        infoDiv.appendChild(row);
+      });
+      body.appendChild(infoDiv);
+
+      if(niveauMax){
+        activerBtn.textContent='Activer le compte — '+niveauMax;
+        activerBtn.disabled=false;
+        activerBtn.style.cssText='width:100%;padding:15px;border-radius:14px;background:#22c55e;color:#fff;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px';
+        activerBtn.addEventListener('click',function(){activerAvecKyc(id,niveauMax);});
+      } else {
+        activerBtn.textContent='Activation impossible — selfie manquant';
+        activerBtn.disabled=true;
+        activerBtn.style.cssText='width:100%;padding:15px;border-radius:14px;background:#f3f4f6;color:#9ca3af;border:1px solid #e5e7eb;font-size:14px;font-weight:700;cursor:not-allowed;font-family:inherit;margin-bottom:10px';
+      }
+    }).catch(function(){
+      activerBtn.textContent='Impossible de vérifier les docs';
+      activerBtn.disabled=true;
+    });
+  }
   if(u.statut==='actif'){
     mkBtn('Suspendre','','background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;width:100%;padding:15px;border-radius:14px;border:1px solid #fed7aa;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){chgStatut(id,'suspendu');});
     mkBtn('Bloquer','btn-r','',function(){chgStatut(id,'bloque');});
@@ -852,6 +946,7 @@ function voirU(id){
   }
   if(u.statut==='bloque')mkBtn('Debloquer','btn-g','',function(){chgStatut(id,'actif');});
   if(perm('rembourser'))mkBtn('Rembourser dernier transfert','','background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){toast('Remboursement bientot disponible');});
+  mkBtn('🔐 Réinitialiser le code PIN','','background:#f0fdf4;color:#15803d;border:1px solid #a7f3d0;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){resetPinClient(u.id,(u.prenom||'')+' '+(u.nom||''));});
   if(isSuperAdmin())mkBtn('Supprimer le compte','btn-r','margin-top:6px',function(){
     document.getElementById('sh-confirm-nom').textContent=(u.prenom||'')+' '+(u.nom||'');
     document.getElementById('sh-confirm-id').value=id;
@@ -860,6 +955,16 @@ function voirU(id){
     closeSh('user');openSh('confirm-delete');
   });
   openSh('user');
+}
+
+async function activerAvecKyc(clientId,niveauKyc){
+  if(!confirm('Activer ce compte au niveau '+niveauKyc+' ?'))return;
+  try{
+    var h={'Content-Type':'application/json'};if(G.token)h['Authorization']='Bearer '+G.token;
+    await fetch(API+'/users/'+clientId+'/kyc',{method:'PATCH',headers:h,body:JSON.stringify({kycNiveau:niveauKyc})});
+    toast('Compte activé — niveau '+niveauKyc);
+    closeSh('user');chargerUsers();
+  }catch(e){toast('Activation: '+e.message,true);}
 }
 
 async function chgStatut(id,statut){
@@ -1101,16 +1206,38 @@ async function rejeterKyc(clientId,ticketId,niveau){
 }
 
 async function validerKyc(clientId,ticketId,niveau){
-  if(!confirm('Valider le passage au niveau '+niveau+' pour ce client ?'))return;
+  // 1. Charger les docs existants du client
+  var docs=[];
+  try{var dr=await apiGet('/kyc/documents?userId='+clientId);docs=dr.data||[];}
+  catch(e){docs=[];}
+
+  // 2. Vérifier si le niveau demandé est validable
+  var niveauMax=niveauKycValidable(docs);
+  var manquants=docsManquants(niveau,docs);
+
+  if(!niveauMax){
+    // Aucun niveau validable - selfie manquant au minimum
+    toast('Impossible de valider : selfie manquant. Le client doit soumettre ses documents.',true);
+    return;
+  }
+
+  // 3. Si niveau demandé > niveau validable → proposer de valider le niveau inférieur
+  var niveauAValider=niveau;
+  if(manquants.length>0){
+    var msg='Documents manquants pour '+niveau+' : '+manquants.map(function(d){return KYC_LABELS[d]||d;}).join(', ');
+    msg+=' - Docs complets pour '+niveauMax+'. Valider en '+niveauMax+' a la place ?';
+    if(!confirm(msg))return;
+    niveauAValider=niveauMax;
+  } else {
+    if(!confirm('Valider le passage au niveau '+niveauAValider+' pour ce client ?'))return;
+  }
+
+  // 4. Valider
   try{
     var h={'Content-Type':'application/json'};if(G.token)h['Authorization']='Bearer '+G.token;
-    // Mettre à jour le niveau KYC du client
-    await fetch(API+'/kyc/'+clientId+'/validate',{method:'GET',headers:h});
-    // Fallback : mettre à jour via PATCH statut
-    await fetch(API+'/users/'+clientId+'/kyc',{method:'PATCH',headers:h,body:JSON.stringify({kycNiveau:niveau})});
-    // Fermer le ticket
-    await apiPost('/tickets/'+ticketId+'/status',{statut:'resolu'});
-    toast('KYC '+niveau+' validé pour le client');
+    await fetch(API+'/users/'+clientId+'/kyc',{method:'PATCH',headers:h,body:JSON.stringify({kycNiveau:niveauAValider})});
+    await apiPost('/tickets/'+ticketId+'/status',{statut:'resolu'}).catch(function(){});
+    toast('KYC '+niveauAValider+' validé — client actif');
     chargerTicketsKyc();
   }catch(e){toast('Validation: '+e.message,true);}
 }
@@ -1227,6 +1354,12 @@ async function rechercherClient(){
     btnSusp.style.cssText='width:100%;margin-top:8px;padding:13px;background:#fffbeb;color:#92400e;border:1px solid #fde68a;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
     btnSusp.addEventListener('click',function(){suspendreCompte(u.id,(u.prenom||'')+' '+(u.nom||''));});
     btnZone.appendChild(btnSusp);
+    // Bouton Reset PIN (Support + Admin)
+    var btnPin=document.createElement('button');
+    btnPin.textContent='🔐 Réinitialiser le code PIN';
+    btnPin.style.cssText='width:100%;margin-top:8px;padding:13px;background:#f0fdf4;color:#15803d;border:1px solid #a7f3d0;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
+    btnPin.addEventListener('click',function(){resetPinClient(u.id,(u.prenom||'')+' '+(u.nom||''));});
+    btnZone.appendChild(btnPin);
     card.appendChild(btnZone);
   }
   el.appendChild(card);
@@ -1541,7 +1674,7 @@ var PERMS={
   // Support Client : recherche client, remboursement, tickets
   support_client:{home:0,users:0,txns:0,monitoring:0,support:1,tech:0,creer:0,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:0,logs:0},
   // Support Tech : logs, transactions bloquees, alertes systeme. Pas infos perso client
-  support_tech:  {home:0,users:0,txns:1,monitoring:1,stats:1,support:0,tech:1,creer:0,soldes:0,supprimer:0,rembourser:0,kyc:0,gels:0,logs:1}
+  support_tech:  {home:0,users:1,txns:1,monitoring:1,stats:1,support:0,tech:1,creer:0,soldes:0,supprimer:0,rembourser:0,kyc:1,gels:0,logs:1}
 };
 function perm(k){var u=G.user;if(!u)return 0;var p=PERMS[u.role];return p?p[k]||0:0;}
 
@@ -1810,7 +1943,51 @@ function voirU(id){
     if(extra)btn.style.cssText=extra;btn.style.marginBottom='10px';
     btn.addEventListener('click',fn);body.appendChild(btn);
   }
-  if(u.statut==='en_attente')mkBtn('Activer le compte','btn-g','',function(){chgStatut(id,'actif');});
+  if(u.statut==='en_attente'){
+    // Charger les docs pour vérifier avant d'afficher le bouton
+    var activerBtn=document.createElement('button');
+    activerBtn.textContent='Vérification docs...';
+    activerBtn.disabled=true;
+    activerBtn.style.cssText='width:100%;padding:15px;border-radius:14px;background:#f3f4f6;color:#9ca3af;border:none;font-size:15px;font-weight:700;cursor:not-allowed;font-family:inherit;margin-bottom:10px';
+    body.appendChild(activerBtn);
+    apiGet('/kyc/documents?userId='+id).then(function(r){
+      var docs=r.data||[];
+      var niveauMax=niveauKycValidable(docs);
+      var niveauDemande=u.kycNiveauDemande||u.kycNiveau||'KYC1';
+      var docsIds=docs.map(function(d){return d.typeDocument;});
+
+      // Construire l'état des docs pour chaque niveau
+      var niveaux=['KYC1','KYC2','KYC3'];
+      var infoDiv=document.createElement('div');
+      infoDiv.style.cssText='margin-bottom:12px';
+      niveaux.forEach(function(niv){
+        var requis=KYC_DOCS_REQUIS[niv]||[];
+        var manq=requis.filter(function(d){return docsIds.indexOf(d)<0;});
+        var complet=manq.length===0;
+        var isCurrent=u.kycNiveau===niv;
+        var row=document.createElement('div');
+        row.style.cssText='padding:8px 12px;border-radius:10px;margin-bottom:6px;background:'+(complet?'#f0fdf4':'#fef3c7');
+        row.innerHTML='<div style="font-size:12px;font-weight:700;color:'+(complet?'#15803d':'#92400e')+'">'+niv+' '+(complet?'✅ Complet':(isCurrent?'⏳ En cours':'🔒'))+' '+(isCurrent?'(niveau actuel)':'')+'</div>'
+          +(manq.length?'<div style="font-size:11px;color:#a16207;margin-top:2px">Manquants : '+manq.map(function(d){return KYC_LABELS[d]||d;}).join(', ')+'</div>':'');
+        infoDiv.appendChild(row);
+      });
+      body.appendChild(infoDiv);
+
+      if(niveauMax){
+        activerBtn.textContent='Activer le compte — '+niveauMax;
+        activerBtn.disabled=false;
+        activerBtn.style.cssText='width:100%;padding:15px;border-radius:14px;background:#22c55e;color:#fff;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px';
+        activerBtn.addEventListener('click',function(){activerAvecKyc(id,niveauMax);});
+      } else {
+        activerBtn.textContent='Activation impossible — selfie manquant';
+        activerBtn.disabled=true;
+        activerBtn.style.cssText='width:100%;padding:15px;border-radius:14px;background:#f3f4f6;color:#9ca3af;border:1px solid #e5e7eb;font-size:14px;font-weight:700;cursor:not-allowed;font-family:inherit;margin-bottom:10px';
+      }
+    }).catch(function(){
+      activerBtn.textContent='Impossible de vérifier les docs';
+      activerBtn.disabled=true;
+    });
+  }
   if(u.statut==='actif'){
     mkBtn('Suspendre','','background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;width:100%;padding:15px;border-radius:14px;border:1px solid #fed7aa;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){chgStatut(id,'suspendu');});
     mkBtn('Bloquer','btn-r','',function(){chgStatut(id,'bloque');});
@@ -1821,6 +1998,7 @@ function voirU(id){
   }
   if(u.statut==='bloque')mkBtn('Debloquer','btn-g','',function(){chgStatut(id,'actif');});
   if(perm('rembourser'))mkBtn('Rembourser dernier transfert','','background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){toast('Remboursement bientot disponible');});
+  mkBtn('🔐 Réinitialiser le code PIN','','background:#f0fdf4;color:#15803d;border:1px solid #a7f3d0;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){resetPinClient(u.id,(u.prenom||'')+' '+(u.nom||''));});
   if(isSuperAdmin())mkBtn('Supprimer le compte','btn-r','margin-top:6px',function(){
     document.getElementById('sh-confirm-nom').textContent=(u.prenom||'')+' '+(u.nom||'');
     document.getElementById('sh-confirm-id').value=id;
@@ -1829,6 +2007,16 @@ function voirU(id){
     closeSh('user');openSh('confirm-delete');
   });
   openSh('user');
+}
+
+async function activerAvecKyc(clientId,niveauKyc){
+  if(!confirm('Activer ce compte au niveau '+niveauKyc+' ?'))return;
+  try{
+    var h={'Content-Type':'application/json'};if(G.token)h['Authorization']='Bearer '+G.token;
+    await fetch(API+'/users/'+clientId+'/kyc',{method:'PATCH',headers:h,body:JSON.stringify({kycNiveau:niveauKyc})});
+    toast('Compte activé — niveau '+niveauKyc);
+    closeSh('user');chargerUsers();
+  }catch(e){toast('Activation: '+e.message,true);}
 }
 
 async function chgStatut(id,statut){
@@ -2105,6 +2293,12 @@ async function rechercherClient(){
     btnSusp.style.cssText='width:100%;margin-top:8px;padding:13px;background:#fffbeb;color:#92400e;border:1px solid #fde68a;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
     btnSusp.addEventListener('click',function(){suspendreCompte(u.id,(u.prenom||'')+' '+(u.nom||''));});
     btnZone.appendChild(btnSusp);
+    // Bouton Reset PIN (Support + Admin)
+    var btnPin=document.createElement('button');
+    btnPin.textContent='🔐 Réinitialiser le code PIN';
+    btnPin.style.cssText='width:100%;margin-top:8px;padding:13px;background:#f0fdf4;color:#15803d;border:1px solid #a7f3d0;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit';
+    btnPin.addEventListener('click',function(){resetPinClient(u.id,(u.prenom||'')+' '+(u.nom||''));});
+    btnZone.appendChild(btnPin);
     card.appendChild(btnZone);
   }
   el.appendChild(card);
@@ -2190,7 +2384,150 @@ async function creerTicket(){
 }
 
 // ── TECH ──
+
+// ── TECH : Clients par statut ──
+var techStatutActif='en_attente';
+async function chargerClientsTech(statut){
+  statut=statut||techStatutActif;
+  techStatutActif=statut;
+  // Mise à jour des filtres
+  ['en_attente','actif','suspendu','bloque'].forEach(function(s){
+    var btn=document.getElementById('tf-'+s);if(!btn)return;
+    var on=s===statut;
+    btn.style.border='1.5px solid '+(on?'var(--y)':'#e5e7eb');
+    btn.style.background=on?'var(--y3)':'#fff';
+    btn.style.color=on?'var(--y2)':'var(--m)';
+  });
+  var el=document.getElementById('tech-clients-list');if(!el)return;
+  el.innerHTML='<div style="padding:16px;text-align:center"><div class="spin" style="width:16px;height:16px;border-width:2px"></div></div>';
+  try{
+    var r=await apiGet('/users?statut='+statut+'&limit=50');
+    var list=r.data||[];
+    el.innerHTML='';
+    if(!list.length){
+      el.innerHTML='<div style="font-size:13px;color:var(--m);padding:12px;text-align:center">Aucun compte '+statut+'</div>';
+      return;
+    }
+    list.forEach(function(u){
+      var c=ROLE_C[u.role]||'#888';
+      var card=document.createElement('div');
+      card.style.cssText='background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer';
+      var statutColor={'actif':'#22c55e','en_attente':'#f59e0b','suspendu':'#f97316','bloque':'#ef4444'}[u.statut]||'#888';
+      card.innerHTML='<div style="display:flex;align-items:center;gap:10px">'
+        +'<div style="width:40px;height:40px;border-radius:10px;background:'+c+'18;color:'+c+';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0">'+(u.prenom||'?')[0].toUpperCase()+'</div>'
+        +'<div style="flex:1"><div style="font-size:13px;font-weight:700">'+(u.prenom||'')+' '+(u.nom||'')+'</div>'
+        +'<div style="font-size:11px;color:var(--m);font-family:monospace">'+u.telephone+'</div>'
+        +'<div style="font-size:10px;color:var(--m);margin-top:2px">'+u.role.toUpperCase()+' · KYC: '+(u.kycNiveau||'--')+'</div>'
+        +'</div>'
+        +'<div style="text-align:right;flex-shrink:0">'
+        +'<span style="background:'+statutColor+'22;color:'+statutColor+';padding:3px 8px;border-radius:99px;font-size:10px;font-weight:700">'+u.statut+'</span>'
+        +'</div>'
+        +'</div>'
+        +'<div id="tech-actions-'+u.id+'" style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap"></div>';
+      el.appendChild(card);
+      // Boutons d'action selon statut (SANS solde ni historique)
+      var actZone=document.getElementById('tech-actions-'+u.id);
+      function mkTechBtn(txt,bg,color,fn){
+        var b=document.createElement('button');
+        b.textContent=txt;
+        b.style.cssText='padding:7px 14px;background:'+bg+';color:'+color+';border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit';
+        b.addEventListener('click',fn);
+        actZone.appendChild(b);
+      }
+      // Voir photos KYC
+      mkTechBtn('Voir documents','#eff6ff','#1d4ed8',function(){afficherDocsTech(u.id,(u.prenom||'')+' '+(u.nom||''));});
+      if(u.statut==='en_attente'){
+        mkTechBtn('Activer','#dcfce7','#15803d',function(){activerClientTech(u.id,u.prenom);});
+        mkTechBtn('Maintenir en attente','#fef3c7','#92400e',function(){toast('Compte maintenu en attente');});
+      }
+      if(u.statut==='actif'){
+        mkTechBtn('Mettre en attente','#fef3c7','#92400e',function(){chgStatutTech(u.id,'en_attente');});
+      }
+      if(u.statut==='suspendu'){
+        mkTechBtn('Réactiver','#dcfce7','#15803d',function(){activerClientTech(u.id,u.prenom);});
+      }
+    });
+  }catch(e){el.innerHTML='<div style="color:var(--r);font-size:13px;padding:10px">'+e.message+'</div>';}
+}
+
+async function activerClientTech(clientId,prenom){
+  // Vérifier les docs avant d'activer
+  var docs=[];
+  try{var dr=await apiGet('/kyc/documents?userId='+clientId);docs=dr.data||[];}catch(e){}
+  var niveauMax=niveauKycValidable(docs);
+  if(!niveauMax){
+    toast('Activation impossible : aucun document valide soumis. Le client doit fournir au minimum son selfie.',true);
+    return;
+  }
+  if(!confirm('Activer le compte de '+prenom+' au niveau '+niveauMax+' ?'))return;
+  try{
+    var h={'Content-Type':'application/json'};if(G.token)h['Authorization']='Bearer '+G.token;
+    await fetch(API+'/users/'+clientId+'/kyc',{method:'PATCH',headers:h,body:JSON.stringify({kycNiveau:niveauMax})});
+    toast('Compte activé en '+niveauMax);
+    chargerClientsTech(techStatutActif);
+  }catch(e){toast('Activation: '+e.message,true);}
+}
+
+async function chgStatutTech(clientId,statut){
+  try{
+    await apiPatch('/users/'+clientId+'/status',{statut:statut});
+    toast('Statut mis à jour : '+statut);
+    chargerClientsTech(techStatutActif);
+  }catch(e){toast(e.message,true);}
+}
+
+function afficherDocsTech(userId,nom){
+  // Créer un overlay avec les docs KYC — PAS de solde ni historique
+  var ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:999;overflow-y:auto;padding:20px';
+  ov.innerHTML='<div style="background:#fff;border-radius:20px;max-width:360px;margin:0 auto;overflow:hidden">'
+    +'<div style="background:linear-gradient(135deg,#374151,#111827);padding:16px 20px;display:flex;align-items:center;justify-content:space-between">'
+    +'<div><div style="font-size:15px;font-weight:800;color:#fff">'+nom+'</div>'
+    +'<div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px">Documents KYC</div></div>'
+    +'<button id="tech-close-'+userId+'" style="background:rgba(255,255,255,.15);border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:16px">✕</button>'
+    +'</div>'
+    +'<div id="tech-docs-content-'+userId+'" style="padding:16px"><div style="text-align:center"><div class="spin"></div></div></div>'
+    +'</div>';
+  document.body.appendChild(ov);
+  // Bouton fermer
+  var closeBtn=document.getElementById('tech-close-'+userId);
+  if(closeBtn)closeBtn.addEventListener('click',function(){ov.remove();});
+  // Charger les docs
+  apiGet('/kyc/documents?userId='+userId).then(function(r){
+    var docs=r.data||[];
+    var el=document.getElementById('tech-docs-content-'+userId);
+    if(!el)return;
+    if(!docs.length){el.innerHTML='<div style="color:var(--m);font-size:13px;text-align:center;padding:16px">Aucun document soumis</div>';return;}
+    var niveauMax=niveauKycValidable(docs);
+    var html='<div style="background:'+(niveauMax?'#f0fdf4':'#fef3c7')+';border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;font-weight:700;color:'+(niveauMax?'#15803d':'#92400e')+'">'
+      +(niveauMax?'✅ Niveau validable : '+niveauMax:'⚠️ Documents insuffisants pour valider un niveau')
+      +'</div>';
+    html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+    var labels={selfie:'Selfie',cni_recto:'CNI Recto',cni_verso:'CNI Verso',extrait_naissance:'Extrait naiss.',justificatif_domicile:'Justif. domicile',rccm:'RCCM',declaration_fiscale:'DFE'};
+    docs.forEach(function(doc){
+      var sc=doc.statut==='approuve'?'#22c55e':doc.statut==='rejete'?'#ef4444':'#f59e0b';
+      html+='<div style="background:#f9fafb;border-radius:12px;overflow:hidden">'
+        +'<div style="padding:6px 10px;display:flex;justify-content:space-between;align-items:center">'
+        +'<span style="font-size:10px;font-weight:700">'+(labels[doc.typeDocument]||doc.typeDocument)+'</span>'
+        +'<span style="font-size:9px;font-weight:700;color:'+sc+'">'+doc.statut+'</span></div>';
+      if(doc.urlFichier){
+        var imgTag='<a href="'+doc.urlFichier+'" target="_blank"><img src="'+doc.urlFichier+'" style="width:100%;height:80px;object-fit:cover"/></a>';
+        html+=imgTag;
+      }
+      else html+='<div style="padding:12px;text-align:center;font-size:11px;color:#9ca3af">Non dispo</div>';
+      html+='</div>';
+    });
+    html+='</div>';
+    el.innerHTML=html;
+  }).catch(function(e){
+    var el=document.getElementById('tech-docs-content-'+userId);
+    if(el)el.innerHTML='<div style="color:var(--r);font-size:13px">'+e.message+'</div>';
+  });
+}
+
 async function chargerTech(){
+  // Charger les clients en attente d'abord
+  chargerClientsTech('en_attente');
   // Ping API
   try{
     var t0=Date.now();await apiGet('/health');var ms=Date.now()-t0;
@@ -2277,46 +2614,66 @@ async function chargerHistoriqueClient(userId){
     if(parent)parent.appendChild(div);
     el=div;
   }
-  el.innerHTML='<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:8px">Historique (12 mois)</div><div style="padding:16px;text-align:center"><div class="spin" style="width:18px;height:18px;border-width:2px"></div></div>';
+  // Règle métier : Support voit 3 mois, Admin/Superviseur voit tout
+  var role=G.user?G.user.role:'';
+  var isAdmin=(role==='admin'||role==='superviseur');
+  var limiteMois=isAdmin?12:3;
+  var dateDebut=new Date();dateDebut.setMonth(dateDebut.getMonth()-limiteMois);
+  var labelPeriode=isAdmin?'Tout l\'historique':'3 derniers mois';
+  el.innerHTML='<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:8px">Historique ('+labelPeriode+')</div><div style="padding:16px;text-align:center"><div class="spin" style="width:18px;height:18px;border-width:2px"></div></div>';
   try{
-    // Historique sur 1 an - limit 200
-    var r=await apiGet('/transactions?userId='+userId+'&limit=200');
-    var list=r.data||[];
+    var limit=isAdmin?500:200;
+    var r=await apiGet('/transactions?userId='+userId+'&limit='+limit);
+    var list=(r.data||[]).filter(function(tx){
+      return isAdmin||new Date(tx.dateCreation)>=dateDebut;
+    });
     var TC={depot:'#22c55e',retrait:'#f97316',transfert:'#3b82f6',commission:'#f59e0b',paiement_marchand:'#8b5cf6'};
-    var TL={depot:'Depot',retrait:'Retrait',transfert:'Transfert',commission:'Commission',paiement_marchand:'Paiement'};
+    var TL={depot:'Dépôt',retrait:'Retrait',transfert:'Transfert',commission:'Commission',paiement_marchand:'Paiement'};
     var TI={depot:'↓',retrait:'↑',transfert:'⇄',commission:'★',paiement_marchand:'◈'};
-    if(!list.length){el.innerHTML='<div style="font-size:12px;color:#6b7280;padding:8px">Aucune transaction</div>';return;}
+    el.innerHTML='';
     var header=document.createElement('div');
-    header.innerHTML='<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:8px">Historique (12 mois)</div>';
+    header.innerHTML='<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:10px">Historique ('+labelPeriode+')'
+      +(isAdmin?'':' <span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:99px;font-size:9px">Support : lecture seule</span>')+'</div>';
     el.appendChild(header);
+    if(!list.length){
+      var vide=document.createElement('div');
+      vide.style.cssText='background:#ecfdf5;border:1px solid #a7f3d0;border-radius:14px;padding:14px;text-align:center;color:#059669;font-size:13px;font-weight:600';
+      vide.textContent='Aucune transaction sur la période';
+      el.appendChild(vide);return;
+    }
+    // Règle remboursement : Admin seulement, ≤ 7 jours
     var limiteRemb=new Date(Date.now()-7*24*60*60*1000);
+    var peutRembourser=(role==='admin');
     list.forEach(function(tx){
       var c=TC[tx.type]||'#888';var l=TL[tx.type]||tx.type;
       var row=document.createElement('div');
-      row.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f9fafb';
-      var isTransfert=tx.type==='transfert'&&tx.statut==='complete';
-      // Afficher Rembourser sur tous les transferts dans le délai
-      // Le champ compteSourceId est maintenant inclus dans la réponse
-      var dansDelai=isTransfert&&new Date(tx.dateCreation)>=limiteRemb;
-      row.innerHTML='<div style="width:32px;height:32px;border-radius:8px;background:'+c+'18;color:'+c+';display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0">'+(TI[tx.type]||'·')+'</div>'
-        +'<div style="flex:1"><div style="font-size:12px;font-weight:700;color:'+c+'">'+l+'</div>'
+      row.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f9fafb';
+      var estRemboursable=(tx.type==='transfert'||tx.type==='paiement_marchand'||tx.type==='depot')&&tx.statut==='complete'&&new Date(tx.dateCreation)>=limiteRemb;
+      row.innerHTML='<div style="width:34px;height:34px;border-radius:9px;background:'+c+'18;color:'+c+';display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">'+(TI[tx.type]||'·')+'</div>'
+        +'<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700;color:'+c+'">'+l+'</div>'
         +'<div style="font-size:10px;color:#9ca3af">'+FD(tx.dateCreation)+'</div>'
-        +(tx.statut==='annule'?'<div style="font-size:9px;color:#ef4444;font-weight:700">REMBOURSE</div>':'')
+        +(tx.statut==='annule'?'<div style="font-size:9px;color:#ef4444;font-weight:700">REMBOURSÉ</div>':'')
+        +(tx.reference?'<div style="font-size:9px;color:#9ca3af;font-family:monospace">'+tx.reference+'</div>':'')
         +'</div>'
-        +'<div style="text-align:right"><div style="font-size:13px;font-weight:800;color:'+c+'">'+F(tx.montant)+'</div></div>';
-      // Bouton rembourser sur les transferts dans le délai
-      if(dansDelai&&perm('rembourser')){
+        +'<div style="text-align:right;flex-shrink:0"><div style="font-size:13px;font-weight:800;color:'+c+'">'+F(tx.montant)+'</div></div>';
+      if(estRemboursable&&peutRembourser){
         var btnR=document.createElement('button');
         btnR.textContent='Rembourser';
         btnR.style.cssText='padding:4px 10px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;margin-left:4px';
         (function(b,txId,montant,ref){
           b.addEventListener('click',function(){
             var uid=currentClientId;
-            if(!uid){toast('Erreur: client non identifie',true);return;}
+            if(!uid){toast('Erreur: client non identifié',true);return;}
             rembourserTransaction(txId,montant,ref,uid);
           });
         })(btnR,tx.id,tx.montant,tx.reference);
         row.appendChild(btnR);
+      } else if(estRemboursable&&!peutRembourser&&role==='support_client'){
+        // Support voit l'éligibilité mais ne peut pas rembourser
+        var tag=document.createElement('span');
+        tag.textContent='Éligible';
+        tag.style.cssText='padding:3px 8px;background:#fef3c7;color:#92400e;border-radius:8px;font-size:9px;font-weight:700;margin-left:4px;flex-shrink:0';
+        row.appendChild(tag);
       }
       el.appendChild(row);
     });
@@ -2364,12 +2721,87 @@ function afficherQrSuperviseur(){
   document.body.appendChild(ov);
 }
 
+// ── GRAPHIQUES STATS ──
+var statsChart=null;
+var statsRawData=[];
+var currentChartType='depot';
+
+var CHART_COLORS={
+  depot:{border:'#22c55e',bg:'rgba(34,197,94,.12)'},
+  retrait:{border:'#f97316',bg:'rgba(249,115,22,.12)'},
+  transfert:{border:'#3b82f6',bg:'rgba(59,130,246,.12)'},
+  paiement_marchand:{border:'#8b5cf6',bg:'rgba(139,92,246,.12)'}
+};
+
+function setChartType(type){
+  currentChartType=type;
+  var types=['depot','retrait','transfert','paiement_marchand'];
+  var colors={depot:'#22c55e',retrait:'#f97316',transfert:'#3b82f6',paiement_marchand:'#8b5cf6'};
+  types.forEach(function(t){
+    var btn=document.getElementById('ct-'+t);if(!btn)return;
+    if(t===type){
+      var c=colors[t];
+      btn.style.borderColor=c;btn.style.background=c+'18';btn.style.color=c;
+    }else{
+      btn.style.borderColor='#e5e7eb';btn.style.background='#f9fafb';btn.style.color='#6b7280';
+    }
+  });
+  renderChart(type);
+}
+
+function renderChart(type){
+  var canvas=document.getElementById('stats-chart');if(!canvas)return;
+  // Préparer les 30 derniers jours
+  var days=[];var labels=[];
+  for(var i=29;i>=0;i--){
+    var d=new Date();d.setDate(d.getDate()-i);
+    days.push(d.toISOString().slice(0,10));
+    labels.push(d.getDate()+'/'+(d.getMonth()+1));
+  }
+  var byDay={};days.forEach(function(d){byDay[d]=0;});
+  statsRawData.forEach(function(tx){
+    if(tx.type!==type&&!(type==='paiement_marchand'&&tx.type==='paiement_marchand'))return;
+    var day=(tx.dateCreation||tx.date_creation||'').slice(0,10);
+    if(byDay[day]!==undefined)byDay[day]+=Number(tx.montant||0);
+  });
+  var data=days.map(function(d){return Math.round(byDay[d]/1000);});// en milliers
+  var cc=CHART_COLORS[type]||CHART_COLORS.depot;
+  if(statsChart){statsChart.destroy();}
+  statsChart=new Chart(canvas,{
+    type:'line',
+    data:{
+      labels:labels,
+      datasets:[{
+        label:'Volume (×1000 F)',
+        data:data,
+        borderColor:cc.border,
+        backgroundColor:cc.bg,
+        borderWidth:2.5,
+        pointRadius:data.map(function(v){return v>0?4:0;}),
+        pointBackgroundColor:cc.border,
+        fill:true,
+        tension:.4
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ' '+ctx.parsed.y+'k F';} }}},
+      scales:{
+        x:{grid:{display:false},ticks:{font:{size:9},color:'#9ca3af',maxTicksLimit:10}},
+        y:{grid:{color:'#f3f4f6'},ticks:{font:{size:9},color:'#9ca3af',callback:function(v){return v+'k';}},beginAtZero:true}
+      }
+    }
+  });
+}
+
 async function chargerStats(){
-  var el=document.getElementById('stats-content');if(!el)return;
+  var el=document.getElementById('stats-content-inner');if(!el)return;
   el.innerHTML='<div style="padding:24px;text-align:center"><div class="spin"></div></div>';
   try{
-    var r=await apiGet('/transactions?limit=500');
-    var list=r.data||[];
+    var r=await apiGet('/transactions?limit=1000');
+    statsRawData=r.data||[];
+    renderChart(currentChartType);
+    var list=statsRawData;
     var now=new Date();var debut=new Date(now.getFullYear(),now.getMonth(),1);
     var cumT={depot:{n:0,m:0,comm:0},retrait:{n:0,m:0,comm:0},transfert:{n:0,m:0},paiement:{n:0,m:0}};
     var cumM={depot:{n:0,m:0,comm:0},retrait:{n:0,m:0,comm:0},transfert:{n:0,m:0},paiement:{n:0,m:0}};
@@ -2377,7 +2809,6 @@ async function chargerStats(){
       var m=Number(tx.montant||0);var f=Number(tx.frais||0);
       var d=new Date(tx.dateCreation||tx.date_creation);
       var isMois=d>=debut;
-      var tgt=isMois?cumM:null;
       function add(obj,type){obj[type].n++;obj[type].m+=m;if(type==='depot')obj[type].comm+=Math.round(m*0.002);if(type==='retrait')obj[type].comm+=Math.round(f*0.35);}
       if(tx.type==='depot'){add(cumT,'depot');if(isMois)add(cumM,'depot');}
       else if(tx.type==='retrait'){add(cumT,'retrait');if(isMois)add(cumM,'retrait');}
@@ -2397,7 +2828,7 @@ async function chargerStats(){
       defs.forEach(function(d){
         var c=cums[d.k];
         var card=document.createElement('div');
-        card.style.cssText='background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px 16px;margin-bottom:8px';
+        card.style.cssText='background:#fff;border:1px solid #f3f4f6;border-radius:16px;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.05)';
         var rows='<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:#6b7280;font-size:12px">Opérations</span><span style="font-size:13px;font-weight:700">'+c.n+' op.</span></div>'
           +'<div style="display:flex;justify-content:space-between;margin-bottom:'+(d.showComm?'6px':'0')+';"><span style="color:#6b7280;font-size:12px">Volume total</span><span style="font-size:14px;font-weight:800;color:'+d.color+'">'+F(c.m)+'</span></div>';
         if(d.showComm)rows+='<div style="display:flex;justify-content:space-between"><span style="color:#6b7280;font-size:12px">'+d.commLabel+'</span><span style="font-size:13px;font-weight:700;color:#22c55e">+'+F(c.comm)+'</span></div>';
@@ -2406,19 +2837,22 @@ async function chargerStats(){
           +'<div style="font-size:14px;font-weight:700">'+d.label+'</div></div>'+rows;
         sec.appendChild(card);
       });
-      // Bientôt
-      ['Transferts sortants (MTN MoMo, Orange...)','Transferts entrants (autres réseaux)'].forEach(function(lbl){
-        var card=document.createElement('div');
-        card.style.cssText='background:#f9fafb;border:1px solid #f3f4f6;border-radius:14px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:10px;opacity:.6';
-        card.innerHTML='<div style="width:36px;height:36px;border-radius:10px;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:16px">⏳</div>'
-          +'<div><div style="font-size:13px;font-weight:700;color:#6b7280">'+lbl+'</div><div style="font-size:11px;color:#9ca3af">Bientôt disponible</div></div>';
-        sec.appendChild(card);
-      });
       return sec;
     }
     el.appendChild(mkSection('Ce mois-ci',cumM));
     el.appendChild(mkSection('Total historique',cumT));
   }catch(e){el.innerHTML='<div style="color:var(--r);padding:12px;font-size:13px">'+e.message+'</div>';}
+}
+
+async function resetPinClient(userId,nom){
+  if(!confirm('Réinitialiser le PIN de '+nom+' à 1234 ? L\'utilisateur devra le changer à la prochaine connexion.'))return;
+  try{
+    var h={'Content-Type':'application/json','Authorization':'Bearer '+G.token};
+    var resp=await fetch(API+'/users/'+userId+'/reset-pin',{method:'POST',headers:h});
+    var data=await resp.json();
+    if(!resp.ok)throw new Error(data.message||'Erreur lors de la réinitialisation');
+    toast('✓ PIN de '+nom+' réinitialisé à 1234');
+  }catch(e){toast('Erreur: '+e.message,true);}
 }
 
 function logout(){

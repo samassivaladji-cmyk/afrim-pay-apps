@@ -399,22 +399,17 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 
 <!-- ÉCRAN VERROUILLAGE -->
 <div class="scr" id="s-lock" style="background:linear-gradient(160deg,#064e3b,#059669);justify-content:center;align-items:center;min-height:100vh;padding:40px 24px;">
-  <div style="width:100%;max-width:340px;text-align:center;">
-    <div style="width:72px;height:72px;background:rgba(255,255,255,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;">
-      <svg width="36" height="36" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+  <div style="width:100%;max-width:300px;text-align:center;display:flex;flex-direction:column;align-items:center;">
+    <div style="width:72px;height:72px;border-radius:18px;overflow:hidden;margin:0 auto 24px;box-shadow:0 6px 20px rgba(0,0,0,.2);">
+      <img src="https://samassivaladji-cmyk.github.io/afrim-pay-apps/logo.png" style="width:100%;height:100%;object-fit:contain" alt="AFRIM PAY"/>
     </div>
-    <div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:8px;">Application verrouillée</div>
-    <div style="font-size:14px;color:rgba(255,255,255,.7);margin-bottom:32px;">Entrez votre code secret pour continuer</div>
-    <div id="lock-err" style="display:none;background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4);color:#fca5a5;padding:10px 14px;border-radius:12px;font-size:13px;margin-bottom:16px;"></div>
+    <div style="font-size:14px;color:rgba(255,255,255,.75);margin-bottom:24px;letter-spacing:.01em;">Entrez votre code pour déverrouiller</div>
+    <div id="lock-err" style="display:none;background:rgba(239,68,68,.2);border:1px solid rgba(239,68,68,.4);color:#fca5a5;padding:10px 14px;border-radius:12px;font-size:13px;margin-bottom:12px;width:100%;"></div>
     <input id="lock-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••"
-      style="width:100%;padding:16px;font-size:28px;letter-spacing:14px;text-align:center;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.3);border-radius:16px;color:#fff;outline:none;box-sizing:border-box;margin-bottom:16px;"
-      onkeydown="if(event.key==='Enter')deverrouillerApp()"
-      oninput="this.style.borderColor=this.value.length===4?'rgba(255,255,255,.9)':'rgba(255,255,255,.3)'"/>
-    <button onclick="deverrouillerApp()" style="width:100%;padding:16px;background:#fff;color:#059669;border:none;border-radius:16px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:12px;">
-      Déverrouiller
-    </button>
-    <button onclick="logout()" style="width:100%;padding:12px;background:transparent;color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.2);border-radius:12px;font-size:14px;cursor:pointer;font-family:inherit;">
-      Se déconnecter
+      style="width:100%;padding:16px;font-size:30px;letter-spacing:16px;text-align:center;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.25);border-radius:16px;color:#fff;outline:none;box-sizing:border-box;margin-bottom:32px;"
+      oninput="if(this.value.length===4)deverrouillerApp();"/>
+    <button onclick="logoutFromLock()" style="width:100%;padding:16px;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.6);border-radius:14px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.05em;">
+      DÉCONNEXION
     </button>
   </div>
 </div>
@@ -1080,7 +1075,7 @@ function ouvrirInfos(){
 }
 function voirPlafond(){
   var u=G.user;if(!u)return;openSh('plafond');
-  var plafonds={'KYC1':200000,'KYC2':1000000,'KYC3':5000000};
+  var plafonds={'KYC1':20000,'KYC2':50000,'KYC3':100000};
   var p=plafonds[u.kycNiveau]||200000;
   document.getElementById('sh-plafond-body').innerHTML=
     '<div style="text-align:center;padding:20px 0"><div style="font-size:36px;font-weight:900;color:#059669">'+Number(p).toLocaleString('fr-FR')+' FCFA</div><div style="color:#6b7280;font-size:14px;margin-top:4px">Plafond mensuel '+u.kycNiveau+'</div></div>'+
@@ -1184,85 +1179,178 @@ document.addEventListener('DOMContentLoaded',function(){
 
 function ouvrirKycUpgrade(){
   openSh('kyc-upgrade');
-  var u=G.user||{};
-  var kyc=u.kycNiveau||'KYC1';
   var el=document.getElementById('kyc-body');
   if(!el)return;
+  el.innerHTML='<div style="padding:24px;text-align:center"><div class="spin"></div></div>';
+  // Charger les docs déjà soumis depuis le backend → source de vérité permanente
+  var uid=G.user&&G.user.id;
+  get('/kyc/documents?userId='+uid).then(function(r){
+    _renderKyc(r.data||[]);
+  }).catch(function(){
+    _renderKyc([]);
+  });
+}
+
+function _renderKyc(docsExistants){
+  var u=G.user||{};
+  var kyc=u.kycNiveau||'KYC1';
+  var statut=u.statut||'';
+  var el=document.getElementById('kyc-body');
+  if(!el)return;
+
+  // IDs des docs déjà soumis/validés en base
+  var docsValides={};
+  (docsExistants||[]).forEach(function(d){
+    docsValides[d.typeDocument||d.type_document]=true;
+  });
+
   var KYC_DOCS={
-    KYC1:[{id:'selfie',label:'Selfie',icon:'🤳',desc:'Photo de vous, visage visible',camera:'user'}],
-    KYC2:[{id:'selfie',label:'Selfie',icon:'🤳',desc:'Photo de vous',camera:'user'},{id:'cni_recto',label:'CNI Recto',icon:'🪪',desc:'Recto carte identité',camera:'environment'},{id:'cni_verso',label:'CNI Verso',icon:'🪪',desc:'Verso carte identité',camera:'environment'}],
-    KYC3:[{id:'selfie',label:'Selfie',icon:'🤳',desc:'Photo de vous',camera:'user'},{id:'cni_recto',label:'CNI Recto',icon:'🪪',desc:'Recto carte identité',camera:'environment'},{id:'cni_verso',label:'CNI Verso',icon:'🪪',desc:'Verso carte identité',camera:'environment'},{id:'extrait_naissance',label:'Extrait naissance',icon:'📄',desc:'Original ou copie certifiée',camera:'environment'},{id:'justificatif_domicile',label:'Justificatif domicile',icon:'🏠',desc:'Facture ou attestation récente',camera:'environment'}]
+    KYC1:[{id:'selfie',label:'Selfie',icon:'🤳',desc:'Votre visage bien visible',camera:'user'}],
+    KYC2:[{id:'selfie',label:'Selfie',icon:'🤳',desc:'Votre visage bien visible',camera:'user'},
+          {id:'cni_recto',label:'CNI Recto',icon:'🪪',desc:'Recto carte identité nationale',camera:'environment'},
+          {id:'cni_verso',label:'CNI Verso',icon:'🪪',desc:'Verso carte identité nationale',camera:'environment'}],
+    KYC3:[{id:'selfie',label:'Selfie',icon:'🤳',desc:'Votre visage bien visible',camera:'user'},
+          {id:'cni_recto',label:'CNI Recto',icon:'🪪',desc:'Recto carte identité nationale',camera:'environment'},
+          {id:'cni_verso',label:'CNI Verso',icon:'🪪',desc:'Verso carte identité nationale',camera:'environment'},
+          {id:'extrait_naissance',label:'Extrait de naissance',icon:'📄',desc:'Original ou copie certifiée',camera:'environment'},
+          {id:'justificatif_domicile',label:'Justificatif de domicile',icon:'🏠',desc:'Facture ou attestation récente',camera:'environment'}]
   };
+
+  var NOUVEAUX_DOCS={
+    KYC1:['selfie'],
+    KYC2:['cni_recto','cni_verso'],
+    KYC3:['extrait_naissance','justificatif_domicile']
+  };
+
   var PLAFONDS={KYC1:'20 000',KYC2:'50 000',KYC3:'100 000'};
   var KYC_CONDITIONS={
-    KYC1:{filleuls:0,desc:'Accès de base — Valide avec un simple selfie'},
-    KYC2:{filleuls:200,desc:'200 filleuls rattachés requis pour le plafond 50 000 F'},
-    KYC3:{filleuls:500,desc:'500 filleuls rattachés requis pour le plafond 100 000 F'}
+    KYC1:{filleuls:0,desc:'Accès de base — Un simple selfie suffit'},
+    KYC2:{filleuls:200,desc:'200 filleuls requis pour le plafond 50 000 F'},
+    KYC3:{filleuls:500,desc:'500 filleuls requis pour le plafond 100 000 F'}
   };
-  var nbRatt=Number((G.user&&G.user.nbRattaches)||0);
+
+  var nbRatt=Number((u.nbRattaches)||0);
   var niveaux=['KYC1','KYC2','KYC3'];
   var colors={KYC1:'#22c55e',KYC2:'#3b82f6',KYC3:'#8b5cf6'};
+  var kycOrder={KYC1:1,KYC2:2,KYC3:3};
+
   window._kycPhotos={};
+
   var h='<div style="background:#f9fafb;border-radius:14px;padding:14px;margin-bottom:16px">';
-  h+='<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:8px">Niveau actuel : '+kyc+'</div>';
-  h+='<div style="background:#e5e7eb;border-radius:99px;height:6px">';
-  h+='<div style="background:var(--g);border-radius:99px;height:6px;width:'+(kyc==='KYC1'?'33':kyc==='KYC2'?'66':'100')+'%"></div></div></div>';
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+  h+='<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase">Niveau actuel : '+kyc+'</div>';
+  h+='<div style="font-size:11px;color:#6b7280">'+kycOrder[kyc]+'/3</div></div>';
+  h+='<div style="background:#e5e7eb;border-radius:99px;height:8px">';
+  h+='<div style="background:var(--g);border-radius:99px;height:8px;width:'+(kyc==='KYC1'?'33':kyc==='KYC2'?'66':'100')+'%;transition:.4s"></div></div></div>';
+
   niveaux.forEach(function(niv){
-    var docs=KYC_DOCS[niv]||[];
-    var isActive=kyc===niv&&u.statut==='actif';
     var col=colors[niv];
-    h+='<div style="border:1.5px solid '+(isActive?col:'#e5e7eb')+';border-radius:14px;padding:14px;margin-bottom:10px">';
-    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
+    var isActive=kyc===niv&&statut==='actif';
+    var isNext=kycOrder[niv]===kycOrder[kyc]+1;
+    var isFuture=kycOrder[niv]>kycOrder[kyc]+1;
+    var dejaCeNiveau=kycOrder[niv]<=kycOrder[kyc];
+    var nouvDocs=NOUVEAUX_DOCS[niv]||[];
+    var allDocs=KYC_DOCS[niv]||[];
+
+    var borderStyle=isActive?'2px solid '+col:(isNext?'1.5px solid '+col+'88':'1.5px solid #e5e7eb');
+    var opacity=isFuture?'opacity:.45;':'';
+    h+='<div style="'+opacity+'border:'+borderStyle+';border-radius:16px;padding:16px;margin-bottom:12px">';
+
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
     h+='<div style="font-size:16px;font-weight:900;color:'+col+'">'+niv+'</div>';
-    h+=(isActive?'<span style="background:'+col+'22;color:'+col+';padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700">Actif ✓</span>':'<span style="background:#f3f4f6;color:#6b7280;padding:3px 10px;border-radius:99px;font-size:10px">'+PLAFONDS[niv]+' F/mois</span>');
+    if(isActive){
+      h+='<span style="background:'+col+'22;color:'+col+';padding:4px 12px;border-radius:99px;font-size:10px;font-weight:800">✓ Actif</span>';
+    } else if(dejaCeNiveau){
+      h+='<span style="background:#f0fdf4;color:#15803d;padding:4px 12px;border-radius:99px;font-size:10px;font-weight:700">✓ Complété</span>';
+    } else {
+      h+='<span style="background:#f3f4f6;color:#6b7280;padding:4px 12px;border-radius:99px;font-size:10px">'+PLAFONDS[niv]+' F/mois</span>';
+    }
     h+='</div>';
-    // Conditions requises
+
     var cond=KYC_CONDITIONS[niv];
-    if(cond){
+    if(cond&&(isNext||isActive)){
       var condOk=cond.filleuls===0||nbRatt>=cond.filleuls;
-      h+='<div style="background:'+(condOk?'#f0fdf4':'#fef3c7')+';border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:11px;color:'+(condOk?'#15803d':'#92400e')+'">';
+      h+='<div style="background:'+(condOk?'#f0fdf4':'#fef3c7')+';border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:11px;color:'+(condOk?'#15803d':'#92400e')+'">';
       h+=(condOk?'✅ ':'⚠️ ')+cond.desc;
       if(cond.filleuls>0)h+=' <b>('+nbRatt+'/'+cond.filleuls+')</b>';
-      h+='<br><span style="opacity:.8">Un filleul est rattaché dès qu il fait un dépôt ou reçoit un transfert ≥500 FCFA</span>';
       h+='</div>';
     }
-    docs.forEach(function(doc){
+
+    allDocs.forEach(function(doc){
       var key=niv+'-'+doc.id;
-      h+='<div id="ks-'+key+'" data-niv="'+niv+'" data-doc="'+doc.id+'" data-cam="'+doc.camera+'" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f9fafb;border-radius:10px;border:1px solid #e5e7eb;margin-bottom:6px;cursor:pointer">';
-      h+='<div style="width:38px;height:38px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:18px">'+doc.icon+'</div>';
-      h+='<div style="flex:1"><div style="font-size:13px;font-weight:600">'+doc.label+'</div><div id="kl-'+key+'" style="font-size:11px;color:#9ca3af">'+doc.desc+'</div></div>';
-      h+='<div id="kc-'+key+'" style="font-size:18px">📷</div></div>';
-      h+='<input type="file" accept="image/*" capture="'+doc.camera+'" id="ki-'+key+'" style="display:none"/>';
+      // Un doc est validé si : il est dans les docs du backend OU le niveau actuel dépasse ce niveau
+      var estValide=docsValides[doc.id]||(dejaCeNiveau&&nouvDocs.indexOf(doc.id)<0);
+
+      if(estValide){
+        h+='<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f0fdf4;border-radius:10px;border:1px solid #a7f3d0;margin-bottom:6px">';
+        h+='<div style="width:38px;height:38px;border-radius:10px;background:#dcfce7;display:flex;align-items:center;justify-content:center;font-size:18px">'+doc.icon+'</div>';
+        h+='<div style="flex:1"><div style="font-size:13px;font-weight:700;color:#15803d">'+doc.label+'</div>';
+        h+='<div style="font-size:11px;color:#22c55e">Déjà validé ✓</div></div>';
+        h+='<div style="font-size:20px">✅</div></div>';
+      } else if(isNext||isActive){
+        h+='<div id="ks-'+key+'" data-niv="'+niv+'" data-doc="'+doc.id+'" data-cam="'+doc.camera+'" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f9fafb;border-radius:10px;border:1px solid #e5e7eb;margin-bottom:6px;cursor:pointer">';
+        h+='<div style="width:38px;height:38px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:18px">'+doc.icon+'</div>';
+        h+='<div style="flex:1"><div style="font-size:13px;font-weight:600">'+doc.label+'</div>';
+        h+='<div id="kl-'+key+'" style="font-size:11px;color:#9ca3af">Appuyer pour prendre la photo</div></div>';
+        h+='<div id="kc-'+key+'" style="font-size:18px">📷</div></div>';
+        h+='<input type="file" accept="image/*" capture="'+doc.camera+'" id="ki-'+key+'" style="display:none"/>';
+      }
     });
-    if(!isActive){
-      h+='<button data-niv="'+niv+'" id="btn-kyc-'+niv+'" style="width:100%;padding:12px;background:'+col+';color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:6px">Soumettre pour '+niv+'</button>';
+
+    if(isNext){
+      h+='<button data-niv="'+niv+'" id="btn-kyc-'+niv+'" style="width:100%;padding:14px;background:'+col+';color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px;opacity:.5">Upgrade vers '+niv+' →</button>';
     }
     h+='</div>';
   });
+
   el.innerHTML=h;
-  // Attacher les événements après rendu
+
   el.querySelectorAll('[data-niv][data-doc]').forEach(function(slot){
     slot.addEventListener('click',function(){
-      document.getElementById('ki-'+slot.dataset.niv+'-'+slot.dataset.doc).click();
+      var inp=document.getElementById('ki-'+slot.dataset.niv+'-'+slot.dataset.doc);
+      if(inp)inp.click();
     });
   });
-  el.querySelectorAll('[data-file]').forEach(function(){});
+
   niveaux.forEach(function(niv){
-    var docs=KYC_DOCS[niv]||[];
-    docs.forEach(function(doc){
+    var allDocs=KYC_DOCS[niv]||[];
+    allDocs.forEach(function(doc){
       var inp=document.getElementById('ki-'+niv+'-'+doc.id);
       if(!inp)return;
       inp.addEventListener('change',function(){
         if(!this.files||!this.files[0])return;
-        window._kycPhotos[niv+'-'+doc.id]=this.files[0];
-        var sl=document.getElementById('ks-'+niv+'-'+doc.id);if(sl){sl.style.background='#f0fdf4';sl.style.border='1px solid #22c55e';}
-        var lb=document.getElementById('kl-'+niv+'-'+doc.id);if(lb){lb.textContent='Photo prise ✓';lb.style.color='#22c55e';}
-        var ck=document.getElementById('kc-'+niv+'-'+doc.id);if(ck)ck.textContent='✅';
+        var file=this.files[0];
+        window._kycPhotos[niv+'-'+doc.id]=file;
+        var sl=document.getElementById('ks-'+niv+'-'+doc.id);
+        if(sl){sl.style.background='#f0fdf4';sl.style.border='1px solid #22c55e';}
+        var lb=document.getElementById('kl-'+niv+'-'+doc.id);
+        if(lb){lb.textContent='Photo prise ✓';lb.style.color='#22c55e';}
+        var ck=document.getElementById('kc-'+niv+'-'+doc.id);
+        if(ck){
+          var reader=new FileReader();
+          reader.onload=function(e){
+            ck.innerHTML='<img src="'+e.target.result+'" style="width:38px;height:38px;border-radius:8px;object-fit:cover;border:2px solid #22c55e"/>';
+          };
+          reader.readAsDataURL(file);
+        }
+        _checkKycBtn(niv);
       });
     });
     var btn=document.getElementById('btn-kyc-'+niv);
     if(btn)btn.addEventListener('click',function(){soumettreKyc(this.dataset.niv);});
   });
+}
+
+function _checkKycBtn(niv){
+  var NOUVEAUX_DOCS={KYC1:['selfie'],KYC2:['cni_recto','cni_verso'],KYC3:['extrait_naissance','justificatif_domicile']};
+  var docs=NOUVEAUX_DOCS[niv]||[];
+  var photos=window._kycPhotos||{};
+  var tous=docs.every(function(id){return !!photos[niv+'-'+id];});
+  var btn=document.getElementById('btn-kyc-'+niv);
+  if(btn){
+    btn.style.opacity=tous?'1':'.5';
+    btn.textContent=tous?'Soumettre pour '+niv+' →':'Upgrade vers '+niv+' ('+docs.filter(function(id){return !photos[niv+'-'+id];}).length+' document(s) manquant)';
+  }
 }
 
 function prendrePhotoKyc(niv,docId,camera){
@@ -1280,12 +1368,13 @@ function photoKycChange(niv,docId,inp){
   if(chk)chk.textContent='✅';
 }
 async function soumettreKyc(niv){
-  var KYC_DOCS={
+  // Seuls les nouveaux documents à envoyer pour ce niveau
+  var NOUVEAUX_DOCS={
     'KYC1':[{id:'selfie'}],
-    'KYC2':[{id:'selfie'},{id:'cni_recto'},{id:'cni_verso'}],
-    'KYC3':[{id:'selfie'},{id:'cni_recto'},{id:'cni_verso'},{id:'extrait_naissance'},{id:'justificatif_domicile'}]
+    'KYC2':[{id:'cni_recto'},{id:'cni_verso'}],
+    'KYC3':[{id:'extrait_naissance'},{id:'justificatif_domicile'}]
   };
-  var docs=KYC_DOCS[niv]||[];
+  var docs=NOUVEAUX_DOCS[niv]||[];
   var photos=window._kycPhotos||{};
   var manq=docs.filter(function(d){return !photos[niv+'-'+d.id];}).map(function(d){return d.id;});
   if(manq.length){T('Documents manquants : '+manq.join(', '),true);return;}
@@ -1294,15 +1383,21 @@ async function soumettreKyc(niv){
   for(var i=0;i<docs.length;i++){
     var doc=docs[i];var file=photos[niv+'-'+doc.id];if(!file)continue;
     try{
-      var fd=new FormData();fd.append('file',file);fd.append('upload_preset','afrim-kyc');fd.append('folder','afrim-pay/kyc');
+      var fd=new FormData();
+      fd.append('file',file);
+      fd.append('upload_preset','afrim-kyc');
+      fd.append('folder','afrim-pay/kyc');
       var r=await fetch('https://api.cloudinary.com/v1_1/dzofjvhwu/image/upload',{method:'POST',body:fd});
-      var d=await r.json();if(!r.ok||!d.secure_url)throw new Error('Upload échoué');
+      var d=await r.json();
+      if(!r.ok||!d.secure_url)throw new Error('Upload échoué');
       await post('/kyc/documents',{userId:uid,typeDocument:doc.id,urlFichier:d.secure_url});
     }catch(e){T('Erreur '+doc.id+': '+e.message,true);return;}
   }
-  if(niv!=='KYC1')await post('/kyc/request',{userId:uid,niveauDemande:niv}).catch(function(){});
-  T('Documents envoyés ! Validation sous 48h.');
+  await post('/kyc/request',{userId:uid,niveauDemande:niv}).catch(function(){});
+  T('Documents envoyés ✓ Validation sous 48h.');
+  window._kycPhotos={};
   closeSh('kyc-upgrade');
+  rafraichir();
 }
 
 async function virerGains(){
@@ -1320,10 +1415,26 @@ async function virerGains(){
 
 // ── VERROUILLAGE AUTO ──
 var _lockTimer=null;
+var _idleTimer=null;
 var _lockDelay=60000;
+
+function resetIdleTimer(){
+  if(!G.token||!G.user||G.locked)return;
+  if(_idleTimer)clearTimeout(_idleTimer);
+  _idleTimer=setTimeout(function(){
+    _idleTimer=null;
+    verrouillerApp();
+  },_lockDelay);
+}
+
+// Écouter toute activité utilisateur
+['touchstart','touchend','click','keydown','scroll','mousemove'].forEach(function(ev){
+  document.addEventListener(ev,resetIdleTimer,{passive:true});
+});
 
 function verrouillerApp(){
   if(!G.token)return;
+  if(_idleTimer){clearTimeout(_idleTimer);_idleTimer=null;}
   G.locked=true;
   document.querySelectorAll('.sh-ov.on').forEach(function(s){s.classList.remove('on');});
   var p=document.getElementById('wave-qr-popup');if(p)p.style.display='none';
@@ -1332,7 +1443,7 @@ function verrouillerApp(){
   if(lockScr){
     lockScr.classList.add('on');
     var pinEl=document.getElementById('lock-pin');
-    if(pinEl){pinEl.value='';setTimeout(function(){pinEl.focus();},300);}
+    if(pinEl){pinEl.value='';pinEl.style.borderColor='rgba(255,255,255,.3)';setTimeout(function(){pinEl.focus();},300);}
     var errEl=document.getElementById('lock-err');
     if(errEl)errEl.style.display='none';
   }
@@ -1343,7 +1454,7 @@ async function deverrouillerApp(){
   var errEl=document.getElementById('lock-err');
   if(!pinEl||!errEl)return;
   var pin=pinEl.value.trim();
-  if(pin.length!==4){errEl.textContent='Code à 4 chiffres requis';errEl.style.display='';return;}
+  if(pin.length!==4){pinEl.value='';return;}
   try{
     var r=await post('/auth/login',{telephone:G.user.telephone,pin:pin});
     if(r.data&&r.data.accessToken){G.token=r.data.accessToken;LS.set('afrim_token',G.token);}
@@ -1352,18 +1463,25 @@ async function deverrouillerApp(){
     G.locked=false;
     document.getElementById('s-lock').classList.remove('on');
     setTab(G.tab||'home');
+    resetIdleTimer();
   }catch(e){
-    errEl.textContent='Code secret incorrect';
+    errEl.textContent='Code incorrect';
     errEl.style.display='';
     pinEl.value='';
-    pinEl.focus();
+    pinEl.style.borderColor='rgba(239,68,68,.6)';
+    setTimeout(function(){pinEl.focus();},100);
   }
+}
+
+async function logoutFromLock(){
+  // Déconnexion depuis l'écran verrouillé
+  G.locked=false;
+  await logout();
 }
 
 // Détecter arrière-plan / premier plan
 document.addEventListener('visibilitychange',function(){
   if(document.hidden){
-    // App passe en arrière-plan → sauvegarder l'heure
     if(G.token&&G.user){
       LS.set('afrim_lock_time', Date.now().toString());
       _lockTimer=setTimeout(function(){
@@ -1372,11 +1490,12 @@ document.addEventListener('visibilitychange',function(){
       },_lockDelay);
     }
   } else {
-    // App revenue au premier plan → vérifier le temps écoulé
     if(_lockTimer){clearTimeout(_lockTimer);_lockTimer=null;}
     var t=LS.get('afrim_lock_time');
     if(t&&G.token&&G.user&&(Date.now()-Number(t))>=_lockDelay){
       verrouillerApp();
+    } else {
+      resetIdleTimer();
     }
   }
 });

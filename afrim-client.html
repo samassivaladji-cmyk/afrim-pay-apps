@@ -1227,31 +1227,41 @@ function _renderKyc(docsExistants){
   var niveaux=['KYC1','KYC2','KYC3'];
   var nbRatt=Number(u.nbRattaches||0);
 
-  // Docs soumis en base (peu importe le statut)
+  // Docs soumis en base (pour référence uniquement sur le niveau en_attente)
   var docsSoumis={};
   (docsExistants||[]).forEach(function(d){
     docsSoumis[d.typeDocument||d.type_document]=true;
   });
 
+  // Docs définitivement validés par niveau (règle métier fixe — indépendante de l'API)
+  // Si KYC1 actif → selfie validé
+  // Si KYC2 actif → selfie + cni_recto + cni_verso validés
+  // Si KYC3 actif → tous validés
+  var DOCS_VALIDES_PAR_NIVEAU={
+    KYC1:['selfie'],
+    KYC2:['selfie','cni_recto','cni_verso'],
+    KYC3:['selfie','cni_recto','cni_verso','extrait_naissance','justificatif_domicile']
+  };
+  // Ensemble de tous les docs validés définitivement
+  var docsDefinitivementValides={};
+  // Un doc est validé définitivement si son niveau d'appartenance <= niveau actuel ET actif
+  // OU si son niveau d'appartenance < niveau actuel (toujours vrai peu importe statut)
+  niveaux.forEach(function(n){
+    var docsN=DOCS_VALIDES_PAR_NIVEAU[n]||[];
+    if(ORDER[n]<ORDER[kyc]){
+      // Niveaux passés → forcément validés
+      docsN.forEach(function(id){docsDefinitivementValides[id]=true;});
+    } else if(ORDER[n]===ORDER[kyc]&&statut==='actif'){
+      // Niveau actuel validé
+      docsN.forEach(function(id){docsDefinitivementValides[id]=true;});
+    }
+  });
+
   window._kycPhotos={};
 
-  // ── Règle centrale ───────────────────────────────────────────────
-  // Un document est VERROUILLÉ (non modifiable) si :
-  //   a) Son niveau est STRICTEMENT inférieur au niveau actuel  → forcément validé
-  //   b) Son niveau EST le niveau actuel ET statut === 'actif'  → validé par back-office
-  // Un document est MODIFIABLE si :
-  //   Son niveau EST le niveau actuel ET statut === 'en_attente'
-  // Un document est À FOURNIR si :
-  //   Son niveau est le PROCHAIN niveau (niveau actuel + 1)
-
   function docVerrouille(niv, docId){
-    var ord=ORDER[niv];
-    var actOrd=ORDER[kyc];
-    if(ord < actOrd) return true;                         // niveau passé → verrouillé
-    if(ord === actOrd && statut==='actif') return true;   // niveau actuel validé → verrouillé
-    // Niveau suivant : doc déjà soumis en base (ex: selfie du KYC2 déjà validé au KYC1)
-    if(ord === actOrd+1 && docsSoumis[docId]) return true;
-    return false;
+    // Un doc est verrouillé s'il est dans les docs définitivement validés
+    return !!docsDefinitivementValides[docId];
   }
 
   function docModifiable(niv, docId){

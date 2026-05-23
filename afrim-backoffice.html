@@ -503,7 +503,7 @@ function renderKycPhotos(containerId, role, kycNiveau) {
       + '<div style="font-size:11px;color:' + (done ? '#22c55e' : '#9ca3af') + ';margin-top:1px">' + (done ? 'Photo prise' : 'Recommande — Appuyer pour photographier') + '</div></div>'
       + (done ? '<div style="color:#22c55e;font-size:18px">✓</div>' : '<div style="color:#d1d5db;font-size:18px">📷</div>')
       + '</div>'
-      + '<input type="file" id="kyc-input-' + doc.id + '" accept="image/*" capture="' + doc.camera + '" style="display:none" data-docid="' + doc.id + '" onchange="onKycPhoto(this)"/>';
+      + '<input type="file" id="kyc-input-' + doc.id + '" accept="image/*;capture=camera" capture="' + doc.camera + '" style="display:none" data-docid="' + doc.id + '" onchange="onKycPhoto(this)"/>';
   });
 
   html += '</div>';
@@ -947,6 +947,7 @@ function voirU(id){
   if(u.statut==='bloque')mkBtn('Debloquer','btn-g','',function(){chgStatut(id,'actif');});
   if(perm('rembourser'))mkBtn('Rembourser dernier transfert','','background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){toast('Remboursement bientot disponible');});
   mkBtn('🔐 Réinitialiser le code PIN','','background:#f0fdf4;color:#15803d;border:1px solid #a7f3d0;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){resetPinClient(u.id,(u.prenom||'')+' '+(u.nom||''));});
+  mkBtn('🔔 Historique notifications','','background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){afficherHistoriqueNotifs(u.id,(u.prenom||'')+' '+(u.nom||''));});
   if(isSuperAdmin())mkBtn('Supprimer le compte','btn-r','margin-top:6px',function(){
     document.getElementById('sh-confirm-nom').textContent=(u.prenom||'')+' '+(u.nom||'');
     document.getElementById('sh-confirm-id').value=id;
@@ -968,8 +969,22 @@ async function activerAvecKyc(clientId,niveauKyc){
 }
 
 async function chgStatut(id,statut){
-  try{await apiPatch('/users/'+id+'/status',{statut:statut});toast('Statut mis a jour');closeSh('user');chargerUsers();}
-  catch(e){toast(e.message,true);}
+  // Messages par défaut selon le statut
+  var motifs={
+    suspendu:'Votre compte AFRIM PAY a été suspendu temporairement suite à un problème de vérification KYC. Soumettez des documents valides pour réactivation.',
+    bloque:'Votre compte AFRIM PAY a été bloqué suite à une activité suspecte. Contactez immédiatement le support.',
+    actif:'Votre compte AFRIM PAY a été réactivé. Vous pouvez utiliser tous les services normalement.',
+    en_attente:'Votre compte est en attente de validation. Vous serez notifié dès la vérification.'
+  };
+  var motifDefaut=motifs[statut]||'';
+  var motif=statut==='actif'?motifDefaut:window.prompt('Motif (optionnel — laissez vide pour message par défaut) :',motifDefaut);
+  if(motif===null)return; // Annulé
+  try{
+    await apiPatch('/users/'+id+'/status',{statut:statut,motif:motif||motifDefaut});
+    toast('Statut mis à jour — notification envoyée');
+    closeSh('user');
+    chargerUsers();
+  }catch(e){toast(e.message,true);}
 }
 
 async function supprimerCompte(){
@@ -1563,7 +1578,7 @@ function renderKycPhotos(containerId, role, kycNiveau) {
       + '<div style="font-size:11px;color:' + (done ? '#22c55e' : '#9ca3af') + ';margin-top:1px">' + (done ? 'Photo prise' : 'Recommande — Appuyer pour photographier') + '</div></div>'
       + (done ? '<div style="color:#22c55e;font-size:18px">✓</div>' : '<div style="color:#d1d5db;font-size:18px">📷</div>')
       + '</div>'
-      + '<input type="file" id="kyc-input-' + doc.id + '" accept="image/*" capture="' + doc.camera + '" style="display:none" data-docid="' + doc.id + '" onchange="onKycPhoto(this)"/>';
+      + '<input type="file" id="kyc-input-' + doc.id + '" accept="image/*;capture=camera" capture="' + doc.camera + '" style="display:none" data-docid="' + doc.id + '" onchange="onKycPhoto(this)"/>';
   });
 
   html += '</div>';
@@ -1999,6 +2014,7 @@ function voirU(id){
   if(u.statut==='bloque')mkBtn('Debloquer','btn-g','',function(){chgStatut(id,'actif');});
   if(perm('rembourser'))mkBtn('Rembourser dernier transfert','','background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){toast('Remboursement bientot disponible');});
   mkBtn('🔐 Réinitialiser le code PIN','','background:#f0fdf4;color:#15803d;border:1px solid #a7f3d0;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){resetPinClient(u.id,(u.prenom||'')+' '+(u.nom||''));});
+  mkBtn('🔔 Historique notifications','','background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){afficherHistoriqueNotifs(u.id,(u.prenom||'')+' '+(u.nom||''));});
   if(isSuperAdmin())mkBtn('Supprimer le compte','btn-r','margin-top:6px',function(){
     document.getElementById('sh-confirm-nom').textContent=(u.prenom||'')+' '+(u.nom||'');
     document.getElementById('sh-confirm-id').value=id;
@@ -2020,8 +2036,22 @@ async function activerAvecKyc(clientId,niveauKyc){
 }
 
 async function chgStatut(id,statut){
-  try{await apiPatch('/users/'+id+'/status',{statut:statut});toast('Statut mis a jour');closeSh('user');chargerUsers();}
-  catch(e){toast(e.message,true);}
+  // Messages par défaut selon le statut
+  var motifs={
+    suspendu:'Votre compte AFRIM PAY a été suspendu temporairement suite à un problème de vérification KYC. Soumettez des documents valides pour réactivation.',
+    bloque:'Votre compte AFRIM PAY a été bloqué suite à une activité suspecte. Contactez immédiatement le support.',
+    actif:'Votre compte AFRIM PAY a été réactivé. Vous pouvez utiliser tous les services normalement.',
+    en_attente:'Votre compte est en attente de validation. Vous serez notifié dès la vérification.'
+  };
+  var motifDefaut=motifs[statut]||'';
+  var motif=statut==='actif'?motifDefaut:window.prompt('Motif (optionnel — laissez vide pour message par défaut) :',motifDefaut);
+  if(motif===null)return; // Annulé
+  try{
+    await apiPatch('/users/'+id+'/status',{statut:statut,motif:motif||motifDefaut});
+    toast('Statut mis à jour — notification envoyée');
+    closeSh('user');
+    chargerUsers();
+  }catch(e){toast(e.message,true);}
 }
 
 async function supprimerCompte(){
@@ -2844,6 +2874,62 @@ async function chargerStats(){
   }catch(e){el.innerHTML='<div style="color:var(--r);padding:12px;font-size:13px">'+e.message+'</div>';}
 }
 
+var _notifUserId = null;
+var _notifUserNom = null;
+
+async function afficherHistoriqueNotifs(userId, nom){
+  _notifUserId = userId;
+  _notifUserNom = nom;
+  document.getElementById('sh-notif-nom').textContent = nom;
+  document.getElementById('notif-titre-input').value = '';
+  document.getElementById('notif-msg-input').value = '';
+  closeSh('user');
+  openSh('notif-hist');
+  var el = document.getElementById('notif-hist-list');
+  el.innerHTML = '<div style="padding:20px;text-align:center"><div class="spin"></div></div>';
+  try{
+    var r = await apiGet('/notifications/user/'+userId);
+    var list = r.notifications || [];
+    if(!list.length){
+      el.innerHTML = '<div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:14px;padding:14px;text-align:center;color:#059669;font-size:13px;font-weight:600">✓ Aucune notification</div>';
+      return;
+    }
+    var icons={transaction:'💳',kyc:'📋',securite:'🔐',systeme:'📢',parrainage:'🤝'};
+    var cols={transaction:'#3b82f6',kyc:'#22c55e',securite:'#f59e0b',systeme:'#8b5cf6',parrainage:'#f97316'};
+    el.innerHTML = list.map(function(n){
+      var icon=icons[n.type]||'🔔';
+      var col=cols[n.type]||'#6b7280';
+      var d=new Date(n.created_at);
+      var ds=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})
+        +' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      return '<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:12px 14px;margin-bottom:8px;'+(n.lu?'':'border-left:3px solid '+col)+'">'
+        +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+        +'<span style="background:'+col+'18;border-radius:8px;padding:4px 8px;font-size:14px">'+icon+'</span>'
+        +'<div style="flex:1"><div style="font-size:13px;font-weight:700">'+n.titre+'</div>'
+        +'<div style="font-size:10px;color:#9ca3af">'+ds+(n.lu?' · Lu':' · <b style="color:'+col+'">Non lu</b>')+'</div></div></div>'
+        +'<div style="font-size:12px;color:#374151;line-height:1.5">'+n.message+'</div></div>';
+    }).join('');
+  }catch(e){
+    el.innerHTML='<div style="color:var(--r);padding:12px;font-size:13px">'+e.message+'</div>';
+  }
+}
+
+async function envoyerNotifDirecte(){
+  if(!_notifUserId){toast('Erreur: utilisateur non identifié',true);return;}
+  var titre=document.getElementById('notif-titre-input').value.trim();
+  var message=document.getElementById('notif-msg-input').value.trim();
+  var type=document.getElementById('notif-type-input').value;
+  if(!titre||!message){toast('Titre et message requis',true);return;}
+  try{
+    await apiPost('/notifications/direct',{userId:_notifUserId,titre:titre,message:message,type:type});
+    toast('✓ Notification envoyée à '+_notifUserNom);
+    document.getElementById('notif-titre-input').value='';
+    document.getElementById('notif-msg-input').value='';
+    // Rafraîchir la liste
+    afficherHistoriqueNotifs(_notifUserId, _notifUserNom);
+  }catch(e){toast(e.message,true);}
+}
+
 async function resetPinClient(userId,nom){
   if(!confirm('Réinitialiser le PIN de '+nom+' à 1234 ? L\'utilisateur devra le changer à la prochaine connexion.'))return;
   try{
@@ -2870,5 +2956,39 @@ document.querySelectorAll('.sh-ov').forEach(function(el){el.addEventListener('cl
   showScr('s-login');
 })();
 </script>
+<!-- SHEET HISTORIQUE NOTIFICATIONS -->
+<div class="sh-ov" id="sh-notif-hist" onclick="if(event.target===this)closeSh('notif-hist')">
+  <div class="sh">
+    <div class="sh-bar"></div>
+    <div class="sh-top">
+      <div>
+        <div class="sh-title">🔔 Notifications</div>
+        <div id="sh-notif-nom" style="font-size:13px;color:var(--m);margin-top:2px"></div>
+      </div>
+      <button class="sh-x" onclick="closeSh('notif-hist')">✕</button>
+    </div>
+    <div class="sh-body">
+      <!-- Envoyer une notif manuelle -->
+      <div style="background:#f5f3ff;border-radius:14px;padding:14px;margin-bottom:16px">
+        <div style="font-size:11px;font-weight:700;color:#7c3aed;text-transform:uppercase;margin-bottom:10px">Envoyer une notification</div>
+        <input class="inp" id="notif-titre-input" placeholder="Titre" style="margin-bottom:8px"/>
+        <textarea class="inp" id="notif-msg-input" placeholder="Message..." rows="3" style="resize:none;margin-bottom:8px"></textarea>
+        <select class="inp" id="notif-type-input" style="margin-bottom:10px">
+          <option value="systeme">📢 Système</option>
+          <option value="kyc">📋 KYC</option>
+          <option value="securite">🔐 Sécurité</option>
+          <option value="transaction">💳 Transaction</option>
+        </select>
+        <button onclick="envoyerNotifDirecte()" style="width:100%;padding:12px;background:#7c3aed;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Envoyer →</button>
+      </div>
+      <!-- Historique -->
+      <div style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;margin-bottom:10px">Historique</div>
+      <div id="notif-hist-list">
+        <div style="padding:20px;text-align:center"><div class="spin"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

@@ -206,10 +206,13 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
   </div>
   <div style="padding:16px 16px 0">
     <div class="card" style="margin-bottom:14px">
-      <div style="font-size:12px;font-weight:700;color:var(--m);text-transform:uppercase;margin-bottom:10px">Rechercher un client</div>
-      <div style="display:flex;gap:8px">
-        <input class="inp" id="sup-tel" type="tel" placeholder="Numero telephone" inputmode="numeric" style="flex:1;padding:12px 14px;font-size:14px"/>
-        <button onclick="rechercherClient()" style="padding:0 14px;background:linear-gradient(135deg,var(--y2),var(--y));color:#fff;border:none;border-radius:12px;font-weight:700;cursor:pointer;font-family:inherit">Chercher</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:700;color:var(--m);text-transform:uppercase">Rechercher un client</div>
+        <button id="btn-nouvelle-recherche" onclick="nouvelleRecherche()" style="display:none;background:#f3f4f6;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--m);cursor:pointer;font-family:inherit">↩ Nouvelle recherche</button>
+      </div>
+      <div id="sup-search-zone" style="display:flex;gap:8px">
+        <input class="inp" id="sup-tel" type="tel" placeholder="Numéro téléphone" inputmode="numeric" style="flex:1;padding:12px 14px;font-size:14px" onkeydown="if(event.key==='Enter')rechercherClient()"/>
+        <button onclick="rechercherClient()" style="padding:0 16px;background:linear-gradient(135deg,var(--y2),var(--y));color:#fff;border:none;border-radius:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">Chercher</button>
       </div>
       <div id="sup-result" style="display:none;margin-top:12px"></div>
     </div>
@@ -1276,6 +1279,11 @@ async function rechercherClient(){
   var el=document.getElementById('sup-result');
   el.style.display='';
   el.innerHTML='<div style="padding:16px;text-align:center"><div class="spin" style="width:20px;height:20px;border-width:2px"></div></div>';
+  // Masquer barre de recherche, afficher bouton retour
+  var _sz=document.getElementById('sup-search-zone');
+  var _br=document.getElementById('btn-nouvelle-recherche');
+  if(_sz)_sz.style.display='none';
+  if(_br)_br.style.display='block';
 
   var u=null;
   // Essayer plusieurs routes selon le rôle (support_client a acces limite)
@@ -1302,7 +1310,7 @@ async function rechercherClient(){
       }
     }
   }
-  if(!u){el.innerHTML='<div style="color:var(--m);font-size:13px;padding:12px;text-align:center">Aucun compte trouve pour ce numero</div>';return;}
+  if(!u){el.innerHTML='<div style="background:#fef3c7;border-radius:12px;padding:14px;color:#92400e;font-size:13px;font-weight:600;text-align:center">Aucun compte trouvé pour ce numéro</div>';var _sz2=document.getElementById('sup-search-zone');var _br2=document.getElementById('btn-nouvelle-recherche');if(_sz2)_sz2.style.display='flex';if(_br2)_br2.style.display='none';return;}
 
   // Afficher fiche complète client
   el.innerHTML='';
@@ -2230,6 +2238,11 @@ async function rechercherClient(){
   var el=document.getElementById('sup-result');
   el.style.display='';
   el.innerHTML='<div style="padding:16px;text-align:center"><div class="spin" style="width:20px;height:20px;border-width:2px"></div></div>';
+  // Masquer barre de recherche, afficher bouton retour
+  var _sz=document.getElementById('sup-search-zone');
+  var _br=document.getElementById('btn-nouvelle-recherche');
+  if(_sz)_sz.style.display='none';
+  if(_br)_br.style.display='block';
 
   var u=null;
   // Essayer plusieurs routes selon le rôle (support_client a acces limite)
@@ -2256,7 +2269,7 @@ async function rechercherClient(){
       }
     }
   }
-  if(!u){el.innerHTML='<div style="color:var(--m);font-size:13px;padding:12px;text-align:center">Aucun compte trouve pour ce numero</div>';return;}
+  if(!u){el.innerHTML='<div style="background:#fef3c7;border-radius:12px;padding:14px;color:#92400e;font-size:13px;font-weight:600;text-align:center">Aucun compte trouvé pour ce numéro</div>';var _sz2=document.getElementById('sup-search-zone');var _br2=document.getElementById('btn-nouvelle-recherche');if(_sz2)_sz2.style.display='flex';if(_br2)_br2.style.display='none';return;}
 
   // Afficher fiche complète client
   el.innerHTML='';
@@ -2928,6 +2941,18 @@ async function envoyerNotifDirecte(){
     // Rafraîchir la liste
     afficherHistoriqueNotifs(_notifUserId, _notifUserNom);
   }catch(e){toast(e.message,true);}
+}
+
+function nouvelleRecherche(){
+  var el=document.getElementById('sup-result');
+  var sz=document.getElementById('sup-search-zone');
+  var br=document.getElementById('btn-nouvelle-recherche');
+  var ti=document.getElementById('sup-tel');
+  if(el){el.style.display='none';el.innerHTML='';}
+  if(sz)sz.style.display='flex';
+  if(br)br.style.display='none';
+  if(ti){ti.value='';setTimeout(function(){ti.focus();},100);}
+  currentClientId=null;
 }
 
 async function resetPinClient(userId,nom){

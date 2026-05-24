@@ -235,7 +235,7 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
       </div>
       <div id="sup-result" style="display:none;margin-top:12px"></div>
     </div>
-    <div style="font-size:12px;font-weight:700;color:var(--m);text-transform:uppercase;margin-bottom:10px">Tickets en attente</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px"><div style="font-size:12px;font-weight:700;color:var(--m);text-transform:uppercase">Tickets</div><div id="tickets-compteurs"></div></div>
     <div id="sup-tickets"><div style="padding:24px;text-align:center"><div class="spin"></div></div></div>
     <button onclick="openSh('new-ticket')" style="width:100%;margin-top:14px;padding:14px;background:linear-gradient(135deg,var(--y2),var(--y));color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">+ Nouveau ticket</button>
   </div>
@@ -1294,8 +1294,8 @@ async function chargerSupport(){
       el.innerHTML='<div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:16px;padding:14px;text-align:center;color:#059669;font-size:13px;font-weight:600">✓ Aucun ticket ouvert</div>';
       return;
     }
-    var statutColors={'ouvert':'#f59e0b','en_cours':'#3b82f6','resolu':'#22c55e','ferme':'#9ca3af'};
-    var statutLabels={'ouvert':'Ouvert','en_cours':'En cours','resolu':'Résolu','ferme':'Fermé'};
+    var statutColors={'ouvert':'#f59e0b','en_cours':'#3b82f6','transfere_tech':'#7c3aed','resolu':'#22c55e','ferme':'#9ca3af'};
+    var statutLabels={'ouvert':'Ouvert','en_cours':'En cours','transfere_tech':'🛠 Transféré tech','resolu':'Résolu','ferme':'Fermé'};
     list.forEach(function(t){
       var div=document.createElement('div');
       div.style.cssText='background:#fff;border:1px solid #f3f4f6;border-radius:16px;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.05)';
@@ -1319,11 +1319,23 @@ async function chargerSupport(){
         btns.appendChild(btnP);
       }
       if(t.statut==='ouvert'||t.statut==='en_cours'){
+        var btnT=document.createElement('button');
+        btnT.textContent='🛠 Tech';
+        btnT.style.cssText='padding:7px 12px;background:#faf5ff;border:1px solid #d8b4fe;border-radius:8px;color:#7c3aed;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit';
+        (function(tid){btnT.addEventListener('click',function(){cloturerTicket(tid,'transfere_tech');});})(t.id);
+        btns.appendChild(btnT);
         var btnR=document.createElement('button');
         btnR.textContent='✓ Résolu';
         btnR.style.cssText='padding:7px 12px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;color:#059669;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit';
         (function(tid){btnR.addEventListener('click',function(){cloturerTicket(tid,'resolu');});})(t.id);
         btns.appendChild(btnR);
+      }
+      if(t.statut==='transfere_tech'){
+        var btnRt=document.createElement('button');
+        btnRt.textContent='✓ Marquer résolu';
+        btnRt.style.cssText='padding:7px 12px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;color:#059669;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit';
+        (function(tid){btnRt.addEventListener('click',function(){cloturerTicket(tid,'resolu');});})(t.id);
+        btns.appendChild(btnRt);
       }
       div.appendChild(btns);
       el.appendChild(div);
@@ -2291,8 +2303,8 @@ async function chargerSupport(){
       el.innerHTML='<div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:16px;padding:14px;text-align:center;color:#059669;font-size:13px;font-weight:600">✓ Aucun ticket ouvert</div>';
       return;
     }
-    var statutColors={'ouvert':'#f59e0b','en_cours':'#3b82f6','resolu':'#22c55e','ferme':'#9ca3af'};
-    var statutLabels={'ouvert':'Ouvert','en_cours':'En cours','resolu':'Résolu','ferme':'Fermé'};
+    var statutColors={'ouvert':'#f59e0b','en_cours':'#3b82f6','transfere_tech':'#7c3aed','resolu':'#22c55e','ferme':'#9ca3af'};
+    var statutLabels={'ouvert':'Ouvert','en_cours':'En cours','transfere_tech':'🛠 Transféré tech','resolu':'Résolu','ferme':'Fermé'};
     list.forEach(function(t){
       var div=document.createElement('div');
       div.style.cssText='background:#fff;border:1px solid #f3f4f6;border-radius:16px;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.05)';
@@ -2316,11 +2328,23 @@ async function chargerSupport(){
         btns.appendChild(btnP);
       }
       if(t.statut==='ouvert'||t.statut==='en_cours'){
+        var btnT=document.createElement('button');
+        btnT.textContent='🛠 Tech';
+        btnT.style.cssText='padding:7px 12px;background:#faf5ff;border:1px solid #d8b4fe;border-radius:8px;color:#7c3aed;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit';
+        (function(tid){btnT.addEventListener('click',function(){cloturerTicket(tid,'transfere_tech');});})(t.id);
+        btns.appendChild(btnT);
         var btnR=document.createElement('button');
         btnR.textContent='✓ Résolu';
         btnR.style.cssText='padding:7px 12px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;color:#059669;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit';
         (function(tid){btnR.addEventListener('click',function(){cloturerTicket(tid,'resolu');});})(t.id);
         btns.appendChild(btnR);
+      }
+      if(t.statut==='transfere_tech'){
+        var btnRt=document.createElement('button');
+        btnRt.textContent='✓ Marquer résolu';
+        btnRt.style.cssText='padding:7px 12px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;color:#059669;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit';
+        (function(tid){btnRt.addEventListener('click',function(){cloturerTicket(tid,'resolu');});})(t.id);
+        btns.appendChild(btnRt);
       }
       div.appendChild(btns);
       el.appendChild(div);
@@ -3036,6 +3060,21 @@ async function envoyerNotifDirecte(){
     // Rafraîchir la liste
     afficherHistoriqueNotifs(_notifUserId, _notifUserNom);
   }catch(e){toast(e.message,true);}
+}
+
+async function chargerCompteurTickets(){
+  try{
+    var r=await apiGet('/tickets?limit=200');
+    var list=r.data||[];
+    var counts={ouvert:0,en_cours:0,transfere_tech:0,resolu:0,ferme:0};
+    list.forEach(function(t){if(counts[t.statut]!==undefined)counts[t.statut]++;});
+    var el=document.getElementById('tickets-compteurs');
+    if(el)el.innerHTML=
+      '<span style="background:#fef3c7;color:#92400e;padding:3px 8px;border-radius:99px;font-size:10px;font-weight:700;margin-right:4px">'+counts.ouvert+' Ouverts</span>'
+      +'<span style="background:#eff6ff;color:#1d4ed8;padding:3px 8px;border-radius:99px;font-size:10px;font-weight:700;margin-right:4px">'+counts.en_cours+' En cours</span>'
+      +'<span style="background:#faf5ff;color:#7c3aed;padding:3px 8px;border-radius:99px;font-size:10px;font-weight:700;margin-right:4px">'+counts.transfere_tech+' Tech</span>'
+      +'<span style="background:#ecfdf5;color:#059669;padding:3px 8px;border-radius:99px;font-size:10px;font-weight:700">'+counts.resolu+' Résolus</span>';
+  }catch(e){}
 }
 
 async function cloturerTicket(id,statut){

@@ -3120,9 +3120,18 @@ async function envoyerCampagne(){
       ?['client','agent','business','mini_master','master','superviseur']
       :[dest];
     var r=await apiPost('/notifications/masse',{titre:titre,message:msg,type:'systeme',roles:roles});
-    toast('✓ '+(r.total||0)+' notification(s) envoyée(s)');
-    document.getElementById('camp-titre').value='';
-    document.getElementById('camp-msg').value='';
+    if(!r){toast('Erreur: session expirée - reconnectez-vous',true);btns.forEach(function(b){b.disabled=false;b.textContent='📢 Envoyer →';});return;}
+    var total=r.total||0;
+    if(total===0){
+      // Diagnostic: compter les utilisateurs directement
+      var diag=await callAPI('/users?limit=500').catch(function(){return null;});
+      var nbUsers=diag&&diag.data?diag.data.length:0;
+      toast('0 envoyé ('+nbUsers+' comptes en base). Roles: '+roles.join(','),true);
+    } else {
+      toast('✓ '+total+' notification(s) envoyée(s)');
+      document.getElementById('camp-titre').value='';
+      document.getElementById('camp-msg').value='';
+    }
   }catch(e){toast('Erreur: '+e.message,true);}
   btns.forEach(function(b){b.disabled=false;b.textContent='📢 Envoyer →';});
 }

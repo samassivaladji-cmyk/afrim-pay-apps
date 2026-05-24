@@ -686,6 +686,20 @@ function F(n){return Number(n||0).toLocaleString('fr-FR')+' FCFA';}
 function FD(d){if(!d)return'--';return new Date(d).toLocaleString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}
 
 // ── API ──
+async function refreshAccessToken(){
+  try{
+    if(!G.refresh)return false;
+    var r=await fetch(API+'/auth/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refreshToken:G.refresh})});
+    var d=await r.json();
+    if(r.ok&&d.data&&d.data.accessToken){
+      G.token=d.data.accessToken;
+      if(d.data.refreshToken)G.refresh=d.data.refreshToken;
+      try{localStorage.setItem('afrim_token',G.token);if(d.data.refreshToken)localStorage.setItem('afrim_refresh',G.refresh);}catch(e){}
+      return true;
+    }
+    return false;
+  }catch(e){return false;}
+}
 async function callAPI(path,opts){
   opts=opts||{};
   var h={'Content-Type':'application/json'};
@@ -693,8 +707,19 @@ async function callAPI(path,opts){
   var r=await fetch(API+path,Object.assign({headers:h},opts));
   var d=await r.json();
   if(!r.ok){
-    // Token invalide ou expiré → déconnecter automatiquement
-    if(r.status===401){logout();return null;}
+    if(r.status===401){
+      // Tenter refresh avant de déconnecter
+      var refreshed=await refreshAccessToken();
+      if(refreshed){
+        // Réessayer avec le nouveau token
+        h['Authorization']='Bearer '+G.token;
+        var r2=await fetch(API+path,Object.assign({headers:h},opts));
+        var d2=await r2.json();
+        if(!r2.ok){logout();return null;}
+        return d2;
+      }
+      logout();return null;
+    }
     throw new Error(d.message||'Erreur '+r.status);
   }
   return d;
@@ -1783,6 +1808,20 @@ function F(n){return Number(n||0).toLocaleString('fr-FR')+' FCFA';}
 function FD(d){if(!d)return'--';return new Date(d).toLocaleString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}
 
 // ── API ──
+async function refreshAccessToken(){
+  try{
+    if(!G.refresh)return false;
+    var r=await fetch(API+'/auth/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refreshToken:G.refresh})});
+    var d=await r.json();
+    if(r.ok&&d.data&&d.data.accessToken){
+      G.token=d.data.accessToken;
+      if(d.data.refreshToken)G.refresh=d.data.refreshToken;
+      try{localStorage.setItem('afrim_token',G.token);if(d.data.refreshToken)localStorage.setItem('afrim_refresh',G.refresh);}catch(e){}
+      return true;
+    }
+    return false;
+  }catch(e){return false;}
+}
 async function callAPI(path,opts){
   opts=opts||{};
   var h={'Content-Type':'application/json'};
@@ -1790,8 +1829,19 @@ async function callAPI(path,opts){
   var r=await fetch(API+path,Object.assign({headers:h},opts));
   var d=await r.json();
   if(!r.ok){
-    // Token invalide ou expiré → déconnecter automatiquement
-    if(r.status===401){logout();return null;}
+    if(r.status===401){
+      // Tenter refresh avant de déconnecter
+      var refreshed=await refreshAccessToken();
+      if(refreshed){
+        // Réessayer avec le nouveau token
+        h['Authorization']='Bearer '+G.token;
+        var r2=await fetch(API+path,Object.assign({headers:h},opts));
+        var d2=await r2.json();
+        if(!r2.ok){logout();return null;}
+        return d2;
+      }
+      logout();return null;
+    }
     throw new Error(d.message||'Erreur '+r.status);
   }
   return d;
@@ -3121,12 +3171,10 @@ async function envoyerCampagne(){
       :[dest];
     var r=await apiPost('/notifications/masse',{titre:titre,message:msg,type:'systeme',roles:roles});
     if(!r){toast('Erreur: session expirée - reconnectez-vous',true);btns.forEach(function(b){b.disabled=false;b.textContent='📢 Envoyer →';});return;}
-    var total=r.total||0;
+    var total=r.data?r.data.total:r.total||0;
+    var debugInfo=r.data&&r.data.debug?r.data.debug.join(' | '):'';
     if(total===0){
-      // Diagnostic: compter les utilisateurs directement
-      var diag=await callAPI('/users?limit=500').catch(function(){return null;});
-      var nbUsers=diag&&diag.data?diag.data.length:0;
-      toast('0 envoyé ('+nbUsers+' comptes en base). Roles: '+roles.join(','),true);
+      toast('0 envoyé. '+debugInfo,true);
     } else {
       toast('✓ '+total+' notification(s) envoyée(s)');
       document.getElementById('camp-titre').value='';

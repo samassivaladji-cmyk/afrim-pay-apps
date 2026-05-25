@@ -363,25 +363,21 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
     </div>
 
   </div>
-    <!-- ═══ HISTORIQUE NOTIFICATIONS (en bas du panel Notif) ═══ -->
-    <div id="sup-panel-notif-hist" style="display:none;margin-top:16px">
-      <div style="font-size:12px;font-weight:800;color:#374151;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em">&#x1F4CB; Historique notifications</div>
-      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px" id="sup-notif-hist-filters"></div>
+    <!-- HISTORIQUE NOTIFICATIONS (sous Notif) -->
+    <div id="sup-hist-notif-section" style="display:none;margin-top:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.04em">&#x1F4CB; Historique notifications</div>
+      </div>
+      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px" id="sup-notif-hist-filters"></div>
       <div id="sup-notif-hist-list"></div>
-      <button id="sup-notif-hist-plus" onclick="supChargerPlusNotifHist()" style="display:none;width:100%;padding:8px;background:#f3f4f6;border:none;border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit;color:#6b7280;margin-top:6px">Charger plus</button>
+      <button id="sup-notif-hist-plus" onclick="supChargerPlusNotifHist()" style="display:none;width:100%;padding:8px;background:#f3f4f6;border:none;border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit;color:#6b7280;margin-top:6px">Charger plus &#x25BC;</button>
     </div>
 
-    <!-- ═══ TICKETS SUPPORT CLIENT (en bas du panel Suivi) ═══ -->
-    <div id="sup-panel-tickets-propres" style="display:none;margin-top:16px">
-      <div style="font-size:12px;font-weight:800;color:#374151;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em">&#x1F3AB; Mes tickets à traiter</div>
-      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px">
-        <button id="tkp-all" onclick="supFiltrerTicketsPropres('')" style="padding:5px 12px;border-radius:99px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid var(--y);background:var(--y);color:#fff;white-space:nowrap">Tous</button>
-        <button id="tkp-ouvert" onclick="supFiltrerTicketsPropres('ouvert')" style="padding:5px 12px;border-radius:99px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;white-space:nowrap">&#x23F3; En attente</button>
-        <button id="tkp-en_cours" onclick="supFiltrerTicketsPropres('en_cours')" style="padding:5px 12px;border-radius:99px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;white-space:nowrap">&#x1F504; En cours</button>
-        <button id="tkp-resolu" onclick="supFiltrerTicketsPropres('resolu')" style="padding:5px 12px;border-radius:99px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;white-space:nowrap">&#x2705; Résolus</button>
-        <button id="tkp-ferme" onclick="supFiltrerTicketsPropres('ferme')" style="padding:5px 12px;border-radius:99px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;white-space:nowrap">&#x1F512; Clôturés</button>
-      </div>
-      <div id="sup-tickets-propres-list"><div style="padding:16px;text-align:center"><div class="spin"></div></div></div>
+    <!-- TICKETS PROPRES SUPPORT CLIENT (sous Suivi) -->
+    <div id="sup-tickets-propres-section" style="display:none;margin-top:20px">
+      <div style="font-size:12px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px">&#x1F3AB; Tickets support client</div>
+      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px" id="sup-tkp-filters"></div>
+      <div id="sup-tickets-propres-list"><div style="padding:14px;text-align:center"><div class="spin"></div></div></div>
     </div>
 
   </div>
@@ -420,18 +416,12 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
     <div id="tech-txns"><div style="padding:24px;text-align:center"><div class="spin"></div></div></div>
     <div style="font-size:12px;font-weight:700;color:var(--m);text-transform:uppercase;margin:16px 0 10px">Alertes systeme</div>
     <div id="tech-logs"><div style="padding:24px;text-align:center"><div class="spin"></div></div></div>
-  </div>
-    <!-- ═══ TICKETS TECH À TRAITER ═══ -->
+
+    <!-- TICKETS TECH -->
     <div style="margin-top:20px">
-      <div style="font-size:12px;font-weight:800;color:#374151;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em">&#x1F527; Tickets techniques</div>
-      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px">
-        <button id="tktech-all" onclick="techFiltrerTickets('')" style="padding:5px 12px;border-radius:99px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid var(--y);background:var(--y);color:#fff;white-space:nowrap">Tous</button>
-        <button id="tktech-ouvert" onclick="techFiltrerTickets('ouvert')" style="padding:5px 12px;border-radius:99px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;white-space:nowrap">&#x23F3; En attente</button>
-        <button id="tktech-en_cours" onclick="techFiltrerTickets('en_cours')" style="padding:5px 12px;border-radius:99px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;white-space:nowrap">&#x1F504; En cours</button>
-        <button id="tktech-resolu" onclick="techFiltrerTickets('resolu')" style="padding:5px 12px;border-radius:99px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;white-space:nowrap">&#x2705; Résolus</button>
-        <button id="tktech-ferme" onclick="techFiltrerTickets('ferme')" style="padding:5px 12px;border-radius:99px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;white-space:nowrap">&#x1F512; Clôturés</button>
-      </div>
-      <div id="tech-tickets-list"><div style="padding:16px;text-align:center"><div class="spin"></div></div></div>
+      <div style="font-size:12px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px">&#x1F527; Tickets techniques</div>
+      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px" id="tech-tk-filters"></div>
+      <div id="tech-tickets-list"><div style="padding:14px;text-align:center"><div class="spin"></div></div></div>
     </div>
   </div>
   <nav class="bnav" id="bnav-tech"></nav>
@@ -1347,28 +1337,11 @@ async function chargerMonitoring(){
     var tr=await apiGet('/tickets?limit=20');var tlist=tr.data||[];
     var el2=document.getElementById('m-tickets');el2.innerHTML='';
     if(!tlist.length){el2.innerHTML='<div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:14px;padding:14px;text-align:center;color:#059669;font-size:13px;font-weight:600">Aucun ticket</div>';
-    }else{tlist.forEach(function(t){var div=document.createElement('div');div.style.cssText='background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px 16px;margin-bottom:8px';div.innerHTML='<div style="font-size:13px;font-weight:700;margin-bottom:4px">'+t.sujet+'</div><div style="font-size:12px;color:#6b7280;margin-bottom:10px">'+t.description+'</div>';var statCols2={'ouvert':'#f59e0b','en_cours':'#3b82f6','resolu':'#22c55e','ferme':'#9ca3af','rejete':'#ef4444'};
-var statLbls2={'ouvert':'En attente','en_cours':'En cours','resolu':'Résolu','ferme':'Clôturé','rejete':'Rejeté'};
-var sc2=statCols2[t.statut]||'#9ca3af';
-var sl2=statLbls2[t.statut]||t.statut;
-var badge2=document.createElement('span');
-badge2.textContent=sl2;
-badge2.style.cssText='background:'+sc2+'18;color:'+sc2+';padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700';
-div.appendChild(badge2);
-if(t.statut==='ouvert'||t.statut==='en_cours'){
-  var bRes=document.createElement('button');bRes.textContent='✅ Résoudre';
-  bRes.style.cssText='padding:6px 12px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;color:#059669;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;margin-right:6px;margin-top:8px';
-  (function(tid){bRes.addEventListener('click',function(){changerStatutTicketGlobal(tid,'resolu');});})(t.id);
-  div.appendChild(bRes);
-  var bClos=document.createElement('button');bClos.textContent='🔒 Clôturer';
-  bClos.style.cssText='padding:6px 12px;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;color:#6b7280;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;margin-top:8px';
-  (function(tid){bClos.addEventListener('click',function(){changerStatutTicketGlobal(tid,'ferme');});})(t.id);
-  div.appendChild(bClos);
-}el2.appendChild(div);});}
+    }else{tlist.forEach(function(t){var div=document.createElement('div');div.style.cssText='background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px 16px;margin-bottom:8px';div.innerHTML='<div style="font-size:13px;font-weight:700;margin-bottom:4px">'+t.sujet+'</div><div style="font-size:12px;color:#6b7280;margin-bottom:10px">'+t.description+'</div>';if(t.statut==='ouvert'){var btn=document.createElement('button');btn.textContent='Resoudre';btn.style.cssText='padding:7px 14px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;color:#059669;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit';btn.addEventListener('click',function(){cloturerT(t.id);});div.appendChild(btn);}else{var sp=document.createElement('span');sp.style.cssText='color:#059669;font-size:11px;font-weight:700';sp.textContent='Resolu';div.appendChild(sp);}el2.appendChild(div);});}
   }catch(e){document.getElementById('m-tickets').innerHTML='<div style="color:var(--r);font-size:12px">'+e.message+'</div>';}
 }
 async function cloturerA(id){try{await apiPatch('/alerts/'+id,{statut:'resolue',actionPrise:'Cloturee par admin'});toast('Alerte cloturee');chargerMonitoring();}catch(e){toast(e.message,true);}}
-async function cloturerT(id){try{await apiPatch('/tickets/'+id+'/status',{statut:'ferme'});toast('Ticket résolu');chargerMonitoring();}catch(e){toast(e.message,true);}}
+async function cloturerT(id){changerStatutTicketGlobal(id,'resolu');}
 async function cloturerTicket(id,statut){try{await apiPatch('/tickets/'+id+'/status',{statut:statut});toast('Statut mis à jour');chargerSupport();}catch(e){toast(e.message,true);}}
 
 // ── SUPPORT ──
@@ -1500,7 +1473,16 @@ function setSupTab(tab) {
     }
     if (panel) panel.style.display = isActive ? 'block' : 'none';
   });
-  if (tab === 'tickets') chargerTicketsSupport(_supTicketFilter);
+  // Sections additionnelles en bas
+  var histSec = document.getElementById('sup-hist-notif-section');
+  var tkpSec = document.getElementById('sup-tickets-propres-section');
+  if (histSec) histSec.style.display = tab === 'notif' ? 'block' : 'none';
+  if (tkpSec) tkpSec.style.display = tab === 'tickets' ? 'block' : 'none';
+  if (tab === 'tickets') {
+    chargerTicketsSupport(_supTicketFilter);
+    _supInitTicketsPropres();
+  }
+  if (tab === 'notif') _supInitNotifHist();
 }
 
 function filtrerTicketsSupport(statut) {
@@ -2626,28 +2608,11 @@ async function chargerMonitoring(){
     var tr=await apiGet('/tickets?limit=20');var tlist=tr.data||[];
     var el2=document.getElementById('m-tickets');el2.innerHTML='';
     if(!tlist.length){el2.innerHTML='<div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:14px;padding:14px;text-align:center;color:#059669;font-size:13px;font-weight:600">Aucun ticket</div>';
-    }else{tlist.forEach(function(t){var div=document.createElement('div');div.style.cssText='background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px 16px;margin-bottom:8px';div.innerHTML='<div style="font-size:13px;font-weight:700;margin-bottom:4px">'+t.sujet+'</div><div style="font-size:12px;color:#6b7280;margin-bottom:10px">'+t.description+'</div>';var statCols2={'ouvert':'#f59e0b','en_cours':'#3b82f6','resolu':'#22c55e','ferme':'#9ca3af','rejete':'#ef4444'};
-var statLbls2={'ouvert':'En attente','en_cours':'En cours','resolu':'Résolu','ferme':'Clôturé','rejete':'Rejeté'};
-var sc2=statCols2[t.statut]||'#9ca3af';
-var sl2=statLbls2[t.statut]||t.statut;
-var badge2=document.createElement('span');
-badge2.textContent=sl2;
-badge2.style.cssText='background:'+sc2+'18;color:'+sc2+';padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700';
-div.appendChild(badge2);
-if(t.statut==='ouvert'||t.statut==='en_cours'){
-  var bRes=document.createElement('button');bRes.textContent='✅ Résoudre';
-  bRes.style.cssText='padding:6px 12px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;color:#059669;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;margin-right:6px;margin-top:8px';
-  (function(tid){bRes.addEventListener('click',function(){changerStatutTicketGlobal(tid,'resolu');});})(t.id);
-  div.appendChild(bRes);
-  var bClos=document.createElement('button');bClos.textContent='🔒 Clôturer';
-  bClos.style.cssText='padding:6px 12px;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;color:#6b7280;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;margin-top:8px';
-  (function(tid){bClos.addEventListener('click',function(){changerStatutTicketGlobal(tid,'ferme');});})(t.id);
-  div.appendChild(bClos);
-}el2.appendChild(div);});}
+    }else{tlist.forEach(function(t){var div=document.createElement('div');div.style.cssText='background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px 16px;margin-bottom:8px';div.innerHTML='<div style="font-size:13px;font-weight:700;margin-bottom:4px">'+t.sujet+'</div><div style="font-size:12px;color:#6b7280;margin-bottom:10px">'+t.description+'</div>';if(t.statut==='ouvert'){var btn=document.createElement('button');btn.textContent='Resoudre';btn.style.cssText='padding:7px 14px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;color:#059669;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit';btn.addEventListener('click',function(){cloturerT(t.id);});div.appendChild(btn);}else{var sp=document.createElement('span');sp.style.cssText='color:#059669;font-size:11px;font-weight:700';sp.textContent='Resolu';div.appendChild(sp);}el2.appendChild(div);});}
   }catch(e){document.getElementById('m-tickets').innerHTML='<div style="color:var(--r);font-size:12px">'+e.message+'</div>';}
 }
 async function cloturerA(id){try{await apiPatch('/alerts/'+id,{statut:'resolue',actionPrise:'Cloturee par admin'});toast('Alerte cloturee');chargerMonitoring();}catch(e){toast(e.message,true);}}
-async function cloturerT(id){try{await apiPatch('/tickets/'+id+'/status',{statut:'ferme'});toast('Ticket resolu');chargerMonitoring();}catch(e){toast(e.message,true);}}
+async function cloturerT(id){changerStatutTicketGlobal(id,'resolu');}
 
 // ── SUPPORT ──
 async function chargerSupport2_deprecated(){} // Remplacé par chargerSupport dans le module support
@@ -2989,10 +2954,10 @@ function afficherDocsTech(userId,nom){
 }
 
 async function chargerTech(){
-  // Charger les tickets tech en bas
-  setTimeout(function(){ if(typeof _techChargerTickets==='function') _techChargerTickets(''); }, 300);
   // Charger les clients en attente d'abord
   chargerClientsTech('en_attente');
+  // Tickets tech
+  setTimeout(function(){ if(typeof _techInitTickets==='function') _techInitTickets(); }, 400);
   // Ping API
   try{
     var t0=Date.now();await apiGet('/health');var ms=Date.now()-t0;
@@ -3989,76 +3954,176 @@ function boLockLogout() {
 
 
 // ══════════════════════════════════════════════════════
-// FONCTION GLOBALE changement statut ticket (sans risque d'erreur)
+// CORRECTION STATUT TICKET — fonction globale robuste
 // ══════════════════════════════════════════════════════
 async function changerStatutTicketGlobal(id, statut) {
   try {
     await callAPI('/tickets/' + id + '/status', {method:'PATCH', body: JSON.stringify({statut: statut})});
-    var msgs = {resolu:'✅ Ticket résolu', ferme:'🔒 Ticket clôturé', rejete:'❌ Ticket rejeté', ouvert:'🔄 Ticket relancé', en_cours:'🔄 Pris en charge'};
-    toast(msgs[statut] || 'Statut mis à jour');
-    // Rafraîchir selon le contexte actuel
+    var msgs = {resolu:'✅ Résolu', ferme:'🔒 Clôturé', rejete:'❌ Rejeté', ouvert:'🔄 Relancé', en_cours:'🔄 En cours'};
+    toast(msgs[statut] || 'Mis à jour');
     if (typeof chargerMonitoring === 'function') chargerMonitoring();
-    if (typeof chargerTicketsSupport === 'function') chargerTicketsSupport(_supTicketFilter);
-    if (typeof _techChargerTickets === 'function') _techChargerTickets(_techTicketFilter);
-    if (typeof _supChargerTicketsPropres === 'function') _supChargerTicketsPropres(_supPropresFilter);
+    if (typeof chargerTicketsSupport === 'function') chargerTicketsSupport(_supTicketFilter || '');
+    if (typeof _techLoadTickets === 'function') _techLoadTickets(_techTkFilter || '');
+    if (typeof _supLoadTicketsPropres === 'function') _supLoadTicketsPropres(_supPropresFilter || '');
   } catch(e) { toast('Erreur: ' + e.message, true); }
 }
 
 // ══════════════════════════════════════════════════════
-// MODULE SUPPORT CLIENT — Fonctions nouvelles sections
+// RENDU COMMUN TICKETS (tableau détaillé)
 // ══════════════════════════════════════════════════════
-
-// Afficher/masquer les sections en bas selon l'onglet actif
-var _origSetSupTab = typeof setSupTab === 'function' ? setSupTab : null;
-function setSupTab(tab) {
-  var tabs = ['notif','search','newticket','tickets'];
-  tabs.forEach(function(t) {
-    var btn = document.getElementById('sup-tab-'+t);
-    var panel = document.getElementById('sup-panel-'+t);
-    var isActive = t === tab;
-    if (btn) { btn.style.color = isActive ? 'var(--y2)' : '#6b7280'; btn.style.borderBottom = isActive ? '2px solid var(--y)' : '2px solid transparent'; }
-    if (panel) panel.style.display = isActive ? 'block' : 'none';
-  });
-  // Sections additionnelles en bas
-  var histPanel = document.getElementById('sup-panel-notif-hist');
-  var tkPropresPanel = document.getElementById('sup-panel-tickets-propres');
-  if (histPanel) histPanel.style.display = tab === 'notif' ? 'block' : 'none';
-  if (tkPropresPanel) tkPropresPanel.style.display = tab === 'tickets' ? 'block' : 'none';
-
-  if (tab === 'tickets') {
-    chargerTicketsSupport(_supTicketFilter);
-    _supChargerTicketsPropres('');
+function _rendrTickets(el, list) {
+  el.innerHTML = '';
+  if (!list || !list.length) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:#9ca3af;font-size:12px;background:#f9fafb;border-radius:10px">Aucun ticket</div>';
+    return;
   }
-  if (tab === 'notif') _supInitNotifHist();
+  var statCols = {ouvert:'#f59e0b', en_cours:'#3b82f6', resolu:'#22c55e', ferme:'#9ca3af', rejete:'#ef4444', transfere_tech:'#7c3aed'};
+  var statLbls = {ouvert:'⏳ En attente', en_cours:'🔄 En cours', resolu:'✅ Résolu', ferme:'🔒 Clôturé', rejete:'❌ Rejeté', transfere_tech:'🛠 Tech'};
+  list.forEach(function(tk) {
+    var sc = statCols[tk.statut] || '#9ca3af';
+    var sl = statLbls[tk.statut] || tk.statut;
+    var d = new Date(tk.dateCreation || Date.now());
+    var ds = d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})
+           + ' ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    var client = tk.client || {};
+    var cInfo = ((client.prenom||'') + ' ' + (client.nom||'')).trim() + (client.telephone ? ' · '+client.telephone : '');
+    // Carte principale
+    var card = document.createElement('div');
+    card.style.cssText = 'background:#fff;border:1px solid #f3f4f6;border-radius:12px;padding:13px 14px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.05)';
+    // Ligne 1 : sujet + badge statut
+    var row1 = document.createElement('div');
+    row1.style.cssText = 'display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:5px';
+    var sj = document.createElement('div');
+    sj.style.cssText = 'font-size:12px;font-weight:700;color:#111827;flex:1;line-height:1.3';
+    sj.textContent = tk.sujet;
+    var badge = document.createElement('span');
+    badge.style.cssText = 'background:'+sc+'15;color:'+sc+';padding:3px 9px;border-radius:99px;font-size:10px;font-weight:700;flex-shrink:0;border:1px solid '+sc+'30';
+    badge.textContent = sl;
+    row1.appendChild(sj); row1.appendChild(badge);
+    card.appendChild(row1);
+    // Ligne 2 : client en bleu
+    if (cInfo.trim()) {
+      var rowC = document.createElement('div');
+      rowC.style.cssText = 'font-size:11px;color:#2563eb;font-weight:600;margin-bottom:4px';
+      rowC.textContent = '👤 ' + cInfo.trim();
+      card.appendChild(rowC);
+    }
+    // Ligne 3 : description
+    if (tk.description) {
+      var rowD = document.createElement('div');
+      rowD.style.cssText = 'font-size:11px;color:#6b7280;margin-bottom:6px;line-height:1.4';
+      rowD.textContent = tk.description;
+      card.appendChild(rowD);
+    }
+    // Ligne 4 : date + référence
+    var rowMeta = document.createElement('div');
+    rowMeta.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:8px';
+    var rowDate = document.createElement('div');
+    rowDate.style.cssText = 'font-size:10px;color:#9ca3af;display:flex;align-items:center;gap:4px';
+    rowDate.innerHTML = '&#x1F552; ' + ds;
+    rowMeta.appendChild(rowDate);
+    if (tk.reference || tk.id) {
+      var rowRef = document.createElement('div');
+      rowRef.style.cssText = 'font-size:10px;color:#d1d5db;font-family:monospace';
+      rowRef.textContent = (tk.reference || tk.id.slice(0,8).toUpperCase());
+      rowMeta.appendChild(rowRef);
+    }
+    card.appendChild(rowMeta);
+    // Boutons action
+    var btns = document.createElement('div');
+    btns.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap';
+    if (tk.statut === 'ouvert') {
+      var b1 = document.createElement('button');
+      b1.innerHTML = '&#x1F504; Prendre en charge';
+      b1.style.cssText = 'padding:6px 11px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;color:#1d4ed8;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit';
+      (function(id){b1.onclick=function(){changerStatutTicketGlobal(id,'en_cours');};})(tk.id);
+      btns.appendChild(b1);
+    }
+    if (tk.statut === 'ouvert' || tk.statut === 'en_cours' || tk.statut === 'transfere_tech') {
+      var b2 = document.createElement('button');
+      b2.innerHTML = '&#x2705; Résolu';
+      b2.style.cssText = 'padding:6px 11px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;color:#059669;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit';
+      (function(id){b2.onclick=function(){changerStatutTicketGlobal(id,'resolu');};})(tk.id);
+      btns.appendChild(b2);
+      var b3 = document.createElement('button');
+      b3.innerHTML = '&#x274C; Rejeter';
+      b3.style.cssText = 'padding:6px 11px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#ef4444;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit';
+      (function(id){b3.onclick=function(){changerStatutTicketGlobal(id,'rejete');};})(tk.id);
+      btns.appendChild(b3);
+      var b4 = document.createElement('button');
+      b4.innerHTML = '&#x1F512; Clôturer';
+      b4.style.cssText = 'padding:6px 11px;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;color:#6b7280;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit';
+      (function(id){b4.onclick=function(){changerStatutTicketGlobal(id,'ferme');};})(tk.id);
+      btns.appendChild(b4);
+    }
+    if (tk.statut === 'resolu' || tk.statut === 'ferme' || tk.statut === 'rejete') {
+      var b5 = document.createElement('button');
+      b5.innerHTML = '&#x1F504; Relancer';
+      b5.style.cssText = 'padding:6px 11px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;color:#1d4ed8;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit';
+      (function(id){b5.onclick=function(){changerStatutTicketGlobal(id,'ouvert');};})(tk.id);
+      btns.appendChild(b5);
+    }
+    if (btns.childElementCount > 0) card.appendChild(btns);
+    el.appendChild(card);
+  });
 }
 
-// Historique notifs dans Support Client
+// Filtres tickets communs (boutons pill horizontaux scrollables)
+function _buildTkFilters(containerId, prefix, onFilter) {
+  var bar = document.getElementById(containerId);
+  if (!bar || bar.childElementCount > 0) return;
+  var fDefs = [['Tous',''],['⏳ En attente','ouvert'],['🔄 En cours','en_cours'],['✅ Résolus','resolu'],['🔒 Clôturés','ferme'],['❌ Rejetés','rejete']];
+  fDefs.forEach(function(fd) {
+    var btn = document.createElement('button');
+    btn.id = prefix + fd[1].replace('','all');
+    btn.textContent = fd[0];
+    btn.dataset.val = fd[1];
+    var isAll = fd[1] === '';
+    btn.style.cssText = 'padding:5px 12px;border-radius:99px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;border:1.5px solid '+(isAll?'var(--y)':'#e5e7eb')+';background:'+(isAll?'var(--y)':'#fff')+';color:'+(isAll?'#fff':'#6b7280');
+    btn.onclick = function() {
+      bar.querySelectorAll('button').forEach(function(b) {
+        var active = b.dataset.val === btn.dataset.val;
+        b.style.background = active ? 'var(--y)' : '#fff';
+        b.style.color = active ? '#fff' : '#6b7280';
+        b.style.borderColor = active ? 'var(--y)' : '#e5e7eb';
+      });
+      onFilter(this.dataset.val);
+    };
+    bar.appendChild(btn);
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// SUPPORT CLIENT — Historique notifications
+// ══════════════════════════════════════════════════════
 var _supNotifHistFilter = '';
 var _supNotifHistOffset = 0;
 
 function _supInitNotifHist() {
   var fBar = document.getElementById('sup-notif-hist-filters');
-  if (!fBar || fBar.childElementCount > 0) { _supLoadNotifHist(false); return; }
-  var fDefs = [['Tous',''],['Clients','client'],['Agents','agent'],['Business','business'],['Masters','master'],['Support','support']];
-  fDefs.forEach(function(fd) {
-    var btn = document.createElement('button');
-    btn.textContent = fd[0];
-    btn.dataset.role = fd[1];
-    var isAll = fd[1] === '';
-    btn.style.cssText = 'padding:4px 10px;border-radius:99px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;border:1.5px solid ' + (isAll?'var(--y)':'#e5e7eb') + ';background:' + (isAll?'var(--y)':'#fff') + ';color:' + (isAll?'#fff':'#6b7280');
-    btn.onclick = function() {
-      _supNotifHistFilter = this.dataset.role;
-      _supNotifHistOffset = 0;
-      fBar.querySelectorAll('button').forEach(function(b) {
-        var a = b.dataset.role === _supNotifHistFilter;
-        b.style.background = a ? 'var(--y)' : '#fff';
-        b.style.color = a ? '#fff' : '#6b7280';
-        b.style.borderColor = a ? 'var(--y)' : '#e5e7eb';
-      });
-      _supLoadNotifHist(false);
-    };
-    fBar.appendChild(btn);
-  });
+  if (!fBar) return;
+  if (fBar.childElementCount === 0) {
+    var fDefs = [['Tous',''],['Clients','client'],['Agents','agent'],['Business','business'],['Masters','master'],['Mini-M.','mini_master'],['Support','support'],['Admin','admin']];
+    fDefs.forEach(function(fd) {
+      var btn = document.createElement('button');
+      btn.textContent = fd[0];
+      btn.dataset.role = fd[1];
+      var isAll = fd[1] === '';
+      btn.style.cssText = 'padding:5px 12px;border-radius:99px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;flex-shrink:0;border:1.5px solid '+(isAll?'var(--y)':'#e5e7eb')+';background:'+(isAll?'var(--y)':'#fff')+';color:'+(isAll?'#fff':'#6b7280');
+      btn.onclick = function() {
+        _supNotifHistFilter = this.dataset.role;
+        _supNotifHistOffset = 0;
+        fBar.querySelectorAll('button').forEach(function(b) {
+          var a = b.dataset.role === _supNotifHistFilter;
+          b.style.background = a ? 'var(--y)' : '#fff';
+          b.style.color = a ? '#fff' : '#6b7280';
+          b.style.borderColor = a ? 'var(--y)' : '#e5e7eb';
+        });
+        _supLoadNotifHist(false);
+      };
+      fBar.appendChild(btn);
+    });
+  }
   _supLoadNotifHist(false);
 }
 
@@ -4068,7 +4133,7 @@ async function _supLoadNotifHist(append) {
   if (!append) el.innerHTML = '<div style="text-align:center;padding:12px"><div class="spin"></div></div>';
   var q = '/notifications/all?limit=15&offset=' + _supNotifHistOffset;
   if (_supNotifHistFilter === 'support') q += '&role=support';
-  else if (_supNotifHistFilter) q += '&role=' + _supNotifHistFilter;
+  else if (_supNotifHistFilter) q += '&role=' + encodeURIComponent(_supNotifHistFilter);
   try {
     var r = await callAPI(q);
     var list = (r.data && r.data.notifications) || [];
@@ -4081,192 +4146,103 @@ async function _supLoadNotifHist(append) {
       var ds = d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}) + ' ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
       var user = ((n.prenom||'') + (n.nom?' '+n.nom:'')).trim() || (n.telephone||'');
       var row = document.createElement('div');
-      row.style.cssText = 'background:#fff;border-radius:10px;padding:10px 12px;margin-bottom:6px;border:1px solid #f3f4f6';
+      row.style.cssText = 'background:#fff;border-radius:10px;padding:10px 13px;margin-bottom:6px;border:1px solid #f3f4f6;display:flex;flex-direction:column;gap:3px';
+      // Ligne titre + date + suppr
       var h = document.createElement('div');
-      h.style.cssText = 'display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:2px';
-      var t = document.createElement('div');
-      t.style.cssText = 'font-size:11px;font-weight:700;color:#111827;flex:1';
-      t.textContent = n.titre;
-      var meta = document.createElement('div');
-      meta.style.cssText = 'display:flex;align-items:center;gap:4px;flex-shrink:0';
+      h.style.cssText = 'display:flex;justify-content:space-between;align-items:flex-start;gap:6px';
+      var titre = document.createElement('div');
+      titre.style.cssText = 'font-size:11px;font-weight:700;color:#111827;flex:1';
+      titre.textContent = n.titre;
+      var metaR = document.createElement('div');
+      metaR.style.cssText = 'display:flex;align-items:center;gap:5px;flex-shrink:0';
       var ts = document.createElement('span');
       ts.style.cssText = 'font-size:9px;color:#9ca3af;white-space:nowrap';
       ts.textContent = ds;
       var del = document.createElement('button');
       del.dataset.nid = n.id;
       del.innerHTML = '&#x2715;';
-      del.style.cssText = 'background:#fef2f2;border:none;border-radius:5px;padding:1px 6px;font-size:10px;color:#ef4444;cursor:pointer;font-family:inherit';
+      del.style.cssText = 'background:#fef2f2;border:none;border-radius:5px;padding:2px 7px;font-size:10px;color:#ef4444;cursor:pointer;font-family:inherit';
       del.onclick = function() {
         var nid = this.dataset.nid;
-        var r2 = this.closest('[style*="border-radius:10px"]');
-        if (!confirm('Supprimer ?')) return;
-        callAPI('/notifications/' + nid, {method:'DELETE'}).then(function() {
-          if (r2) { r2.style.opacity = '0'; r2.style.transition = 'opacity .3s'; setTimeout(function(){r2.remove();}, 300); }
-          toast('Supprimée');
-        }).catch(function(e) { toast('Erreur: '+e.message, true); });
+        var rowEl = this.closest('[style*="flex-direction:column"]');
+        if (!confirm('Supprimer cette notification ?')) return;
+        callAPI('/notifications/'+nid, {method:'DELETE'}).then(function(){
+          if (rowEl) { rowEl.style.opacity='0'; rowEl.style.transition='opacity .3s'; setTimeout(function(){rowEl.remove();},300); }
+          toast('Notification supprimée');
+        }).catch(function(e){ toast('Erreur: '+e.message, true); });
       };
-      meta.appendChild(ts); meta.appendChild(del);
-      h.appendChild(t); h.appendChild(meta);
-      var m = document.createElement('div');
-      m.style.cssText = 'font-size:11px;color:#6b7280;margin-bottom:2px';
-      m.textContent = n.message;
+      metaR.appendChild(ts); metaR.appendChild(del);
+      h.appendChild(titre); h.appendChild(metaR);
+      // Message
+      var msg = document.createElement('div');
+      msg.style.cssText = 'font-size:11px;color:#6b7280';
+      msg.textContent = n.message;
+      // Info user + type
       var inf = document.createElement('div');
       inf.style.cssText = 'font-size:9px;color:#9ca3af';
-      inf.innerHTML = user + (n.role ? ' &middot; ' + n.role : '') + ' <span style="color:' + col + '">&middot; ' + (n.type||'') + '</span>';
-      row.appendChild(h); row.appendChild(m); row.appendChild(inf);
+      inf.innerHTML = user + (n.role ? ' &middot; ' + n.role : '') + ' <span style="color:'+col+'">&middot; '+(n.type||'')+'</span>';
+      row.appendChild(h); row.appendChild(msg); row.appendChild(inf);
       frag.appendChild(row);
     });
     if (!append) el.innerHTML = '';
-    if (!list.length && !append) el.innerHTML = '<div style="text-align:center;padding:16px;color:#9ca3af;font-size:12px">Aucune notification</div>';
+    if (!list.length && !append) el.innerHTML = '<div style="text-align:center;padding:16px;color:#9ca3af;font-size:12px">Aucune notification envoyée</div>';
     else el.appendChild(frag);
     var btnPlus = document.getElementById('sup-notif-hist-plus');
-    if (btnPlus) btnPlus.style.display = list.length >= 15 && (_supNotifHistOffset + list.length) < total ? 'block' : 'none';
-  } catch(e) { if (!append && el) el.innerHTML = '<div style="color:var(--r);font-size:11px;padding:8px">' + e.message + '</div>'; }
+    if (btnPlus) btnPlus.style.display = list.length >= 15 && (_supNotifHistOffset+list.length)<total ? 'block' : 'none';
+  } catch(e) { if (!append && el) el.innerHTML = '<div style="color:var(--r);font-size:11px;padding:8px">'+e.message+'</div>'; }
 }
 
 function supChargerPlusNotifHist() { _supNotifHistOffset += 15; _supLoadNotifHist(true); }
 
-// Tickets propres Support Client
+// ══════════════════════════════════════════════════════
+// SUPPORT CLIENT — Tickets propres
+// ══════════════════════════════════════════════════════
 var _supPropresFilter = '';
 
-function supFiltrerTicketsPropres(statut) {
-  _supPropresFilter = statut;
-  var ids = ['all','ouvert','en_cours','resolu','ferme'];
-  var vals = ['','ouvert','en_cours','resolu','ferme'];
-  ids.forEach(function(id, i) {
-    var btn = document.getElementById('tkp-' + id);
-    if (!btn) return;
-    var active = vals[i] === statut;
-    btn.style.background = active ? 'var(--y)' : '#fff';
-    btn.style.color = active ? '#fff' : '#6b7280';
-    btn.style.borderColor = active ? 'var(--y)' : '#e5e7eb';
+function _supInitTicketsPropres() {
+  _buildTkFilters('sup-tkp-filters', 'sup-tkp-', function(val) {
+    _supPropresFilter = val;
+    _supLoadTicketsPropres(val);
   });
-  _supChargerTicketsPropres(statut);
+  _supLoadTicketsPropres('');
 }
 
-async function _supChargerTicketsPropres(statut) {
+async function _supLoadTicketsPropres(statut) {
   var el = document.getElementById('sup-tickets-propres-list');
   if (!el) return;
   el.innerHTML = '<div style="text-align:center;padding:12px"><div class="spin"></div></div>';
-  var q = '/tickets?limit=30&destinataire=support_client' + (statut ? '&statut=' + statut : '');
+  var q = '/tickets?limit=30' + (statut ? '&statut='+statut : '');
   try {
     var r = await callAPI(q);
     var list = r.data || [];
-    _rendrTickets(el, list, 'support');
-  } catch(e) { el.innerHTML = '<div style="color:var(--r);font-size:12px;padding:8px">' + e.message + '</div>'; }
+    _rendrTickets(el, list);
+  } catch(e) { el.innerHTML = '<div style="color:var(--r);font-size:12px;padding:8px">'+e.message+'</div>'; }
 }
 
 // ══════════════════════════════════════════════════════
-// MODULE TECH — Tickets techniques
+// SUPPORT TECH — Tickets techniques
 // ══════════════════════════════════════════════════════
-var _techTicketFilter = '';
+var _techTkFilter = '';
 
-function techFiltrerTickets(statut) {
-  _techTicketFilter = statut;
-  var ids = ['all','ouvert','en_cours','resolu','ferme'];
-  var vals = ['','ouvert','en_cours','resolu','ferme'];
-  ids.forEach(function(id, i) {
-    var btn = document.getElementById('tktech-' + id);
-    if (!btn) return;
-    var active = vals[i] === statut;
-    btn.style.background = active ? 'var(--y)' : '#fff';
-    btn.style.color = active ? '#fff' : '#6b7280';
-    btn.style.borderColor = active ? 'var(--y)' : '#e5e7eb';
+function _techInitTickets() {
+  _buildTkFilters('tech-tk-filters', 'tech-tk-', function(val) {
+    _techTkFilter = val;
+    _techLoadTickets(val);
   });
-  _techChargerTickets(statut);
+  _techLoadTickets('');
 }
 
-async function _techChargerTickets(statut) {
+async function _techLoadTickets(statut) {
   var el = document.getElementById('tech-tickets-list');
   if (!el) return;
   el.innerHTML = '<div style="text-align:center;padding:12px"><div class="spin"></div></div>';
-  var q = '/tickets?limit=30&destinataire=support_tech' + (statut ? '&statut=' + statut : '');
+  var q = '/tickets?limit=30' + (statut ? '&statut='+statut : '');
   try {
     var r = await callAPI(q);
     var list = r.data || [];
-    _rendrTickets(el, list, 'tech');
-  } catch(e) { el.innerHTML = '<div style="color:var(--r);font-size:12px;padding:8px">' + e.message + '</div>'; }
+    _rendrTickets(el, list);
+  } catch(e) { el.innerHTML = '<div style="color:var(--r);font-size:12px;padding:8px">'+e.message+'</div>'; }
 }
-
-// Rendu commun tickets (utilisé par support + tech)
-function _rendrTickets(el, list, ctx) {
-  el.innerHTML = '';
-  if (!list || !list.length) { el.innerHTML = '<div style="text-align:center;padding:16px;color:#9ca3af;font-size:12px">Aucun ticket</div>'; return; }
-  var statCols = {ouvert:'#f59e0b',en_cours:'#3b82f6',resolu:'#22c55e',ferme:'#9ca3af',rejete:'#ef4444',transfere_tech:'#7c3aed'};
-  var statLbls = {ouvert:'⏳ En attente',en_cours:'🔄 En cours',resolu:'✅ Résolu',ferme:'🔒 Clôturé',rejete:'❌ Rejeté',transfere_tech:'🛠 Tech'};
-  list.forEach(function(t) {
-    var sc = statCols[t.statut] || '#9ca3af';
-    var sl = statLbls[t.statut] || t.statut;
-    var d = new Date(t.dateCreation || Date.now());
-    var ds = d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) + ' ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-    var client = t.client;
-    var cInfo = client ? ((client.prenom||'') + ' ' + (client.nom||'')).trim() + ' · ' + (client.telephone||'') : '';
-    var row = document.createElement('div');
-    row.style.cssText = 'background:#fff;border:1px solid #f3f4f6;border-radius:12px;padding:12px 14px;margin-bottom:7px;box-shadow:0 1px 3px rgba(0,0,0,.04)';
-    // Header
-    var hd = document.createElement('div');
-    hd.style.cssText = 'display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;gap:8px';
-    var sj = document.createElement('div');
-    sj.style.cssText = 'font-size:12px;font-weight:700;flex:1;color:#111827';
-    sj.textContent = t.sujet;
-    var badge = document.createElement('span');
-    badge.style.cssText = 'background:'+sc+'18;color:'+sc+';padding:2px 8px;border-radius:99px;font-size:9px;font-weight:700;flex-shrink:0';
-    badge.textContent = sl;
-    hd.appendChild(sj); hd.appendChild(badge);
-    if (cInfo) {
-      var ci = document.createElement('div');
-      ci.style.cssText = 'font-size:10px;color:#3b82f6;font-weight:600;margin-bottom:3px';
-      ci.textContent = '👤 ' + cInfo;
-      row.appendChild(hd); row.appendChild(ci);
-    } else { row.appendChild(hd); }
-    var desc = document.createElement('div');
-    desc.style.cssText = 'font-size:11px;color:#6b7280;margin-bottom:4px;line-height:1.4';
-    desc.textContent = t.description || '';
-    var dtEl = document.createElement('div');
-    dtEl.style.cssText = 'font-size:9px;color:#9ca3af;margin-bottom:8px';
-    dtEl.textContent = ds;
-    row.appendChild(desc); row.appendChild(dtEl);
-    // Boutons action
-    var btns = document.createElement('div');
-    btns.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap';
-    if (t.statut === 'ouvert') {
-      var b1 = document.createElement('button');
-      b1.textContent = '🔄 Prendre en charge';
-      b1.style.cssText = 'padding:5px 10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:7px;color:#1d4ed8;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit';
-      (function(tid){b1.onclick=function(){changerStatutTicketGlobal(tid,'en_cours');};})(t.id);
-      btns.appendChild(b1);
-    }
-    if (t.statut === 'ouvert' || t.statut === 'en_cours') {
-      var b2 = document.createElement('button');
-      b2.textContent = '✅ Résolu';
-      b2.style.cssText = 'padding:5px 10px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:7px;color:#059669;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit';
-      (function(tid){b2.onclick=function(){changerStatutTicketGlobal(tid,'resolu');};})(t.id);
-      btns.appendChild(b2);
-      var b3 = document.createElement('button');
-      b3.textContent = '❌ Rejeter';
-      b3.style.cssText = 'padding:5px 10px;background:#fef2f2;border:1px solid #fecaca;border-radius:7px;color:#ef4444;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit';
-      (function(tid){b3.onclick=function(){changerStatutTicketGlobal(tid,'rejete');};})(t.id);
-      btns.appendChild(b3);
-      var b4 = document.createElement('button');
-      b4.textContent = '🔒 Clôturer';
-      b4.style.cssText = 'padding:5px 10px;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:7px;color:#6b7280;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit';
-      (function(tid){b4.onclick=function(){changerStatutTicketGlobal(tid,'ferme');};})(t.id);
-      btns.appendChild(b4);
-    }
-    if (t.statut === 'resolu' || t.statut === 'ferme') {
-      var b5 = document.createElement('button');
-      b5.textContent = '🔄 Relancer';
-      b5.style.cssText = 'padding:5px 10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:7px;color:#1d4ed8;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit';
-      (function(tid){b5.onclick=function(){changerStatutTicketGlobal(tid,'ouvert');};})(t.id);
-      btns.appendChild(b5);
-    }
-    if (btns.childElementCount > 0) row.appendChild(btns);
-    el.appendChild(row);
-  });
-}
-
-// Charger tickets tech au chargement de la section tech
-var _origChargerTech = typeof chargerTech === 'function' ? chargerTech : null;
 </script>
 <!-- SHEET HISTORIQUE NOTIFICATIONS -->
 <div class="sh-ov" id="sh-notif-hist" onclick="if(event.target===this)closeSh('notif-hist')">

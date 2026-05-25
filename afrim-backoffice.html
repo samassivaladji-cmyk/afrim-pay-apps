@@ -243,11 +243,26 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
       <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px" id="mon-tech-filters"></div>
       <div id="mon-tech-list"><div style="padding:16px;text-align:center"><div class="spin"></div></div></div>
     </div>
-    <!-- Panel Global tous tickets -->
+    <!-- Panel Global — Vue par entité -->
     <div id="mon-panel-global" style="display:none">
-      <div style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">&#x1F30D; Vue globale tous tickets</div>
-      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px" id="mon-global-filters"></div>
-      <div id="mon-global-list"><div style="padding:16px;text-align:center"><div class="spin"></div></div></div>
+      <div style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">&#x1F30D; Suivi global par entité</div>
+      <!-- Filtre statut global -->
+      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px" id="mon-global-filters"></div>
+      <!-- Back-Office -->
+      <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:800;color:#92400e;margin-bottom:10px">&#x1F4BB; Back-Office</div>
+        <div id="mon-global-bo"><div style="padding:10px;text-align:center"><div class="spin"></div></div></div>
+      </div>
+      <!-- Support Client -->
+      <div style="background:#f0fdf4;border:1px solid #a7f3d0;border-radius:12px;padding:12px 14px;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:800;color:#065f46;margin-bottom:10px">&#x1F3A7; Support Client</div>
+        <div id="mon-global-sup"><div style="padding:10px;text-align:center"><div class="spin"></div></div></div>
+      </div>
+      <!-- Support Tech -->
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:12px 14px;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:800;color:#1e40af;margin-bottom:10px">&#x1F527; Support Technique</div>
+        <div id="mon-global-tech"><div style="padding:10px;text-align:center"><div class="spin"></div></div></div>
+      </div>
     </div>
   </div>
   <nav class="bnav" id="bnav-monitoring"></nav>
@@ -387,40 +402,27 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
 
     <!-- PANNEAU 4 : SUIVI TICKETS -->
     <div id="sup-panel-tickets" style="display:none">
-      <!-- Filtres statut -->
-      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px">
-        <button id="tkf-all" onclick="filtrerTicketsSupport('')" style="padding:6px 14px;border-radius:99px;border:1.5px solid var(--y);background:var(--y);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">Tous</button>
-        <button id="tkf-ouvert" onclick="filtrerTicketsSupport('ouvert')" style="padding:6px 14px;border-radius:99px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">⏳ En attente</button>
-        <button id="tkf-en_cours" onclick="filtrerTicketsSupport('en_cours')" style="padding:6px 14px;border-radius:99px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">🔄 En cours</button>
-        <button id="tkf-resolu" onclick="filtrerTicketsSupport('resolu')" style="padding:6px 14px;border-radius:99px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">✅ Résolus</button>
-        <button id="tkf-rejete" onclick="filtrerTicketsSupport('rejete')" style="padding:6px 14px;border-radius:99px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">❌ Rejetés</button>
-        <button id="tkf-ferme" onclick="filtrerTicketsSupport('ferme')" style="padding:6px 14px;border-radius:99px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">🔒 Clôturés</button>
+      <!-- Vue globale tous tickets -->
+      <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">&#x1F4CB; Tous les tickets (vue globale)</div>
+      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px">
+        <button id="tkf-all" onclick="filtrerTicketsSupport('')" style="padding:5px 12px;border-radius:99px;border:1.5px solid var(--y);background:var(--y);color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">Tous</button>
+        <button id="tkf-ouvert" onclick="filtrerTicketsSupport('ouvert')" style="padding:5px 12px;border-radius:99px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">⏳ En attente</button>
+        <button id="tkf-en_cours" onclick="filtrerTicketsSupport('en_cours')" style="padding:5px 12px;border-radius:99px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">🔄 En cours</button>
+        <button id="tkf-resolu" onclick="filtrerTicketsSupport('resolu')" style="padding:5px 12px;border-radius:99px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">✅ Résolus</button>
+        <button id="tkf-rejete" onclick="filtrerTicketsSupport('rejete')" style="padding:5px 12px;border-radius:99px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">❌ Rejetés</button>
+        <button id="tkf-ferme" onclick="filtrerTicketsSupport('ferme')" style="padding:5px 12px;border-radius:99px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">🔒 Clôturés</button>
       </div>
       <div id="sup-tickets"><div style="padding:24px;text-align:center"><div class="spin"></div></div></div>
+
+      <!-- ── Mes tickets à traiter (Support Client) ── -->
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid #f3f4f6">
+        <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">&#x1F3AB; Mes tickets à traiter</div>
+        <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px" id="sup-tk-filters"></div>
+        <div id="sup-tk-list"><div style="padding:14px;text-align:center"><div class="spin"></div></div></div>
+      </div>
     </div>
 
   </div>
-    <!-- ═══ HISTORIQUE NOTIFICATIONS (en bas du panel Notif) ═══ -->
-    <div id="sup-panel-notif-hist" style="display:none;margin-top:16px">
-      <div style="font-size:12px;font-weight:800;color:#374151;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em">&#x1F4CB; Historique notifications</div>
-      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px" id="sup-notif-hist-filters"></div>
-      <div id="sup-notif-hist-list"></div>
-      <button id="sup-notif-hist-plus" onclick="supChargerPlusNotifHist()" style="display:none;width:100%;padding:8px;background:#f3f4f6;border:none;border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit;color:#6b7280;margin-top:6px">Charger plus</button>
-    </div>
-
-    <!-- ═══ TICKETS SUPPORT CLIENT (en bas du panel Suivi) ═══ -->
-    <div id="sup-panel-tickets-propres" style="display:none;margin-top:16px">
-      <div style="font-size:12px;font-weight:800;color:#374151;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em">&#x1F3AB; Mes tickets à traiter</div>
-      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px">
-        <button id="tkp-all" onclick="supFiltrerTicketsPropres('')" style="padding:5px 12px;border-radius:99px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid var(--y);background:var(--y);color:#fff;white-space:nowrap">Tous</button>
-        <button id="tkp-ouvert" onclick="supFiltrerTicketsPropres('ouvert')" style="padding:5px 12px;border-radius:99px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;white-space:nowrap">&#x23F3; En attente</button>
-        <button id="tkp-en_cours" onclick="supFiltrerTicketsPropres('en_cours')" style="padding:5px 12px;border-radius:99px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;white-space:nowrap">&#x1F504; En cours</button>
-        <button id="tkp-resolu" onclick="supFiltrerTicketsPropres('resolu')" style="padding:5px 12px;border-radius:99px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;white-space:nowrap">&#x2705; Résolus</button>
-        <button id="tkp-ferme" onclick="supFiltrerTicketsPropres('ferme')" style="padding:5px 12px;border-radius:99px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;white-space:nowrap">&#x1F512; Clôturés</button>
-      </div>
-      <div id="sup-tickets-propres-list"><div style="padding:16px;text-align:center"><div class="spin"></div></div></div>
-    </div>
-
   </div>
     <!-- ── Historique notifications (sous onglet Notif) ── -->
     <div id="sup-notif-hist-zone" style="display:none;margin-top:18px">
@@ -1555,7 +1557,10 @@ function setSupTab(tab) {
     _tkInitFilters('sup-tk-filters', 'sup-tk-', function(v){ _tkLoadList('sup-tk-list', v, ''); });
     _tkLoadList('sup-tk-list', '', '');
   }
-  if (tab === 'notif') _initSupNotifHist();
+  if (tab === 'notif') {
+    // Charger historique notifs sous l'onglet Notif
+    _initSupNotifHist();
+  }
 }
 
 function filtrerTicketsSupport(statut) {
@@ -4067,32 +4072,9 @@ async function changerStatutTicketGlobal(id, statut) {
 // ══════════════════════════════════════════════════════
 
 // Afficher/masquer les sections en bas selon l'onglet actif
-var _origSetSupTab = typeof setSupTab === 'function' ? setSupTab : null;
-function setSupTab(tab) {
-  var tabs = ['notif','search','newticket','tickets'];
-  tabs.forEach(function(t) {
-    var btn = document.getElementById('sup-tab-'+t);
-    var panel = document.getElementById('sup-panel-'+t);
-    var isActive = t === tab;
-    if (btn) { btn.style.color = isActive ? 'var(--y2)' : '#6b7280'; btn.style.borderBottom = isActive ? '2px solid var(--y)' : '2px solid transparent'; }
-    if (panel) panel.style.display = isActive ? 'block' : 'none';
-  });
-  // Sections additionnelles en bas
-  var histPanel = document.getElementById('sup-panel-notif-hist');
-  var tkPropresPanel = document.getElementById('sup-panel-tickets-propres');
-  if (histPanel) histPanel.style.display = tab === 'notif' ? 'block' : 'none';
-  if (tkPropresPanel) tkPropresPanel.style.display = tab === 'tickets' ? 'block' : 'none';
+// setSupTab unifié dans le bloc principal
 
-  if (tab === 'tickets') {
-    chargerTicketsSupport(_supTicketFilter);
-    _supChargerTicketsPropres('');
-  }
-  if (tab === 'notif') _supInitNotifHist();
-}
-
-// Historique notifs dans Support Client
-var _supNotifHistFilter = '';
-var _supNotifHistOffset = 0;
+// Variables déplacées dans le bloc unifié
 
 function _supInitNotifHist() {
   var fBar = document.getElementById('sup-notif-hist-filters');
@@ -4324,9 +4306,6 @@ function _rendrTickets(el, list, ctx) {
 }
 
 // Charger tickets tech au chargement de la section tech
-var _origChargerTech = typeof chargerTech === 'function' ? chargerTech : null;
-
-
 // ════════════════════════════════════════════════════════════════
 // SYSTÈME TICKETS UNIFIÉ — rendu + filtres + chargement
 // ════════════════════════════════════════════════════════════════
@@ -4510,8 +4489,16 @@ function setMonTab(tab) {
     _tkLoadList('mon-tech-list', _monTechFilter, 'support_tech');
   }
   if (tab === 'global') {
-    _tkInitFilters('mon-global-filters', 'mon-global-', function(v) { _monGlobalFilter = v; _tkLoadList('mon-global-list', v, ''); });
-    _tkLoadList('mon-global-list', _monGlobalFilter, '');
+    // Vue structurée par entité
+    _tkInitFilters('mon-global-filters', 'mon-global-', function(v) {
+      _monGlobalFilter = v;
+      _tkLoadList('mon-global-bo', v, 'admin');
+      _tkLoadList('mon-global-sup', v, 'support_client');
+      _tkLoadList('mon-global-tech', v, 'support_tech');
+    });
+    _tkLoadList('mon-global-bo', _monGlobalFilter, 'admin');
+    _tkLoadList('mon-global-sup', _monGlobalFilter, 'support_client');
+    _tkLoadList('mon-global-tech', _monGlobalFilter, 'support_tech');
   }
 }
 

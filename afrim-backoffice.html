@@ -1713,7 +1713,7 @@ async function creerTicketSupport() {
       sujet: motif,
       description: desc,
       telephone: tel,
-      destinataire: dest,
+      service: _getServiceFromDestinaire(dest),
       priorite: prio
     });
     toast('✅ Ticket créé avec succès');
@@ -4353,16 +4353,20 @@ function _tkInitFilters(containerId, prefix, onFilter) {
 
 // Charge et affiche les tickets dans un conteneur
 async function _tkLoadList(listId, statut, destinataire) {
+  await _tkLoadListSvc(listId, statut, '');
+}
+
+async function _tkLoadListSvc(listId, statut, service) {
   var el = document.getElementById(listId);
   if (!el) return;
   el.innerHTML = '<div style="text-align:center;padding:14px"><div class="spin"></div></div>';
   var q = '/tickets?limit=40';
   if (statut) q += '&statut=' + encodeURIComponent(statut);
-  if (destinataire) q += '&destinataire=' + encodeURIComponent(destinataire);
+  if (service) q += '&service=' + encodeURIComponent(service);
   try {
     var r = await callAPI(q);
     var list = r.data || [];
-    _tkRender(el, list);
+    _tkRenderWithDelete(el, list);
   } catch(e) {
     el.innerHTML = '<div style="color:var(--r);font-size:12px;padding:8px">' + e.message + '</div>';
   }
@@ -4461,7 +4465,7 @@ function _tkRender(el, list) {
 // MONITORING — onglets et chargements
 // ════════════════════════════════════════════════════════════════
 function setMonTab(tab) {
-  var tabs = ['alertes','bo','sup','tech','global'];
+  var tabs = ['alertes','bo','sup','tech'];
   tabs.forEach(function(t) {
     var btn = document.getElementById('mon-tab-'+t);
     var panel = document.getElementById('mon-panel-'+t);
@@ -4472,34 +4476,24 @@ function setMonTab(tab) {
     }
     if (panel) panel.style.display = active ? 'block' : 'none';
   });
+  // Panel global (si présent dans l'ancienne version)
+  var gp = document.getElementById('mon-panel-global');
+  if (gp) gp.style.display = 'none';
   if (tab === 'alertes') {
-    // Charger alertes via chargerMonitoring existante
     var el = document.getElementById('m-alerts');
     if (!el || el.innerHTML.indexOf('spin') >= 0) chargerMonitoring();
   }
   if (tab === 'bo') {
-    _tkInitFilters('mon-bo-filters', 'mon-bo-', function(v) { _monBoFilter = v; _tkLoadList('mon-bo-list', v, 'admin'); });
-    _tkLoadList('mon-bo-list', _monBoFilter, 'admin');
+    _tkInitFilters('mon-bo-filters', 'mon-bo-', function(v) { _monBoFilter = v; _tkLoadListSvc('mon-bo-list', v, 'backoffice'); });
+    _tkLoadListSvc('mon-bo-list', _monBoFilter||'', 'backoffice');
   }
   if (tab === 'sup') {
-    _tkInitFilters('mon-sup-filters', 'mon-sup-', function(v) { _monSupFilter = v; _tkLoadList('mon-sup-list', v, 'support_client'); });
-    _tkLoadList('mon-sup-list', _monSupFilter, 'support_client');
+    _tkInitFilters('mon-sup-filters', 'mon-sup-', function(v) { _monSupFilter = v; _tkLoadListSvc('mon-sup-list', v, 'support_client'); });
+    _tkLoadListSvc('mon-sup-list', _monSupFilter||'', 'support_client');
   }
   if (tab === 'tech') {
-    _tkInitFilters('mon-tech-filters', 'mon-tech-', function(v) { _monTechFilter = v; _tkLoadList('mon-tech-list', v, 'support_tech'); });
-    _tkLoadList('mon-tech-list', _monTechFilter, 'support_tech');
-  }
-  if (tab === 'global') {
-    // Vue structurée par entité
-    _tkInitFilters('mon-global-filters', 'mon-global-', function(v) {
-      _monGlobalFilter = v;
-      _tkLoadList('mon-global-bo', v, 'admin');
-      _tkLoadList('mon-global-sup', v, 'support_client');
-      _tkLoadList('mon-global-tech', v, 'support_tech');
-    });
-    _tkLoadList('mon-global-bo', _monGlobalFilter, 'admin');
-    _tkLoadList('mon-global-sup', _monGlobalFilter, 'support_client');
-    _tkLoadList('mon-global-tech', _monGlobalFilter, 'support_tech');
+    _tkInitFilters('mon-tech-filters', 'mon-tech-', function(v) { _monTechFilter = v; _tkLoadListSvc('mon-tech-list', v, 'support_tech'); });
+    _tkLoadListSvc('mon-tech-list', _monTechFilter||'', 'support_tech');
   }
 }
 
@@ -4700,3 +4694,107 @@ function _techInitTicketsSafe() {
 </div>
 </body>
 </html>
+// ════════════════════════════════════════════════════════════════
+// RENDU TICKETS AVEC SUPPRESSION
+// ════════════════════════════════════════════════════════════════
+function _tkRenderWithDelete(el, list) {
+  el.innerHTML = '';
+  if (!list || !list.length) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:#9ca3af;font-size:12px;background:#f9fafb;border-radius:10px">Aucun ticket</div>';
+    return;
+  }
+  var statCols = {ouvert:'#f59e0b',en_cours:'#3b82f6',escalade:'#7c3aed',resolu:'#22c55e',ferme:'#9ca3af'};
+  var statLbls = {ouvert:'⏳ En attente',en_cours:'🔄 En cours',escalade:'🔺 Escaladé',resolu:'✅ Résolu',ferme:'🔒 Clôturé'};
+  list.forEach(function(tk) {
+    var sc = statCols[tk.statut] || '#9ca3af';
+    var sl = statLbls[tk.statut] || tk.statut;
+    var d = new Date(tk.dateCreation || Date.now());
+    var ds = d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})
+           + ' ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    var client = tk.client || {};
+    var cInfo = ((client.prenom||'') + ' ' + (client.nom||'')).trim() + (client.telephone ? ' · '+client.telephone : '');
+    var card = document.createElement('div');
+    card.style.cssText = 'background:#fff;border:1px solid #f3f4f6;border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.04)';
+    var r1 = document.createElement('div');
+    r1.style.cssText = 'display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px';
+    var sj = document.createElement('div');
+    sj.style.cssText = 'font-size:12px;font-weight:700;color:#111827;flex:1';
+    sj.textContent = tk.sujet;
+    var badgeWrap = document.createElement('div');
+    badgeWrap.style.cssText = 'display:flex;align-items:center;gap:5px;flex-shrink:0';
+    var badge = document.createElement('span');
+    badge.style.cssText = 'background:'+sc+'15;color:'+sc+';padding:2px 8px;border-radius:99px;font-size:9px;font-weight:700;border:1px solid '+sc+'30';
+    badge.textContent = sl;
+    // Bouton supprimer (admin seulement côté UI - le backend vérifie)
+    var delBtn = document.createElement('button');
+    delBtn.dataset.tid = tk.id;
+    delBtn.innerHTML = '&#x1F5D1;';
+    delBtn.title = 'Supprimer ce ticket';
+    delBtn.style.cssText = 'background:#fef2f2;border:none;border-radius:5px;padding:2px 6px;font-size:11px;color:#ef4444;cursor:pointer';
+    delBtn.onclick = function() {
+      var tid = this.dataset.tid;
+      if (!confirm('Supprimer définitivement ce ticket ?')) return;
+      callAPI('/tickets/'+tid, {method:'DELETE'}).then(function() {
+        card.style.opacity='0'; card.style.transition='opacity .3s';
+        setTimeout(function(){card.remove(); toast('Ticket supprimé');}, 300);
+      }).catch(function(e){ toast('Erreur: '+e.message, true); });
+    };
+    badgeWrap.appendChild(badge);
+    badgeWrap.appendChild(delBtn);
+    r1.appendChild(sj); r1.appendChild(badgeWrap);
+    card.appendChild(r1);
+    if (cInfo.trim()) {
+      var rc = document.createElement('div');
+      rc.style.cssText = 'font-size:10px;color:#2563eb;font-weight:600;margin-bottom:4px';
+      rc.textContent = '👤 ' + cInfo.trim();
+      card.appendChild(rc);
+    }
+    if (tk.description) {
+      var rd = document.createElement('div');
+      rd.style.cssText = 'font-size:11px;color:#6b7280;margin-bottom:5px;line-height:1.4';
+      rd.textContent = tk.description;
+      card.appendChild(rd);
+    }
+    var rmeta = document.createElement('div');
+    rmeta.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:8px';
+    var rdate = document.createElement('div');
+    rdate.style.cssText = 'font-size:9px;color:#9ca3af';
+    rdate.innerHTML = '&#x1F552; ' + ds;
+    rmeta.appendChild(rdate);
+    if (tk.reference) {
+      var rref = document.createElement('div');
+      rref.style.cssText = 'font-size:9px;color:#d1d5db;font-family:monospace';
+      rref.textContent = '#' + (tk.reference||'').slice(-8).toUpperCase();
+      rmeta.appendChild(rref);
+    }
+    card.appendChild(rmeta);
+    var btns = document.createElement('div');
+    btns.style.cssText = 'display:flex;gap:5px;flex-wrap:wrap';
+    function addBtn(label, style, statut) {
+      var b = document.createElement('button');
+      b.innerHTML = label;
+      b.style.cssText = 'padding:5px 10px;border-radius:7px;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit;' + style;
+      (function(id, st) { b.onclick = function() { changerStatutTicket(id, st); }; })(tk.id, statut);
+      btns.appendChild(b);
+    }
+    if (tk.statut === 'ouvert') addBtn('🔄 Prendre', 'background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8', 'en_cours');
+    if (tk.statut === 'ouvert' || tk.statut === 'en_cours' || tk.statut === 'escalade') {
+      addBtn('✅ Résolu', 'background:#ecfdf5;border:1px solid #a7f3d0;color:#059669', 'resolu');
+      addBtn('🔒 Clôturer', 'background:#f3f4f6;border:1px solid #e5e7eb;color:#6b7280', 'ferme');
+    }
+    if (tk.statut === 'resolu' || tk.statut === 'ferme') {
+      addBtn('🔄 Relancer', 'background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8', 'ouvert');
+    }
+    if (btns.childElementCount > 0) card.appendChild(btns);
+    el.appendChild(card);
+  });
+}
+
+// Mettre à jour creerTicketSupport pour envoyer le service
+function _getServiceFromDestinaire(dest) {
+  if (dest === 'support_tech') return 'support_tech';
+  if (dest === 'admin') return 'backoffice';
+  return 'support_client'; // défaut
+}
+
+

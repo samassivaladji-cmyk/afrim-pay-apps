@@ -422,8 +422,6 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
       </div>
     </div>
 
-  </div>
-  </div>
     <!-- ── Historique notifications (sous onglet Notif) ── -->
     <div id="sup-notif-hist-zone" style="display:none;margin-top:18px">
       <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">&#x1F4CB; Historique notifications</div>
@@ -480,16 +478,15 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
       <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px" id="tech-tk-filters"></div>
       <div id="tech-tk-list"><div style="padding:14px;text-align:center"><div class="spin"></div></div></div>
     </div>
-  </div>
   <nav class="bnav" id="bnav-tech"></nav>
 </div>
 
 
 <!-- ECRAN STATISTIQUES -->
 <div class="scr" id="s-stats">
-  <div style="background:#fff;padding:52px 20px 16px;border-bottom:1px solid #f3f4f6;position:sticky;top:0;z-index:10">
-    <div style="font-size:22px;font-weight:900">Statistiques</div>
-    <div style="color:var(--m);font-size:13px;margin-top:3px">Cumuls et courbes des opérations</div>
+  <div style="background:var(--y3);padding:52px 20px 16px;border-bottom:2px solid var(--y);position:sticky;top:0;z-index:10">
+    <div style="font-size:22px;font-weight:900;color:var(--y2)">Statistiques</div>
+    <div style="color:var(--y2);font-size:13px;margin-top:3px;opacity:.8">Cumuls et courbes des opérations</div>
   </div>
   <div style="padding:12px 16px 100px" id="stats-content">
     <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:14px">
@@ -974,7 +971,15 @@ function setTab(t){
   else if(t==='monitoring'){showScr('s-monitoring');chargerMonitoring();}
   else if(t==='support'){showScr('s-support');chargerSupport();}
   else if(t==='tech'){showScr('s-tech');chargerTech();}
-  else if(t==='stats'){showScr('s-stats');chargerStats();}
+  else if(t==='stats'){
+    var allScr=document.querySelectorAll('.scr');
+    for(var i=0;i<allScr.length;i++){allScr[i].classList.remove('on');allScr[i].style.display='';}
+    var statsEl=document.getElementById('s-stats');
+    if(statsEl){statsEl.classList.add('on');statsEl.style.display='flex';}
+    window.scrollTo(0,0);
+    buildNavs('stats');
+    chargerStats();
+  }
 }
 
 // ── LOGIN ──
@@ -2273,7 +2278,15 @@ function setTab(t){
   else if(t==='monitoring'){showScr('s-monitoring');chargerMonitoring();}
   else if(t==='support'){showScr('s-support');chargerSupport();}
   else if(t==='tech'){showScr('s-tech');chargerTech();}
-  else if(t==='stats'){showScr('s-stats');chargerStats();}
+  else if(t==='stats'){
+    var allScr=document.querySelectorAll('.scr');
+    for(var i=0;i<allScr.length;i++){allScr[i].classList.remove('on');allScr[i].style.display='';}
+    var statsEl=document.getElementById('s-stats');
+    if(statsEl){statsEl.classList.add('on');statsEl.style.display='flex';}
+    window.scrollTo(0,0);
+    buildNavs('stats');
+    chargerStats();
+  }
 }
 
 // ── LOGIN ──
@@ -3324,11 +3337,11 @@ function renderChart(type){
 
 async function chargerStats(){
   var el=document.getElementById('stats-content-inner');if(!el)return;
-  el.innerHTML='<div style="padding:24px;text-align:center"><div class="spin"></div></div>';
+  el.innerHTML='<div style="padding:24px;text-align:center"><div class="spin"></div><div style="font-size:11px;color:#9ca3af;margin-top:8px">Chargement des données...</div></div>';
   try{
-    var r=await apiGet('/transactions?limit=1000');
+    var r=await apiGet('/transactions?limit=500');
     statsRawData=r.data||[];
-    renderChart(currentChartType);
+    try{renderChart(currentChartType);}catch(ce){console.warn('Chart error:',ce.message);};
     var list=statsRawData;
     var now=new Date();var debut=new Date(now.getFullYear(),now.getMonth(),1);
     var cumT={depot:{n:0,m:0,comm:0},retrait:{n:0,m:0,comm:0},transfert:{n:0,m:0},paiement:{n:0,m:0}};
@@ -3369,7 +3382,15 @@ async function chargerStats(){
     }
     el.appendChild(mkSection('Ce mois-ci',cumM));
     el.appendChild(mkSection('Total historique',cumT));
-  }catch(e){el.innerHTML='<div style="color:var(--r);padding:12px;font-size:13px">'+e.message+'</div>';}
+  }catch(e){
+    el.innerHTML='<div style="background:#fef3c7;border:1.5px solid var(--y);border-radius:14px;padding:16px;text-align:center">'
+      +'<div style="font-size:24px;margin-bottom:8px">📊</div>'
+      +'<div style="font-size:14px;font-weight:800;color:var(--y2);margin-bottom:6px">Stats non disponibles</div>'
+      +'<div style="font-size:12px;color:#92400e">'+e.message+'</div>'
+      +'<div style="font-size:11px;color:#a16207;margin-top:8px">Connectez-vous à internet et réessayez</div>'
+      +'<button onclick="chargerStats()" style="margin-top:12px;padding:8px 16px;background:var(--y);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">↻ Réessayer</button>'
+      +"</div>";
+  }
 }
 
 var _notifUserId = null;

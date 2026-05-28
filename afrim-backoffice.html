@@ -163,35 +163,7 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
   </div>
   <div style="padding:12px 16px 100px">
     <div id="u-list"><div style="padding:40px;text-align:center"><div class="spin"></div></div></div>
-    <!-- Section Notifications -->
-    <div id="notifs-admin-section" style="margin-top:24px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div style="font-size:13px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.05em">🔔 Notifications système</div>
-        <div style="display:flex;gap:6px">
-          <select id="notif-filter-type" onchange="chargerNotifsAdmin()" style="font-size:11px;padding:4px 8px;border:1px solid #e5e7eb;border-radius:8px;font-family:inherit;color:#374151">
-            <option value="">Tous types</option>
-            <option value="transaction">Transactions</option>
-            <option value="systeme">Système</option>
-            <option value="kyc">KYC</option>
-            <option value="securite">Sécurité</option>
-          </select>
-          <select id="notif-filter-lu" onchange="chargerNotifsAdmin()" style="font-size:11px;padding:4px 8px;border:1px solid #e5e7eb;border-radius:8px;font-family:inherit;color:#374151">
-            <option value="">Tous</option>
-            <option value="false">Non lues</option>
-            <option value="true">Lues</option>
-          </select>
-        </div>
-      </div>
-      <!-- Toolbar sélection admin notifs -->
-      <div id="nadm-toolbar" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 10px;background:#f9fafb;border-radius:10px;border:1px solid #f3f4f6;margin-bottom:8px">
-        <span id="nadm-count" style="font-size:11px;font-weight:700;color:#6b7280;flex:1">0 notification(s)</span>
-        <button onclick="nadmToggleAll()" id="nadm-btn-all" style="background:#fff;border:1.5px solid var(--y);border-radius:8px;padding:4px 9px;font-size:11px;font-weight:700;color:var(--y2);cursor:pointer;font-family:inherit">☐ Tout</button>
-        <button id="nadm-btn-suppr" onclick="nadmSupprimerSelection()" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:4px 9px;font-size:11px;font-weight:700;color:#ef4444;cursor:pointer;font-family:inherit">🗑 Supprimer</button>
-        <button id="nadm-btn-partout" onclick="nadmSupprimerPourTous()" style="display:none;background:#fef3c7;border:1px solid var(--y);border-radius:8px;padding:4px 9px;font-size:11px;font-weight:700;color:var(--y2);cursor:pointer;font-family:inherit">🌍 Pour tous</button>
-      </div>
-      <div id="notifs-admin-list"><div style="padding:20px;text-align:center"><div class="spin"></div></div></div>
-      <button onclick="chargerPlusNotifsAdmin()" id="btn-plus-notifs" style="display:none;width:100%;padding:10px;background:#f3f4f6;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;color:#6b7280;margin-top:8px">Charger plus</button>
-    </div>
+
   </div>
   <nav class="bnav" id="bnav-users"></nav>
 </div>
@@ -347,21 +319,6 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
         <div id="campagnes-list"><div style="padding:16px;text-align:center"><div class="spin"></div></div></div>
       </div>
 
-      <!-- HISTORIQUE PAR GROUPE -->
-      <div style="margin-top:20px">
-        <div style="font-size:13px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px">📋 Historique par groupe</div>
-        <!-- Filtres rôles -->
-        <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px" id="sup-nh-filters"></div>
-        <!-- Toolbar sélection -->
-        <div id="sup-nh-toolbar" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 10px;background:#f9fafb;border-radius:10px;border:1px solid #f3f4f6;margin-bottom:8px">
-          <span id="sup-nh-count" style="font-size:11px;font-weight:700;color:#6b7280;flex:1">0 sélectionnée(s)</span>
-          <button onclick="supNhToggleAll()" id="sup-nh-btn-all" style="background:#fff;border:1.5px solid var(--y);border-radius:8px;padding:4px 9px;font-size:11px;font-weight:700;color:var(--y2);cursor:pointer;font-family:inherit">☐ Tout</button>
-          <button id="sup-nh-btn-suppr" onclick="supNhSupprimerSel()" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:4px 9px;font-size:11px;font-weight:700;color:#ef4444;cursor:pointer;font-family:inherit">🗑 Supprimer</button>
-          <button id="sup-nh-btn-partout" onclick="supNhSupprimerPartout()" style="display:none;background:#fef3c7;border:1px solid var(--y);border-radius:8px;padding:4px 9px;font-size:11px;font-weight:700;color:var(--y2);cursor:pointer;font-family:inherit">🌍 Pour tous</button>
-        </div>
-        <div id="sup-nh-list"></div>
-        <button id="sup-nh-plus" onclick="supNhPlus()" style="display:none;width:100%;padding:8px;background:#f3f4f6;border:none;border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit;color:#6b7280;margin-top:6px">Charger plus ▼</button>
-      </div>
     </div>
 
     <!-- PANNEAU 2 : RECHERCHE CLIENT -->
@@ -991,7 +948,7 @@ function buildNavs(activeTab){
 function setTab(t){
   buildNavs(t);
   if(t==='home'){showScr('s-home');chargerAccueil();}
-  else if(t==='users'){showScr('s-users');chargerUsers();chargerNotifsAdmin();}
+  else if(t==='users'){showScr('s-users');chargerUsers();}
   else if(t==='txns'){showScr('s-txns');chargerTxns();}
   else if(t==='monitoring'){showScr('s-monitoring');chargerMonitoring();}
   else if(t==='support'){showScr('s-support');chargerSupport();}
@@ -1586,10 +1543,7 @@ function setSupTab(tab) {
     _tkInitFilters('sup-tk-filters', 'sup-tk-', function(v){ _tkLoadList('sup-tk-list', v, ''); });
     _tkLoadList('sup-tk-list', '', '');
   }
-  if (tab === 'notif') {
-    // Historique individuel par groupe
-    _initSupNotifHist();
-  }
+
 }
 
 function filtrerTicketsSupport(statut) {
@@ -2297,7 +2251,7 @@ function buildNavGrid(){
 function setTab(t){
   buildNavs(t);
   if(t==='home'){showScr('s-home');chargerAccueil();}
-  else if(t==='users'){showScr('s-users');chargerUsers();chargerNotifsAdmin();}
+  else if(t==='users'){showScr('s-users');chargerUsers();}
   else if(t==='txns'){showScr('s-txns');chargerTxns();}
   else if(t==='monitoring'){showScr('s-monitoring');chargerMonitoring();}
   else if(t==='support'){showScr('s-support');chargerSupport();}

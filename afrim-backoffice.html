@@ -377,7 +377,8 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
             <select class="inp" id="tk-dest">
               <option value="support_client">🎧 Support Client</option>
               <option value="support_tech">🛠️ Support Tech</option>
-              <option value="admin">👑 Admin</option>
+              <option value="backoffice">🖥️ Back-Office</option>
+              <option value="admin">👑 Admin / Superviseur</option>
             </select>
           </div>
           <div style="flex:1">
@@ -1545,8 +1546,8 @@ function setSupTab(tab) {
   if (zoneTK) zoneTK.style.display = tab === 'tickets' ? 'block' : 'none';
   if (tab === 'tickets') {
     chargerTicketsSupport(_supTicketFilter||'');
-    _tkInitFilters('sup-tk-filters', 'sup-tk-', function(v){ _tkLoadList('sup-tk-list', v, ''); });
-    _tkLoadList('sup-tk-list', '', '');
+    _tkInitFilters('sup-tk-filters', 'sup-tk-', function(v){ _tkLoadList('sup-tk-list', v, 'support_client'); });
+    _tkLoadList('sup-tk-list', '', 'support_client');
   }
 
 }
@@ -1701,7 +1702,7 @@ async function creerTicketSupport() {
       sujet: motif,
       description: desc,
       telephone: tel,
-      destinataire: dest,
+      service: dest,
       priorite: prio
     });
     toast('✅ Ticket créé avec succès');
@@ -4818,8 +4819,8 @@ function setMonTab(tab) {
     if (!el || el.innerHTML.indexOf('spin') >= 0) chargerMonitoring();
   }
   if (tab === 'bo') {
-    _tkInitFilters('mon-bo-filters', 'mon-bo-', function(v) { _monBoFilter = v; _tkLoadList('mon-bo-list', v, 'admin'); });
-    _tkLoadList('mon-bo-list', _monBoFilter, 'admin');
+    _tkInitFilters('mon-bo-filters', 'mon-bo-', function(v) { _monBoFilter = v; _tkLoadList('mon-bo-list', v, 'backoffice'); });
+    _tkLoadList('mon-bo-list', _monBoFilter, 'backoffice');
   }
   if (tab === 'sup') {
     _tkInitFilters('mon-sup-filters', 'mon-sup-', function(v) { _monSupFilter = v; _tkLoadList('mon-sup-list', v, 'support_client'); });
@@ -4833,11 +4834,11 @@ function setMonTab(tab) {
     // Vue structurée par entité
     _tkInitFilters('mon-global-filters', 'mon-global-', function(v) {
       _monGlobalFilter = v;
-      _tkLoadList('mon-global-bo', v, 'admin');
+      _tkLoadList('mon-global-bo', v, 'backoffice');
       _tkLoadList('mon-global-sup', v, 'support_client');
       _tkLoadList('mon-global-tech', v, 'support_tech');
     });
-    _tkLoadList('mon-global-bo', _monGlobalFilter, 'admin');
+    _tkLoadList('mon-global-bo', _monGlobalFilter, 'backoffice');
     _tkLoadList('mon-global-sup', _monGlobalFilter, 'support_client');
     _tkLoadList('mon-global-tech', _monGlobalFilter, 'support_tech');
   }
@@ -5045,8 +5046,8 @@ if (_origChargerTechFn) {
   chargerTech = async function() {
     await _origChargerTechFn();
     setTimeout(function() {
-      _tkInitFilters('tech-tk-filters', 'tech-tk-', function(v){ _techTkFilter2 = v; _tkLoadList('tech-tk-list', v, ''); });
-      _tkLoadList('tech-tk-list', '', '');
+      _tkInitFilters('tech-tk-filters', 'tech-tk-', function(v){ _techTkFilter2 = v; _tkLoadList('tech-tk-list', v, 'support_tech'); });
+      _tkLoadList('tech-tk-list', '', 'support_tech');
     }, 400);
   };
 }

@@ -346,6 +346,22 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
         </div>
         <div id="campagnes-list"><div style="padding:16px;text-align:center"><div class="spin"></div></div></div>
       </div>
+
+      <!-- HISTORIQUE PAR GROUPE -->
+      <div style="margin-top:20px">
+        <div style="font-size:13px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px">📋 Historique par groupe</div>
+        <!-- Filtres rôles -->
+        <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px" id="sup-nh-filters"></div>
+        <!-- Toolbar sélection -->
+        <div id="sup-nh-toolbar" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 10px;background:#f9fafb;border-radius:10px;border:1px solid #f3f4f6;margin-bottom:8px">
+          <span id="sup-nh-count" style="font-size:11px;font-weight:700;color:#6b7280;flex:1">0 sélectionnée(s)</span>
+          <button onclick="supNhToggleAll()" id="sup-nh-btn-all" style="background:#fff;border:1.5px solid var(--y);border-radius:8px;padding:4px 9px;font-size:11px;font-weight:700;color:var(--y2);cursor:pointer;font-family:inherit">☐ Tout</button>
+          <button id="sup-nh-btn-suppr" onclick="supNhSupprimerSel()" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:4px 9px;font-size:11px;font-weight:700;color:#ef4444;cursor:pointer;font-family:inherit">🗑 Supprimer</button>
+          <button id="sup-nh-btn-partout" onclick="supNhSupprimerPartout()" style="display:none;background:#fef3c7;border:1px solid var(--y);border-radius:8px;padding:4px 9px;font-size:11px;font-weight:700;color:var(--y2);cursor:pointer;font-family:inherit">🌍 Pour tous</button>
+        </div>
+        <div id="sup-nh-list"></div>
+        <button id="sup-nh-plus" onclick="supNhPlus()" style="display:none;width:100%;padding:8px;background:#f3f4f6;border:none;border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit;color:#6b7280;margin-top:6px">Charger plus ▼</button>
+      </div>
     </div>
 
     <!-- PANNEAU 2 : RECHERCHE CLIENT -->
@@ -1571,7 +1587,8 @@ function setSupTab(tab) {
     _tkLoadList('sup-tk-list', '', '');
   }
   if (tab === 'notif') {
-    // L'historique individuel est remplacé par chargerCampagnes (appelé dans setSupTab)
+    // Historique individuel par groupe
+    _initSupNotifHist();
   }
 }
 
@@ -4834,6 +4851,58 @@ chargerMonitoring = async function() {
 // ════════════════════════════════════════════════════════════════
 var _supNhFilter = '';
 var _supNhOffset = 0;
+var _supNhSel = {};
+var _supNhCache = [];
+
+function _supNhUpdateToolbar() {
+  var count = Object.keys(_supNhSel).length;
+  var tb = document.getElementById('sup-nh-toolbar');
+  var cEl = document.getElementById('sup-nh-count');
+  var bAll = document.getElementById('sup-nh-btn-all');
+  var bSuppr = document.getElementById('sup-nh-btn-suppr');
+  var bPartout = document.getElementById('sup-nh-btn-partout');
+  if (tb) tb.style.display = _supNhCache.length ? 'flex' : 'none';
+  if (cEl) cEl.textContent = count > 0 ? count+' sélectionnée(s)' : _supNhCache.length+' notification(s)';
+  if (bAll) bAll.textContent = (count === _supNhCache.length && _supNhCache.length > 0) ? '☑ Désélect.' : '☐ Tout';
+  if (bSuppr) bSuppr.style.display = count > 0 ? '' : 'none';
+  if (bPartout) bPartout.style.display = count === 1 ? '' : 'none';
+}
+
+function supNhToggleAll() {
+  var count = Object.keys(_supNhSel).length;
+  if (count === _supNhCache.length && _supNhCache.length > 0) _supNhSel = {};
+  else _supNhCache.forEach(function(n){ _supNhSel[n.id] = n; });
+  _supNhCache.forEach(function(n){
+    var cb = document.getElementById('supnhcb-'+n.id);
+    var card = document.getElementById('supnhcard-'+n.id);
+    if (cb) cb.checked = !!_supNhSel[n.id];
+    if (card) { card.style.background = _supNhSel[n.id] ? '#fef3c7' : '#fff'; card.style.borderColor = _supNhSel[n.id] ? 'var(--y)' : '#f3f4f6'; }
+  });
+  _supNhUpdateToolbar();
+}
+
+async function supNhSupprimerSel() {
+  var ids = Object.keys(_supNhSel);
+  if (!ids.length) return;
+  if (!confirm('Supprimer '+ids.length+' notification(s) ?')) return;
+  try {
+    await callAPI('/notifications/bulk', {method:'DELETE', body:JSON.stringify({ids:ids})});
+    toast('✓ '+ids.length+' notification(s) supprimée(s)');
+    _supNhSel = {}; _supNhOffset = 0; _loadSupNh(false);
+  } catch(e) { toast('Erreur: '+e.message, true); }
+}
+
+async function supNhSupprimerPartout() {
+  var ids = Object.keys(_supNhSel);
+  if (ids.length !== 1) return;
+  var n = _supNhSel[ids[0]];
+  if (!confirm('Supprimer "'+n.titre+'" chez TOUS les destinataires ?')) return;
+  try {
+    await callAPI('/notifications/bulk', {method:'DELETE', body:JSON.stringify({partout:true, titre:n.titre, message:n.message})});
+    toast('✓ Supprimée pour tous');
+    _supNhSel = {}; _supNhOffset = 0; _loadSupNh(false);
+  } catch(e) { toast('Erreur: '+e.message, true); }
+}
 
 function _initSupNotifHist() {
   var fBar = document.getElementById('sup-nh-filters');
@@ -4866,7 +4935,7 @@ function _initSupNotifHist() {
 async function _loadSupNh(append) {
   var el = document.getElementById('sup-nh-list');
   if (!el) return;
-  if (!append) el.innerHTML = '<div style="text-align:center;padding:12px"><div class="spin"></div></div>';
+  if (!append) { el.innerHTML = '<div style="text-align:center;padding:12px"><div class="spin"></div></div>'; _supNhSel = {}; }
   var q = '/notifications/all?limit=15&offset=' + _supNhOffset;
   if (_supNhFilter === 'support') q += '&role=support';
   else if (_supNhFilter) q += '&role=' + encodeURIComponent(_supNhFilter);
@@ -4874,6 +4943,7 @@ async function _loadSupNh(append) {
     var r = await callAPI(q);
     var list = (r.data && r.data.notifications) || [];
     var total = (r.data && r.data.total) || 0;
+    if (!append) _supNhCache = list; else _supNhCache = _supNhCache.concat(list);
     var cols = {transaction:'#3b82f6',kyc:'#22c55e',securite:'#f59e0b',systeme:'#8b5cf6',parrainage:'#f97316'};
     var frag = document.createDocumentFragment();
     list.forEach(function(n) {
@@ -4881,46 +4951,53 @@ async function _loadSupNh(append) {
       var d = new Date(n.created_at || Date.now());
       var ds = d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}) + ' ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
       var user = ((n.prenom||'') + (n.nom?' '+n.nom:'')).trim() || (n.telephone||'');
-      var row = document.createElement('div');
-      row.style.cssText = 'background:#fff;border-radius:10px;padding:10px 13px;margin-bottom:6px;border:1px solid #f3f4f6';
-      // Header : titre + date + suppr
+      var checked = !!_supNhSel[n.id];
+      var card = document.createElement('div');
+      card.id = 'supnhcard-'+n.id;
+      card.style.cssText = 'background:'+(checked?'#fef3c7':'#fff')+';border-radius:10px;padding:10px 12px;margin-bottom:6px;border:1.5px solid '+(checked?'var(--y)':'#f3f4f6')+';cursor:pointer;transition:background .15s';
+      var inner = document.createElement('div');
+      inner.style.cssText = 'display:flex;align-items:flex-start;gap:8px';
+      var cb = document.createElement('input');
+      cb.type = 'checkbox'; cb.id = 'supnhcb-'+n.id; cb.checked = checked;
+      cb.style.cssText = 'width:16px;height:16px;accent-color:var(--y);cursor:pointer;flex-shrink:0;margin-top:2px';
+      (function(nId, nData) {
+        cb.addEventListener('change', function() {
+          if (this.checked) _supNhSel[nId] = nData; else delete _supNhSel[nId];
+          var c2 = document.getElementById('supnhcard-'+nId);
+          if (c2) { c2.style.background = this.checked?'#fef3c7':'#fff'; c2.style.borderColor = this.checked?'var(--y)':'#f3f4f6'; }
+          _supNhUpdateToolbar();
+        });
+        card.addEventListener('click', function(e) {
+          if (e.target.type === 'checkbox') return;
+          cb.checked = !cb.checked; cb.dispatchEvent(new Event('change'));
+        });
+      })(n.id, n);
+      var body = document.createElement('div');
+      body.style.cssText = 'flex:1;min-width:0';
       var h = document.createElement('div');
-      h.style.cssText = 'display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:3px';
+      h.style.cssText = 'display:flex;justify-content:space-between;align-items:flex-start;gap:4px;margin-bottom:2px';
       var titre = document.createElement('div');
       titre.style.cssText = 'font-size:11px;font-weight:700;color:#111827;flex:1';
       titre.textContent = n.titre;
-      var metaR = document.createElement('div');
-      metaR.style.cssText = 'display:flex;align-items:center;gap:5px;flex-shrink:0';
       var ts = document.createElement('span');
-      ts.style.cssText = 'font-size:9px;color:#9ca3af;white-space:nowrap';
+      ts.style.cssText = 'font-size:9px;color:#9ca3af;white-space:nowrap;flex-shrink:0';
       ts.textContent = ds;
-      var del = document.createElement('button');
-      del.dataset.nid = n.id;
-      del.innerHTML = '&#x2715;';
-      del.style.cssText = 'background:#fef2f2;border:none;border-radius:5px;padding:2px 7px;font-size:10px;color:#ef4444;cursor:pointer;font-family:inherit';
-      del.onclick = function() {
-        var nid = this.dataset.nid;
-        var rowEl = this.closest('[style*="border:1px solid #f3f4f6"]');
-        if (!confirm('Supprimer ?')) return;
-        callAPI('/notifications/'+nid, {method:'DELETE'}).then(function(){
-          if (rowEl) { rowEl.style.opacity='0'; rowEl.style.transition='opacity .3s'; setTimeout(function(){rowEl.remove();},300); }
-          toast('Notification supprimée');
-        }).catch(function(e){ toast('Erreur: '+e.message, true); });
-      };
-      metaR.appendChild(ts); metaR.appendChild(del);
-      h.appendChild(titre); h.appendChild(metaR);
+      h.appendChild(titre); h.appendChild(ts);
       var msg = document.createElement('div');
       msg.style.cssText = 'font-size:11px;color:#6b7280;margin-bottom:2px';
       msg.textContent = n.message;
       var inf = document.createElement('div');
       inf.style.cssText = 'font-size:9px;color:#9ca3af';
       inf.innerHTML = user + (n.role ? ' &middot; '+n.role : '') + ' <span style="color:'+col+'">&middot; '+(n.type||'')+'</span>';
-      row.appendChild(h); row.appendChild(msg); row.appendChild(inf);
-      frag.appendChild(row);
+      body.appendChild(h); body.appendChild(msg); body.appendChild(inf);
+      inner.appendChild(cb); inner.appendChild(body);
+      card.appendChild(inner);
+      frag.appendChild(card);
     });
     if (!append) el.innerHTML = '';
     if (!list.length && !append) el.innerHTML = '<div style="text-align:center;padding:14px;color:#9ca3af;font-size:12px">Aucune notification</div>';
     else el.appendChild(frag);
+    _supNhUpdateToolbar();
     var btnPlus = document.getElementById('sup-nh-plus');
     if (btnPlus) btnPlus.style.display = list.length >= 15 && (_supNhOffset+list.length) < total ? 'block' : 'none';
   } catch(e) { if (!append && el) el.innerHTML = '<div style="color:var(--r);font-size:11px;padding:8px">'+e.message+'</div>'; }

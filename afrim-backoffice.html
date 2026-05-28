@@ -312,9 +312,14 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
 
       <!-- HISTORIQUE CENTRALISÉ DES CAMPAGNES -->
       <div style="margin-top:20px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <div style="font-size:13px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.04em">📋 Historique des envois</div>
           <button onclick="chargerCampagnes()" style="background:#f3f4f6;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;color:#6b7280;cursor:pointer;font-family:inherit">↻ Actualiser</button>
+        </div>
+        <div id="camp-toolbar" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 10px;background:#f9fafb;border-radius:10px;border:1px solid #f3f4f6;margin-bottom:8px">
+          <span id="camp-sel-count" style="font-size:11px;font-weight:700;color:#6b7280;flex:1">0 sélectionnée(s)</span>
+          <button onclick="campToggleAll()" id="camp-btn-all" style="background:#fff;border:1.5px solid var(--y);border-radius:8px;padding:4px 9px;font-size:11px;font-weight:700;color:var(--y2);cursor:pointer;font-family:inherit">☐ Tout</button>
+          <button id="camp-btn-suppr" onclick="campSupprimerSel()" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:4px 9px;font-size:11px;font-weight:700;color:#ef4444;cursor:pointer;font-family:inherit">🗑 Supprimer</button>
         </div>
         <div id="campagnes-list"><div style="padding:16px;text-align:center"><div class="spin"></div></div></div>
       </div>
@@ -3614,15 +3619,61 @@ function campDestChange(){
 }
 
 // ── HISTORIQUE CAMPAGNES NOTIFICATIONS ──
+var _campSel={};
+var _campCache=[];
+
+function _campUpdateToolbar(){
+  var count=Object.keys(_campSel).length;
+  var total=_campCache.length;
+  var tb=document.getElementById('camp-toolbar');
+  var cEl=document.getElementById('camp-sel-count');
+  var bAll=document.getElementById('camp-btn-all');
+  var bSuppr=document.getElementById('camp-btn-suppr');
+  if(tb) tb.style.display=total>0?'flex':'none';
+  if(cEl) cEl.textContent=count>0?count+' sélectionnée(s)':total+' envoi(s)';
+  if(bAll) bAll.textContent=(count===total&&total>0)?'☑ Désélect.':'☐ Tout';
+  if(bSuppr) bSuppr.style.display=count>0?'':'none';
+}
+
+function campToggleAll(){
+  var count=Object.keys(_campSel).length,total=_campCache.length;
+  if(count===total&&total>0) _campSel={};
+  else _campCache.forEach(function(c){_campSel[c.id]=c;});
+  _campCache.forEach(function(c){
+    var cb=document.getElementById('campcb-'+c.id);
+    var card=document.getElementById('campcard-'+c.id);
+    if(cb) cb.checked=!!_campSel[c.id];
+    if(card){card.style.background=_campSel[c.id]?'#fef3c7':'#fff';card.style.borderColor=_campSel[c.id]?'var(--y)':'#f3f4f6';}
+  });
+  _campUpdateToolbar();
+}
+
+async function campSupprimerSel(){
+  var ids=Object.keys(_campSel);
+  if(!ids.length) return;
+  if(!confirm('Supprimer '+ids.length+' notification(s) chez TOUS leurs destinataires ?')) return;
+  try{
+    for(var i=0;i<ids.length;i++){
+      await callAPI('/notif-campagnes/'+ids[i],{method:'DELETE'});
+    }
+    toast('✓ '+ids.length+' campagne(s) supprimée(s)');
+    _campSel={};
+    chargerCampagnes();
+  }catch(e){toast('Erreur: '+e.message,true);}
+}
+
 async function chargerCampagnes(){
   var el=document.getElementById('campagnes-list');
   if(!el)return;
   el.innerHTML='<div style="padding:16px;text-align:center"><div class="spin"></div></div>';
+  _campSel={};
   try{
     var r=await apiGet('/notif-campagnes?limit=50');
-    var list=r.campagnes||[];
+    var list=(r.data&&r.data.campagnes)||r.campagnes||[];
+    _campCache=list;
     if(!list.length){
       el.innerHTML='<div style="text-align:center;padding:16px;color:#9ca3af;font-size:12px">Aucun envoi enregistré</div>';
+      _campUpdateToolbar();
       return;
     }
     var cibleIcons={'client':'👤','agent':'🏪','business':'🏬','mini_master':'🔵','master':'🟤','superviseur':'🟠','support_client':'🎧','support_tech':'🛠️','admin':'👑','tous':'🌍','all':'🌍','all_clients':'👥','all_staff':'🏢'};
@@ -3631,25 +3682,51 @@ async function chargerCampagnes(){
       var d=new Date(c.created_at);
       var ds=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
       var cibles=c.cible.split(',').map(function(s){s=s.trim();return (cibleIcons[s]||'📢')+' '+s;}).join(', ');
+      var checked=!!_campSel[c.id];
       var card=document.createElement('div');
-      card.style.cssText='background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:12px 14px;margin-bottom:8px';
-      card.innerHTML=
-        '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">'
-          +'<div style="flex:1;min-width:0">'
-            +'<div style="font-size:13px;font-weight:800;color:#111827;margin-bottom:2px">'+c.titre+'</div>'
-            +'<div style="font-size:11px;color:#6b7280;margin-bottom:6px">'+c.message+'</div>'
-            +'<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">'
-              +'<span style="background:#fef3c7;color:var(--y2);border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700">'+cibles+'</span>'
-              +(c.nb_destinataires?'<span style="background:#ecfdf5;color:#059669;border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700">'+c.nb_destinataires+' destinataire(s)</span>':'')
-              +'<span style="font-size:10px;color:#9ca3af">'+ds+'</span>'
-              +(c.envoye_par?'<span style="font-size:10px;color:#9ca3af">· par '+c.envoye_par+'</span>':'')
-            +'</div>'
-          +'</div>'
-          +(isSuperAdmin()?'<button data-cid="'+c.id+'" onclick="supprimerCampagne(this.dataset.cid)" style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;color:#ef4444;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap">🗑 Supprimer</button>':'')
+      card.id='campcard-'+c.id;
+      card.style.cssText='background:'+(checked?'#fef3c7':'#fff')+';border:1.5px solid '+(checked?'var(--y)':'#f3f4f6')+';border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:background .15s';
+      var cb=document.createElement('input');
+      cb.type='checkbox';cb.id='campcb-'+c.id;cb.checked=checked;
+      cb.style.cssText='width:17px;height:17px;accent-color:var(--y);cursor:pointer;flex-shrink:0;margin-top:2px';
+      (function(cId,cData){
+        cb.addEventListener('change',function(){
+          if(this.checked)_campSel[cId]=cData;else delete _campSel[cId];
+          var card2=document.getElementById('campcard-'+cId);
+          if(card2){card2.style.background=this.checked?'#fef3c7':'#fff';card2.style.borderColor=this.checked?'var(--y)':'#f3f4f6';}
+          _campUpdateToolbar();
+        });
+        card.addEventListener('click',function(e){
+          if(e.target.type==='checkbox'||e.target.tagName==='BUTTON') return;
+          cb.checked=!cb.checked;cb.dispatchEvent(new Event('change'));
+        });
+      })(c.id,c);
+      var inner=document.createElement('div');
+      inner.style.cssText='display:flex;align-items:flex-start;gap:10px';
+      var body=document.createElement('div');
+      body.style.cssText='flex:1;min-width:0';
+      body.innerHTML=
+        '<div style="font-size:13px;font-weight:800;color:#111827;margin-bottom:2px">'+c.titre+'</div>'
+        +'<div style="font-size:11px;color:#6b7280;margin-bottom:6px">'+c.message+'</div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">'
+          +'<span style="background:#fef3c7;color:var(--y2);border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700">'+cibles+'</span>'
+          +(c.nb_destinataires?'<span style="background:#ecfdf5;color:#059669;border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700">'+c.nb_destinataires+' destinataire(s)</span>':'')
+          +'<span style="font-size:10px;color:#9ca3af">'+ds+'</span>'
+          +(c.envoye_par?'<span style="font-size:10px;color:#9ca3af">· par '+c.envoye_par+'</span>':'')
         +'</div>';
+      var btnSuppr=document.createElement('button');
+      btnSuppr.dataset.cid=c.id;
+      btnSuppr.textContent='🗑';
+      btnSuppr.title='Supprimer';
+      btnSuppr.style.cssText='background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:6px 8px;font-size:14px;color:#ef4444;cursor:pointer;flex-shrink:0';
+      (function(cId){ btnSuppr.onclick=function(e){e.stopPropagation();supprimerCampagne(cId);}; })(c.id);
+      inner.appendChild(cb);inner.appendChild(body);
+      if(isSuperAdmin()) inner.appendChild(btnSuppr);
+      card.appendChild(inner);
       frag.appendChild(card);
     });
     el.innerHTML='';el.appendChild(frag);
+    _campUpdateToolbar();
   }catch(e){
     el.innerHTML='<div style="color:var(--r);padding:12px;font-size:12px">'+e.message+'</div>';
   }
@@ -3661,6 +3738,7 @@ async function supprimerCampagne(id){
     var r=await callAPI('/notif-campagnes/'+id,{method:'DELETE'});
     var data=r.data||r;
     toast('✓ Supprimée ('+(data.notifs_supprimees||0)+' notifs)');
+    delete _campSel[id];
     chargerCampagnes();
   }catch(e){toast('Erreur: '+e.message,true);}
 }

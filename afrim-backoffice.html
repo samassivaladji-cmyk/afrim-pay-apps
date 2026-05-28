@@ -182,6 +182,13 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
           </select>
         </div>
       </div>
+      <!-- Toolbar sélection admin notifs -->
+      <div id="nadm-toolbar" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 10px;background:#f9fafb;border-radius:10px;border:1px solid #f3f4f6;margin-bottom:8px">
+        <span id="nadm-count" style="font-size:11px;font-weight:700;color:#6b7280;flex:1">0 notification(s)</span>
+        <button onclick="nadmToggleAll()" id="nadm-btn-all" style="background:#fff;border:1.5px solid var(--y);border-radius:8px;padding:4px 9px;font-size:11px;font-weight:700;color:var(--y2);cursor:pointer;font-family:inherit">☐ Tout</button>
+        <button id="nadm-btn-suppr" onclick="nadmSupprimerSelection()" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:4px 9px;font-size:11px;font-weight:700;color:#ef4444;cursor:pointer;font-family:inherit">🗑 Supprimer</button>
+        <button id="nadm-btn-partout" onclick="nadmSupprimerPourTous()" style="display:none;background:#fef3c7;border:1px solid var(--y);border-radius:8px;padding:4px 9px;font-size:11px;font-weight:700;color:var(--y2);cursor:pointer;font-family:inherit">🌍 Pour tous</button>
+      </div>
       <div id="notifs-admin-list"><div style="padding:20px;text-align:center"><div class="spin"></div></div></div>
       <button onclick="chargerPlusNotifsAdmin()" id="btn-plus-notifs" style="display:none;width:100%;padding:10px;background:#f3f4f6;border:none;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;color:#6b7280;margin-top:8px">Charger plus</button>
     </div>
@@ -4053,31 +4060,105 @@ async function chargerPlusNotifsAdmin() {
   } catch(e) {}
 }
 
+var _nadmSel = {};
+var _nadmCache = [];
+
+function _nadmUpdateToolbar() {
+  var count = Object.keys(_nadmSel).length;
+  var total = _nadmCache.length;
+  var cEl=document.getElementById('nadm-count'), bAll=document.getElementById('nadm-btn-all');
+  var bSuppr=document.getElementById('nadm-btn-suppr'), bPartout=document.getElementById('nadm-btn-partout');
+  if(cEl) cEl.textContent = count>0 ? count+' sélectionnée(s)' : total+' notification(s)';
+  if(bAll) bAll.textContent = (count===total&&total>0) ? '☑ Désélect.' : '☐ Tout';
+  if(bSuppr) bSuppr.style.display = count>0?'':'none';
+  if(bPartout) bPartout.style.display = count===1?'':'none';
+}
+
+function nadmToggleAll() {
+  var count=Object.keys(_nadmSel).length, total=_nadmCache.length;
+  if(count===total&&total>0) _nadmSel={};
+  else _nadmCache.forEach(function(n){_nadmSel[n.id]=n;});
+  _nadmCache.forEach(function(n){
+    var cb=document.getElementById('nadmcb-'+n.id), card=document.getElementById('nadmcard-'+n.id);
+    if(cb) cb.checked=!!_nadmSel[n.id];
+    if(card){card.style.background=_nadmSel[n.id]?'#fef3c7':'#fff';card.style.borderColor=_nadmSel[n.id]?'var(--y)':'#f3f4f6';}
+  });
+  _nadmUpdateToolbar();
+}
+
+async function nadmSupprimerSelection() {
+  var ids=Object.keys(_nadmSel);
+  if(!ids.length) return;
+  if(!confirm('Supprimer '+ids.length+' notification(s) ?')) return;
+  try{
+    await callAPI('/notifications/bulk',{method:'DELETE',body:JSON.stringify({ids:ids})});
+    toast('✓ '+ids.length+' notification(s) supprimée(s)');
+    _nadmSel={}; chargerNotifsAdmin();
+  }catch(e){toast('Erreur: '+e.message,true);}
+}
+
+async function nadmSupprimerPourTous() {
+  var ids=Object.keys(_nadmSel);
+  if(ids.length!==1) return;
+  var n=_nadmSel[ids[0]];
+  if(!confirm('Supprimer "'+n.titre+'" pour TOUS les utilisateurs qui l\'ont reçue ?')) return;
+  try{
+    await callAPI('/notifications/bulk',{method:'DELETE',body:JSON.stringify({partout:true,titre:n.titre,message:n.message})});
+    toast('✓ Supprimée pour tous'); _nadmSel={}; chargerNotifsAdmin();
+  }catch(e){toast('Erreur: '+e.message,true);}
+}
+
 function afficherNotifsAdmin(list, append) {
-  var el = document.getElementById('notifs-admin-list');
-  if (!el) return;
-  if (!list.length && !append) { el.innerHTML = '<div style="text-align:center;padding:20px;color:#9ca3af;font-size:12px">Aucune notification</div>'; return; }
-  var cols = {transaction:'#3b82f6', kyc:'#22c55e', securite:'#f59e0b', systeme:'#8b5cf6', parrainage:'#f97316'};
-  var html = list.map(function(n) {
-    var col = cols[n.type] || '#6b7280';
-    var d = new Date(n.created_at || Date.now());
-    var ds = d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}) + ' ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-    var user = (n.prenom||'') + ' ' + (n.nom||'') + (n.telephone?' ('+n.telephone+')':'') + (n.role?' · '+n.role:'');
-    return '<div style="background:#fff;border-radius:11px;padding:11px 13px;margin-bottom:7px;border:1px solid #f3f4f6;display:flex;align-items:flex-start;gap:10px">'
-      + '<div style="width:8px;height:8px;border-radius:50%;background:' + (n.lu?'#d1d5db':col) + ';margin-top:5px;flex-shrink:0"></div>'
-      + '<div style="flex:1;min-width:0">'
-      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">'
-      + '<div style="font-size:12px;font-weight:700;color:#111827">' + n.titre + '</div>'
-      + '<div style="display:flex;align-items:center;gap:6px">'
-      + '<span style="font-size:10px;color:#9ca3af;white-space:nowrap">' + ds + '</span>'
-      + '<button data-notif-id="' + n.id + '" onclick="supprimerNotifAdmin(this.dataset.notifId,this)" style="background:#fef2f2;border:none;border-radius:6px;padding:2px 7px;font-size:10px;color:#ef4444;cursor:pointer;font-family:inherit">&#x2715;</button>'
-      + '</div></div>'
-      + '<div style="font-size:11px;color:#6b7280;margin-top:2px">' + n.message + '</div>'
-      + '<div style="font-size:10px;color:#9ca3af;margin-top:3px">' + user.trim() + ' · <span style="color:' + col + '">' + (n.type||'') + '</span></div>'
-      + '</div></div>';
-  }).join('');
-  if (append) el.innerHTML += html;
-  else el.innerHTML = html;
+  var el=document.getElementById('notifs-admin-list');
+  if(!el) return;
+  if(!append){_nadmCache=list;_nadmSel={};}
+  else _nadmCache=_nadmCache.concat(list);
+  if(!list.length&&!append){
+    el.innerHTML='<div style="text-align:center;padding:20px;color:#9ca3af;font-size:12px">Aucune notification</div>';
+    _nadmUpdateToolbar();return;
+  }
+  var cols={transaction:'#3b82f6',kyc:'#22c55e',securite:'#f59e0b',systeme:'#8b5cf6',parrainage:'#f97316'};
+  var frag=document.createDocumentFragment();
+  list.forEach(function(n){
+    var col=cols[n.type]||'#6b7280';
+    var d=new Date(n.created_at||Date.now());
+    var ds=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    var user=(n.prenom||'')+' '+(n.nom||'')+(n.telephone?' ('+n.telephone+')':'')+(n.role?' · '+n.role:'');
+    var checked=!!_nadmSel[n.id];
+    var card=document.createElement('div');
+    card.id='nadmcard-'+n.id;
+    card.style.cssText='background:'+(checked?'#fef3c7':'#fff')+';border-radius:11px;padding:10px 12px;margin-bottom:7px;border:1.5px solid '+(checked?'var(--y)':'#f3f4f6')+';cursor:pointer;transition:background .15s';
+    var cb=document.createElement('input');
+    cb.type='checkbox';cb.id='nadmcb-'+n.id;cb.checked=checked;
+    cb.style.cssText='width:16px;height:16px;accent-color:var(--y);cursor:pointer;flex-shrink:0;margin-top:3px';
+    (function(nId,nData){
+      cb.addEventListener('change',function(){
+        if(this.checked)_nadmSel[nId]=nData;else delete _nadmSel[nId];
+        var c2=document.getElementById('nadmcard-'+nId);
+        if(c2){c2.style.background=this.checked?'#fef3c7':'#fff';c2.style.borderColor=this.checked?'var(--y)':'#f3f4f6';}
+        _nadmUpdateToolbar();
+      });
+      card.addEventListener('click',function(e){
+        if(e.target.type==='checkbox')return;
+        cb.checked=!cb.checked;cb.dispatchEvent(new Event('change'));
+      });
+    })(n.id,n);
+    var inner=document.createElement('div');
+    inner.style.cssText='display:flex;align-items:flex-start;gap:8px';
+    var dot=document.createElement('div');
+    dot.style.cssText='width:8px;height:8px;border-radius:50%;background:'+(n.lu?'#d1d5db':col)+';margin-top:5px;flex-shrink:0';
+    var body=document.createElement('div');
+    body.style.cssText='flex:1;min-width:0';
+    body.innerHTML='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:4px">'
+      +'<div style="font-size:12px;font-weight:700;color:#111827">'+n.titre+'</div>'
+      +'<span style="font-size:10px;color:#9ca3af;white-space:nowrap;flex-shrink:0">'+ds+'</span></div>'
+      +'<div style="font-size:11px;color:#6b7280;margin-top:2px">'+n.message+'</div>'
+      +'<div style="font-size:10px;color:#9ca3af;margin-top:2px">'+user.trim()+' · <span style="color:'+col+'">'+(n.type||'')+'</span></div>';
+    inner.appendChild(cb);inner.appendChild(dot);inner.appendChild(body);
+    card.appendChild(inner);frag.appendChild(card);
+  });
+  if(append)el.appendChild(frag);else{el.innerHTML='';el.appendChild(frag);}
+  _nadmUpdateToolbar();
 }
 
 // supprimerNotifHist et supprimerToutesNotifsUser → voir bloc afficherHistoriqueNotifs
@@ -4086,8 +4167,8 @@ async function supprimerNotifAdmin(id, btn) {
   if (!confirm('Supprimer cette notification ?')) return;
   try {
     await callAPI('/notifications/' + id, {method:'DELETE'});
-    var row = btn.closest('[style*="border-radius:11px"]');
-    if (row) { row.style.opacity='0'; row.style.transition='opacity .3s'; setTimeout(function(){row.remove();},300); }
+    var row = document.getElementById('nadmcard-'+id);
+    if (row) { row.style.opacity='0'; row.style.transition='opacity .3s'; setTimeout(function(){row.remove();_nadmCache=_nadmCache.filter(function(n){return n.id!==id;});_nadmUpdateToolbar();},300); }
     toast('Notification supprimée');
   } catch(e) { toast('Erreur: ' + e.message, true); }
 }

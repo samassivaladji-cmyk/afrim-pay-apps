@@ -195,6 +195,7 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
       <button id="mon-tab-bo" onclick="setMonTab('bo')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F4BB; Back-Office</button>
       <button id="mon-tab-sup" onclick="setMonTab('sup')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F3A7; Support</button>
       <button id="mon-tab-tech" onclick="setMonTab('tech')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F527; Tech</button>
+      <button id="mon-tab-superviseur" onclick="setMonTab('superviseur')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F7E0; Superviseur</button>
       <button id="mon-tab-global" onclick="setMonTab('global')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F30D; Global</button>
     </div>
   </div>
@@ -238,6 +239,52 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
         <div id="mon-tech-list"><div style="padding:16px;text-align:center"><div class="spin"></div></div></div>
     </div>
     <!-- Panel Global — Vue par entité -->
+    <!-- PANNEAU SUPERVISEUR -->
+    <div id="mon-panel-superviseur" style="display:none">
+
+      <!-- Compteurs réseau zone -->
+      <div style="font-size:11px;font-weight:800;color:#ea580c;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">📊 Mon réseau</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px">
+        <div class="card" style="text-align:center;padding:10px 8px">
+          <div style="font-size:20px;font-weight:900;color:#ea580c" id="sup-zone-agents">--</div>
+          <div style="font-size:9px;color:#6b7280;margin-top:2px">🏪 Agents</div>
+        </div>
+        <div class="card" style="text-align:center;padding:10px 8px">
+          <div style="font-size:20px;font-weight:900;color:#4f46e5" id="sup-zone-business">--</div>
+          <div style="font-size:9px;color:#6b7280;margin-top:2px">🏬 Business</div>
+        </div>
+        <div class="card" style="text-align:center;padding:10px 8px">
+          <div style="font-size:20px;font-weight:900;color:#2563eb" id="sup-zone-minimaster">--</div>
+          <div style="font-size:9px;color:#6b7280;margin-top:2px">🔵 Mini-Masters</div>
+        </div>
+        <div class="card" style="text-align:center;padding:10px 8px">
+          <div style="font-size:20px;font-weight:900;color:#92400e" id="sup-zone-master">--</div>
+          <div style="font-size:9px;color:#6b7280;margin-top:2px">🟤 Masters</div>
+        </div>
+      </div>
+
+      <!-- Parcourir le réseau -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em">👥 Mon réseau terrain</div>
+      </div>
+      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px" id="sup-zone-role-filters"></div>
+      <div id="sup-zone-list"><div style="padding:16px;text-align:center"><div class="spin"></div></div></div>
+
+      <!-- Tickets à traiter -->
+      <div style="margin-top:18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em">🎫 Mes tickets à traiter</div>
+          <button onclick="chargerTicketsSuperviseur()" style="background:#f3f4f6;border:none;border-radius:8px;padding:4px 9px;font-size:10px;font-weight:700;color:#6b7280;cursor:pointer;font-family:inherit">↻</button>
+        </div>
+        <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px" id="sup-tk-sup-filters"></div>
+        <div id="sup-tk-sup-list"><div style="padding:14px;text-align:center"><div class="spin"></div></div></div>
+      </div>
+
+      <!-- Stats zone rapides -->
+      <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-top:18px;margin-bottom:10px">📈 Activité de ma zone</div>
+      <div id="sup-zone-stats"><div style="padding:16px;text-align:center"><div class="spin"></div></div></div>
+    </div>
+
     <div id="mon-panel-global" style="display:none">
       <div style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">&#x1F30D; Suivi global par entité</div>
       <!-- Filtre statut global -->
@@ -393,7 +440,8 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
               <option value="support_client">🎧 Support Client</option>
               <option value="support_tech">🛠️ Support Tech</option>
               <option value="backoffice">🖥️ Back-Office</option>
-              <option value="admin">👑 Admin / Superviseur</option>
+              <option value="superviseur">🟠 Superviseur</option>
+              <option value="admin">👑 Admin</option>
             </select>
           </div>
           <div style="flex:1">
@@ -839,11 +887,11 @@ var PERMS={
   // Admin : acces total
   admin:         {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:1,logs:1},
   // Superviseur : sa zone uniquement, pas le personnel interne
-  superviseur:   {home:1,users:1,txns:0,monitoring:1,stats:1,support:0,tech:0,creer:1,soldes:1,supprimer:0,rembourser:0,kyc:1,gels:0,logs:1},
+  superviseur:   {home:1,users:1,txns:0,monitoring:1,stats:1,support:0,tech:0,creer:0,soldes:1,supprimer:0,rembourser:0,kyc:0,gels:0,logs:0,superviseur_zone:1},
   // Support Client : recherche client, remboursement, tickets
   support_client:{home:0,users:0,txns:0,monitoring:0,support:1,tech:0,creer:0,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:0,logs:0},
   // Support Tech : logs, transactions bloquees, alertes systeme. Pas infos perso client
-  support_tech:  {home:0,users:1,txns:1,monitoring:1,stats:1,support:0,tech:1,creer:0,soldes:0,supprimer:0,rembourser:0,kyc:1,gels:0,logs:1}
+  support_tech:  {home:0,users:0,txns:0,monitoring:1,stats:0,support:0,tech:1,creer:0,soldes:0,supprimer:0,rembourser:0,kyc:0,gels:0,logs:1}
 };
 function perm(k){var u=G.user;if(!u)return 0;var p=PERMS[u.role];return p?p[k]||0:0;}
 
@@ -1076,10 +1124,12 @@ async function chargerAccueil(){
 // ── USERS ──
 async function chargerUsers(){
   var u=G.user;if(!u)return;
-  // Superviseur ne voit pas le personnel interne
+  // Superviseur voit uniquement son réseau terrain (pas clients)
   var rolesVis=u.role==='superviseur'
-    ?['all','client','agent','business','mini_master','master']
+    ?['agent','business','mini_master','master']
     :['all','client','agent','business','mini_master','master','superviseur'];
+  // Superviseur: forcer le filtre par défaut sur agent si 'all' ou 'client'
+  if(u.role==='superviseur'&&(uFilter==='all'||uFilter==='client'))uFilter='agent';
   var chipsEl=document.getElementById('u-chips');chipsEl.innerHTML='';
   rolesVis.forEach(function(r){
     var on=uFilter===r;var lbl=r==='all'?'Tous':r;
@@ -1094,8 +1144,15 @@ async function chargerUsers(){
   el.innerHTML='<div style="padding:40px;text-align:center"><div class="spin"></div></div>';
   try{
     var p='/users?limit=100';
-    if(uFilter!=='all')p+='&role='+uFilter;
-    if(u.role==='superviseur'&&u.zone)p+='&zone='+encodeURIComponent(u.zone);
+    if(u.role==='superviseur'){
+      // Superviseur: force son rôle filter, jamais clients
+      var allowedRoles=['agent','business','mini_master','master'];
+      var roleToLoad=allowedRoles.indexOf(uFilter)>=0?uFilter:'agent';
+      p+='&role='+roleToLoad;
+      if(u.zone)p+='&zone='+encodeURIComponent(u.zone);
+    } else if(uFilter!=='all'){
+      p+='&role='+uFilter;
+    }
     var r=await apiGet(p);
     usersData=r.data||[];
     renderU(usersData);
@@ -2149,11 +2206,11 @@ var PERMS={
   // Admin : acces total
   admin:         {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:1,logs:1},
   // Superviseur : sa zone uniquement, pas le personnel interne
-  superviseur:   {home:1,users:1,txns:0,monitoring:1,stats:1,support:0,tech:0,creer:1,soldes:1,supprimer:0,rembourser:0,kyc:1,gels:0,logs:1},
+  superviseur:   {home:1,users:1,txns:0,monitoring:1,stats:1,support:0,tech:0,creer:0,soldes:1,supprimer:0,rembourser:0,kyc:0,gels:0,logs:0,superviseur_zone:1},
   // Support Client : recherche client, remboursement, tickets
   support_client:{home:0,users:0,txns:0,monitoring:0,support:1,tech:0,creer:0,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:0,logs:0},
   // Support Tech : logs, transactions bloquees, alertes systeme. Pas infos perso client
-  support_tech:  {home:0,users:1,txns:1,monitoring:1,stats:1,support:0,tech:1,creer:0,soldes:0,supprimer:0,rembourser:0,kyc:1,gels:0,logs:1}
+  support_tech:  {home:0,users:0,txns:0,monitoring:1,stats:0,support:0,tech:1,creer:0,soldes:0,supprimer:0,rembourser:0,kyc:0,gels:0,logs:1}
 };
 function perm(k){var u=G.user;if(!u)return 0;var p=PERMS[u.role];return p?p[k]||0:0;}
 
@@ -2381,10 +2438,12 @@ async function chargerAccueil(){
 // ── USERS ──
 async function chargerUsers(){
   var u=G.user;if(!u)return;
-  // Superviseur ne voit pas le personnel interne
+  // Superviseur voit uniquement son réseau terrain (pas clients)
   var rolesVis=u.role==='superviseur'
-    ?['all','client','agent','business','mini_master','master']
+    ?['agent','business','mini_master','master']
     :['all','client','agent','business','mini_master','master','superviseur'];
+  // Superviseur: forcer le filtre par défaut sur agent si 'all' ou 'client'
+  if(u.role==='superviseur'&&(uFilter==='all'||uFilter==='client'))uFilter='agent';
   var chipsEl=document.getElementById('u-chips');chipsEl.innerHTML='';
   rolesVis.forEach(function(r){
     var on=uFilter===r;var lbl=r==='all'?'Tous':r;
@@ -2399,8 +2458,15 @@ async function chargerUsers(){
   el.innerHTML='<div style="padding:40px;text-align:center"><div class="spin"></div></div>';
   try{
     var p='/users?limit=100';
-    if(uFilter!=='all')p+='&role='+uFilter;
-    if(u.role==='superviseur'&&u.zone)p+='&zone='+encodeURIComponent(u.zone);
+    if(u.role==='superviseur'){
+      // Superviseur: force son rôle filter, jamais clients
+      var allowedRoles=['agent','business','mini_master','master'];
+      var roleToLoad=allowedRoles.indexOf(uFilter)>=0?uFilter:'agent';
+      p+='&role='+roleToLoad;
+      if(u.zone)p+='&zone='+encodeURIComponent(u.zone);
+    } else if(uFilter!=='all'){
+      p+='&role='+uFilter;
+    }
     var r=await apiGet(p);
     usersData=r.data||[];
     renderU(usersData);
@@ -3337,8 +3403,15 @@ function renderChart(type){
 async function chargerStats(){
   var el=document.getElementById('stats-content-inner');if(!el)return;
   el.innerHTML='<div style="padding:24px;text-align:center"><div class="spin"></div><div style="font-size:11px;color:#9ca3af;margin-top:8px">Chargement des données...</div></div>';
+  var role=G.user?G.user.role:'';
+  // Superviseur: show zone stats header
+  if(role==='superviseur'){
+    var hdr=document.getElementById('stats-content');
+    if(hdr){var zBadge=document.getElementById('sup-stats-badge');if(!zBadge){zBadge=document.createElement('div');zBadge.id='sup-stats-badge';zBadge.style.cssText='background:#fef3c7;border:1px solid var(--y);border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:11px;font-weight:700;color:var(--y2)';zBadge.textContent='🟠 Statistiques filtrées — Agents, Business, Mini-Masters, Masters uniquement';hdr.insertBefore(zBadge,hdr.firstChild);}}
+  }
   try{
-    var r=await apiGet('/transactions?limit=500');
+    var roleFilter=role==='superviseur'?'&role=agent,business,mini_master,master':'';
+    var r=await apiGet('/transactions?limit=500'+roleFilter);
     statsRawData=r.data||[];
     try{renderChart(currentChartType);}catch(ce){console.warn('Chart error:',ce.message);};
     var list=statsRawData;
@@ -4895,6 +4968,19 @@ function _tkRender(el, list) {
     if (tk.statut === 'resolu' || tk.statut === 'ferme' || tk.statut === 'rejete') {
       addBtn('🔄 Relancer', 'background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8', 'ouvert');
     }
+    // En lecture seule si le role ne peut pas agir sur ce service
+    var canAct = true;
+    var role2 = G.user ? G.user.role : '';
+    if (role2 === 'support_tech' && tk.service !== 'support_tech') canAct = false;
+    if (role2 === 'support_client' && tk.service !== 'support_client') canAct = false;
+    if (!canAct) {
+      var roTag = document.createElement('div');
+      roTag.style.cssText = 'font-size:9px;color:#9ca3af;font-style:italic;margin-top:4px';
+      roTag.textContent = '👁 Lecture seule — traité par ' + (tk.service||'autre service');
+      if (btns.childElementCount > 0) btns.innerHTML = '';
+      btns.appendChild(roTag);
+    }
+
     // Bouton supprimer (admin seulement)
     if (isSuperAdmin()) {
       var bDel = document.createElement('button');
@@ -4913,7 +4999,28 @@ function _tkRender(el, list) {
 // MONITORING — onglets et chargements
 // ════════════════════════════════════════════════════════════════
 function setMonTab(tab) {
-  var tabs = ['alertes','bo','sup','tech','global'];
+  var role = G.user ? G.user.role : '';
+  // Tabs visibility by role
+  var allTabs = ['alertes','bo','sup','tech','superviseur','global'];
+  // superviseur sees only: alertes + superviseur
+  // support_tech sees only: alertes + tech
+  // admin/superviseur_admin sees all
+  allTabs.forEach(function(t) {
+    var btn = document.getElementById('mon-tab-'+t);
+    if (!btn) return;
+    var show = true;
+    if (role === 'support_tech') show = (t === 'alertes' || t === 'tech');
+    else if (role === 'superviseur') show = (t === 'alertes' || t === 'superviseur');
+    else if (role === 'support_client') show = (t === 'alertes' || t === 'sup' || t === 'tech');
+    btn.style.display = show ? '' : 'none';
+  });
+  // If requested tab not allowed, redirect
+  var tabMap = {support_tech:'tech', superviseur:'superviseur', support_client:'sup'};
+  if (tabMap[role] && !['alertes', tabMap[role], (role==='support_client'?'tech':'')].includes(tab)) {
+    tab = tabMap[role];
+  }
+  _monActiveTab = tab;
+  var tabs = ['alertes','bo','sup','tech','superviseur','global'];
   tabs.forEach(function(t) {
     var btn = document.getElementById('mon-tab-'+t);
     var panel = document.getElementById('mon-panel-'+t);
@@ -4941,6 +5048,9 @@ function setMonTab(tab) {
     _tkInitFilters('mon-tech-filters', 'mon-tech-', function(v) { _monTechFilter = v; _tkLoadList('mon-tech-list', v, 'support_tech'); });
     _tkLoadList('mon-tech-list', _monTechFilter, 'support_tech');
   }
+  if (tab === 'superviseur') {
+    chargerZoneSuperviseur();
+  }
   if (tab === 'global') {
     // Vue structurée par entité
     _tkInitFilters('mon-global-filters', 'mon-global-', function(v) {
@@ -4952,6 +5062,243 @@ function setMonTab(tab) {
     _tkLoadList('mon-global-bo', _monGlobalFilter, 'backoffice');
     _tkLoadList('mon-global-sup', _monGlobalFilter, 'support_client');
     _tkLoadList('mon-global-tech', _monGlobalFilter, 'support_tech');
+  }
+}
+
+// ── ZONE SUPERVISEUR ──
+var _supZoneRoleFilter = 'agent';
+
+async function chargerZoneSuperviseur() {
+  // Compteurs par rôle
+  var roles = ['agent','business','mini_master','master'];
+  var idMap = {agent:'sup-zone-agents',business:'sup-zone-business',mini_master:'sup-zone-minimaster',master:'sup-zone-master'};
+  for (var i=0; i<roles.length; i++) {
+    try {
+      var r = await apiGet('/users?role='+roles[i]+'&limit=1');
+      var total = (r.data&&r.data.length!==undefined) ? r.data.length : (r.total||0);
+      // Try total from meta
+      if (r.meta && r.meta.total) total = r.meta.total;
+      else if (Array.isArray(r.data)) total = r.data.length;
+      var el = document.getElementById(idMap[roles[i]]);
+      if (el) el.textContent = total;
+    } catch(e) {}
+  }
+  // Init role filter buttons
+  var fBar = document.getElementById('sup-zone-role-filters');
+  if (fBar && fBar.childElementCount === 0) {
+    var roleDefs = [['Agents','agent'],['Business','business'],['Mini-Masters','mini_master'],['Masters','master']];
+    roleDefs.forEach(function(rd) {
+      var btn = document.createElement('button');
+      btn.textContent = rd[0];
+      btn.dataset.role = rd[1];
+      var active = rd[1] === _supZoneRoleFilter;
+      btn.style.cssText = 'padding:5px 14px;border-radius:99px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap;'
+        +(active?'background:var(--y);color:#fff;border:1.5px solid var(--y)':'background:#fff;color:#374151;border:1.5px solid #e5e7eb');
+      btn.addEventListener('click', function() {
+        _supZoneRoleFilter = this.dataset.role;
+        fBar.querySelectorAll('button').forEach(function(b){
+          var a = b.dataset.role === _supZoneRoleFilter;
+          b.style.background = a?'var(--y)':'#fff';
+          b.style.color = a?'#fff':'#374151';
+        });
+        chargerZoneList();
+      });
+      fBar.appendChild(btn);
+    });
+  }
+  chargerZoneList();
+  chargerTicketsSuperviseur();
+}
+
+async function chargerTicketsSuperviseur() {
+  // Initialiser les filtres statut
+  var fBar = document.getElementById('sup-tk-sup-filters');
+  if (fBar && fBar.childElementCount === 0) {
+    var statDefs = [['Tous',''],['⏳ En attente','ouvert'],['🔄 En cours','en_cours'],['✅ Résolus','resolu'],['🔒 Clôturés','ferme']];
+    var _supTkFilter = '';
+    statDefs.forEach(function(sd) {
+      var btn = document.createElement('button');
+      btn.textContent = sd[0];
+      btn.dataset.st = sd[1];
+      var active = sd[1] === '';
+      btn.style.cssText = 'padding:5px 12px;border-radius:99px;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit;white-space:nowrap;'
+        +(active?'background:var(--y);color:#fff;border:1.5px solid var(--y)':'background:#fff;color:#374151;border:1.5px solid #e5e7eb');
+      btn.addEventListener('click', function() {
+        fBar.querySelectorAll('button').forEach(function(b){
+          var a = b.dataset.st === this.dataset.st;
+          b.style.background = a?'var(--y)':'#fff';
+          b.style.color = a?'#fff':'#374151';
+        }, this);
+        _chargerSupTkList(this.dataset.st);
+      });
+      fBar.appendChild(btn);
+    });
+  }
+  _chargerSupTkList('');
+}
+
+async function _chargerSupTkList(statut) {
+  var el = document.getElementById('sup-tk-sup-list');
+  if (!el) return;
+  el.innerHTML = '<div style="padding:14px;text-align:center"><div class="spin"></div></div>';
+  try {
+    var q = '/tickets?service=superviseur&limit=30' + (statut?'&statut='+statut:'');
+    var r = await apiGet(q);
+    var list = r.data || [];
+    if (!list.length) {
+      el.innerHTML = '<div style="text-align:center;padding:14px;color:#9ca3af;font-size:12px;background:#f9fafb;border-radius:10px">Aucun ticket assigné</div>';
+      return;
+    }
+    var statCols = {ouvert:'#f59e0b',en_cours:'#3b82f6',resolu:'#22c55e',ferme:'#9ca3af',rejete:'#ef4444'};
+    var statLbls = {ouvert:'⏳ En attente',en_cours:'🔄 En cours',resolu:'✅ Résolu',ferme:'🔒 Clôturé',rejete:'❌ Rejeté'};
+    var frag = document.createDocumentFragment();
+    list.forEach(function(t) {
+      var sc = statCols[t.statut]||'#9ca3af';
+      var sl = statLbls[t.statut]||t.statut;
+      var d = new Date(t.dateCreation||Date.now());
+      var ds = d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}) + ' ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      var card = document.createElement('div');
+      card.style.cssText = 'background:#fff;border:1px solid #f3f4f6;border-radius:12px;padding:11px 13px;margin-bottom:7px';
+      // Header
+      var h = document.createElement('div');
+      h.style.cssText = 'display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px';
+      var sj = document.createElement('div');
+      sj.style.cssText = 'font-size:12px;font-weight:700;color:#111827;flex:1';
+      sj.textContent = t.sujet;
+      var badge = document.createElement('span');
+      badge.style.cssText = 'background:'+sc+'15;color:'+sc+';border-radius:99px;padding:2px 8px;font-size:9px;font-weight:700;flex-shrink:0';
+      badge.textContent = sl;
+      h.appendChild(sj); h.appendChild(badge);
+      card.appendChild(h);
+      // Client
+      var client = t.client||{prenom:t.prenom,nom:t.nom,telephone:t.telephone};
+      if (client.telephone) {
+        var cl = document.createElement('div');
+        cl.style.cssText = 'font-size:10px;color:#2563eb;font-weight:600;margin-bottom:3px';
+        cl.textContent = '👤 '+((client.prenom||'')+' '+(client.nom||'')).trim()+' · '+(client.telephone||'');
+        card.appendChild(cl);
+      }
+      // Description
+      if (t.description) {
+        var desc = document.createElement('div');
+        desc.style.cssText = 'font-size:11px;color:#6b7280;margin-bottom:5px';
+        desc.textContent = t.description;
+        card.appendChild(desc);
+      }
+      // Date + ref
+      var meta = document.createElement('div');
+      meta.style.cssText = 'display:flex;justify-content:space-between;margin-bottom:6px';
+      meta.innerHTML = '<span style="font-size:9px;color:#9ca3af">🕒 '+ds+'</span>'
+        +(t.reference?'<span style="font-size:9px;color:#d1d5db;font-family:monospace">'+t.reference+'</span>':'');
+      card.appendChild(meta);
+      // Action buttons (superviseur can take & resolve his own tickets)
+      var btns = document.createElement('div');
+      btns.style.cssText = 'display:flex;gap:5px;flex-wrap:wrap';
+      if (t.statut === 'ouvert') {
+        var bPrendre = document.createElement('button');
+        bPrendre.textContent = '🔄 Prendre en charge';
+        bPrendre.style.cssText = 'padding:5px 10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:7px;color:#1d4ed8;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit';
+        (function(tid){ bPrendre.onclick = function(){ changerStatutTicket(tid,'en_cours');setTimeout(function(){_chargerSupTkList('');},600); }; })(t.id);
+        btns.appendChild(bPrendre);
+      }
+      if (t.statut === 'ouvert' || t.statut === 'en_cours') {
+        var bResolu = document.createElement('button');
+        bResolu.textContent = '✅ Résolu';
+        bResolu.style.cssText = 'padding:5px 10px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:7px;color:#059669;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit';
+        (function(tid){ bResolu.onclick = function(){ changerStatutTicket(tid,'resolu');setTimeout(function(){_chargerSupTkList('');},600); }; })(t.id);
+        btns.appendChild(bResolu);
+      }
+      if (btns.childElementCount > 0) card.appendChild(btns);
+      frag.appendChild(card);
+    });
+    el.innerHTML = '';
+    el.appendChild(frag);
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--r);padding:10px;font-size:11px">'+e.message+'</div>';
+  }
+}
+
+async function chargerZoneList() {
+  var el = document.getElementById('sup-zone-list');
+  if (!el) return;
+  el.innerHTML = '<div style="padding:16px;text-align:center"><div class="spin"></div></div>';
+  try {
+    var r = await apiGet('/users?role='+_supZoneRoleFilter+'&limit=50');
+    var list = r.data || [];
+    if (!list.length) {
+      el.innerHTML = '<div style="text-align:center;padding:16px;color:#9ca3af;font-size:12px">Aucun compte</div>';
+      return;
+    }
+    var frag = document.createDocumentFragment();
+    list.forEach(function(u) {
+      var card = document.createElement('div');
+      card.style.cssText = 'background:#fff;border:1px solid #f3f4f6;border-radius:12px;padding:11px 13px;margin-bottom:7px';
+      var solde = u.solde!==undefined&&u.solde!==null?Number(u.solde):0;
+      var statC = {actif:'#22c55e',en_attente:'#f59e0b',suspendu:'#ef4444',bloque:'#6b7280'};
+      var sc = statC[u.statut]||'#9ca3af';
+      var initials = ((u.prenom||'')[0]||(u.nom||'')[0]||'?').toUpperCase();
+      var roleC = {'agent':'#d97706','business':'#4f46e5','mini_master':'#2563eb','master':'#92400e'};
+      var rc = roleC[u.role]||'#ea580c';
+      card.innerHTML =
+        '<div style="display:flex;align-items:center;gap:10px">'
+          +'<div style="width:36px;height:36px;border-radius:10px;background:'+rc+'15;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:'+rc+';flex-shrink:0">'+initials+'</div>'
+          +'<div style="flex:1;min-width:0">'
+            +'<div style="font-size:12px;font-weight:700;color:#111827">'+((u.prenom||'')+' '+(u.nom||'')).trim()+'</div>'
+            +'<div style="font-size:10px;color:#6b7280">'+u.telephone+'</div>'
+          +'</div>'
+          +'<div style="text-align:right">'
+            +'<div style="font-size:12px;font-weight:800;color:'+rc+'">'+F(solde)+'</div>'
+            +'<span style="background:'+sc+'15;color:'+sc+';border-radius:99px;padding:1px 7px;font-size:9px;font-weight:700">'+u.statut+'</span>'
+          +'</div>'
+        +'</div>';
+      frag.appendChild(card);
+    });
+    el.innerHTML = '';
+    el.appendChild(frag);
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--r);padding:12px;font-size:12px">'+e.message+'</div>';
+  }
+  // Also load zone stats
+  chargerZoneStats();
+}
+
+async function chargerZoneStats() {
+  var el = document.getElementById('sup-zone-stats');
+  if (!el) return;
+  el.innerHTML = '<div style="padding:12px;text-align:center"><div class="spin"></div></div>';
+  try {
+    // Load transactions for agents/business in zone
+    var r = await apiGet('/transactions?limit=200');
+    var txns = r.data || [];
+    // Filter to zone roles (agent/business initiated)
+    var zoneRoles = ['agent','business','mini_master','master'];
+    var now = new Date(); var debut = new Date(now.getFullYear(),now.getMonth(),1);
+    var stats = {depot:{n:0,vol:0},retrait:{n:0,vol:0},transfert:{n:0,vol:0},paiement:{n:0,vol:0}};
+    txns.forEach(function(tx){
+      if(new Date(tx.createdAt||tx.created_at) < debut) return;
+      var m = Number(tx.montant||0);
+      var t = tx.type;
+      if(stats[t]){stats[t].n++;stats[t].vol+=m;}
+    });
+    var rows = [
+      {label:'💰 Dépôts',col:'#22c55e',n:stats.depot.n,vol:stats.depot.vol},
+      {label:'💸 Retraits',col:'#ef4444',n:stats.retrait.n,vol:stats.retrait.vol},
+      {label:'↔️ Transferts',col:'#3b82f6',n:stats.transfert.n,vol:stats.transfert.vol},
+      {label:'🛒 Paiements',col:'#8b5cf6',n:stats.paiement.n,vol:stats.paiement.vol},
+    ];
+    var html = '<div style="font-size:10px;color:#9ca3af;margin-bottom:6px">Ce mois-ci (données réseau)</div>';
+    rows.forEach(function(row){
+      html += '<div style="background:#fff;border:1px solid #f3f4f6;border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">'
+        +'<div style="font-size:11px;font-weight:700;color:#374151">'+row.label+'</div>'
+        +'<div style="text-align:right">'
+          +'<div style="font-size:12px;font-weight:800;color:'+row.col+'">'+F(row.vol)+'</div>'
+          +'<div style="font-size:9px;color:#9ca3af">'+row.n+' op.</div>'
+        +'</div>'
+      +'</div>';
+    });
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--r);padding:8px;font-size:11px">'+e.message+'</div>';
   }
 }
 

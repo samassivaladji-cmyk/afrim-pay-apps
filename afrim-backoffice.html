@@ -190,7 +190,7 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
       </div>
     </div>
     <!-- Onglets monitoring -->
-    <div style="display:flex;overflow-x:auto;gap:0;padding-bottom:0">
+    <div id="mon-tab-bar" style="display:flex;overflow-x:auto;gap:0;padding-bottom:0">
       <button id="mon-tab-alertes" onclick="setMonTab('alertes')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:var(--y2);border-bottom:2px solid var(--y);white-space:nowrap">&#x1F6A8; Alertes</button>
       <button id="mon-tab-bo" onclick="setMonTab('bo')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F4BB; Back-Office</button>
       <button id="mon-tab-sup" onclick="setMonTab('sup')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F3A7; Support</button>
@@ -239,50 +239,18 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
         <div id="mon-tech-list"><div style="padding:16px;text-align:center"><div class="spin"></div></div></div>
     </div>
     <!-- Panel Global — Vue par entité -->
-    <!-- PANNEAU SUPERVISEUR -->
+    <!-- PANNEAU SUPERVISEUR — alertes + tickets directement -->
     <div id="mon-panel-superviseur" style="display:none">
-
-      <!-- Compteurs réseau zone -->
-      <div style="font-size:11px;font-weight:800;color:#ea580c;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">📊 Mon réseau</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px">
-        <div class="card" style="text-align:center;padding:10px 8px">
-          <div style="font-size:20px;font-weight:900;color:#ea580c" id="sup-zone-agents">--</div>
-          <div style="font-size:9px;color:#6b7280;margin-top:2px">🏪 Agents</div>
-        </div>
-        <div class="card" style="text-align:center;padding:10px 8px">
-          <div style="font-size:20px;font-weight:900;color:#4f46e5" id="sup-zone-business">--</div>
-          <div style="font-size:9px;color:#6b7280;margin-top:2px">🏬 Business</div>
-        </div>
-        <div class="card" style="text-align:center;padding:10px 8px">
-          <div style="font-size:20px;font-weight:900;color:#2563eb" id="sup-zone-minimaster">--</div>
-          <div style="font-size:9px;color:#6b7280;margin-top:2px">🔵 Mini-Masters</div>
-        </div>
-        <div class="card" style="text-align:center;padding:10px 8px">
-          <div style="font-size:20px;font-weight:900;color:#92400e" id="sup-zone-master">--</div>
-          <div style="font-size:9px;color:#6b7280;margin-top:2px">🟤 Masters</div>
-        </div>
-      </div>
-
-      <!-- Parcourir le réseau -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em">👥 Mon réseau terrain</div>
-      </div>
-      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px" id="sup-zone-role-filters"></div>
-      <div id="sup-zone-list"><div style="padding:16px;text-align:center"><div class="spin"></div></div></div>
-
+      <!-- Alertes actives -->
+      <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">🚨 Alertes actives</div>
+      <div id="sup-alertes-inline"><div style="padding:12px;text-align:center"><div class="spin"></div></div></div>
       <!-- Tickets à traiter -->
-      <div style="margin-top:18px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em">🎫 Mes tickets à traiter</div>
-          <button onclick="chargerTicketsSuperviseur()" style="background:#f3f4f6;border:none;border-radius:8px;padding:4px 9px;font-size:10px;font-weight:700;color:#6b7280;cursor:pointer;font-family:inherit">↻</button>
-        </div>
-        <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px" id="sup-tk-sup-filters"></div>
-        <div id="sup-tk-sup-list"><div style="padding:14px;text-align:center"><div class="spin"></div></div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:18px;margin-bottom:8px">
+        <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em">🎫 Mes tickets à traiter</div>
+        <button onclick="chargerTicketsSuperviseur()" style="background:#f3f4f6;border:none;border-radius:8px;padding:4px 9px;font-size:10px;font-weight:700;color:#6b7280;cursor:pointer;font-family:inherit">↻</button>
       </div>
-
-      <!-- Stats zone rapides -->
-      <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-top:18px;margin-bottom:10px">📈 Activité de ma zone</div>
-      <div id="sup-zone-stats"><div style="padding:16px;text-align:center"><div class="spin"></div></div></div>
+      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px" id="sup-tk-sup-filters"></div>
+      <div id="sup-tk-sup-list"><div style="padding:14px;text-align:center"><div class="spin"></div></div></div>
     </div>
 
     <div id="mon-panel-global" style="display:none">
@@ -532,10 +500,37 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
 <!-- ECRAN STATISTIQUES -->
 <div class="scr" id="s-stats">
   <div style="background:var(--y3);padding:52px 20px 16px;border-bottom:2px solid var(--y);position:sticky;top:0;z-index:10">
-    <div style="font-size:22px;font-weight:900;color:var(--y2)">Statistiques</div>
-    <div style="color:var(--y2);font-size:13px;margin-top:3px;opacity:.8">Cumuls et courbes des opérations</div>
+    <div style="font-size:22px;font-weight:900;color:var(--y2)" id="stats-title">Statistiques</div>
+    <div style="color:var(--y2);font-size:13px;margin-top:3px;opacity:.8" id="stats-subtitle">Cumuls et courbes des opérations</div>
   </div>
-  <div style="padding:12px 16px 100px" id="stats-content">
+  <!-- Stats Superviseur -->
+  <div id="sup-stats-panel" style="display:none;padding:12px 16px 100px">
+    <!-- Filtres période -->
+    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px" id="sup-stats-period-filters"></div>
+    <!-- Graphique évolution (visible si période != today) -->
+    <div id="sup-stats-chart-wrap" style="background:#fff;border-radius:14px;padding:14px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.07)">
+      <div style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Évolution de la période</div>
+      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap" id="sup-chart-type-btns"></div>
+      <div style="height:160px"><canvas id="sup-stats-canvas"></canvas></div>
+    </div>
+    <!-- Résumé global -->
+    <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">📊 Vue globale</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px" id="sup-stats-global-grid">
+      <div class="card" style="text-align:center;padding:10px 8px"><div style="font-size:18px;font-weight:900;color:#ea580c" id="ssg-agents">--</div><div style="font-size:9px;color:#6b7280">🏪 Agents</div></div>
+      <div class="card" style="text-align:center;padding:10px 8px"><div style="font-size:18px;font-weight:900;color:#4f46e5" id="ssg-business">--</div><div style="font-size:9px;color:#6b7280">🏬 Business</div></div>
+      <div class="card" style="text-align:center;padding:10px 8px"><div style="font-size:18px;font-weight:900;color:#2563eb" id="ssg-minimaster">--</div><div style="font-size:9px;color:#6b7280">🔵 Mini-Masters</div></div>
+      <div class="card" style="text-align:center;padding:10px 8px"><div style="font-size:18px;font-weight:900;color:#92400e" id="ssg-master">--</div><div style="font-size:9px;color:#6b7280">🟤 Masters</div></div>
+    </div>
+    <!-- Volumes globaux -->
+    <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">💰 Volumes de la période</div>
+    <div id="sup-stats-volumes"></div>
+    <!-- Stats détaillées par catégorie -->
+    <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-top:18px;margin-bottom:8px">📋 Détail par catégorie</div>
+    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px" id="sup-stats-cat-filters"></div>
+    <div id="sup-stats-detail"></div>
+  </div>
+  <!-- Stats Admin (vue normale) -->
+  <div id="stats-content" style="padding:12px 16px 100px">
     <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:14px">
       <div style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Évolution sur 30 jours</div>
       <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
@@ -550,6 +545,7 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
       <div style="padding:24px;text-align:center"><div class="spin"></div></div>
     </div>
   </div>
+  </div><!-- end stats-content admin -->
   <nav class="bnav" id="bnav-stats"></nav>
 </div>
 
@@ -1025,7 +1021,22 @@ function setTab(t){
     if(statsEl){statsEl.classList.add('on');statsEl.style.display='flex';}
     window.scrollTo(0,0);
     buildNavs('stats');
-    chargerStats();
+    var role=G.user?G.user.role:'';
+    var supPanel=document.getElementById('sup-stats-panel');
+    var adminPanel=document.getElementById('stats-content');
+    var titleEl=document.getElementById('stats-title');
+    var subtitleEl=document.getElementById('stats-subtitle');
+    if(role==='superviseur'){
+      if(supPanel)supPanel.style.display='block';
+      if(adminPanel)adminPanel.style.display='none';
+      if(titleEl)titleEl.textContent='Statistiques zone';
+      if(subtitleEl)subtitleEl.textContent='Mon réseau — Agents, Business, Masters';
+      chargerStatsSuperviseur();
+    }else{
+      if(supPanel)supPanel.style.display='none';
+      if(adminPanel)adminPanel.style.display='block';
+      chargerStats();
+    }
   }
 }
 
@@ -2341,7 +2352,22 @@ function setTab(t){
     if(statsEl){statsEl.classList.add('on');statsEl.style.display='flex';}
     window.scrollTo(0,0);
     buildNavs('stats');
-    chargerStats();
+    var role=G.user?G.user.role:'';
+    var supPanel=document.getElementById('sup-stats-panel');
+    var adminPanel=document.getElementById('stats-content');
+    var titleEl=document.getElementById('stats-title');
+    var subtitleEl=document.getElementById('stats-subtitle');
+    if(role==='superviseur'){
+      if(supPanel)supPanel.style.display='block';
+      if(adminPanel)adminPanel.style.display='none';
+      if(titleEl)titleEl.textContent='Statistiques zone';
+      if(subtitleEl)subtitleEl.textContent='Mon réseau — Agents, Business, Masters';
+      chargerStatsSuperviseur();
+    }else{
+      if(supPanel)supPanel.style.display='none';
+      if(adminPanel)adminPanel.style.display='block';
+      chargerStats();
+    }
   }
 }
 
@@ -2757,6 +2783,14 @@ async function chargerTxns(){
 
 // ── MONITORING ──
 async function chargerMonitoring(){
+  // Rediriger selon le rôle
+  var role = G.user ? G.user.role : '';
+  if (role === 'superviseur') { setMonTab('superviseur'); return; }
+  if (role === 'support_tech') { setMonTab('tech'); return; }
+  if (role === 'support_client') { setMonTab('sup'); return; }
+  // Admin/superviseur_admin → show alerts tab
+  setMonTab(_monActiveTab || 'alertes');
+  if (_monActiveTab && _monActiveTab !== 'alertes') return;
   try{
     var ar=await apiGet('/alerts?limit=20');var list=ar.data||[];
     var el=document.getElementById('m-alerts');el.innerHTML='';
@@ -5002,21 +5036,26 @@ function setMonTab(tab) {
   var role = G.user ? G.user.role : '';
   // Tabs visibility by role
   var allTabs = ['alertes','bo','sup','tech','superviseur','global'];
-  // superviseur sees only: alertes + superviseur
-  // support_tech sees only: alertes + tech
-  // admin/superviseur_admin sees all
   allTabs.forEach(function(t) {
     var btn = document.getElementById('mon-tab-'+t);
     if (!btn) return;
     var show = true;
     if (role === 'support_tech') show = (t === 'alertes' || t === 'tech');
-    else if (role === 'superviseur') show = (t === 'alertes' || t === 'superviseur');
+    else if (role === 'superviseur') show = false; // superviseur has no tabs - direct view
     else if (role === 'support_client') show = (t === 'alertes' || t === 'sup' || t === 'tech');
     btn.style.display = show ? '' : 'none';
   });
+  // Superviseur: hide tab bar entirely, show alertes + tickets directly
+  // Hide tab bar for superviseur immediately
+  var monNav = document.getElementById('mon-tab-bar');
+  if (monNav) {
+    monNav.style.display = role === 'superviseur' ? 'none' : '';
+    monNav.style.visibility = role === 'superviseur' ? 'hidden' : '';
+  }
   // If requested tab not allowed, redirect
-  var tabMap = {support_tech:'tech', superviseur:'superviseur', support_client:'sup'};
-  if (tabMap[role] && !['alertes', tabMap[role], (role==='support_client'?'tech':'')].includes(tab)) {
+  var tabMap = {support_tech:'tech', support_client:'sup'};
+  if (role === 'superviseur') tab = 'superviseur';
+  else if (tabMap[role] && !['alertes', tabMap[role], (role==='support_client'?'tech':'')].includes(tab)) {
     tab = tabMap[role];
   }
   _monActiveTab = tab;
@@ -5068,45 +5107,340 @@ function setMonTab(tab) {
 // ── ZONE SUPERVISEUR ──
 var _supZoneRoleFilter = 'agent';
 
-async function chargerZoneSuperviseur() {
-  // Compteurs par rôle
-  var roles = ['agent','business','mini_master','master'];
-  var idMap = {agent:'sup-zone-agents',business:'sup-zone-business',mini_master:'sup-zone-minimaster',master:'sup-zone-master'};
-  for (var i=0; i<roles.length; i++) {
-    try {
-      var r = await apiGet('/users?role='+roles[i]+'&limit=1');
-      var total = (r.data&&r.data.length!==undefined) ? r.data.length : (r.total||0);
-      // Try total from meta
-      if (r.meta && r.meta.total) total = r.meta.total;
-      else if (Array.isArray(r.data)) total = r.data.length;
-      var el = document.getElementById(idMap[roles[i]]);
-      if (el) el.textContent = total;
-    } catch(e) {}
-  }
-  // Init role filter buttons
-  var fBar = document.getElementById('sup-zone-role-filters');
-  if (fBar && fBar.childElementCount === 0) {
-    var roleDefs = [['Agents','agent'],['Business','business'],['Mini-Masters','mini_master'],['Masters','master']];
-    roleDefs.forEach(function(rd) {
+
+// ══════════════════════════════════════════════════════════
+// STATISTIQUES SUPERVISEUR — Vue complète zone
+// ══════════════════════════════════════════════════════════
+var _supStatsPeriod = 'month';
+var _supStatsCat = 'agent';
+var _supStatsTxns = [];
+var _supStatsUsers = {};
+
+async function chargerStatsSuperviseur() {
+  // Init filtres période
+  var pBar = document.getElementById('sup-stats-period-filters');
+  if (pBar && pBar.childElementCount === 0) {
+    var periods = [['Auj. hui','today'],['Cette semaine','week'],['Ce mois','month'],['Cette année','year']];
+    periods.forEach(function(p) {
       var btn = document.createElement('button');
-      btn.textContent = rd[0];
-      btn.dataset.role = rd[1];
-      var active = rd[1] === _supZoneRoleFilter;
-      btn.style.cssText = 'padding:5px 14px;border-radius:99px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap;'
+      btn.textContent = p[0]; btn.dataset.p = p[1];
+      var active = p[1] === _supStatsPeriod;
+      btn.style.cssText = 'padding:5px 13px;border-radius:99px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap;'
         +(active?'background:var(--y);color:#fff;border:1.5px solid var(--y)':'background:#fff;color:#374151;border:1.5px solid #e5e7eb');
       btn.addEventListener('click', function() {
-        _supZoneRoleFilter = this.dataset.role;
-        fBar.querySelectorAll('button').forEach(function(b){
-          var a = b.dataset.role === _supZoneRoleFilter;
-          b.style.background = a?'var(--y)':'#fff';
-          b.style.color = a?'#fff':'#374151';
+        _supStatsPeriod = this.dataset.p;
+        pBar.querySelectorAll('button').forEach(function(b){
+          var a = b.dataset.p === _supStatsPeriod;
+          b.style.background = a?'var(--y)':'#fff'; b.style.color = a?'#fff':'#374151';
         });
-        chargerZoneList();
+        _supStatsLoadData();
       });
-      fBar.appendChild(btn);
+      pBar.appendChild(btn);
     });
   }
-  chargerZoneList();
+  // Init filtres catégorie
+  var cBar = document.getElementById('sup-stats-cat-filters');
+  if (cBar && cBar.childElementCount === 0) {
+    var cats = [['🏪 Agents','agent'],['🏬 Business','business'],['🔵 Mini-Masters','mini_master'],['🟤 Masters','master']];
+    cats.forEach(function(c) {
+      var btn = document.createElement('button');
+      btn.textContent = c[0]; btn.dataset.c = c[1];
+      var active = c[1] === _supStatsCat;
+      btn.style.cssText = 'padding:5px 13px;border-radius:99px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap;'
+        +(active?'background:var(--y);color:#fff;border:1.5px solid var(--y)':'background:#fff;color:#374151;border:1.5px solid #e5e7eb');
+      btn.addEventListener('click', function() {
+        _supStatsCat = this.dataset.c;
+        cBar.querySelectorAll('button').forEach(function(b){
+          var a = b.dataset.c === _supStatsCat;
+          b.style.background = a?'var(--y)':'#fff'; b.style.color = a?'#fff':'#374151';
+        });
+        _supStatsRenderDetail();
+      });
+      cBar.appendChild(btn);
+    });
+  }
+  _supStatsLoadData();
+}
+
+function _supStatsGetDebut() {
+  var now = new Date();
+  if (_supStatsPeriod === 'today') return new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  if (_supStatsPeriod === 'week') { var d=new Date(now); d.setDate(d.getDate()-7); return d; }
+  if (_supStatsPeriod === 'month') return new Date(now.getFullYear(),now.getMonth(),1);
+  if (_supStatsPeriod === 'year') return new Date(now.getFullYear(),0,1);
+  return new Date(now.getFullYear(),now.getMonth(),1);
+}
+
+async function _supStatsLoadData() {
+  var volEl = document.getElementById('sup-stats-volumes');
+  var detEl = document.getElementById('sup-stats-detail');
+  if (volEl) volEl.innerHTML = '<div style="padding:16px;text-align:center"><div class="spin"></div></div>';
+  if (detEl) detEl.innerHTML = '<div style="padding:16px;text-align:center"><div class="spin"></div></div>';
+
+  try {
+    // Load users counts
+    var roles = ['agent','business','mini_master','master'];
+    var idMap = {agent:'ssg-agents',business:'ssg-business',mini_master:'ssg-minimaster',master:'ssg-master'};
+    _supStatsUsers = {};
+    for (var i=0; i<roles.length; i++) {
+      var ru = await apiGet('/users?role='+roles[i]+'&limit=200');
+      _supStatsUsers[roles[i]] = ru.data || [];
+      var el = document.getElementById(idMap[roles[i]]);
+      if (el) el.textContent = _supStatsUsers[roles[i]].length;
+    }
+
+    // Load transactions
+    var rt = await apiGet('/transactions?limit=500');
+    var allTxns = rt.data || [];
+    var debut = _supStatsGetDebut();
+    _supStatsTxns = allTxns.filter(function(tx){ return new Date(tx.createdAt||tx.created_at) >= debut; });
+
+    // Render volumes
+    var types = [
+      {key:'depot',label:'💰 Dépôts',col:'#22c55e'},
+      {key:'retrait',label:'💸 Retraits',col:'#ef4444'},
+      {key:'transfert',label:'↔️ Transferts',col:'#3b82f6'},
+      {key:'paiement_marchand',label:'🛒 Paiements marchands',col:'#8b5cf6'},
+    ];
+    var totals = {};
+    types.forEach(function(t){ totals[t.key]={n:0,vol:0}; });
+    _supStatsTxns.forEach(function(tx){
+      if(totals[tx.type]){totals[tx.type].n++;totals[tx.type].vol+=Number(tx.montant||0);}
+    });
+    var volHtml = '';
+    types.forEach(function(t){
+      volHtml += '<div style="background:#fff;border:1px solid #f3f4f6;border-radius:12px;padding:11px 13px;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center">'
+        +'<div style="font-size:12px;font-weight:700;color:#374151">'+t.label+'</div>'
+        +'<div style="text-align:right">'
+          +'<div style="font-size:13px;font-weight:900;color:'+t.col+'">'+F(totals[t.key].vol)+'</div>'
+          +'<div style="font-size:9px;color:#9ca3af">'+totals[t.key].n+' opération(s)</div>'
+        +'</div>'
+      +'</div>';
+    });
+    if (volEl) volEl.innerHTML = volHtml || '<div style="padding:12px;text-align:center;color:#9ca3af;font-size:12px">Aucune transaction sur cette période</div>';
+
+    // Render chart (not for 'today')
+    var chartWrap = document.getElementById('sup-stats-chart-wrap');
+    if (chartWrap) chartWrap.style.display = _supStatsPeriod === 'today' ? 'none' : '';
+    if (_supStatsPeriod !== 'today') _supStatsRenderChart();
+
+    _supStatsRenderDetail();
+  } catch(e) {
+    if (volEl) volEl.innerHTML = '<div style="color:var(--r);padding:12px;font-size:12px">'+e.message+'</div>';
+  }
+}
+
+var _supStatsChartInst = null;
+var _supStatsChartType = 'depot';
+
+function _supStatsInitChartBtns() {
+  var bar = document.getElementById('sup-chart-type-btns');
+  if (!bar || bar.childElementCount > 0) return;
+  var types = [['Dépôts','depot','#22c55e'],['Retraits','retrait','#ef4444'],['Transferts','transfert','#3b82f6'],['Paiements','paiement_marchand','#8b5cf6']];
+  types.forEach(function(t) {
+    var btn = document.createElement('button');
+    btn.textContent = t[0]; btn.dataset.ct = t[1]; btn.dataset.col = t[2];
+    var active = t[1] === _supStatsChartType;
+    btn.style.cssText = 'padding:4px 11px;border-radius:99px;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit;'
+      +(active?'background:'+t[2]+';color:#fff;border:1.5px solid '+t[2]:'background:#f9fafb;color:#6b7280;border:1.5px solid #e5e7eb');
+    btn.addEventListener('click', function() {
+      _supStatsChartType = this.dataset.ct;
+      bar.querySelectorAll('button').forEach(function(b){
+        var a = b.dataset.ct === _supStatsChartType;
+        var c = b.dataset.col;
+        b.style.background = a?c:'#f9fafb'; b.style.color = a?'#fff':'#6b7280'; b.style.borderColor = a?c:'#e5e7eb';
+      });
+      _supStatsRenderChart();
+    });
+    bar.appendChild(btn);
+  });
+}
+
+function _supStatsRenderChart() {
+  _supStatsInitChartBtns();
+  var canvas = document.getElementById('sup-stats-canvas');
+  if (!canvas || typeof Chart === 'undefined') return;
+  var txns = _supStatsTxns;
+  var debut = _supStatsGetDebut();
+  var now = new Date();
+
+  // Build daily/weekly buckets
+  var labels = [], data = [];
+  if (_supStatsPeriod === 'week') {
+    // Last 7 days
+    for (var d=6; d>=0; d--) {
+      var day = new Date(now); day.setDate(day.getDate()-d);
+      var label = day.toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit'});
+      labels.push(label);
+      var dayStart = new Date(day.getFullYear(),day.getMonth(),day.getDate());
+      var dayEnd = new Date(dayStart); dayEnd.setDate(dayEnd.getDate()+1);
+      var vol = txns.filter(function(tx){
+        var dt = new Date(tx.createdAt||tx.created_at);
+        return tx.type===_supStatsChartType && dt>=dayStart && dt<dayEnd;
+      }).reduce(function(s,tx){return s+Number(tx.montant||0);},0);
+      data.push(vol);
+    }
+  } else if (_supStatsPeriod === 'month') {
+    // Days of current month
+    var daysInMonth = new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+    for (var i=1; i<=daysInMonth; i++) {
+      labels.push(i.toString());
+      var dayStart = new Date(now.getFullYear(),now.getMonth(),i);
+      var dayEnd = new Date(now.getFullYear(),now.getMonth(),i+1);
+      var vol = txns.filter(function(tx){
+        var dt = new Date(tx.createdAt||tx.created_at);
+        return tx.type===_supStatsChartType && dt>=dayStart && dt<dayEnd;
+      }).reduce(function(s,tx){return s+Number(tx.montant||0);},0);
+      data.push(vol);
+    }
+  } else if (_supStatsPeriod === 'year') {
+    // Monthly
+    var monthNames = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+    for (var m=0; m<12; m++) {
+      labels.push(monthNames[m]);
+      var mStart = new Date(now.getFullYear(),m,1);
+      var mEnd = new Date(now.getFullYear(),m+1,1);
+      var vol = txns.filter(function(tx){
+        var dt = new Date(tx.createdAt||tx.created_at);
+        return tx.type===_supStatsChartType && dt>=mStart && dt<mEnd;
+      }).reduce(function(s,tx){return s+Number(tx.montant||0);},0);
+      data.push(vol);
+    }
+  }
+
+  var colMap = {depot:'#22c55e',retrait:'#ef4444',transfert:'#3b82f6',paiement_marchand:'#8b5cf6'};
+  var col = colMap[_supStatsChartType]||'#22c55e';
+
+  if (_supStatsChartInst) { try { _supStatsChartInst.destroy(); } catch(e){} }
+  _supStatsChartInst = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data, borderColor: col, backgroundColor: col+'22',
+        borderWidth: 2, pointRadius: 3, pointBackgroundColor: col, fill: true, tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 8 }, maxTicksLimit: 8, maxRotation: 0 } },
+        y: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 8 }, callback: function(v){ return v>=1000?(v/1000)+'k':v; } } }
+      }
+    }
+  });
+}
+
+function _supStatsRenderDetail() {
+  var el = document.getElementById('sup-stats-detail');
+  if (!el) return;
+  var users = _supStatsUsers[_supStatsCat] || [];
+  var txns = _supStatsTxns;
+
+  if (!users.length) {
+    el.innerHTML = '<div style="text-align:center;padding:14px;color:#9ca3af;font-size:12px">Aucun compte dans cette catégorie</div>';
+    return;
+  }
+
+  // Build userId set for this category
+  var userIds = {};
+  users.forEach(function(u){ userIds[u.id]=u; });
+
+  // Compute per-user stats
+  var userStats = {};
+  users.forEach(function(u){ userStats[u.id]={depot:{n:0,vol:0},retrait:{n:0,vol:0},transfert:{n:0,vol:0},paiement:{n:0,vol:0}}; });
+
+  txns.forEach(function(tx){
+    var uid = tx.compteSource && tx.compteSource.utilisateurId ? tx.compteSource.utilisateurId : (tx.initiateurId||tx.userId||'');
+    if(userStats[uid] && userStats[uid][tx.type]){
+      userStats[uid][tx.type].n++;
+      userStats[uid][tx.type].vol+=Number(tx.montant||0);
+    }
+  });
+
+  var statLabels = {
+    agent: ['depot','retrait'],
+    business: ['paiement'],
+    mini_master: ['depot','retrait'],
+    master: ['depot','retrait']
+  };
+  var showTypes = statLabels[_supStatsCat]||['depot','retrait'];
+  var typeLabels = {depot:'Dépôts',retrait:'Retraits',paiement:'Paiements',transfert:'Transferts'};
+  var typeColors = {depot:'#22c55e',retrait:'#ef4444',paiement:'#8b5cf6',transfert:'#3b82f6'};
+
+  var statCU = {actif:'#22c55e',en_attente:'#f59e0b',suspendu:'#ef4444',bloque:'#9ca3af'};
+  var roleColorsMap = {agent:'#d97706',business:'#4f46e5',mini_master:'#2563eb',master:'#92400e'};
+  var rc = roleColorsMap[_supStatsCat]||'#ea580c';
+
+  // Summary row
+  var totalActifs = users.filter(function(u){return u.statut==='actif';}).length;
+  var summaryHtml = '<div style="background:'+rc+'08;border:1px solid '+rc+'20;border-radius:12px;padding:11px 13px;margin-bottom:10px;display:flex;justify-content:space-between">'
+    +'<div><div style="font-size:13px;font-weight:800;color:'+rc+'">'+users.length+' au total</div>'
+    +'<div style="font-size:10px;color:#6b7280">'+totalActifs+' actifs</div></div>'
+    +'</div>';
+  el.innerHTML = summaryHtml;
+
+  // Per-user cards (top 10 by volume)
+  var sorted = users.slice().sort(function(a,b){
+    var va=(userStats[b.id]||{});
+    var vb=(userStats[a.id]||{});
+    var volA=showTypes.reduce(function(s,t){return s+(va[t]?va[t].vol:0);},0);
+    var volB=showTypes.reduce(function(s,t){return s+(vb[t]?vb[t].vol:0);},0);
+    return volB-volA;
+  });
+
+  var frag = document.createDocumentFragment();
+  sorted.slice(0,15).forEach(function(u){
+    var card = document.createElement('div');
+    card.style.cssText = 'background:#fff;border:1px solid #f3f4f6;border-radius:12px;padding:10px 12px;margin-bottom:7px';
+    var sc = statCU[u.statut]||'#9ca3af';
+    var initials = ((u.prenom||'')[0]||(u.nom||'')[0]||'?').toUpperCase();
+    var st = userStats[u.id]||{};
+    var statsRow = showTypes.map(function(t){
+      var s=st[t]||{n:0,vol:0};
+      return '<span style="margin-right:10px"><span style="color:'+typeColors[t]+';font-weight:700;font-size:10px">'+typeLabels[t]+'</span>'
+        +' <span style="font-size:10px;color:#374151;font-weight:600">'+F(s.vol)+'</span>'
+        +' <span style="font-size:9px;color:#9ca3af">('+s.n+'op)</span></span>';
+    }).join('');
+    card.innerHTML = '<div style="display:flex;align-items:center;gap:9px;margin-bottom:5px">'
+      +'<div style="width:32px;height:32px;border-radius:8px;background:'+rc+'15;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:'+rc+';flex-shrink:0">'+initials+'</div>'
+      +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:11px;font-weight:700;color:#111827">'+((u.prenom||'')+' '+(u.nom||'')).trim()+'</div>'
+        +'<div style="font-size:9px;color:#6b7280">'+u.telephone+'</div>'
+      +'</div>'
+      +'<span style="background:'+sc+'15;color:'+sc+';border-radius:99px;padding:1px 7px;font-size:9px;font-weight:700">'+u.statut+'</span>'
+    +'</div>'
+    +'<div style="font-size:10px;flex-wrap:wrap">'+statsRow+'</div>';
+    frag.appendChild(card);
+  });
+  el.appendChild(frag);
+}
+
+async function chargerZoneSuperviseur() {
+  // Load alertes inline
+  var aEl = document.getElementById('sup-alertes-inline');
+  if (aEl) {
+    aEl.innerHTML = '<div style="padding:12px;text-align:center"><div class="spin"></div></div>';
+    try {
+      var ar = await apiGet('/alerts?limit=10');
+      var alist = ar.data || [];
+      if (!alist.length) {
+        aEl.innerHTML = '<div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:12px;text-align:center;color:#059669;font-size:12px;font-weight:600">✓ Aucune alerte active</div>';
+      } else {
+        var html = '';
+        alist.forEach(function(a){
+          html += '<div style="background:#fff;border:1px solid #fecaca;border-left:3px solid #ef4444;border-radius:10px;padding:10px 12px;margin-bottom:6px">'
+            +'<div style="font-size:11px;font-weight:700;color:#ef4444;margin-bottom:2px">⚠️ '+(a.type||'Alerte')+'</div>'
+            +'<div style="font-size:11px;color:#374151">'+(a.description||a.message||'')+'</div>'
+          +'</div>';
+        });
+        aEl.innerHTML = html;
+      }
+    } catch(e) {
+      aEl.innerHTML = '<div style="color:var(--r);font-size:11px;padding:8px">'+e.message+'</div>';
+    }
+  }
   chargerTicketsSuperviseur();
 }
 

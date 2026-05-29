@@ -393,6 +393,13 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
         <div id="tk-err" style="display:none;color:var(--r);font-size:12px;margin-bottom:8px;padding:8px;background:#fef2f2;border-radius:8px"></div>
         <button onclick="creerTicketSupport()" style="width:100%;padding:13px;background:linear-gradient(135deg,var(--y2),var(--y));color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">✅ Créer le ticket</button>
       </div>
+
+      <!-- MES TICKETS À TRAITER -->
+      <div style="margin-top:20px">
+        <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">🎫 Mes tickets à traiter</div>
+        <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px" id="mytk-filters"></div>
+        <div id="mytk-list"><div style="padding:14px;text-align:center"><div class="spin"></div></div></div>
+      </div>
     </div>
 
     <!-- PANNEAU 4 : SUIVI TICKETS -->
@@ -409,20 +416,9 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
       </div>
       <div id="sup-tickets"><div style="padding:24px;text-align:center"><div class="spin"></div></div></div>
 
-      <!-- ── Mes tickets à traiter (Support Client) ── -->
-      <div style="margin-top:20px;padding-top:16px;border-top:1px solid #f3f4f6">
-        <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">&#x1F3AB; Mes tickets à traiter</div>
-        <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px" id="sup-tk-filters"></div>
-        <div id="sup-tk-list"><div style="padding:14px;text-align:center"><div class="spin"></div></div></div>
-      </div>
     </div>
 
-    <!-- ── Tickets Support Client (sous onglet Suivi) ── -->
-    <div id="sup-tk-zone" style="display:none;margin-top:18px">
-      <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">&#x1F3AB; Tickets Support Client</div>
-      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px" id="sup-tk-filters"></div>
-      <div id="sup-tk-list"><div style="padding:14px;text-align:center"><div class="spin"></div></div></div>
-    </div>
+
   </div>
   <div style="height:100px"></div>
   <nav class="bnav" id="bnav-support"></nav>
@@ -1541,13 +1537,13 @@ function setSupTab(tab) {
     if (panel) panel.style.display = isActive ? 'block' : 'none';
   });
   if (tab === 'notif') setTimeout(function(){ if(typeof chargerCampagnes==='function') chargerCampagnes(); }, 100);
-  // Section tickets additionnelle
-  var zoneTK = document.getElementById('sup-tk-zone');
-  if (zoneTK) zoneTK.style.display = tab === 'tickets' ? 'block' : 'none';
+  if (tab === 'newticket') {
+    // Charger les tickets à traiter dans l'onglet Ticket
+    _tkInitFilters('mytk-filters', 'mytk-', function(v){ _tkLoadList('mytk-list', v, 'support_client'); });
+    _tkLoadList('mytk-list', '', 'support_client');
+  }
   if (tab === 'tickets') {
     chargerTicketsSupport(_supTicketFilter||'');
-    _tkInitFilters('sup-tk-filters', 'sup-tk-', function(v){ _tkLoadList('sup-tk-list', v, 'support_client'); });
-    _tkLoadList('sup-tk-list', '', 'support_client');
   }
 
 }
@@ -1617,11 +1613,13 @@ async function chargerTicketsSupport(statut) {
         b1.style.cssText='padding:6px 11px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;color:#1d4ed8;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit';
         (function(tid){b1.onclick=function(){changerStatutTicket(tid,'en_cours');};})(t.id);
         btns.appendChild(b1);
-        var b2=document.createElement('button');
-        b2.textContent='🛠 → Tech';
-        b2.style.cssText='padding:6px 11px;background:#faf5ff;border:1px solid #d8b4fe;border-radius:8px;color:#7c3aed;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit';
-        (function(tid){b2.onclick=function(){changerStatutTicket(tid,'transfere_tech');};})(t.id);
-        btns.appendChild(b2);
+        if(t.service==='support_client'||!t.service){
+          var b2=document.createElement('button');
+          b2.textContent='🛠 → Tech';
+          b2.style.cssText='padding:6px 11px;background:#faf5ff;border:1px solid #d8b4fe;border-radius:8px;color:#7c3aed;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit';
+          (function(tid){b2.onclick=function(){changerStatutTicket(tid,'transfere_tech');};})(t.id);
+          btns.appendChild(b2);
+        }
       }
       if(t.statut==='ouvert'||t.statut==='en_cours'||t.statut==='transfere_tech'){
         var b3=document.createElement('button');
@@ -1709,6 +1707,7 @@ async function creerTicketSupport() {
     document.getElementById('tk-client-tel').value = '';
     document.getElementById('tk-motif').value = '';
     document.getElementById('tk-desc').value = '';
+    setTimeout(function(){ _tkLoadList('mytk-list', '', 'support_client'); }, 500);
     document.getElementById('tk-client-info').style.display = 'none';
     setSupTab('tickets');
     filtrerTicketsSupport('ouvert');
@@ -4749,6 +4748,16 @@ function _tkRender(el, list) {
       card.appendChild(rc);
     }
 
+    // Service badge
+    if (tk.service) {
+      var svcIcons = {support_client:'🎧',support_tech:'🛠️',backoffice:'🖥️',admin:'👑'};
+      var svcLabels = {support_client:'Support Client',support_tech:'Support Tech',backoffice:'Back-Office',admin:'Admin'};
+      var svcColors = {support_client:'#059669',support_tech:'#7c3aed',backoffice:'#d97706',admin:'#dc2626'};
+      var svcBadge = document.createElement('span');
+      svcBadge.style.cssText = 'display:inline-block;background:'+(svcColors[tk.service]||'#6b7280')+'15;color:'+(svcColors[tk.service]||'#6b7280')+';border-radius:6px;padding:1px 7px;font-size:9px;font-weight:700;margin-bottom:4px';
+      svcBadge.textContent = (svcIcons[tk.service]||'📋')+' '+(svcLabels[tk.service]||tk.service);
+      card.appendChild(svcBadge);
+    }
     // Ligne 3 : description
     if (tk.description) {
       var rd = document.createElement('div');
@@ -4784,7 +4793,12 @@ function _tkRender(el, list) {
       btns.appendChild(b);
     }
 
-    if (tk.statut === 'ouvert') addBtn('🔄 Prendre', 'background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8', 'en_cours');
+    if (tk.statut === 'ouvert') {
+      addBtn('🔄 Prendre', 'background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8', 'en_cours');
+      if (tk.service === 'support_client' || !tk.service) {
+        addBtn('🛠 → Tech', 'background:#faf5ff;border:1px solid #d8b4fe;color:#7c3aed', 'transfere_tech');
+      }
+    }
     if (tk.statut === 'ouvert' || tk.statut === 'en_cours' || tk.statut === 'transfere_tech') {
       addBtn('✅ Résolu', 'background:#ecfdf5;border:1px solid #a7f3d0;color:#059669', 'resolu');
       addBtn('❌ Rejeter', 'background:#fef2f2;border:1px solid #fecaca;color:#ef4444', 'rejete');

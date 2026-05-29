@@ -189,8 +189,8 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
         <div style="color:var(--m);font-size:12px;margin-top:2px">Alertes &amp; supervision tickets</div>
       </div>
     </div>
-    <!-- Onglets monitoring -->
-    <div id="mon-tab-bar" style="display:flex;overflow-x:auto;gap:0;padding-bottom:0">
+    <!-- Onglets monitoring (masqués par défaut, affichés par JS selon le rôle) -->
+    <div id="mon-tab-bar" style="display:none;overflow-x:auto;gap:0;padding-bottom:0">
       <button id="mon-tab-alertes" onclick="setMonTab('alertes')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:var(--y2);border-bottom:2px solid var(--y);white-space:nowrap">&#x1F6A8; Alertes</button>
       <button id="mon-tab-bo" onclick="setMonTab('bo')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F4BB; Back-Office</button>
       <button id="mon-tab-sup" onclick="setMonTab('sup')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F3A7; Support</button>
@@ -201,8 +201,45 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
   </div>
   <div style="padding:14px 16px 100px">
     <!-- Panel Alertes -->
-    <div id="mon-panel-alertes">
-      <div style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Alertes actives</div>
+    <div id="mon-panel-alertes" style="display:none">
+      <!-- Header alertes -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:13px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em">🚨 Alertes</div>
+        <div style="display:flex;gap:6px">
+          <button onclick="creerAlerteModal()" id="btn-creer-alerte" style="background:var(--y);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;display:none">+ Créer</button>
+          <button onclick="chargerAlertesCentralisees()" style="background:#f3f4f6;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;color:#6b7280;cursor:pointer;font-family:inherit">↻</button>
+        </div>
+      </div>
+      <!-- Filtres gravité -->
+      <div style="display:flex;gap:5px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px" id="alerte-grav-filters"></div>
+      <!-- Filtres statut -->
+      <div style="display:flex;gap:5px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px" id="alerte-stat-filters"></div>
+      <!-- Formulaire création alerte (admin/support) -->
+      <div id="alerte-create-form" style="display:none;background:#fef3c7;border:1.5px solid var(--y);border-radius:12px;padding:12px;margin-bottom:12px">
+        <div style="font-size:11px;font-weight:700;color:var(--y2);margin-bottom:8px">🚨 Nouvelle alerte</div>
+        <input class="inp" id="al-titre" placeholder="Titre de l'alerte" style="margin-bottom:6px;font-size:12px">
+        <textarea class="inp" id="al-desc" placeholder="Description détaillée..." rows="2" style="margin-bottom:6px;font-size:12px;resize:none"></textarea>
+        <div style="display:flex;gap:6px;margin-bottom:6px">
+          <select class="inp" id="al-gravite" style="font-size:11px;flex:1">
+            <option value="faible">🟢 Faible</option>
+            <option value="moyenne" selected>🟡 Moyenne</option>
+            <option value="elevee">🟠 Élevée</option>
+            <option value="critique">🔴 Critique</option>
+          </select>
+          <select class="inp" id="al-service" style="font-size:11px;flex:1">
+            <option value="support_client">🎧 Support Client</option>
+            <option value="support_tech">🛠️ Support Tech</option>
+            <option value="superviseur">🟠 Superviseur</option>
+            <option value="backoffice">🖥️ Back-Office</option>
+            <option value="admin">👑 Admin</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button onclick="envoyerAlerte()" style="flex:1;padding:8px;background:var(--y);color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">🚨 Envoyer</button>
+          <button onclick="document.getElementById('alerte-create-form').style.display='none'" style="padding:8px 12px;background:#f3f4f6;border:none;border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit">✕</button>
+        </div>
+      </div>
+      <!-- Liste alertes -->
       <div id="m-alerts"><div style="padding:20px;text-align:center"><div class="spin"></div></div></div>
     </div>
     <!-- Panel Back-Office tickets internes -->
@@ -1011,7 +1048,21 @@ function setTab(t){
   if(t==='home'){showScr('s-home');chargerAccueil();}
   else if(t==='users'){showScr('s-users');chargerUsers();}
   else if(t==='txns'){showScr('s-txns');chargerTxns();}
-  else if(t==='monitoring'){showScr('s-monitoring');chargerMonitoring();}
+  else if(t==='monitoring'){
+    showScr('s-monitoring');
+    // Affichage immédiat selon le rôle (synchrone, avant tout appel API)
+    var monRole = G.user ? G.user.role : '';
+    if (monRole === 'superviseur') {
+      ['alertes','bo','sup','tech','superviseur','global'].forEach(function(t2){
+        var p=document.getElementById('mon-panel-'+t2); if(p)p.style.display='none';
+      });
+      var spEl=document.getElementById('mon-panel-superviseur');
+      if(spEl)spEl.style.display='block';
+      chargerZoneSuperviseur();
+    } else {
+      chargerMonitoring();
+    }
+  }
   else if(t==='support'){showScr('s-support');chargerSupport();}
   else if(t==='tech'){showScr('s-tech');chargerTech();}
   else if(t==='stats'){
@@ -1456,12 +1507,19 @@ async function chargerTxns(){
 
 // ── MONITORING ──
 async function chargerMonitoring(){
-  try{
-    var ar=await apiGet('/alerts?limit=20');var list=ar.data||[];
-    var el=document.getElementById('m-alerts');el.innerHTML='';
-    if(!list.length){el.innerHTML='<div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:14px;padding:14px;text-align:center;color:#059669;font-size:13px;font-weight:600">Aucune alerte</div>';
-    }else{list.forEach(function(a){var div=document.createElement('div');div.style.cssText='background:#fef2f2;border:1px solid #fecaca;border-radius:14px;padding:14px 16px;margin-bottom:8px';div.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--r);margin-bottom:4px">'+a.typeAlerte+'</div><div style="font-size:12px;color:#6b7280;margin-bottom:10px">'+a.description+'</div>';var btn=document.createElement('button');btn.textContent='Cloturer';btn.style.cssText='padding:7px 14px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;color:#059669;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit';btn.addEventListener('click',function(){cloturerA(a.id);});div.appendChild(btn);el.appendChild(div);});}
-  }catch(e){document.getElementById('m-alerts').innerHTML='<div style="color:var(--r);font-size:12px">'+e.message+'</div>';}
+  var role = G.user ? G.user.role : '';
+  if (role === 'superviseur') {
+    ['alertes','bo','sup','tech','superviseur','global'].forEach(function(t){var p=document.getElementById('mon-panel-'+t);if(p)p.style.display='none';});
+    var sp=document.getElementById('mon-panel-superviseur');
+    if(sp)sp.style.display='block';
+    if(typeof chargerZoneSuperviseur==='function') chargerZoneSuperviseur();
+    return;
+  }
+  var monNav=document.getElementById('mon-tab-bar');
+  if(monNav && (role==='admin'))monNav.style.display='flex';
+  if (role === 'support_tech') { setMonTab('tech'); return; }
+  if (role === 'support_client') { setMonTab('sup'); return; }
+  chargerAlertesCentralisees();
   try{
     var tr=await apiGet('/tickets?limit=20');var tlist=tr.data||[];
     var el2=document.getElementById('m-tickets');el2.innerHTML='';
@@ -2342,7 +2400,21 @@ function setTab(t){
   if(t==='home'){showScr('s-home');chargerAccueil();}
   else if(t==='users'){showScr('s-users');chargerUsers();}
   else if(t==='txns'){showScr('s-txns');chargerTxns();}
-  else if(t==='monitoring'){showScr('s-monitoring');chargerMonitoring();}
+  else if(t==='monitoring'){
+    showScr('s-monitoring');
+    // Affichage immédiat selon le rôle (synchrone, avant tout appel API)
+    var monRole = G.user ? G.user.role : '';
+    if (monRole === 'superviseur') {
+      ['alertes','bo','sup','tech','superviseur','global'].forEach(function(t2){
+        var p=document.getElementById('mon-panel-'+t2); if(p)p.style.display='none';
+      });
+      var spEl=document.getElementById('mon-panel-superviseur');
+      if(spEl)spEl.style.display='block';
+      chargerZoneSuperviseur();
+    } else {
+      chargerMonitoring();
+    }
+  }
   else if(t==='support'){showScr('s-support');chargerSupport();}
   else if(t==='tech'){showScr('s-tech');chargerTech();}
   else if(t==='stats'){
@@ -2785,18 +2857,20 @@ async function chargerTxns(){
 async function chargerMonitoring(){
   // Rediriger selon le rôle
   var role = G.user ? G.user.role : '';
-  if (role === 'superviseur') { setMonTab('superviseur'); return; }
+  if (role === 'superviseur') {
+    ['alertes','bo','sup','tech','superviseur','global'].forEach(function(t){var p=document.getElementById('mon-panel-'+t);if(p)p.style.display='none';});
+    var sp=document.getElementById('mon-panel-superviseur');
+    if(sp)sp.style.display='block';
+    chargerZoneSuperviseur();
+    return;
+  }
   if (role === 'support_tech') { setMonTab('tech'); return; }
   if (role === 'support_client') { setMonTab('sup'); return; }
-  // Admin/superviseur_admin → show alerts tab
+  var monNav=document.getElementById('mon-tab-bar');
+  if(monNav)monNav.style.display='flex';
   setMonTab(_monActiveTab || 'alertes');
   if (_monActiveTab && _monActiveTab !== 'alertes') return;
-  try{
-    var ar=await apiGet('/alerts?limit=20');var list=ar.data||[];
-    var el=document.getElementById('m-alerts');el.innerHTML='';
-    if(!list.length){el.innerHTML='<div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:14px;padding:14px;text-align:center;color:#059669;font-size:13px;font-weight:600">Aucune alerte</div>';
-    }else{list.forEach(function(a){var div=document.createElement('div');div.style.cssText='background:#fef2f2;border:1px solid #fecaca;border-radius:14px;padding:14px 16px;margin-bottom:8px';div.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--r);margin-bottom:4px">'+a.typeAlerte+'</div><div style="font-size:12px;color:#6b7280;margin-bottom:10px">'+a.description+'</div>';var btn=document.createElement('button');btn.textContent='Cloturer';btn.style.cssText='padding:7px 14px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;color:#059669;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit';btn.addEventListener('click',function(){cloturerA(a.id);});div.appendChild(btn);el.appendChild(div);});}
-  }catch(e){document.getElementById('m-alerts').innerHTML='<div style="color:var(--r);font-size:12px">'+e.message+'</div>';}
+  chargerAlertesCentralisees();
   try{
     var tr=await apiGet('/tickets?limit=20');var tlist=tr.data||[];
     var el2=document.getElementById('m-tickets');el2.innerHTML='';
@@ -5049,8 +5123,9 @@ function setMonTab(tab) {
   // Hide tab bar for superviseur immediately
   var monNav = document.getElementById('mon-tab-bar');
   if (monNav) {
-    monNav.style.display = role === 'superviseur' ? 'none' : '';
-    monNav.style.visibility = role === 'superviseur' ? 'hidden' : '';
+    // Show tabs only for admin, superviseur_admin, support_client (partial)
+    var showTabs = (role === 'admin' || role === 'support_client');
+    monNav.style.display = showTabs ? 'flex' : 'none';
   }
   // If requested tab not allowed, redirect
   var tabMap = {support_tech:'tech', support_client:'sup'};
@@ -5417,22 +5492,226 @@ function _supStatsRenderDetail() {
   el.appendChild(frag);
 }
 
+
+// ══════════════════════════════════════════════════════
+// ALERTES CENTRALISÉES — Module complet
+// ══════════════════════════════════════════════════════
+var _alerteGravFilter = '';
+var _alerteStatFilter = 'ouverte,en_cours';
+
+var ALERTE_GRAV = {
+  faible:   {col:'#22c55e', label:'🟢 Faible'},
+  moyenne:  {col:'#f59e0b', label:'🟡 Moyenne'},
+  elevee:   {col:'#f97316', label:'🟠 Élevée'},
+  critique: {col:'#ef4444', label:'🔴 Critique'},
+};
+var ALERTE_STAT = {
+  ouverte:  {col:'#ef4444', label:'🔴 Ouverte'},
+  en_cours: {col:'#f97316', label:'🟠 En cours'},
+  resolue:  {col:'#22c55e', label:'✅ Résolue'},
+  fermee:   {col:'#9ca3af', label:'🔒 Fermée'},
+};
+var ALERTE_SVC = {
+  support_client: {col:'#059669', icon:'🎧'},
+  support_tech:   {col:'#7c3aed', icon:'🛠️'},
+  superviseur:    {col:'#ea580c', icon:'🟠'},
+  backoffice:     {col:'#d97706', icon:'🖥️'},
+  admin:          {col:'#dc2626', icon:'👑'},
+};
+
+async function chargerAlertesCentralisees() {
+  var el = document.getElementById('m-alerts');
+  if (!el) return;
+  el.innerHTML = '<div style="padding:20px;text-align:center"><div class="spin"></div></div>';
+
+  // Show create button for admin/support
+  var role = G.user ? G.user.role : '';
+  var btnCreate = document.getElementById('btn-creer-alerte');
+  if (btnCreate) btnCreate.style.display = (role==='admin'||role==='support_client'||role==='support_tech') ? '' : 'none';
+
+  // Init gravité filters
+  var gBar = document.getElementById('alerte-grav-filters');
+  if (gBar && gBar.childElementCount === 0) {
+    var gravDefs = [['Toutes',''],['🟢 Faible','faible'],['🟡 Moyenne','moyenne'],['🟠 Élevée','elevee'],['🔴 Critique','critique']];
+    gravDefs.forEach(function(g) {
+      var btn = document.createElement('button');
+      btn.textContent = g[0]; btn.dataset.g = g[1];
+      var active = g[1] === _alerteGravFilter;
+      btn.style.cssText = 'padding:4px 10px;border-radius:99px;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit;white-space:nowrap;'
+        +(active?'background:var(--y);color:#fff;border:1.5px solid var(--y)':'background:#fff;color:#374151;border:1.5px solid #e5e7eb');
+      btn.addEventListener('click', function() {
+        _alerteGravFilter = this.dataset.g;
+        gBar.querySelectorAll('button').forEach(function(b){
+          var a=b.dataset.g===_alerteGravFilter;b.style.background=a?'var(--y)':'#fff';b.style.color=a?'#fff':'#374151';b.style.borderColor=a?'var(--y)':'#e5e7eb';
+        });
+        chargerAlertesCentralisees();
+      });
+      gBar.appendChild(btn);
+    });
+  }
+
+  // Init statut filters
+  var sBar = document.getElementById('alerte-stat-filters');
+  if (sBar && sBar.childElementCount === 0) {
+    var statDefs = [['Actives','ouverte,en_cours'],['🔴 Ouvertes','ouverte'],['🟠 En cours','en_cours'],['✅ Résolues','resolue'],['🔒 Fermées','fermee'],['Toutes','']];
+    statDefs.forEach(function(s) {
+      var btn = document.createElement('button');
+      btn.textContent = s[0]; btn.dataset.s = s[1];
+      var active = s[1] === _alerteStatFilter;
+      btn.style.cssText = 'padding:4px 10px;border-radius:99px;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit;white-space:nowrap;'
+        +(active?'background:#374151;color:#fff;border:1.5px solid #374151':'background:#fff;color:#374151;border:1.5px solid #e5e7eb');
+      btn.addEventListener('click', function() {
+        _alerteStatFilter = this.dataset.s;
+        sBar.querySelectorAll('button').forEach(function(b){
+          var a=b.dataset.s===_alerteStatFilter;b.style.background=a?'#374151':'#fff';b.style.color=a?'#fff':'#374151';b.style.borderColor=a?'#374151':'#e5e7eb';
+        });
+        chargerAlertesCentralisees();
+      });
+      sBar.appendChild(btn);
+    });
+  }
+
+  try {
+    var q = '/alerts?limit=50';
+    if (_alerteGravFilter) q += '&gravite='+_alerteGravFilter;
+    // Handle multi-statut filter (ouverte,en_cours)
+    if (_alerteStatFilter && _alerteStatFilter.indexOf(',') === -1) q += '&statut='+_alerteStatFilter;
+    var r = await apiGet(q);
+    var list = (r.data && r.data.alertes) || [];
+    // Filter actives manually if needed
+    if (_alerteStatFilter === 'ouverte,en_cours') {
+      list = list.filter(function(a){ return a.statut==='ouverte'||a.statut==='en_cours'; });
+    }
+    el.innerHTML = '';
+    if (!list.length) {
+      el.innerHTML = '<div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:12px;padding:14px;text-align:center;color:#059669;font-size:12px;font-weight:600">✓ Aucune alerte active</div>';
+      return;
+    }
+    var frag = document.createDocumentFragment();
+    list.forEach(function(a) {
+      var gv = ALERTE_GRAV[a.gravite] || {col:'#9ca3af',label:a.gravite};
+      var st = ALERTE_STAT[a.statut] || {col:'#9ca3af',label:a.statut};
+      var sv = ALERTE_SVC[a.service] || {col:'#6b7280',icon:'📋'};
+      var d = new Date(a.created_at||Date.now());
+      var ds = d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      var card = document.createElement('div');
+      card.id = 'acard-'+a.id;
+      card.style.cssText = 'background:#fff;border:1px solid #f3f4f6;border-left:3px solid '+gv.col+';border-radius:10px;padding:11px 13px;margin-bottom:8px';
+      // Header
+      card.innerHTML =
+        '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:5px">'
+          +'<div style="font-size:12px;font-weight:800;color:#111827;flex:1">'+a.titre+'</div>'
+          +'<div style="display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">'
+            +'<span style="background:'+gv.col+'15;color:'+gv.col+';border-radius:99px;padding:1px 7px;font-size:9px;font-weight:700">'+gv.label+'</span>'
+            +'<span style="background:'+st.col+'15;color:'+st.col+';border-radius:99px;padding:1px 7px;font-size:9px;font-weight:700">'+st.label+'</span>'
+          +'</div>'
+        +'</div>'
+        +'<div style="font-size:11px;color:#6b7280;margin-bottom:6px;line-height:1.4">'+a.description+'</div>'
+        +('<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">')
+          +'<div style="display:flex;gap:5px;align-items:center">'
+            +'<span style="background:'+sv.col+'15;color:'+sv.col+';border-radius:6px;padding:1px 7px;font-size:9px;font-weight:700">'+sv.icon+' '+a.service+'</span>'
+            +'<span style="font-size:9px;color:#9ca3af">'+ds+'</span>'
+          +'</div>'
+          +'<span style="font-size:9px;color:#9ca3af">par '+(a.auteur||'système')+'</span>'
+        +'</div>';
+      // Action buttons
+      if (a.statut !== 'resolue' && a.statut !== 'fermee') {
+        var btnRow = document.createElement('div');
+        btnRow.style.cssText = 'display:flex;gap:5px;flex-wrap:wrap;margin-top:6px';
+        if (a.statut === 'ouverte') {
+          var bPrendre = document.createElement('button');
+          bPrendre.textContent = '🔄 Prendre en charge';
+          bPrendre.style.cssText = 'padding:5px 9px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:7px;color:#1d4ed8;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit';
+          (function(aid){bPrendre.onclick=function(){changerStatutAlerte(aid,'en_cours');};})(a.id);
+          btnRow.appendChild(bPrendre);
+        }
+        var bResoudre = document.createElement('button');
+        bResoudre.textContent = '✅ Résoudre';
+        bResoudre.style.cssText = 'padding:5px 9px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:7px;color:#059669;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit';
+        (function(aid){bResoudre.onclick=function(){changerStatutAlerte(aid,'resolue');};})(a.id);
+        btnRow.appendChild(bResoudre);
+        var bFermer = document.createElement('button');
+        bFermer.textContent = '🔒 Fermer';
+        bFermer.style.cssText = 'padding:5px 9px;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:7px;color:#6b7280;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit';
+        (function(aid){bFermer.onclick=function(){changerStatutAlerte(aid,'fermee');};})(a.id);
+        btnRow.appendChild(bFermer);
+        if (isSuperAdmin()) {
+          var bSuppr = document.createElement('button');
+          bSuppr.textContent = '🗑';
+          bSuppr.style.cssText = 'padding:5px 8px;background:#fef2f2;border:1px solid #fecaca;border-radius:7px;color:#ef4444;cursor:pointer;font-size:11px;font-family:inherit';
+          (function(aid){bSuppr.onclick=function(){supprimerAlerte(aid);};})(a.id);
+          btnRow.appendChild(bSuppr);
+        }
+        card.appendChild(btnRow);
+      }
+      frag.appendChild(card);
+    });
+    el.appendChild(frag);
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--r);padding:12px;font-size:12px">'+e.message+'</div>';
+  }
+}
+
+async function changerStatutAlerte(id, statut) {
+  try {
+    var traite_par = G.user ? (G.user.prenom||G.user.telephone||G.user.role) : 'admin';
+    await callAPI('/alerts/'+id, {method:'PATCH', body:JSON.stringify({statut:statut, traite_par:traite_par})});
+    toast('✓ Alerte mise à jour');
+    chargerAlertesCentralisees();
+  } catch(e) { toast('Erreur: '+e.message, true); }
+}
+
+async function supprimerAlerte(id) {
+  if (!confirm('Supprimer définitivement cette alerte ?')) return;
+  try {
+    await callAPI('/alerts/'+id, {method:'DELETE'});
+    var card = document.getElementById('acard-'+id);
+    if (card) { card.style.opacity='0'; card.style.transition='opacity .3s'; setTimeout(function(){card.remove();},300); }
+    toast('✓ Alerte supprimée');
+  } catch(e) { toast('Erreur: '+e.message, true); }
+}
+
+function creerAlerteModal() {
+  var f = document.getElementById('alerte-create-form');
+  if (f) f.style.display = f.style.display==='none' ? 'block' : 'none';
+}
+
+async function envoyerAlerte() {
+  var titre = document.getElementById('al-titre').value.trim();
+  var desc = document.getElementById('al-desc').value.trim();
+  var gravite = document.getElementById('al-gravite').value;
+  var service = document.getElementById('al-service').value;
+  if (!titre || !desc) { toast('Titre et description requis', true); return; }
+  try {
+    await callAPI('/alerts', {method:'POST', body:JSON.stringify({titre:titre, description:desc, gravite:gravite, service:service})});
+    toast('🚨 Alerte créée');
+    document.getElementById('al-titre').value='';
+    document.getElementById('al-desc').value='';
+    document.getElementById('alerte-create-form').style.display='none';
+    chargerAlertesCentralisees();
+  } catch(e) { toast('Erreur: '+e.message, true); }
+}
+
 async function chargerZoneSuperviseur() {
   // Load alertes inline
+  // Alertes centralisées filtrées pour superviseur - chargées dans m-alerts du panel superviseur
+  // (le panneau sup contient sup-alertes-inline qui appelle chargerAlertesCentralisees)
   var aEl = document.getElementById('sup-alertes-inline');
   if (aEl) {
     aEl.innerHTML = '<div style="padding:12px;text-align:center"><div class="spin"></div></div>';
     try {
-      var ar = await apiGet('/alerts?limit=10');
-      var alist = ar.data || [];
+      var ar = await apiGet('/alerts?limit=10&statut=ouverte');
+      var alist = (ar.data && ar.data.alertes) || [];
       if (!alist.length) {
         aEl.innerHTML = '<div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:12px;text-align:center;color:#059669;font-size:12px;font-weight:600">✓ Aucune alerte active</div>';
       } else {
         var html = '';
         alist.forEach(function(a){
-          html += '<div style="background:#fff;border:1px solid #fecaca;border-left:3px solid #ef4444;border-radius:10px;padding:10px 12px;margin-bottom:6px">'
-            +'<div style="font-size:11px;font-weight:700;color:#ef4444;margin-bottom:2px">⚠️ '+(a.type||'Alerte')+'</div>'
-            +'<div style="font-size:11px;color:#374151">'+(a.description||a.message||'')+'</div>'
+          var gv = {faible:'#22c55e',moyenne:'#f59e0b',elevee:'#f97316',critique:'#ef4444'};
+          var col = gv[a.gravite]||'#f59e0b';
+          html += '<div style="background:#fff;border:1px solid '+col+'30;border-left:3px solid '+col+';border-radius:10px;padding:9px 11px;margin-bottom:6px">'
+            +'<div style="font-size:11px;font-weight:700;color:'+col+';margin-bottom:2px">⚠️ '+a.titre+'</div>'
+            +'<div style="font-size:10px;color:#374151">'+a.description+'</div>'
           +'</div>';
         });
         aEl.innerHTML = html;

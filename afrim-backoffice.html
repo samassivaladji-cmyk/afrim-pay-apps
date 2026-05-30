@@ -292,6 +292,14 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
     <!-- Panel Global — Vue par entité -->
     <!-- PANNEAU SUPERVISEUR — alertes + tickets directement -->
     <div id="mon-panel-superviseur" style="display:none">
+      <!-- Navigation retour pour superviseur -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #f3f4f6">
+        <button onclick="setTab('home')" style="background:#f3f4f6;border:none;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;color:#374151;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          Accueil
+        </button>
+        <button onclick="setTab('monitoring')" style="background:#fef3c7;border:1px solid var(--y);border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;color:var(--y2);cursor:pointer;font-family:inherit">↻ Rafraîchir</button>
+      </div>
       <!-- Alertes actives -->
       <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">🚨 Alertes actives</div>
       <div id="sup-alertes-inline"><div style="padding:12px;text-align:center"><div class="spin"></div></div></div>
@@ -3457,7 +3465,7 @@ async function chargerTech(){
   // Alertes systeme (tickets escalades pour support_tech)
   try{
     var u=G.user;
-    var alertUrl='/alerts?limit=10&statut=ouverte';
+    var alertUrl='/alerts?limit=10&statut=ouverte&service=support_tech';
     var ar=await apiGet(alertUrl);
     var alist=(ar.data&&ar.data.alertes)||[];
     var el2=document.getElementById('tech-logs');el2.innerHTML='';
@@ -3465,12 +3473,12 @@ async function chargerTech(){
       el2.innerHTML='<div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:14px;padding:14px;text-align:center;color:#059669;font-size:13px;font-weight:600">Aucune alerte systeme</div>';
     }else{
       alist.forEach(function(a){
+        var gv={faible:'#22c55e',moyenne:'#f59e0b',elevee:'#f97316',critique:'#ef4444'};
+        var col=gv[a.gravite]||'#ef4444';
         var div=document.createElement('div');
-        div.style.cssText='background:#fef2f2;border:1px solid #fecaca;border-radius:14px;padding:12px 16px;margin-bottom:8px';
-        var titre=a.typeAlerte||a.sujet||'Alerte';
-        var desc=a.description||'--';
-        div.innerHTML='<div style="font-size:12px;font-weight:700;color:var(--r)">'+titre+'</div>'
-          +'<div style="font-size:11px;color:#6b7280;margin-top:3px">'+desc+'</div>';
+        div.style.cssText='background:#fff;border:1px solid '+col+'30;border-left:3px solid '+col+';border-radius:10px;padding:10px 12px;margin-bottom:7px';
+        div.innerHTML='<div style="font-size:11px;font-weight:700;color:'+col+';margin-bottom:2px">⚠️ '+(a.titre||'Alerte')+'</div>'
+          +'<div style="font-size:10px;color:#6b7280">'+a.description+'</div>';
         el2.appendChild(div);
       });
     }
@@ -5904,7 +5912,7 @@ async function chargerZoneSuperviseur() {
   if (aEl) {
     aEl.innerHTML = '<div style="padding:12px;text-align:center"><div class="spin"></div></div>';
     try {
-      var ar = await apiGet('/alerts?limit=10&statut=ouverte');
+      var ar = await apiGet('/alerts?limit=10&statut=ouverte&service=superviseur');
       var alist = (ar.data && ar.data.alertes) || [];
       if (!alist.length) {
         aEl.innerHTML = '<div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:12px;text-align:center;color:#059669;font-size:12px;font-weight:600">✓ Aucune alerte active</div>';

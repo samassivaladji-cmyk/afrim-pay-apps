@@ -202,6 +202,10 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
         <div style="font-size:20px;font-weight:800">Monitoring</div>
         <div style="color:var(--m);font-size:12px;margin-top:2px">Alertes &amp; supervision tickets</div>
       </div>
+      <button id="mon-back-btn" onclick="setTab('home')" style="display:none;background:#f3f4f6;border:none;border-radius:10px;padding:7px 12px;font-size:11px;font-weight:700;color:#374151;cursor:pointer;font-family:inherit;align-items:center;gap:5px">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        Retour
+      </button>
     </div>
     <!-- Onglets monitoring (masqués par défaut, affichés par JS selon le rôle) -->
     <div id="mon-tab-bar" style="display:none;overflow-x:auto;gap:0;padding-bottom:0">
@@ -5425,17 +5429,19 @@ function setMonTab(tab) {
     if (role === 'support_tech') show = (t === 'alertes' || t === 'tech');
     else if (role === 'superviseur') show = false; // superviseur has no tabs - direct view
     else if (role === 'superviseur') show = false;
-    else if (role === 'backoffice') show = (t !== 'superviseur' && t !== 'bo');
+    else if (role === 'backoffice') show = (t !== 'bo'); // backoffice voit tout sauf l'onglet bo
     btn.style.display = show ? '' : 'none';
   });
   // Superviseur: hide tab bar entirely, show alertes + tickets directly
   // Hide tab bar for superviseur immediately
   var monNav = document.getElementById('mon-tab-bar');
   if (monNav) {
-    // Show tabs only for admin, superviseur_admin, support_client (partial)
-    var showTabs = (role === 'admin' || role === 'support_client');
+    var showTabs = (role === 'admin' || role === 'backoffice' || role === 'support_client');
     monNav.style.display = showTabs ? 'flex' : 'none';
   }
+  // Bouton retour pour backoffice
+  var backBtn = document.getElementById('mon-back-btn');
+  if (backBtn) backBtn.style.display = (role === 'backoffice') ? 'flex' : 'none';
   // If requested tab not allowed, redirect
   var tabMap = {support_tech:'tech', support_client:'sup'};
   if (role === 'superviseur') tab = 'superviseur';

@@ -1824,7 +1824,7 @@ async function _chargerSupClientAlertes(gravite, statut) {
   if (!el) return;
   el.innerHTML = '<div style="padding:16px;text-align:center"><div class="spin"></div></div>';
   try {
-    var q = '/alerts?limit=50'; // Backend filtre par role=support_client automatiquement
+    var q = '/alerts?limit=50&service=support_client';
     if (gravite) q += '&gravite='+gravite;
     if (statut) q += '&statut='+statut;
     var r = await apiGet(q);
@@ -5865,7 +5865,7 @@ function _alerteUpdateToolbar() {
   var count = Object.keys(_alerteSel).length;
   var tb = document.getElementById('alerte-sel-toolbar');
   var cEl = document.getElementById('alerte-sel-count');
-  if (tb) tb.style.display = (count > 0 && isSuperAdmin()) ? 'flex' : 'none';
+  if (tb) tb.style.display = (count > 0 && (isSuperAdmin() || isAdminGestionnaire())) ? 'flex' : 'none';
   if (cEl) cEl.textContent = count > 0 ? count + ' sélectionnée(s)' : _alerteCache.length + ' alerte(s)';
 }
 
@@ -5885,6 +5885,7 @@ function _alerteToggleAll() {
 }
 
 async function _alerteSupprimerSel() {
+  if (!isSuperAdmin()) { toast('Seul le super admin peut supprimer les alertes', true); return; }
   var ids = Object.keys(_alerteSel);
   if (!ids.length) return;
   if (!confirm('Supprimer ' + ids.length + ' alerte(s) définitivement ?')) return;
@@ -5978,7 +5979,7 @@ async function chargerAlertesCentralisees() {
       card.id = 'acard-'+a.id;
       card.style.cssText = 'background:#fff;border:1px solid #f3f4f6;border-left:3px solid '+gv.col+';border-radius:10px;padding:11px 13px;margin-bottom:8px';
       // Checkbox sélection (admin uniquement)
-      if (isSuperAdmin()) {
+      if (isSuperAdmin() || isAdminGestionnaire()) {
         var cbWrap = document.createElement('label');
         cbWrap.style.cssText = 'display:flex;align-items:center;gap:5px;margin-bottom:5px;cursor:pointer';
         var cb = document.createElement('input');

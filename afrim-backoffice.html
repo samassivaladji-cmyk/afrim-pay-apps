@@ -1195,7 +1195,7 @@ async function doLogin(){
   document.getElementById('pin-keys').style.display='none';
   try{
     var r=await apiPost('/auth/login',{telephone:tel,pin:G.pin});
-    var ok=['admin','superviseur','support_client','support_tech'];
+    var ok=['admin','superviseur','support_client','support_tech','backoffice'];
     if(ok.indexOf(r.data.user.role)===-1)throw new Error('Acces non autorise');
     G.token=r.data.accessToken;G.refresh=r.data.refreshToken;G.user=r.data.user;
     localStorage.setItem('afrim_token',G.token);localStorage.setItem('afrim_refresh',G.refresh);localStorage.setItem('afrim_user',JSON.stringify(G.user));
@@ -2705,7 +2705,7 @@ async function doLogin(){
   document.getElementById('pin-keys').style.display='none';
   try{
     var r=await apiPost('/auth/login',{telephone:tel,pin:G.pin});
-    var ok=['admin','superviseur','support_client','support_tech'];
+    var ok=['admin','superviseur','support_client','support_tech','backoffice'];
     if(ok.indexOf(r.data.user.role)===-1)throw new Error('Acces non autorise');
     G.token=r.data.accessToken;G.refresh=r.data.refreshToken;G.user=r.data.user;
     localStorage.setItem('afrim_token',G.token);localStorage.setItem('afrim_refresh',G.refresh);localStorage.setItem('afrim_user',JSON.stringify(G.user));

@@ -961,7 +961,7 @@ var insRole='client';
 var usersData=[];var uFilter='all';
 
 // ── UTILITAIRES ──
-function showScr(id){var all=document.querySelectorAll('.scr');for(var i=0;i<all.length;i++)all[i].classList.remove('on');var el=document.getElementById(id);if(el)el.classList.add('on');window.scrollTo(0,0);}
+function showScr(id){var all=document.querySelectorAll('.scr');for(var i=0;i<all.length;i++){all[i].classList.remove('on');all[i].style.display='';}var el=document.getElementById(id);if(el){el.classList.add('on');}window.scrollTo(0,0);}
 function openSh(id){var el=document.getElementById('sh-'+id);if(el)el.classList.add('on');}
 function closeSh(id){var el=document.getElementById('sh-'+id);if(el)el.classList.remove('on');}
 function toast(msg,err){var el=document.getElementById('toast');if(!el)return;el.textContent=msg;el.className=err?'on err':'on';clearTimeout(toast._t);toast._t=setTimeout(function(){el.className='';},2800);}
@@ -1050,27 +1050,42 @@ function setTab(t){
   else if(t==='txns'){showScr('s-txns');chargerTxns();}
   else if(t==='monitoring'){
     showScr('s-monitoring');
-    // Affichage immédiat selon le rôle (synchrone, avant tout appel API)
     var monRole = G.user ? G.user.role : '';
+    // Affichage synchrone immédiat selon le rôle
+    ['alertes','bo','sup','tech','superviseur','global'].forEach(function(t2){
+      var p=document.getElementById('mon-panel-'+t2); if(p)p.style.display='none';
+    });
     if (monRole === 'superviseur') {
-      ['alertes','bo','sup','tech','superviseur','global'].forEach(function(t2){
-        var p=document.getElementById('mon-panel-'+t2); if(p)p.style.display='none';
-      });
       var spEl=document.getElementById('mon-panel-superviseur');
       if(spEl)spEl.style.display='block';
       chargerZoneSuperviseur();
+    } else if (monRole === 'support_tech') {
+      var monNav=document.getElementById('mon-tab-bar'); if(monNav)monNav.style.display='none';
+      var techEl=document.getElementById('mon-panel-tech');
+      if(techEl)techEl.style.display='block';
+      chargerMonitoring();
+    } else if (monRole === 'support_client') {
+      var monNav=document.getElementById('mon-tab-bar'); if(monNav)monNav.style.display='none';
+      var supEl=document.getElementById('mon-panel-sup');
+      if(supEl)supEl.style.display='block';
+      chargerMonitoring();
     } else {
+      // admin et autres : afficher tab bar + onglet actif
+      var monNav=document.getElementById('mon-tab-bar'); if(monNav)monNav.style.display='flex';
+      var activeTab=_monActiveTab||'alertes';
+      var activeEl=document.getElementById('mon-panel-'+activeTab);
+      if(activeEl)activeEl.style.display='block';
+      ['alertes','bo','sup','tech','superviseur','global'].forEach(function(t2){
+        var btn=document.getElementById('mon-tab-'+t2);
+        if(btn){btn.style.color=t2===activeTab?'var(--y2)':'#6b7280';btn.style.borderBottom=t2===activeTab?'2px solid var(--y)':'2px solid transparent';}
+      });
       chargerMonitoring();
     }
   }
   else if(t==='support'){showScr('s-support');chargerSupport();}
   else if(t==='tech'){showScr('s-tech');chargerTech();}
   else if(t==='stats'){
-    var allScr=document.querySelectorAll('.scr');
-    for(var i=0;i<allScr.length;i++){allScr[i].classList.remove('on');allScr[i].style.display='';}
-    var statsEl=document.getElementById('s-stats');
-    if(statsEl){statsEl.classList.add('on');statsEl.style.display='flex';}
-    window.scrollTo(0,0);
+    showScr('s-stats');
     buildNavs('stats');
     var role=G.user?G.user.role:'';
     var supPanel=document.getElementById('sup-stats-panel');
@@ -1516,7 +1531,19 @@ async function chargerMonitoring(){
     return;
   }
   var monNav=document.getElementById('mon-tab-bar');
-  if(monNav && (role==='admin'))monNav.style.display='flex';
+  if(monNav)monNav.style.display='flex';
+  var activeTab2 = _monActiveTab || 'alertes';
+  ['alertes','bo','sup','tech','superviseur','global'].forEach(function(t){
+    var p=document.getElementById('mon-panel-'+t);
+    if(p)p.style.display=(t===activeTab2)?'block':'none';
+  });
+  _monActiveTab = activeTab2;
+  ['alertes','bo','sup','tech','superviseur','global'].forEach(function(t){
+    var btn=document.getElementById('mon-tab-'+t);
+    if(btn){btn.style.color=t===activeTab2?'var(--y2)':'#6b7280';btn.style.borderBottom=t===activeTab2?'2px solid var(--y)':'2px solid transparent';}
+  });
+  if(activeTab2 !== 'alertes') return;
+  chargerAlertesCentralisees();
   if (role === 'support_tech') { setMonTab('tech'); return; }
   if (role === 'support_client') { setMonTab('sup'); return; }
   chargerAlertesCentralisees();
@@ -2288,7 +2315,7 @@ var insRole='client';
 var usersData=[];var uFilter='all';
 
 // ── UTILITAIRES ──
-function showScr(id){var all=document.querySelectorAll('.scr');for(var i=0;i<all.length;i++)all[i].classList.remove('on');var el=document.getElementById(id);if(el)el.classList.add('on');window.scrollTo(0,0);}
+function showScr(id){var all=document.querySelectorAll('.scr');for(var i=0;i<all.length;i++){all[i].classList.remove('on');all[i].style.display='';}var el=document.getElementById(id);if(el){el.classList.add('on');}window.scrollTo(0,0);}
 function openSh(id){var el=document.getElementById('sh-'+id);if(el)el.classList.add('on');}
 function closeSh(id){var el=document.getElementById('sh-'+id);if(el)el.classList.remove('on');}
 function toast(msg,err){var el=document.getElementById('toast');if(!el)return;el.textContent=msg;el.className=err?'on err':'on';clearTimeout(toast._t);toast._t=setTimeout(function(){el.className='';},2800);}
@@ -2402,27 +2429,42 @@ function setTab(t){
   else if(t==='txns'){showScr('s-txns');chargerTxns();}
   else if(t==='monitoring'){
     showScr('s-monitoring');
-    // Affichage immédiat selon le rôle (synchrone, avant tout appel API)
     var monRole = G.user ? G.user.role : '';
+    // Affichage synchrone immédiat selon le rôle
+    ['alertes','bo','sup','tech','superviseur','global'].forEach(function(t2){
+      var p=document.getElementById('mon-panel-'+t2); if(p)p.style.display='none';
+    });
     if (monRole === 'superviseur') {
-      ['alertes','bo','sup','tech','superviseur','global'].forEach(function(t2){
-        var p=document.getElementById('mon-panel-'+t2); if(p)p.style.display='none';
-      });
       var spEl=document.getElementById('mon-panel-superviseur');
       if(spEl)spEl.style.display='block';
       chargerZoneSuperviseur();
+    } else if (monRole === 'support_tech') {
+      var monNav=document.getElementById('mon-tab-bar'); if(monNav)monNav.style.display='none';
+      var techEl=document.getElementById('mon-panel-tech');
+      if(techEl)techEl.style.display='block';
+      chargerMonitoring();
+    } else if (monRole === 'support_client') {
+      var monNav=document.getElementById('mon-tab-bar'); if(monNav)monNav.style.display='none';
+      var supEl=document.getElementById('mon-panel-sup');
+      if(supEl)supEl.style.display='block';
+      chargerMonitoring();
     } else {
+      // admin et autres : afficher tab bar + onglet actif
+      var monNav=document.getElementById('mon-tab-bar'); if(monNav)monNav.style.display='flex';
+      var activeTab=_monActiveTab||'alertes';
+      var activeEl=document.getElementById('mon-panel-'+activeTab);
+      if(activeEl)activeEl.style.display='block';
+      ['alertes','bo','sup','tech','superviseur','global'].forEach(function(t2){
+        var btn=document.getElementById('mon-tab-'+t2);
+        if(btn){btn.style.color=t2===activeTab?'var(--y2)':'#6b7280';btn.style.borderBottom=t2===activeTab?'2px solid var(--y)':'2px solid transparent';}
+      });
       chargerMonitoring();
     }
   }
   else if(t==='support'){showScr('s-support');chargerSupport();}
   else if(t==='tech'){showScr('s-tech');chargerTech();}
   else if(t==='stats'){
-    var allScr=document.querySelectorAll('.scr');
-    for(var i=0;i<allScr.length;i++){allScr[i].classList.remove('on');allScr[i].style.display='';}
-    var statsEl=document.getElementById('s-stats');
-    if(statsEl){statsEl.classList.add('on');statsEl.style.display='flex';}
-    window.scrollTo(0,0);
+    showScr('s-stats');
     buildNavs('stats');
     var role=G.user?G.user.role:'';
     var supPanel=document.getElementById('sup-stats-panel');
@@ -2868,8 +2910,19 @@ async function chargerMonitoring(){
   if (role === 'support_client') { setMonTab('sup'); return; }
   var monNav=document.getElementById('mon-tab-bar');
   if(monNav)monNav.style.display='flex';
-  setMonTab(_monActiveTab || 'alertes');
-  if (_monActiveTab && _monActiveTab !== 'alertes') return;
+  var activeTab = _monActiveTab || 'alertes';
+  // Afficher le bon panel directement
+  ['alertes','bo','sup','tech','superviseur','global'].forEach(function(t){
+    var p=document.getElementById('mon-panel-'+t);
+    if(p)p.style.display=(t===activeTab)?'block':'none';
+  });
+  _monActiveTab = activeTab;
+  // Activer le bon onglet
+  ['alertes','bo','sup','tech','superviseur','global'].forEach(function(t){
+    var btn=document.getElementById('mon-tab-'+t);
+    if(btn){btn.style.color=t===activeTab?'var(--y2)':'#6b7280';btn.style.borderBottom=t===activeTab?'2px solid var(--y)':'2px solid transparent';}
+  });
+  if (activeTab !== 'alertes') return;
   chargerAlertesCentralisees();
   try{
     var tr=await apiGet('/tickets?limit=20');var tlist=tr.data||[];
@@ -5143,7 +5196,7 @@ function setMonTab(tab) {
       btn.style.color = active ? 'var(--y2)' : '#6b7280';
       btn.style.borderBottom = active ? '2px solid var(--y)' : '2px solid transparent';
     }
-    if (panel) panel.style.display = active ? 'block' : 'none';
+    if (panel) { panel.style.display = active ? 'block' : 'none'; }
   });
   if (tab === 'alertes') {
     // Charger alertes via chargerMonitoring existante

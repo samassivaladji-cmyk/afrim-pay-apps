@@ -210,6 +210,7 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
       <button id="mon-tab-sup" onclick="setMonTab('sup')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F3A7; Support</button>
       <button id="mon-tab-tech" onclick="setMonTab('tech')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F527; Tech</button>
       <button id="mon-tab-superviseur" onclick="setMonTab('superviseur')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F7E0; Superviseur</button>
+      <button id="mon-tab-admin" onclick="setMonTab('admin')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F451; Admin</button>
       <button id="mon-tab-global" onclick="setMonTab('global')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F30D; Global</button>
     </div>
   </div>
@@ -223,6 +224,12 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
           <button onclick="creerAlerteModal()" id="btn-creer-alerte" style="background:var(--y);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;display:none">+ Créer</button>
           <button onclick="chargerAlertesCentralisees()" style="background:#f3f4f6;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;color:#6b7280;cursor:pointer;font-family:inherit">↻</button>
         </div>
+      </div>
+      <!-- Toolbar sélection multiple (admin) -->
+      <div id="alerte-sel-toolbar" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca;margin-bottom:8px">
+        <span id="alerte-sel-count" style="font-size:11px;font-weight:700;color:#ef4444;flex:1">0 sélectionnée(s)</span>
+        <button onclick="_alerteToggleAll()" style="background:#fff;border:1px solid #fecaca;border-radius:7px;padding:3px 9px;font-size:10px;font-weight:700;color:#ef4444;cursor:pointer;font-family:inherit">☐ Tout</button>
+        <button onclick="_alerteSupprimerSel()" style="background:#ef4444;border:none;border-radius:7px;padding:3px 9px;font-size:10px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit">🗑 Supprimer sélection</button>
       </div>
       <!-- Filtres gravité -->
       <div style="display:flex;gap:5px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px" id="alerte-grav-filters"></div>
@@ -312,6 +319,18 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
       <div id="sup-tk-sup-list"><div style="padding:14px;text-align:center"><div class="spin"></div></div></div>
     </div>
 
+    <!-- PANNEAU ADMIN (backoffice gestionnaire) -->
+    <div id="mon-panel-admin" style="display:none">
+      <div style="font-size:11px;font-weight:800;color:#ca8a04;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">👑 Administration — Tickets</div>
+      <div id="mon-admin-tb" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca;margin-bottom:8px">
+        <span style="font-size:11px;font-weight:700;color:#ef4444;flex:1" id="mon-admin-tb-count">0 sélectionné(s)</span>
+        <button onclick="_tkSelAll('mon-admin-list')" style="background:#fff;border:1px solid #fecaca;border-radius:7px;padding:3px 9px;font-size:10px;font-weight:700;color:#ef4444;cursor:pointer;font-family:inherit">☐ Tout</button>
+        <button onclick="supprimerTicketsSelection('mon-admin-list')" style="background:#ef4444;border:none;border-radius:7px;padding:3px 9px;font-size:10px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit">🗑 Supprimer</button>
+      </div>
+      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px" id="mon-admin-filters"></div>
+      <div id="mon-admin-list"><div style="padding:16px;text-align:center"><div class="spin"></div></div></div>
+    </div>
+
     <div id="mon-panel-global" style="display:none">
       <div style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">&#x1F30D; Suivi global par entité</div>
       <!-- Filtre statut global -->
@@ -330,6 +349,16 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
       <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:12px 14px;margin-bottom:14px">
         <div style="font-size:11px;font-weight:800;color:#1e40af;margin-bottom:10px">&#x1F527; Support Technique</div>
         <div id="mon-global-tech"><div style="padding:10px;text-align:center"><div class="spin"></div></div></div>
+      </div>
+      <!-- Superviseur -->
+      <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:12px 14px;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:800;color:#c2410c;margin-bottom:10px">&#x1F7E0; Superviseur</div>
+        <div id="mon-global-superviseur"><div style="padding:10px;text-align:center"><div class="spin"></div></div></div>
+      </div>
+      <!-- Admin -->
+      <div style="background:#fefce8;border:1px solid #fde047;border-radius:12px;padding:12px 14px;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:800;color:#ca8a04;margin-bottom:10px">&#x1F451; Admin</div>
+        <div id="mon-global-admin"><div style="padding:10px;text-align:center"><div class="spin"></div></div></div>
       </div>
     </div>
   </div>
@@ -352,6 +381,7 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
       <button id="sup-tab-search" onclick="setSupTab('search')" style="padding:10px 14px;font-size:12px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">🔍 Client</button>
       <button id="sup-tab-newticket" onclick="setSupTab('newticket')" style="padding:10px 14px;font-size:12px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">➕ Ticket</button>
       <button id="sup-tab-tickets" onclick="setSupTab('tickets')" style="padding:10px 14px;font-size:12px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">📋 Suivi</button>
+      <button id="sup-tab-alertes" onclick="setSupTab('alertes')" style="padding:10px 14px;font-size:12px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">⚠️ Alertes</button>
     </div>
   </div>
 
@@ -490,6 +520,17 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
         <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px" id="mytk-filters"></div>
         <div id="mytk-list"><div style="padding:14px;text-align:center"><div class="spin"></div></div></div>
       </div>
+    </div>
+
+    <!-- PANNEAU 5 : ALERTES -->
+    <div id="sup-panel-alertes" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:13px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em">⚠️ Alertes</div>
+        <button onclick="chargerAlertesCentralisees()" style="background:#f3f4f6;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;color:#6b7280;cursor:pointer;font-family:inherit">↻</button>
+      </div>
+      <div style="display:flex;gap:5px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px" id="sup-alerte-grav-filters"></div>
+      <div style="display:flex;gap:5px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px" id="sup-alerte-stat-filters"></div>
+      <div id="sup-alertes-list"><div style="padding:16px;text-align:center"><div class="spin"></div></div></div>
     </div>
 
     <!-- PANNEAU 4 : SUIVI TICKETS -->
@@ -937,20 +978,25 @@ var SUPER_ADMIN_TEL = '0505414751';
 function isSuperAdmin(){
   return G.user && G.user.role === 'admin' && G.user.telephone === SUPER_ADMIN_TEL;
 }
+function isAdminGestionnaire(){
+  return G.user && (G.user.role === 'backoffice' || isSuperAdmin());
+}
 
 var PERMS={
-  // Admin : acces total
-  admin:         {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:1,logs:1},
-  // Superviseur : sa zone uniquement, pas le personnel interne
+  // Back-Office (Super Admin) : acces total + suppression
+  admin:         {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:1,rembourser:1,kyc:1,gels:1,logs:1},
+  // Superviseur : sa zone uniquement
   superviseur:   {home:1,users:1,txns:0,monitoring:1,stats:1,support:0,tech:0,creer:0,soldes:1,supprimer:0,rembourser:0,kyc:0,gels:0,logs:0,superviseur_zone:1},
   // Support Client : recherche client, remboursement, tickets
   support_client:{home:0,users:0,txns:0,monitoring:0,support:1,tech:0,creer:0,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:0,logs:0},
-  // Support Tech : logs, transactions bloquees, alertes systeme. Pas infos perso client
-  support_tech:  {home:0,users:0,txns:0,monitoring:1,stats:0,support:0,tech:1,creer:0,soldes:0,supprimer:0,rembourser:0,kyc:0,gels:0,logs:1}
+  // Support Tech : logs, transactions, alertes systeme
+  support_tech:  {home:0,users:0,txns:0,monitoring:1,stats:0,support:0,tech:1,creer:0,soldes:0,supprimer:0,rembourser:0,kyc:0,gels:0,logs:1},
+  // Admin (gestionnaire) : tout voir + gérer, SANS suppression
+  backoffice:    {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:1,logs:1,admin_gestionnaire:1}
 };
 function perm(k){var u=G.user;if(!u)return 0;var p=PERMS[u.role];return p?p[k]||0:0;}
 
-var ROLE_C={client:'#059669',agent:'#d97706',business:'#4f46e5',mini_master:'#2563eb',master:'#92400e',superviseur:'#ea580c',admin:'#ca8a04',support_client:'#2563eb',support_tech:'#059669'};
+var ROLE_C={client:'#059669',agent:'#d97706',business:'#4f46e5',mini_master:'#2563eb',master:'#92400e',superviseur:'#ea580c',admin:'#ca8a04',backoffice:'#ca8a04',support_client:'#2563eb',support_tech:'#7c3aed'};
 
 // Documents requis par niveau KYC
 var KYC_DOCS_REQUIS = {
@@ -1166,7 +1212,7 @@ async function doLogin(){
 
 function enterApp(){
   var u=G.user;if(!u)return;
-  var firstTab={admin:'home',superviseur:'home',support_client:'support',support_tech:'tech'};
+  var firstTab={admin:'home',superviseur:'home',support_client:'support',support_tech:'tech',backoffice:'home'};
   buildNavGrid();
   buildNavs(firstTab[u.role]||'home');
   setTab(firstTab[u.role]||'home');
@@ -1239,7 +1285,7 @@ function _setBadge(id, count, urgentColor) {
 
 async function chargerAccueil(){
   var u=G.user;if(!u)return;
-  var roleLabel={admin:'ADMINISTRATION',superviseur:'SUPERVISEUR',support_client:'SUPPORT CLIENT',support_tech:'SUPPORT TECH'};
+  var roleLabel={admin:'BACK-OFFICE',superviseur:'SUPERVISEUR',support_client:'SUPPORT CLIENT',support_tech:'SUPPORT TECH',backoffice:'ADMINISTRATION'};
   document.getElementById('h-name').textContent=(u.prenom||'')+' - '+(roleLabel[u.role]||u.role.toUpperCase());
   try{
     var r;
@@ -1619,6 +1665,7 @@ async function chargerMonitoring(){
   });
   if(activeTab2 !== 'alertes') return;
   chargerAlertesCentralisees();
+  if (role === 'backoffice') { /* admin gestionnaire sees full monitoring */ }
   if (role === 'support_tech') { setMonTab('tech'); return; }
   if (role === 'support_client') { setMonTab('sup'); return; }
   chargerAlertesCentralisees();
@@ -1766,9 +1813,63 @@ async function validerKyc(clientId,ticketId,niveau){
 var _supTabActif = 'notif';
 var _supTicketFilter = '';
 
+
+async function _chargerSupClientAlertes(gravite, statut) {
+  var el = document.getElementById('sup-alertes-list');
+  if (!el) return;
+  el.innerHTML = '<div style="padding:16px;text-align:center"><div class="spin"></div></div>';
+  try {
+    var q = '/alerts?limit=30&service=support_client';
+    if (gravite) q += '&gravite='+gravite;
+    if (statut) q += '&statut='+statut;
+    var r = await apiGet(q);
+    var list = (r.data && r.data.alertes) || [];
+    if (!list.length) {
+      el.innerHTML = '<div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:12px;padding:14px;text-align:center;color:#059669;font-size:12px;font-weight:600">✓ Aucune alerte</div>';
+      return;
+    }
+    var frag = document.createDocumentFragment();
+    list.forEach(function(a) {
+      var gv = {faible:'#22c55e',moyenne:'#f59e0b',elevee:'#f97316',critique:'#ef4444'};
+      var st = {ouverte:'#ef4444',en_cours:'#f97316',resolue:'#22c55e',fermee:'#9ca3af'};
+      var col = gv[a.gravite]||'#9ca3af';
+      var stCol = st[a.statut]||'#9ca3af';
+      var d = new Date(a.created_at||Date.now());
+      var ds = d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      var card = document.createElement('div');
+      card.style.cssText = 'background:#fff;border:1px solid #f3f4f6;border-left:3px solid '+col+';border-radius:10px;padding:11px 13px;margin-bottom:7px';
+      card.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">'
+        +'<div style="font-size:12px;font-weight:800;color:#111827;flex:1">'+a.titre+'</div>'
+        +'<div style="display:flex;gap:4px"><span style="background:'+col+'15;color:'+col+';border-radius:99px;padding:1px 7px;font-size:9px;font-weight:700">'+a.gravite+'</span>'
+        +'<span style="background:'+stCol+'15;color:'+stCol+';border-radius:99px;padding:1px 7px;font-size:9px;font-weight:700">'+a.statut+'</span></div></div>'
+        +'<div style="font-size:11px;color:#6b7280;margin-bottom:4px">'+a.description+'</div>'
+        +'<div style="font-size:9px;color:#9ca3af">'+ds+' par '+(a.auteur||'systeme')+'</div>';
+      if (a.statut === 'ouverte' || a.statut === 'en_cours') {
+        var btnRow = document.createElement('div');
+        btnRow.style.cssText = 'display:flex;gap:5px;margin-top:7px';
+        if (a.statut === 'ouverte') {
+          var bP=document.createElement('button');bP.textContent='🔄 Prendre';
+          bP.style.cssText='padding:5px 9px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:7px;color:#1d4ed8;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit';
+          (function(aid){bP.onclick=function(){changerStatutAlerte(aid,'en_cours');setTimeout(function(){_chargerSupClientAlertes('','');},600);};})(a.id);
+          btnRow.appendChild(bP);
+        }
+        var bR=document.createElement('button');bR.textContent='✅ Résoudre';
+        bR.style.cssText='padding:5px 9px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:7px;color:#059669;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit';
+        (function(aid){bR.onclick=function(){changerStatutAlerte(aid,'resolue');setTimeout(function(){_chargerSupClientAlertes('','');},600);};})(a.id);
+        btnRow.appendChild(bR);
+        card.appendChild(btnRow);
+      }
+      frag.appendChild(card);
+    });
+    el.innerHTML='';el.appendChild(frag);
+  } catch(e) {
+    el.innerHTML='<div style="color:var(--r);padding:12px;font-size:12px">'+e.message+'</div>';
+  }
+}
+
 function setSupTab(tab) {
   _supTabActif = tab;
-  var tabs = ['notif','search','newticket','tickets'];
+  var tabs = ['notif','search','newticket','tickets','alertes'];
   tabs.forEach(function(t) {
     var btn = document.getElementById('sup-tab-'+t);
     var panel = document.getElementById('sup-panel-'+t);
@@ -1787,6 +1888,27 @@ function setSupTab(tab) {
   }
   if (tab === 'tickets') {
     chargerTicketsSupport(_supTicketFilter||'');
+  }
+  if (tab === 'alertes') {
+    // Charger les alertes du support_client dans le panel dédié
+    var supAlEl = document.getElementById('sup-alertes-list');
+    if (supAlEl) {
+      // Init filtres si pas encore fait
+      var sgBar = document.getElementById('sup-alerte-grav-filters');
+      if (sgBar && sgBar.childElementCount === 0) {
+        [['Toutes',''],['🟢 Faible','faible'],['🟡 Moyenne','moyenne'],['🟠 Élevée','elevee'],['🔴 Critique','critique']].forEach(function(g){
+          var b=document.createElement('button');b.textContent=g[0];b.dataset.g=g[1];
+          var act=g[1]==='';
+          b.style.cssText='padding:4px 10px;border-radius:99px;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit;white-space:nowrap;'+(act?'background:var(--y);color:#fff;border:1.5px solid var(--y)':'background:#fff;color:#374151;border:1.5px solid #e5e7eb');
+          b.addEventListener('click',function(){
+            sgBar.querySelectorAll('button').forEach(function(b2){var a2=b2.dataset.g===this.dataset.g;b2.style.background=a2?'var(--y)':'#fff';b2.style.color=a2?'#fff':'#374151';b2.style.borderColor=a2?'var(--y)':'#e5e7eb';},this);
+            _chargerSupClientAlertes(this.dataset.g,'');
+          });
+          sgBar.appendChild(b);
+        });
+      }
+      _chargerSupClientAlertes('','');
+    }
   }
 
 }
@@ -2374,18 +2496,20 @@ var G={token:null,refresh:null,user:null,pin:''};
 try{G.token=localStorage.getItem('afrim_token');G.refresh=localStorage.getItem('afrim_refresh');G.user=JSON.parse(localStorage.getItem('afrim_user')||'null');}catch(e){}
 
 var PERMS={
-  // Admin : acces total
-  admin:         {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:1,logs:1},
-  // Superviseur : sa zone uniquement, pas le personnel interne
+  // Back-Office (Super Admin) : acces total + suppression
+  admin:         {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:1,rembourser:1,kyc:1,gels:1,logs:1},
+  // Superviseur : sa zone uniquement
   superviseur:   {home:1,users:1,txns:0,monitoring:1,stats:1,support:0,tech:0,creer:0,soldes:1,supprimer:0,rembourser:0,kyc:0,gels:0,logs:0,superviseur_zone:1},
   // Support Client : recherche client, remboursement, tickets
   support_client:{home:0,users:0,txns:0,monitoring:0,support:1,tech:0,creer:0,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:0,logs:0},
-  // Support Tech : logs, transactions bloquees, alertes systeme. Pas infos perso client
-  support_tech:  {home:0,users:0,txns:0,monitoring:1,stats:0,support:0,tech:1,creer:0,soldes:0,supprimer:0,rembourser:0,kyc:0,gels:0,logs:1}
+  // Support Tech : logs, transactions, alertes systeme
+  support_tech:  {home:0,users:0,txns:0,monitoring:1,stats:0,support:0,tech:1,creer:0,soldes:0,supprimer:0,rembourser:0,kyc:0,gels:0,logs:1},
+  // Admin (gestionnaire) : tout voir + gérer, SANS suppression
+  backoffice:    {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:1,logs:1,admin_gestionnaire:1}
 };
 function perm(k){var u=G.user;if(!u)return 0;var p=PERMS[u.role];return p?p[k]||0:0;}
 
-var ROLE_C={client:'#059669',agent:'#d97706',business:'#4f46e5',mini_master:'#2563eb',master:'#92400e',superviseur:'#ea580c',admin:'#ca8a04',support_client:'#2563eb',support_tech:'#059669'};
+var ROLE_C={client:'#059669',agent:'#d97706',business:'#4f46e5',mini_master:'#2563eb',master:'#92400e',superviseur:'#ea580c',admin:'#ca8a04',backoffice:'#ca8a04',support_client:'#2563eb',support_tech:'#7c3aed'};
 var insRole='client';
 var usersData=[];var uFilter='all';
 
@@ -2598,7 +2722,7 @@ async function doLogin(){
 
 function enterApp(){
   var u=G.user;if(!u)return;
-  var firstTab={admin:'home',superviseur:'home',support_client:'support',support_tech:'tech'};
+  var firstTab={admin:'home',superviseur:'home',support_client:'support',support_tech:'tech',backoffice:'home'};
   buildNavGrid();
   buildNavs(firstTab[u.role]||'home');
   setTab(firstTab[u.role]||'home');
@@ -2669,7 +2793,7 @@ function _setBadge(id, count, urgentColor) {
 
 async function chargerAccueil(){
   var u=G.user;if(!u)return;
-  var roleLabel={admin:'ADMINISTRATION',superviseur:'SUPERVISEUR',support_client:'SUPPORT CLIENT',support_tech:'SUPPORT TECH'};
+  var roleLabel={admin:'BACK-OFFICE',superviseur:'SUPERVISEUR',support_client:'SUPPORT CLIENT',support_tech:'SUPPORT TECH',backoffice:'ADMINISTRATION'};
   chargerCompteurs();
   document.getElementById('h-name').textContent=(u.prenom||'')+' - '+(roleLabel[u.role]||u.role.toUpperCase());
   try{
@@ -3035,6 +3159,7 @@ async function chargerMonitoring(){
     chargerZoneSuperviseur();
     return;
   }
+  if (role === 'backoffice') { /* admin gestionnaire sees full monitoring */ }
   if (role === 'support_tech') { setMonTab('tech'); return; }
   if (role === 'support_client') { setMonTab('sup'); return; }
   var monNav=document.getElementById('mon-tab-bar');
@@ -5298,7 +5423,8 @@ function setMonTab(tab) {
     var show = true;
     if (role === 'support_tech') show = (t === 'alertes' || t === 'tech');
     else if (role === 'superviseur') show = false; // superviseur has no tabs - direct view
-    else if (role === 'support_client') show = (t === 'alertes' || t === 'sup' || t === 'tech');
+    else if (role === 'superviseur') show = false;
+    else if (role === 'backoffice') show = (t !== 'superviseur' && t !== 'bo');
     btn.style.display = show ? '' : 'none';
   });
   // Superviseur: hide tab bar entirely, show alertes + tickets directly
@@ -5316,7 +5442,7 @@ function setMonTab(tab) {
     tab = tabMap[role];
   }
   _monActiveTab = tab;
-  var tabs = ['alertes','bo','sup','tech','superviseur','global'];
+  var tabs = ['alertes','bo','sup','tech','superviseur','admin','global'];
   tabs.forEach(function(t) {
     var btn = document.getElementById('mon-tab-'+t);
     var panel = document.getElementById('mon-panel-'+t);
@@ -5347,6 +5473,10 @@ function setMonTab(tab) {
   if (tab === 'superviseur') {
     chargerZoneSuperviseur();
   }
+  if (tab === 'admin') {
+    _tkInitFilters('mon-admin-filters', 'mon-admin-', function(v) { _tkLoadList('mon-admin-list', v, 'admin'); });
+    _tkLoadList('mon-admin-list', '', 'admin');
+  }
   if (tab === 'global') {
     // Vue structurée par entité
     _tkInitFilters('mon-global-filters', 'mon-global-', function(v) {
@@ -5354,10 +5484,14 @@ function setMonTab(tab) {
       _tkLoadList('mon-global-bo', v, 'backoffice');
       _tkLoadList('mon-global-sup', v, 'support_client');
       _tkLoadList('mon-global-tech', v, 'support_tech');
+      _tkLoadList('mon-global-superviseur', v, 'superviseur');
+      _tkLoadList('mon-global-admin', v, 'admin');
     });
     _tkLoadList('mon-global-bo', _monGlobalFilter, 'backoffice');
     _tkLoadList('mon-global-sup', _monGlobalFilter, 'support_client');
     _tkLoadList('mon-global-tech', _monGlobalFilter, 'support_tech');
+    _tkLoadList('mon-global-superviseur', _monGlobalFilter, 'superviseur');
+    _tkLoadList('mon-global-admin', _monGlobalFilter, 'admin');
   }
 }
 
@@ -5701,6 +5835,49 @@ var ALERTE_SVC = {
   admin:          {col:'#dc2626', icon:'👑'},
 };
 
+
+// ── SÉLECTION MULTIPLE ALERTES ──
+var _alerteSel = {};
+var _alerteCache = [];
+
+function _alerteUpdateToolbar() {
+  var count = Object.keys(_alerteSel).length;
+  var tb = document.getElementById('alerte-sel-toolbar');
+  var cEl = document.getElementById('alerte-sel-count');
+  if (tb) tb.style.display = (count > 0 && isSuperAdmin()) ? 'flex' : 'none';
+  if (cEl) cEl.textContent = count > 0 ? count + ' sélectionnée(s)' : _alerteCache.length + ' alerte(s)';
+}
+
+function _alerteToggleAll() {
+  var count = Object.keys(_alerteSel).length;
+  var total = _alerteCache.length;
+  if (count === total && total > 0) _alerteSel = {};
+  else _alerteCache.forEach(function(a) { _alerteSel[a.id] = true; });
+  // Update checkboxes
+  _alerteCache.forEach(function(a) {
+    var cb = document.getElementById('alcb-'+a.id);
+    var card = document.getElementById('acard-'+a.id);
+    if (cb) cb.checked = !!_alerteSel[a.id];
+    if (card) { card.style.borderColor = _alerteSel[a.id] ? '#fca5a5' : '#f3f4f6'; card.style.background = _alerteSel[a.id] ? '#fff5f5' : '#fff'; }
+  });
+  _alerteUpdateToolbar();
+}
+
+async function _alerteSupprimerSel() {
+  var ids = Object.keys(_alerteSel);
+  if (!ids.length) return;
+  if (!confirm('Supprimer ' + ids.length + ' alerte(s) définitivement ?')) return;
+  try {
+    for (var i = 0; i < ids.length; i++) {
+      await callAPI('/alerts/' + ids[i], {method: 'DELETE'});
+    }
+    toast('✓ ' + ids.length + ' alerte(s) supprimée(s)');
+    _alerteSel = {};
+    chargerAlertesCentralisees();
+    chargerCompteurs();
+  } catch(e) { toast('Erreur: ' + e.message, true); }
+}
+
 async function chargerAlertesCentralisees() {
   var el = document.getElementById('m-alerts');
   if (!el) return;
@@ -5779,6 +5956,25 @@ async function chargerAlertesCentralisees() {
       var card = document.createElement('div');
       card.id = 'acard-'+a.id;
       card.style.cssText = 'background:#fff;border:1px solid #f3f4f6;border-left:3px solid '+gv.col+';border-radius:10px;padding:11px 13px;margin-bottom:8px';
+      // Checkbox sélection (admin uniquement)
+      if (isSuperAdmin()) {
+        var cbWrap = document.createElement('label');
+        cbWrap.style.cssText = 'display:flex;align-items:center;gap:5px;margin-bottom:5px;cursor:pointer';
+        var cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.id = 'alcb-'+a.id;
+        cb.style.cssText = 'width:15px;height:15px;accent-color:#ef4444;cursor:pointer';
+        (function(aid) { cb.onchange = function() {
+          if(this.checked) _alerteSel[aid] = true; else delete _alerteSel[aid];
+          var c2 = document.getElementById('acard-'+aid);
+          if(c2){c2.style.borderColor=this.checked?'#fca5a5':'#f3f4f6';c2.style.background=this.checked?'#fff5f5':'#fff';}
+          _alerteUpdateToolbar();
+        }; })(a.id);
+        var cbLbl = document.createElement('span');
+        cbLbl.style.cssText = 'font-size:9px;color:#9ca3af';
+        cbLbl.textContent = 'Sélectionner';
+        cbWrap.appendChild(cb); cbWrap.appendChild(cbLbl);
+        card.appendChild(cbWrap);
+      }
       // Header
       card.innerHTML =
         '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:5px">'
@@ -5797,7 +5993,18 @@ async function chargerAlertesCentralisees() {
           +'<span style="font-size:9px;color:#9ca3af">par '+(a.auteur||'système')+'</span>'
         +'</div>';
       // Action buttons
-      if (a.statut !== 'resolue' && a.statut !== 'fermee') {
+      // Bouton supprimer toujours visible pour admin (toutes alertes)
+    if (isSuperAdmin()) {
+      var adminDelRow = document.createElement('div');
+      adminDelRow.style.cssText = 'display:flex;justify-content:flex-end;margin-top:4px';
+      var bAdminDel = document.createElement('button');
+      bAdminDel.textContent = '🗑 Supprimer';
+      bAdminDel.style.cssText = 'padding:4px 8px;background:#fef2f2;border:1px solid #fecaca;border-radius:7px;color:#ef4444;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit';
+      (function(aid){bAdminDel.onclick=function(){supprimerAlerte(aid);};})(a.id);
+      adminDelRow.appendChild(bAdminDel);
+      card.appendChild(adminDelRow);
+    }
+    if (a.statut !== 'resolue' && a.statut !== 'fermee') {
         var btnRow = document.createElement('div');
         btnRow.style.cssText = 'display:flex;gap:5px;flex-wrap:wrap;margin-top:6px';
         if (a.statut === 'ouverte') {
@@ -5826,13 +6033,7 @@ async function chargerAlertesCentralisees() {
           (function(al){bTicket.onclick=function(){ creerTicketDepuisAlerte(al); };})(a);
           btnRow.appendChild(bTicket);
         }
-        if (isSuperAdmin()) {
-          var bSuppr = document.createElement('button');
-          bSuppr.textContent = '🗑';
-          bSuppr.style.cssText = 'padding:5px 8px;background:#fef2f2;border:1px solid #fecaca;border-radius:7px;color:#ef4444;cursor:pointer;font-size:11px;font-family:inherit';
-          (function(aid){bSuppr.onclick=function(){supprimerAlerte(aid);};})(a.id);
-          btnRow.appendChild(bSuppr);
-        }
+
         card.appendChild(btnRow);
       }
       frag.appendChild(card);

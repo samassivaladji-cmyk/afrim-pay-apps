@@ -231,9 +231,9 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
       </div>
       <!-- Toolbar sélection multiple (admin) -->
       <div id="alerte-sel-toolbar" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca;margin-bottom:8px">
-        <span id="alerte-sel-count" style="font-size:11px;font-weight:700;color:#ef4444;flex:1">0 sélectionnée(s)</span>
+        <span id="alerte-sel-count" style="font-size:11px;font-weight:700;color:#ef4444;flex:1">0 alerte(s)</span>
         <button onclick="_alerteToggleAll()" style="background:#fff;border:1px solid #fecaca;border-radius:7px;padding:3px 9px;font-size:10px;font-weight:700;color:#ef4444;cursor:pointer;font-family:inherit">☐ Tout</button>
-        <button onclick="_alerteSupprimerSel()" style="background:#ef4444;border:none;border-radius:7px;padding:3px 9px;font-size:10px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit">🗑 Supprimer sélection</button>
+        <button id="alerte-btn-suppr-sel" onclick="_alerteSupprimerSel()" style="display:none;background:#ef4444;border:none;border-radius:7px;padding:3px 9px;font-size:10px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit">🗑 Supprimer sélection</button>
       </div>
       <!-- Filtres gravité -->
       <div style="display:flex;gap:5px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px" id="alerte-grav-filters"></div>
@@ -633,21 +633,35 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
     <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px" id="sup-stats-cat-filters"></div>
     <div id="sup-stats-detail"></div>
   </div>
-  <!-- Stats Admin (vue normale) -->
+  <!-- Stats Admin (vue enrichie) -->
   <div id="stats-content" style="padding:12px 16px 100px">
-    <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:14px">
-      <div style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Évolution sur 30 jours</div>
-      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-        <button onclick="setChartType('depot')" id="ct-depot" style="padding:5px 12px;border-radius:99px;border:1.5px solid #22c55e;background:#f0fdf4;color:#15803d;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Dépôts</button>
-        <button onclick="setChartType('retrait')" id="ct-retrait" style="padding:5px 12px;border-radius:99px;border:1.5px solid #e5e7eb;background:#f9fafb;color:var(--m);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Retraits</button>
-        <button onclick="setChartType('transfert')" id="ct-transfert" style="padding:5px 12px;border-radius:99px;border:1.5px solid #e5e7eb;background:#f9fafb;color:var(--m);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Transferts</button>
-        <button onclick="setChartType('paiement_marchand')" id="ct-paiement_marchand" style="padding:5px 12px;border-radius:99px;border:1.5px solid #e5e7eb;background:#f9fafb;color:var(--m);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Paiements</button>
-      </div>
-      <canvas id="stats-chart" height="180"></canvas>
+    <!-- Filtres période -->
+    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px" id="adm-stats-period-filters"></div>
+    <!-- Graphique -->
+    <div style="background:#fff;border-radius:16px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Évolution de la période</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px" id="adm-chart-type-btns"></div>
+      <canvas id="stats-chart" height="160"></canvas>
     </div>
-    <div id="stats-content-inner">
-      <div style="padding:24px;text-align:center"><div class="spin"></div></div>
+    <!-- Vue globale comptes -->
+    <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">📊 Vue globale — Comptes actifs</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:16px">
+      <div class="card" style="text-align:center;padding:10px 6px"><div style="font-size:18px;font-weight:900;color:#d97706" id="adm-count-agents">--</div><div style="font-size:9px;color:#6b7280">🏪 Agents</div></div>
+      <div class="card" style="text-align:center;padding:10px 6px"><div style="font-size:18px;font-weight:900;color:#4f46e5" id="adm-count-business">--</div><div style="font-size:9px;color:#6b7280">🏬 Business</div></div>
+      <div class="card" style="text-align:center;padding:10px 6px"><div style="font-size:18px;font-weight:900;color:#2563eb" id="adm-count-minimaster">--</div><div style="font-size:9px;color:#6b7280">🔵 Mini-M.</div></div>
+      <div class="card" style="text-align:center;padding:10px 6px"><div style="font-size:18px;font-weight:900;color:#92400e" id="adm-count-master">--</div><div style="font-size:9px;color:#6b7280">🟤 Masters</div></div>
+      <div class="card" style="text-align:center;padding:10px 6px"><div style="font-size:18px;font-weight:900;color:#059669" id="adm-count-clients">--</div><div style="font-size:9px;color:#6b7280">👤 Clients</div></div>
+      <div class="card" style="text-align:center;padding:10px 6px;grid-column:1;display:none" id="adm-count-all-wrap"></div>
     </div>
+    <!-- Onglets catégorie -->
+    <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">📋 Détail par catégorie</div>
+    <div style="display:flex;gap:5px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px" id="adm-stats-cat-filters"></div>
+    <!-- Volumes de la période (dynamique selon catégorie) -->
+    <div id="adm-stats-volumes" style="margin-bottom:14px"></div>
+    <!-- Détail individuel -->
+    <div id="adm-stats-detail"></div>
+    <!-- Compatibilité ancienne référence -->
+    <div id="stats-content-inner" style="display:none"></div>
   </div>
   </div><!-- end stats-content admin -->
   <nav class="bnav" id="bnav-stats"></nav>
@@ -3761,142 +3775,349 @@ function afficherQrSuperviseur(){
   document.body.appendChild(ov);
 }
 
-// ── GRAPHIQUES STATS ──
-var statsChart=null;
-var statsRawData=[];
-var currentChartType='depot';
+// ════════════════════════════════════════════════════════════
+// STATS ADMIN — moteur complet avec détail par rôle/période
+// ════════════════════════════════════════════════════════════
+var statsChart = null;
+var statsRawData = [];
+var currentChartType = 'depot_effectue';
+var _admStatsPeriod = 'month';
+var _admStatsCat = 'agent';
+var _admStatsData = null; // cache dernier résultat /stats/detailed
+var _admStatsChartInst = null;
 
-var CHART_COLORS={
-  depot:{border:'#22c55e',bg:'rgba(34,197,94,.12)'},
-  retrait:{border:'#f97316',bg:'rgba(249,115,22,.12)'},
-  transfert:{border:'#3b82f6',bg:'rgba(59,130,246,.12)'},
-  paiement_marchand:{border:'#8b5cf6',bg:'rgba(139,92,246,.12)'}
+// Définition des métriques par rôle
+var ADM_ROLE_METRICS = {
+  agent: [
+    { key:'depot_effectue',  label:'Dépôts effectués',    col:'#22c55e', icon:'💰', desc:'Dépôts faits pour des clients' },
+    { key:'retrait_effectue',label:'Retraits effectués',   col:'#f97316', icon:'💸', desc:'Retraits faits pour des clients' },
+    { key:'transfert_envoye',label:'Transferts envoyés',   col:'#3b82f6', icon:'➡️', desc:'Vers d\'autres opérateurs' },
+    { key:'transfert_recu',  label:'Transferts reçus',     col:'#8b5cf6', icon:'⬅️', desc:'D\'autres opérateurs' },
+  ],
+  business: [
+    { key:'paiement_recu',   label:'Paiements reçus',      col:'#22c55e', icon:'🛒', desc:'Des clients via QR/code' },
+    { key:'paiement_envoye', label:'Paiements envoyés',     col:'#8b5cf6', icon:'💳', desc:'Vers d\'autres marchands' },
+    { key:'transfert_envoye',label:'Transferts envoyés',   col:'#3b82f6', icon:'➡️', desc:'Vers d\'autres comptes' },
+    { key:'transfert_recu',  label:'Transferts reçus',     col:'#f97316', icon:'⬅️', desc:'D\'autres comptes' },
+  ],
+  mini_master: [
+    { key:'depot_effectue',  label:'Dépôts effectués',    col:'#22c55e', icon:'💰', desc:'Auprès de leurs agents' },
+    { key:'retrait_effectue',label:'Retraits effectués',   col:'#f97316', icon:'💸', desc:'Auprès de leurs agents' },
+    { key:'transfert_envoye',label:'Transferts envoyés',   col:'#3b82f6', icon:'➡️', desc:'Vers Masters / pairs' },
+    { key:'transfert_recu',  label:'Transferts reçus',     col:'#8b5cf6', icon:'⬅️', desc:'Des Masters / pairs' },
+  ],
+  master: [
+    { key:'depot_effectue',  label:'Dépôts effectués',    col:'#22c55e', icon:'💰', desc:'Auprès de leurs agents' },
+    { key:'retrait_effectue',label:'Retraits effectués',   col:'#f97316', icon:'💸', desc:'Auprès de leurs agents' },
+    { key:'transfert_envoye',label:'Transferts envoyés',   col:'#3b82f6', icon:'➡️', desc:'Vers Mini-Masters / pairs' },
+    { key:'transfert_recu',  label:'Transferts reçus',     col:'#8b5cf6', icon:'⬅️', desc:'Des Mini-Masters / pairs' },
+  ],
+  client: [
+    { key:'depot_recu',      label:'Dépôts reçus',         col:'#22c55e', icon:'💰', desc:'Via un agent' },
+    { key:'retrait_fait',    label:'Retraits effectués',   col:'#f97316', icon:'💸', desc:'Via un agent' },
+    { key:'transfert_envoye',label:'Transferts envoyés',   col:'#3b82f6', icon:'➡️', desc:'Vers d\'autres comptes' },
+    { key:'transfert_recu',  label:'Transferts reçus',     col:'#8b5cf6', icon:'⬅️', desc:'D\'autres comptes' },
+    { key:'paiement_envoye', label:'Paiements marchands',  col:'#d97706', icon:'🛒', desc:'Chez des Business' },
+  ],
 };
 
-function setChartType(type){
-  currentChartType=type;
-  var types=['depot','retrait','transfert','paiement_marchand'];
-  var colors={depot:'#22c55e',retrait:'#f97316',transfert:'#3b82f6',paiement_marchand:'#8b5cf6'};
-  types.forEach(function(t){
-    var btn=document.getElementById('ct-'+t);if(!btn)return;
-    if(t===type){
-      var c=colors[t];
-      btn.style.borderColor=c;btn.style.background=c+'18';btn.style.color=c;
-    }else{
-      btn.style.borderColor='#e5e7eb';btn.style.background='#f9fafb';btn.style.color='#6b7280';
-    }
-  });
-  renderChart(type);
+var ADM_CAT_COLORS = { agent:'#d97706', business:'#4f46e5', mini_master:'#2563eb', master:'#92400e', client:'#059669' };
+var ADM_CAT_LABELS = { agent:'🏪 Agents', business:'🏬 Business', mini_master:'🔵 Mini-Masters', master:'🟤 Masters', client:'👤 Clients' };
+
+function setChartType(type) {
+  currentChartType = type;
+  _admStatsRenderChart();
 }
 
-function renderChart(type){
-  var canvas=document.getElementById('stats-chart');if(!canvas)return;
-  // Préparer les 30 derniers jours
-  var days=[];var labels=[];
-  for(var i=29;i>=0;i--){
-    var d=new Date();d.setDate(d.getDate()-i);
-    days.push(d.toISOString().slice(0,10));
-    labels.push(d.getDate()+'/'+(d.getMonth()+1));
+function renderChart(type) { setChartType(type); }
+
+function _admStatsGetDebutLocal() {
+  var now = new Date();
+  if (_admStatsPeriod === 'today')  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  if (_admStatsPeriod === 'week')   { var d=new Date(now); d.setDate(d.getDate()-7); return d; }
+  if (_admStatsPeriod === 'year')   return new Date(now.getFullYear(), 0, 1);
+  return new Date(now.getFullYear(), now.getMonth(), 1);
+}
+
+async function chargerStats() {
+  var role = G.user ? G.user.role : '';
+  if (role === 'superviseur') { chargerStatsSuperviseur(); return; }
+
+  // Init filtres période (une fois)
+  var pBar = document.getElementById('adm-stats-period-filters');
+  if (pBar && pBar.childElementCount === 0) {
+    [['Aujourd\'hui','today'],['Semaine','week'],['Ce mois','month'],['Année','year']].forEach(function(p) {
+      var btn = document.createElement('button');
+      btn.textContent = p[0]; btn.dataset.p = p[1];
+      var a = p[1] === _admStatsPeriod;
+      btn.style.cssText = 'padding:5px 13px;border-radius:99px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap;border:1.5px solid '+(a?'var(--y)':'#e5e7eb')+';background:'+(a?'var(--y)':'#fff')+';color:'+(a?'#fff':'#374151');
+      btn.addEventListener('click', function() {
+        _admStatsPeriod = this.dataset.p;
+        pBar.querySelectorAll('button').forEach(function(b){
+          var ia = b.dataset.p === _admStatsPeriod;
+          b.style.background = ia?'var(--y)':'#fff'; b.style.color = ia?'#fff':'#374151'; b.style.borderColor = ia?'var(--y)':'#e5e7eb';
+        });
+        _admStatsLoadData();
+      });
+      pBar.appendChild(btn);
+    });
   }
-  var byDay={};days.forEach(function(d){byDay[d]=0;});
-  statsRawData.forEach(function(tx){
-    if(tx.type!==type&&!(type==='paiement_marchand'&&tx.type==='paiement_marchand'))return;
-    var day=(tx.dateCreation||tx.date_creation||'').slice(0,10);
-    if(byDay[day]!==undefined)byDay[day]+=Number(tx.montant||0);
+
+  // Init filtres catégorie (une fois)
+  var cBar = document.getElementById('adm-stats-cat-filters');
+  if (cBar && cBar.childElementCount === 0) {
+    ['agent','business','mini_master','master','client'].forEach(function(cat) {
+      var btn = document.createElement('button');
+      btn.textContent = ADM_CAT_LABELS[cat]; btn.dataset.c = cat;
+      var rc = ADM_CAT_COLORS[cat];
+      var a = cat === _admStatsCat;
+      btn.style.cssText = 'padding:6px 13px;border-radius:99px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap;border:1.5px solid '+(a?rc:'#e5e7eb')+';background:'+(a?rc+'18':'#fff')+';color:'+(a?rc:'#374151');
+      btn.addEventListener('click', function() {
+        _admStatsCat = this.dataset.c;
+        cBar.querySelectorAll('button').forEach(function(b){
+          var ia = b.dataset.c === _admStatsCat;
+          var brc = ADM_CAT_COLORS[b.dataset.c];
+          b.style.background = ia ? brc+'18' : '#fff';
+          b.style.color = ia ? brc : '#374151';
+          b.style.borderColor = ia ? brc : '#e5e7eb';
+        });
+        currentChartType = (ADM_ROLE_METRICS[_admStatsCat]||[])[0]&&ADM_ROLE_METRICS[_admStatsCat][0].key || 'depot_effectue';
+        _admStatsLoadData();
+      });
+      cBar.appendChild(btn);
+    });
+  }
+
+  // Init boutons type graphique (une fois, sera mis à jour)
+  _admStatsInitChartBtns();
+  _admStatsLoadData();
+}
+
+function _admStatsInitChartBtns() {
+  var bar = document.getElementById('adm-chart-type-btns');
+  if (!bar) return;
+  bar.innerHTML = '';
+  var metrics = ADM_ROLE_METRICS[_admStatsCat] || [];
+  metrics.forEach(function(m) {
+    var btn = document.createElement('button');
+    btn.textContent = m.icon+' '+m.label.split(' ')[0]+' '+m.label.split(' ').slice(1,2).join('');
+    btn.dataset.ct = m.key;
+    var a = m.key === currentChartType;
+    btn.style.cssText = 'padding:4px 9px;border-radius:99px;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit;white-space:nowrap;border:1.5px solid '+(a?m.col:'#e5e7eb')+';background:'+(a?m.col+'18':'#f9fafb')+';color:'+(a?m.col:'#6b7280');
+    btn.addEventListener('click', function() {
+      currentChartType = this.dataset.ct;
+      bar.querySelectorAll('button').forEach(function(b2){
+        var bm = metrics.find(function(mx){return mx.key===b2.dataset.ct;});
+        var ia = b2.dataset.ct === currentChartType;
+        if (bm) { b2.style.background=ia?bm.col+'18':'#f9fafb'; b2.style.color=ia?bm.col:'#6b7280'; b2.style.borderColor=ia?bm.col:'#e5e7eb'; }
+      });
+      _admStatsRenderChart();
+    });
+    bar.appendChild(btn);
   });
-  var data=days.map(function(d){return Math.round(byDay[d]/1000);});// en milliers
-  var cc=CHART_COLORS[type]||CHART_COLORS.depot;
-  if(statsChart){statsChart.destroy();}
-  statsChart=new Chart(canvas,{
-    type:'line',
-    data:{
-      labels:labels,
-      datasets:[{
-        label:'Volume (×1000 F)',
-        data:data,
-        borderColor:cc.border,
-        backgroundColor:cc.bg,
-        borderWidth:2.5,
-        pointRadius:data.map(function(v){return v>0?4:0;}),
-        pointBackgroundColor:cc.border,
-        fill:true,
-        tension:.4
+}
+
+async function _admStatsLoadData() {
+  var volEl = document.getElementById('adm-stats-volumes');
+  var detEl = document.getElementById('adm-stats-detail');
+  if (volEl) volEl.innerHTML = '<div style="padding:16px;text-align:center"><div class="spin"></div></div>';
+  if (detEl) detEl.innerHTML = '<div style="padding:16px;text-align:center"><div class="spin"></div></div>';
+
+  // Mettre à jour boutons graphique selon catégorie
+  _admStatsInitChartBtns();
+  currentChartType = (ADM_ROLE_METRICS[_admStatsCat]||[])[0] ? ADM_ROLE_METRICS[_admStatsCat][0].key : 'depot_effectue';
+
+  try {
+    // Compteurs par rôle (une fois suffit, on recharge si période change)
+    var roleCountMap = { agent:'adm-count-agents', business:'adm-count-business', mini_master:'adm-count-minimaster', master:'adm-count-master', client:'adm-count-clients' };
+    for (var rk in roleCountMap) {
+      (function(rr, elId) {
+        apiGet('/users?role='+rr+'&limit=1').then(function(ru){
+          var el2 = document.getElementById(elId);
+          // Essayer de récupérer le total depuis une métadonnée ou compter
+          if (el2 && ru) el2.textContent = ru.total || (ru.data ? ru.data.length : '--');
+        }).catch(function(){});
+      })(rk, roleCountMap[rk]);
+    }
+
+    // Charger stats détaillées via la nouvelle route
+    var r = await apiGet('/stats/detailed?role='+_admStatsCat+'&period='+_admStatsPeriod);
+    _admStatsData = r.data || r;
+
+    // Mettre à jour compteur du rôle courant
+    var cEl = document.getElementById(roleCountMap[_admStatsCat]);
+    if (cEl && _admStatsData.total_users !== undefined) cEl.textContent = _admStatsData.total_users;
+
+    // Rendre graphique
+    try { _admStatsRenderChart(); } catch(ce) { console.warn('Chart err:', ce.message); }
+
+    // Rendre volumes globaux
+    _admStatsRenderVolumes();
+
+    // Rendre détail individuel
+    _admStatsRenderDetail();
+
+  } catch(e) {
+    if (volEl) volEl.innerHTML = '<div style="background:#fef3c7;border:1.5px solid var(--y);border-radius:14px;padding:16px;text-align:center">'
+      +'<div style="font-size:20px;margin-bottom:8px">📊</div>'
+      +'<div style="font-size:13px;font-weight:800;color:var(--y2);margin-bottom:6px">Données non disponibles</div>'
+      +'<div style="font-size:11px;color:#92400e">'+e.message+'</div>'
+      +'<button onclick="_admStatsLoadData()" style="margin-top:10px;padding:7px 14px;background:var(--y);color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">↻ Réessayer</button>'
+      +'</div>';
+    if (detEl) detEl.innerHTML = '';
+  }
+}
+
+function _admStatsRenderChart() {
+  var canvas = document.getElementById('stats-chart');
+  if (!canvas || typeof Chart === 'undefined' || !_admStatsData) return;
+  var courbe = _admStatsData.courbe || [];
+  var metrics = ADM_ROLE_METRICS[_admStatsCat] || [];
+  var metricDef = metrics.find(function(m){ return m.key === currentChartType; }) || metrics[0];
+  if (!metricDef) return;
+
+  // Construire labels ordonnés
+  var now = new Date();
+  var labels = [], data = [];
+  if (_admStatsPeriod === 'today') {
+    for (var h=0; h<24; h++) labels.push(h+'h');
+  } else if (_admStatsPeriod === 'week') {
+    for (var d2=6; d2>=0; d2--) {
+      var day2 = new Date(now); day2.setDate(day2.getDate()-d2);
+      labels.push(day2.toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit'}));
+    }
+  } else if (_admStatsPeriod === 'year') {
+    labels = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+  } else {
+    var dim = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+    for (var i=1; i<=dim; i++) labels.push(i.toString());
+  }
+  var courbeMap = {};
+  courbe.forEach(function(c){ courbeMap[c.label] = c; });
+  data = labels.map(function(l){ return Math.round((courbeMap[l] && courbeMap[l][currentChartType]) || 0); });
+
+  if (_admStatsChartInst) { try { _admStatsChartInst.destroy(); } catch(e){} }
+  if (statsChart) { try { statsChart.destroy(); statsChart=null; } catch(e){} }
+
+  _admStatsChartInst = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        borderColor: metricDef.col,
+        backgroundColor: metricDef.col+'22',
+        borderWidth: 2.5,
+        pointRadius: data.map(function(v){return v>0?4:0;}),
+        pointBackgroundColor: metricDef.col,
+        fill: true, tension: 0.4
       }]
     },
-    options:{
-      responsive:true,maintainAspectRatio:true,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ' '+ctx.parsed.y+'k F';} }}},
-      scales:{
-        x:{grid:{display:false},ticks:{font:{size:9},color:'#9ca3af',maxTicksLimit:10}},
-        y:{grid:{color:'#f3f4f6'},ticks:{font:{size:9},color:'#9ca3af',callback:function(v){return v+'k';}},beginAtZero:true}
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: {display:false}, tooltip: { callbacks: { label: function(ctx){
+        var v = ctx.parsed.y;
+        return ' '+(v>=1000?(v/1000).toFixed(1)+'k':v)+' FCFA';
+      }}}},
+      scales: {
+        x: { grid:{display:false}, ticks:{font:{size:8},color:'#9ca3af',maxTicksLimit:10,maxRotation:0} },
+        y: { grid:{color:'#f3f4f6'}, ticks:{font:{size:8},color:'#9ca3af',callback:function(v){return v>=1000?(v/1000)+'k':v;}}, beginAtZero:true }
       }
     }
   });
 }
 
-async function chargerStats(){
-  var el=document.getElementById('stats-content-inner');if(!el)return;
-  el.innerHTML='<div style="padding:24px;text-align:center"><div class="spin"></div><div style="font-size:11px;color:#9ca3af;margin-top:8px">Chargement des données...</div></div>';
-  var role=G.user?G.user.role:'';
-  // Superviseur: show zone stats header
-  if(role==='superviseur'){
-    var hdr=document.getElementById('stats-content');
-    if(hdr){var zBadge=document.getElementById('sup-stats-badge');if(!zBadge){zBadge=document.createElement('div');zBadge.id='sup-stats-badge';zBadge.style.cssText='background:#fef3c7;border:1px solid var(--y);border-radius:10px;padding:8px 12px;margin-bottom:10px;font-size:11px;font-weight:700;color:var(--y2)';zBadge.textContent='🟠 Statistiques filtrées — Agents, Business, Mini-Masters, Masters uniquement';hdr.insertBefore(zBadge,hdr.firstChild);}}
+function _admStatsRenderVolumes() {
+  var el = document.getElementById('adm-stats-volumes');
+  if (!el || !_admStatsData) return;
+  var totaux = _admStatsData.totaux || {};
+  var metrics = ADM_ROLE_METRICS[_admStatsCat] || [];
+  var rc = ADM_CAT_COLORS[_admStatsCat] || '#d97706';
+  var periodLabel = {today:'Aujourd\'hui',week:'7 derniers jours',month:'Ce mois',year:'Cette année'}[_admStatsPeriod]||'Période';
+
+  el.innerHTML = '<div style="font-size:10px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">'+periodLabel+' — '+ADM_CAT_LABELS[_admStatsCat]+'</div>';
+  var frag = document.createDocumentFragment();
+  metrics.forEach(function(m) {
+    var tot = totaux[m.key] || {n:0,vol:0};
+    var card = document.createElement('div');
+    card.style.cssText = 'background:#fff;border:1px solid #f3f4f6;border-left:3px solid '+m.col+';border-radius:12px;padding:11px 13px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:8px';
+    card.innerHTML = '<div style="flex:1;min-width:0">'
+      +'<div style="font-size:12px;font-weight:700;color:#374151">'+m.icon+' '+m.label+'</div>'
+      +'<div style="font-size:10px;color:#9ca3af;margin-top:1px">'+m.desc+'</div>'
+      +'</div>'
+      +'<div style="text-align:right;flex-shrink:0">'
+        +'<div style="font-size:14px;font-weight:900;color:'+m.col+'">'+F(tot.vol)+'</div>'
+        +'<div style="font-size:9px;color:#9ca3af">'+tot.n+' op.</div>'
+      +'</div>';
+    frag.appendChild(card);
+  });
+  el.appendChild(frag);
+}
+
+function _admStatsRenderDetail() {
+  var el = document.getElementById('adm-stats-detail');
+  if (!el || !_admStatsData) return;
+  var users = _admStatsData.users || [];
+  var rc = ADM_CAT_COLORS[_admStatsCat] || '#d97706';
+  var metrics = ADM_ROLE_METRICS[_admStatsCat] || [];
+
+  if (!users.length) {
+    el.innerHTML = '<div style="text-align:center;padding:16px;color:#9ca3af;font-size:12px">Aucun compte dans cette catégorie</div>';
+    return;
   }
-  try{
-    var roleFilter=role==='superviseur'?'&role=agent,business,mini_master,master':'';
-    var r=await apiGet('/transactions?limit=500'+roleFilter);
-    statsRawData=r.data||[];
-    try{renderChart(currentChartType);}catch(ce){console.warn('Chart error:',ce.message);};
-    var list=statsRawData;
-    var now=new Date();var debut=new Date(now.getFullYear(),now.getMonth(),1);
-    var cumT={depot:{n:0,m:0,comm:0},retrait:{n:0,m:0,comm:0},transfert:{n:0,m:0},paiement:{n:0,m:0}};
-    var cumM={depot:{n:0,m:0,comm:0},retrait:{n:0,m:0,comm:0},transfert:{n:0,m:0},paiement:{n:0,m:0}};
-    list.forEach(function(tx){
-      var m=Number(tx.montant||0);var f=Number(tx.frais||0);
-      var d=new Date(tx.dateCreation||tx.date_creation||tx.created_at);
-      var isMois=d>=debut;
-      function add(obj,type){obj[type].n++;obj[type].m+=m;if(type==='depot')obj[type].comm+=Math.round(m*0.002);if(type==='retrait')obj[type].comm+=Math.round(f*0.35);}
-      if(tx.type==='depot'){add(cumT,'depot');if(isMois)add(cumM,'depot');}
-      else if(tx.type==='retrait'){add(cumT,'retrait');if(isMois)add(cumM,'retrait');}
-      else if(tx.type==='transfert'){add(cumT,'transfert');if(isMois)add(cumM,'transfert');}
-      else if(tx.type==='paiement_marchand'){add(cumT,'paiement');if(isMois)add(cumM,'paiement');}
-    });
-    el.innerHTML='';
-    function mkSection(titre,cums){
-      var sec=document.createElement('div');
-      sec.innerHTML='<div style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.07em;margin:16px 0 10px">'+titre+'</div>';
-      var defs=[
-        {k:'depot',icon:'↓',color:'#22c55e',label:'Dépôts',showComm:true,commLabel:'Comm. agents (0,2%)'},
-        {k:'retrait',icon:'↑',color:'#f97316',label:'Retraits',showComm:true,commLabel:'Comm. agents (35% frais)'},
-        {k:'transfert',icon:'⇄',color:'#3b82f6',label:'Transferts internes'},
-        {k:'paiement',icon:'◈',color:'#8b5cf6',label:'Paiements marchands'}
-      ];
-      defs.forEach(function(d){
-        var c=cums[d.k];
-        var card=document.createElement('div');
-        card.style.cssText='background:#fff;border:1px solid #f3f4f6;border-radius:16px;padding:14px 16px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.05)';
-        var rows='<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:#6b7280;font-size:12px">Opérations</span><span style="font-size:13px;font-weight:700">'+c.n+' op.</span></div>'
-          +'<div style="display:flex;justify-content:space-between;margin-bottom:'+(d.showComm?'6px':'0')+';"><span style="color:#6b7280;font-size:12px">Volume total</span><span style="font-size:14px;font-weight:800;color:'+d.color+'">'+F(c.m)+'</span></div>';
-        if(d.showComm)rows+='<div style="display:flex;justify-content:space-between"><span style="color:#6b7280;font-size:12px">'+d.commLabel+'</span><span style="font-size:13px;font-weight:700;color:#22c55e">+'+F(c.comm)+'</span></div>';
-        card.innerHTML='<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'
-          +'<div style="width:36px;height:36px;border-radius:10px;background:'+d.color+'18;color:'+d.color+';display:flex;align-items:center;justify-content:center;font-size:16px">'+d.icon+'</div>'
-          +'<div style="font-size:14px;font-weight:700">'+d.label+'</div></div>'+rows;
-        sec.appendChild(card);
-      });
-      return sec;
-    }
-    el.appendChild(mkSection('Ce mois-ci',cumM));
-    el.appendChild(mkSection('Total historique',cumT));
-  }catch(e){
-    el.innerHTML='<div style="background:#fef3c7;border:1.5px solid var(--y);border-radius:14px;padding:16px;text-align:center">'
-      +'<div style="font-size:24px;margin-bottom:8px">📊</div>'
-      +'<div style="font-size:14px;font-weight:800;color:var(--y2);margin-bottom:6px">Stats non disponibles</div>'
-      +'<div style="font-size:12px;color:#92400e">'+e.message+'</div>'
-      +'<div style="font-size:11px;color:#a16207;margin-top:8px">Connectez-vous à internet et réessayez</div>'
-      +'<button onclick="chargerStats()" style="margin-top:12px;padding:8px 16px;background:var(--y);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">↻ Réessayer</button>'
-      +"</div>";
-  }
+
+  // Tri par volume total décroissant
+  var sorted = users.slice().sort(function(a, b) {
+    var va = metrics.reduce(function(s,m){ return s+((a.stats&&a.stats[m.key])?a.stats[m.key].vol:0); }, 0);
+    var vb = metrics.reduce(function(s,m){ return s+((b.stats&&b.stats[m.key])?b.stats[m.key].vol:0); }, 0);
+    return vb - va;
+  });
+
+  var statCU = {actif:'#22c55e',en_attente:'#f59e0b',suspendu:'#ef4444',bloque:'#9ca3af',gele:'#6366f1'};
+  var totalActifs = _admStatsData.total_actifs || 0;
+
+  el.innerHTML = '';
+  // En-tête résumé
+  var hdr = document.createElement('div');
+  hdr.style.cssText = 'background:'+rc+'08;border:1px solid '+rc+'22;border-radius:12px;padding:10px 13px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center';
+  hdr.innerHTML = '<div><div style="font-size:13px;font-weight:800;color:'+rc+'">'+(users.length)+' au total</div>'
+    +'<div style="font-size:10px;color:#6b7280">'+totalActifs+' actifs</div></div>'
+    +'<div style="font-size:10px;color:#9ca3af">Top '+Math.min(sorted.length,30)+' par volume</div>';
+  el.appendChild(hdr);
+
+  var frag = document.createDocumentFragment();
+  sorted.slice(0, 30).forEach(function(u) {
+    var card = document.createElement('div');
+    card.style.cssText = 'background:#fff;border:1px solid #f3f4f6;border-radius:12px;padding:10px 12px;margin-bottom:7px';
+    var sc = statCU[u.statut] || '#9ca3af';
+    var initials = ((u.prenom||'')[0] || (u.nom||'')[0] || '?').toUpperCase();
+    var st = u.stats || {};
+
+    // Ligne stats par métrique
+    var statsRows = metrics.map(function(m) {
+      var s = st[m.key] || {n:0,vol:0};
+      if (!s.n) return '';
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #f9fafb">'
+        +'<span style="font-size:10px;color:'+m.col+';font-weight:700">'+m.icon+' '+m.label+'</span>'
+        +'<span style="font-size:10px;font-weight:800;color:#374151">'+F(s.vol)
+          +' <span style="font-size:9px;color:#9ca3af;font-weight:400">('+s.n+'op)</span></span>'
+        +'</div>';
+    }).filter(Boolean).join('');
+
+    if (!statsRows) statsRows = '<div style="font-size:10px;color:#d1d5db;padding:4px 0">Aucune activité sur la période</div>';
+
+    card.innerHTML = '<div style="display:flex;align-items:center;gap:9px;margin-bottom:8px">'
+      +'<div style="width:34px;height:34px;border-radius:9px;background:'+rc+'15;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:'+rc+';flex-shrink:0">'+initials+'</div>'
+      +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:11px;font-weight:700;color:#111827">'+((u.prenom||'')+' '+(u.nom||'')).trim()+'</div>'
+        +'<div style="font-size:9px;color:#6b7280">'+(u.telephone||'')+(u.zone?' · '+u.zone:'')+'</div>'
+      +'</div>'
+      +'<span style="background:'+sc+'15;color:'+sc+';border-radius:99px;padding:2px 8px;font-size:9px;font-weight:700;flex-shrink:0">'+(u.statut||'')+'</span>'
+    +'</div>'
+    +'<div>'+statsRows+'</div>';
+    frag.appendChild(card);
+  });
+  el.appendChild(frag);
 }
 
 var _notifUserId = null;
@@ -5863,10 +6084,13 @@ var _alerteCache = [];
 
 function _alerteUpdateToolbar() {
   var count = Object.keys(_alerteSel).length;
+  var total = _alerteCache.length;
   var tb = document.getElementById('alerte-sel-toolbar');
   var cEl = document.getElementById('alerte-sel-count');
-  if (tb) tb.style.display = (count > 0 && (isSuperAdmin() || isAdminGestionnaire())) ? 'flex' : 'none';
-  if (cEl) cEl.textContent = count > 0 ? count + ' sélectionnée(s)' : _alerteCache.length + ' alerte(s)';
+  var btnSuppr = document.getElementById('alerte-btn-suppr-sel');
+  if (tb) tb.style.display = ((isSuperAdmin() || isAdminGestionnaire()) && total > 0) ? 'flex' : 'none';
+  if (cEl) cEl.textContent = count > 0 ? count + ' sélectionnée(s)' : total + ' alerte(s)';
+  if (btnSuppr) btnSuppr.style.display = count > 0 ? '' : 'none';
 }
 
 function _alerteToggleAll() {
@@ -5885,7 +6109,6 @@ function _alerteToggleAll() {
 }
 
 async function _alerteSupprimerSel() {
-  if (!isSuperAdmin()) { toast('Seul le super admin peut supprimer les alertes', true); return; }
   var ids = Object.keys(_alerteSel);
   if (!ids.length) return;
   if (!confirm('Supprimer ' + ids.length + ' alerte(s) définitivement ?')) return;
@@ -5963,9 +6186,12 @@ async function chargerAlertesCentralisees() {
     if (_alerteStatFilter === 'ouverte,en_cours') {
       list = list.filter(function(a){ return a.statut==='ouverte'||a.statut==='en_cours'; });
     }
+    _alerteCache = list;
+    _alerteSel = {};
     el.innerHTML = '';
     if (!list.length) {
       el.innerHTML = '<div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:12px;padding:14px;text-align:center;color:#059669;font-size:12px;font-weight:600">✓ Aucune alerte active</div>';
+      _alerteUpdateToolbar();
       return;
     }
     var frag = document.createDocumentFragment();
@@ -5978,27 +6204,37 @@ async function chargerAlertesCentralisees() {
       var card = document.createElement('div');
       card.id = 'acard-'+a.id;
       card.style.cssText = 'background:#fff;border:1px solid #f3f4f6;border-left:3px solid '+gv.col+';border-radius:10px;padding:11px 13px;margin-bottom:8px';
-      // Checkbox sélection (admin uniquement)
+      // Checkbox sélection — ajoutée AVANT le contenu (pas de innerHTML qui écrase)
+      var _cbWrap = null;
       if (isSuperAdmin() || isAdminGestionnaire()) {
-        var cbWrap = document.createElement('label');
-        cbWrap.style.cssText = 'display:flex;align-items:center;gap:5px;margin-bottom:5px;cursor:pointer';
+        _cbWrap = document.createElement('div');
+        _cbWrap.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid #f3f4f6';
         var cb = document.createElement('input');
         cb.type = 'checkbox'; cb.id = 'alcb-'+a.id;
-        cb.style.cssText = 'width:15px;height:15px;accent-color:#ef4444;cursor:pointer';
+        cb.style.cssText = 'width:16px;height:16px;accent-color:#ef4444;cursor:pointer;flex-shrink:0';
         (function(aid) { cb.onchange = function() {
           if(this.checked) _alerteSel[aid] = true; else delete _alerteSel[aid];
           var c2 = document.getElementById('acard-'+aid);
           if(c2){c2.style.borderColor=this.checked?'#fca5a5':'#f3f4f6';c2.style.background=this.checked?'#fff5f5':'#fff';}
           _alerteUpdateToolbar();
         }; })(a.id);
+        // Clic sur la carte entière (hors boutons) coche la checkbox
+        (function(aid2, cbEl) {
+          card.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' || e.target.type === 'checkbox') return;
+            cbEl.checked = !cbEl.checked;
+            cbEl.dispatchEvent(new Event('change'));
+          });
+        })(a.id, cb);
         var cbLbl = document.createElement('span');
-        cbLbl.style.cssText = 'font-size:9px;color:#9ca3af';
+        cbLbl.style.cssText = 'font-size:10px;color:#9ca3af;font-weight:600';
         cbLbl.textContent = 'Sélectionner';
-        cbWrap.appendChild(cb); cbWrap.appendChild(cbLbl);
-        card.appendChild(cbWrap);
+        _cbWrap.appendChild(cb); _cbWrap.appendChild(cbLbl);
       }
-      // Header
-      card.innerHTML =
+
+      // Contenu de la carte via un div séparé (jamais innerHTML sur card)
+      var _inner = document.createElement('div');
+      _inner.innerHTML =
         '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:5px">'
           +'<div style="font-size:12px;font-weight:800;color:#111827;flex:1">'+a.titre+'</div>'
           +'<div style="display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">'
@@ -6007,13 +6243,15 @@ async function chargerAlertesCentralisees() {
           +'</div>'
         +'</div>'
         +'<div style="font-size:11px;color:#6b7280;margin-bottom:6px;line-height:1.4">'+a.description+'</div>'
-        +('<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">')
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
           +'<div style="display:flex;gap:5px;align-items:center">'
             +'<span style="background:'+sv.col+'15;color:'+sv.col+';border-radius:6px;padding:1px 7px;font-size:9px;font-weight:700">'+sv.icon+' '+a.service+'</span>'
             +'<span style="font-size:9px;color:#9ca3af">'+ds+'</span>'
           +'</div>'
           +'<span style="font-size:9px;color:#9ca3af">par '+(a.auteur||'système')+'</span>'
         +'</div>';
+      if (_cbWrap) card.appendChild(_cbWrap);
+      card.appendChild(_inner);
       // Action buttons
       // Bouton supprimer toujours visible pour admin (toutes alertes)
     if (isSuperAdmin()) {
@@ -6061,6 +6299,7 @@ async function chargerAlertesCentralisees() {
       frag.appendChild(card);
     });
     el.appendChild(frag);
+    _alerteUpdateToolbar();
   } catch(e) {
     el.innerHTML = '<div style="color:var(--r);padding:12px;font-size:12px">Erreur alertes: '+e.message+'</div>';
   }

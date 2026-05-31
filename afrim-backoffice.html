@@ -788,7 +788,31 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
 </div>
 
 <!-- SHEET CHANGER PIN -->
-<div class="sh-ov" id="sh-change-pin">
+<!-- SHEET MODIFIER COMPTE -->
+<div class="sh-ov" id="sh-edit-user">
+  <div class="sh">
+    <div class="sh-bar"></div>
+    <div class="sh-top">
+      <div><div class="sh-title">Modifier le compte</div><div style="color:var(--m);font-size:12px" id="edit-user-subtitle">—</div></div>
+      <button class="sh-x" onclick="closeSh('edit-user')">✕</button>
+    </div>
+    <div class="sh-body">
+      <div id="edit-user-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:13px"></div>
+      <input type="hidden" id="edit-user-id"/>
+      <label class="lbl">Prénom *</label>
+      <input class="inp" id="edit-user-prenom" type="text" placeholder="Prénom" style="margin-bottom:12px"/>
+      <label class="lbl">Nom *</label>
+      <input class="inp" id="edit-user-nom" type="text" placeholder="Nom" style="margin-bottom:12px"/>
+      <label class="lbl">Téléphone *</label>
+      <input class="inp" id="edit-user-tel" type="tel" placeholder="+225 07 XX XX XX" inputmode="numeric" style="margin-bottom:12px"/>
+      <label class="lbl">Zone</label>
+      <input class="inp" id="edit-user-zone" type="text" placeholder="Quartier / Ville" style="margin-bottom:20px"/>
+      <button class="btn btn-y" onclick="doEditUser()">Enregistrer les modifications</button>
+    </div>
+  </div>
+</div>
+
+
   <div class="sh">
     <div class="sh-bar"></div>
     <div class="sh-top"><div><div class="sh-title">Changer mon PIN</div></div><button class="sh-x" onclick="closeSh('change-pin');rstPin()">✕</button></div>
@@ -1043,7 +1067,7 @@ var PERMS={
   // Back-Office (Super Admin) : acces total + suppression
   admin:         {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:1,rembourser:1,kyc:1,gels:1,logs:1},
   // Superviseur : sa zone uniquement
-  superviseur:   {home:1,users:1,txns:0,monitoring:1,stats:1,support:0,tech:0,creer:0,soldes:1,supprimer:0,rembourser:0,kyc:0,gels:0,logs:0,superviseur_zone:1},
+  superviseur:   {home:1,users:1,txns:0,monitoring:1,stats:1,support:0,tech:0,creer:1,soldes:1,supprimer:0,rembourser:0,kyc:0,gels:0,logs:0,superviseur_zone:1},
   // Support Client : recherche client, remboursement, tickets
   support_client:{home:0,users:0,txns:0,monitoring:0,support:1,tech:0,creer:0,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:0,logs:0},
   // Support Tech : logs, transactions, alertes systeme
@@ -1519,6 +1543,32 @@ function voirU(id){
   if(perm('rembourser'))mkBtn('Rembourser dernier transfert','','background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){toast('Remboursement bientot disponible');});
   mkBtn('🔐 Réinitialiser le code PIN','','background:#f0fdf4;color:#15803d;border:1px solid #a7f3d0;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){resetPinClient(u.id,(u.prenom||'')+' '+(u.nom||''));});
   mkBtn('🔔 Historique notifications','','background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){afficherHistoriqueNotifs(u.id,(u.prenom||'')+' '+(u.nom||''));});
+  // Bouton Modifier (superviseur + admin)
+  if(isSuperAdmin()||(G.user&&G.user.role==='superviseur')){
+    mkBtn('\u270f\ufe0f Modifier ce compte','','background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px',function(){
+      document.getElementById('edit-user-id').value=u.id;
+      document.getElementById('edit-user-subtitle').textContent=(u.prenom||'')+' '+(u.nom||'')+' \u00b7 '+(u.role||'');
+      document.getElementById('edit-user-prenom').value=u.prenom||'';
+      document.getElementById('edit-user-nom').value=u.nom||'';
+      document.getElementById('edit-user-tel').value=u.telephone||'';
+      document.getElementById('edit-user-zone').value=u.zone||'';
+      document.getElementById('edit-user-err').style.display='none';
+      closeSh('user');openSh('edit-user');
+    });
+  }
+  // Bouton Modifier (superviseur + admin)
+  if(isSuperAdmin()||(G.user&&G.user.role==='superviseur')){
+    mkBtn('✏️ Modifier ce compte','','background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px',function(){
+      document.getElementById('edit-user-id').value=u.id;
+      document.getElementById('edit-user-subtitle').textContent=(u.prenom||'')+' '+(u.nom||'')+' · '+(u.role||'');
+      document.getElementById('edit-user-prenom').value=u.prenom||'';
+      document.getElementById('edit-user-nom').value=u.nom||'';
+      document.getElementById('edit-user-tel').value=u.telephone||'';
+      document.getElementById('edit-user-zone').value=u.zone||'';
+      document.getElementById('edit-user-err').style.display='none';
+      closeSh('user');openSh('edit-user');
+    });
+  }
   if(isSuperAdmin())mkBtn('Supprimer le compte','btn-r','margin-top:6px',function(){
     document.getElementById('sh-confirm-nom').textContent=(u.prenom||'')+' '+(u.nom||'');
     document.getElementById('sh-confirm-id').value=id;
@@ -1698,58 +1748,24 @@ async function chargerTxns(){
   }catch(e){el.innerHTML='<div style="color:var(--r);padding:12px;font-size:13px">'+e.message+'</div>';}
 }
 
-// ── MONITORING ──
-async function chargerMonitoring(){
-  var role = G.user ? G.user.role : '';
-  if (role === 'superviseur') {
-    ['alertes','bo','sup','tech','superviseur','global'].forEach(function(t){var p=document.getElementById('mon-panel-'+t);if(p)p.style.display='none';});
-    var sp=document.getElementById('mon-panel-superviseur');
-    if(sp)sp.style.display='block';
-    if(typeof chargerZoneSuperviseur==='function') chargerZoneSuperviseur();
-    return;
-  }
-  var monNav=document.getElementById('mon-tab-bar');
-  if(monNav)monNav.style.display='flex';
-  var activeTab2 = _monActiveTab || 'alertes';
-  ['alertes','bo','sup','tech','superviseur','global'].forEach(function(t){
-    var p=document.getElementById('mon-panel-'+t);
-    if(p)p.style.display=(t===activeTab2)?'block':'none';
-  });
-  _monActiveTab = activeTab2;
-  ['alertes','bo','sup','tech','superviseur','global'].forEach(function(t){
-    var btn=document.getElementById('mon-tab-'+t);
-    if(btn){btn.style.color=t===activeTab2?'var(--y2)':'#6b7280';btn.style.borderBottom=t===activeTab2?'2px solid var(--y)':'2px solid transparent';}
-  });
-  if(activeTab2 !== 'alertes') return;
-  chargerAlertesCentralisees();
-  if (role === 'backoffice') { /* admin gestionnaire sees full monitoring */ }
-  if (role === 'support_tech') { setMonTab('tech'); return; }
-  if (role === 'support_client') { setMonTab('sup'); return; }
-  chargerAlertesCentralisees();
-  try{
-    var tr=await apiGet('/tickets?limit=20');var tlist=tr.data||[];
-    var el2=document.getElementById('m-tickets');el2.innerHTML='';
-    if(!tlist.length){el2.innerHTML='<div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:14px;padding:14px;text-align:center;color:#059669;font-size:13px;font-weight:600">Aucun ticket</div>';
-    }else{tlist.forEach(function(t){var div=document.createElement('div');div.style.cssText='background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px 16px;margin-bottom:8px';div.innerHTML='<div style="font-size:13px;font-weight:700;margin-bottom:4px">'+t.sujet+'</div><div style="font-size:12px;color:#6b7280;margin-bottom:10px">'+t.description+'</div>';var statCols2={'ouvert':'#f59e0b','en_cours':'#3b82f6','resolu':'#22c55e','ferme':'#9ca3af','rejete':'#ef4444'};
-var statLbls2={'ouvert':'En attente','en_cours':'En cours','resolu':'Résolu','ferme':'Clôturé','rejete':'Rejeté'};
-var sc2=statCols2[t.statut]||'#9ca3af';
-var sl2=statLbls2[t.statut]||t.statut;
-var badge2=document.createElement('span');
-badge2.textContent=sl2;
-badge2.style.cssText='background:'+sc2+'18;color:'+sc2+';padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700';
-div.appendChild(badge2);
-if(t.statut==='ouvert'||t.statut==='en_cours'){
-  var bRes=document.createElement('button');bRes.textContent='✅ Résoudre';
-  bRes.style.cssText='padding:6px 12px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;color:#059669;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;margin-right:6px;margin-top:8px';
-  (function(tid){bRes.addEventListener('click',function(){changerStatutTicketGlobal(tid,'resolu');});})(t.id);
-  div.appendChild(bRes);
-  var bClos=document.createElement('button');bClos.textContent='🔒 Clôturer';
-  bClos.style.cssText='padding:6px 12px;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;color:#6b7280;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;margin-top:8px';
-  (function(tid){bClos.addEventListener('click',function(){changerStatutTicketGlobal(tid,'ferme');});})(t.id);
-  div.appendChild(bClos);
-}el2.appendChild(div);});}
-  }catch(e){document.getElementById('m-tickets').innerHTML='<div style="color:var(--r);font-size:12px">'+e.message+'</div>';}
+// ── MODIFICATION COMPTE (superviseur + admin) ──
+async function doEditUser() {
+  var id = document.getElementById('edit-user-id').value;
+  var prenom = document.getElementById('edit-user-prenom').value.trim();
+  var nom = document.getElementById('edit-user-nom').value.trim();
+  var tel = document.getElementById('edit-user-tel').value.trim();
+  var zone = document.getElementById('edit-user-zone').value.trim();
+  var errEl = document.getElementById('edit-user-err');
+  errEl.style.display = 'none';
+  if (!prenom || !nom || !tel) { errEl.textContent = 'Prénom, nom et téléphone sont requis'; errEl.style.display = ''; return; }
+  try {
+    await apiPatch('/users/'+id+'/profile', {prenom:prenom, nom:nom, telephone:tel, zone:zone||undefined});
+    toast('✅ Compte modifié avec succès');
+    closeSh('edit-user');
+    chargerUsers();
+  } catch(e) { errEl.textContent = e.message; errEl.style.display = ''; }
 }
+
 async function cloturerA(id){try{await apiPatch('/alerts/'+id,{statut:'resolue',actionPrise:'Cloturee par admin'});toast('Alerte cloturee');chargerMonitoring();}catch(e){toast(e.message,true);}}
 async function cloturerT(id){try{await apiPatch('/tickets/'+id+'/status',{statut:'ferme'});toast('Ticket résolu');chargerMonitoring();}catch(e){toast(e.message,true);}}
 async function cloturerTicket(id,statut){try{await apiPatch('/tickets/'+id+'/status',{statut:statut});toast('Statut mis à jour');chargerSupport();}catch(e){toast(e.message,true);}}
@@ -2570,7 +2586,7 @@ var PERMS={
   // Back-Office (Super Admin) : acces total + suppression
   admin:         {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:1,rembourser:1,kyc:1,gels:1,logs:1},
   // Superviseur : sa zone uniquement
-  superviseur:   {home:1,users:1,txns:0,monitoring:1,stats:1,support:0,tech:0,creer:0,soldes:1,supprimer:0,rembourser:0,kyc:0,gels:0,logs:0,superviseur_zone:1},
+  superviseur:   {home:1,users:1,txns:0,monitoring:1,stats:1,support:0,tech:0,creer:1,soldes:1,supprimer:0,rembourser:0,kyc:0,gels:0,logs:0,superviseur_zone:1},
   // Support Client : recherche client, remboursement, tickets
   support_client:{home:0,users:0,txns:0,monitoring:0,support:1,tech:0,creer:0,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:0,logs:0},
   // Support Tech : logs, transactions, alertes systeme
@@ -3042,6 +3058,32 @@ function voirU(id){
   if(perm('rembourser'))mkBtn('Rembourser dernier transfert','','background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){toast('Remboursement bientot disponible');});
   mkBtn('🔐 Réinitialiser le code PIN','','background:#f0fdf4;color:#15803d;border:1px solid #a7f3d0;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){resetPinClient(u.id,(u.prenom||'')+' '+(u.nom||''));});
   mkBtn('🔔 Historique notifications','','background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){afficherHistoriqueNotifs(u.id,(u.prenom||'')+' '+(u.nom||''));});
+  // Bouton Modifier (superviseur + admin)
+  if(isSuperAdmin()||(G.user&&G.user.role==='superviseur')){
+    mkBtn('\u270f\ufe0f Modifier ce compte','','background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px',function(){
+      document.getElementById('edit-user-id').value=u.id;
+      document.getElementById('edit-user-subtitle').textContent=(u.prenom||'')+' '+(u.nom||'')+' \u00b7 '+(u.role||'');
+      document.getElementById('edit-user-prenom').value=u.prenom||'';
+      document.getElementById('edit-user-nom').value=u.nom||'';
+      document.getElementById('edit-user-tel').value=u.telephone||'';
+      document.getElementById('edit-user-zone').value=u.zone||'';
+      document.getElementById('edit-user-err').style.display='none';
+      closeSh('user');openSh('edit-user');
+    });
+  }
+  // Bouton Modifier (superviseur + admin)
+  if(isSuperAdmin()||(G.user&&G.user.role==='superviseur')){
+    mkBtn('✏️ Modifier ce compte','','background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px',function(){
+      document.getElementById('edit-user-id').value=u.id;
+      document.getElementById('edit-user-subtitle').textContent=(u.prenom||'')+' '+(u.nom||'')+' · '+(u.role||'');
+      document.getElementById('edit-user-prenom').value=u.prenom||'';
+      document.getElementById('edit-user-nom').value=u.nom||'';
+      document.getElementById('edit-user-tel').value=u.telephone||'';
+      document.getElementById('edit-user-zone').value=u.zone||'';
+      document.getElementById('edit-user-err').style.display='none';
+      closeSh('user');openSh('edit-user');
+    });
+  }
   if(isSuperAdmin())mkBtn('Supprimer le compte','btn-r','margin-top:6px',function(){
     document.getElementById('sh-confirm-nom').textContent=(u.prenom||'')+' '+(u.nom||'');
     document.getElementById('sh-confirm-id').value=id;

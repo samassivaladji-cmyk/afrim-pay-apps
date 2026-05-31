@@ -184,12 +184,40 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
 
 <!-- TRANSACTIONS -->
 <div class="scr" id="s-txns">
-  <div style="background:#fff;padding:52px 20px 16px;border-bottom:1px solid #f3f4f6;position:sticky;top:0;z-index:10">
+  <div style="background:#fff;padding:52px 20px 0;border-bottom:1px solid #f3f4f6;position:sticky;top:0;z-index:10">
     <div style="font-size:22px;font-weight:800">Flux financiers</div>
     <div style="color:var(--m);font-size:13px;margin-top:3px">Cumuls et transactions</div>
+    <!-- Onglets -->
+    <div style="display:flex;gap:0;overflow-x:auto;margin-top:10px">
+      <button id="flux-tab-list" onclick="setFluxTab('list')" style="padding:9px 16px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:var(--y2);border-bottom:2px solid var(--y);white-space:nowrap">📋 Transactions</button>
+      <button id="flux-tab-analytics" onclick="setFluxTab('analytics')" style="padding:9px 16px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">📊 Analytics</button>
+    </div>
   </div>
-  <div style="padding:12px 16px 100px">
+  <!-- Panel Transactions -->
+  <div id="flux-panel-list" style="padding:12px 16px 100px">
     <div id="t-list"><div style="padding:24px;text-align:center"><div class="spin"></div></div></div>
+  </div>
+  <!-- Panel Analytics -->
+  <div id="flux-panel-analytics" style="display:none;padding:12px 16px 100px">
+    <!-- Filtres période -->
+    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px" id="flux-period-filters"></div>
+    <!-- Filtre statut -->
+    <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap" id="flux-statut-filters"></div>
+    <!-- Courbe principale -->
+    <div style="background:#fff;border-radius:16px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Évolution des flux</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px" id="flux-chart-cat-btns"></div>
+      <canvas id="flux-main-chart" height="160"></canvas>
+    </div>
+    <!-- Tableau synthèse transferts -->
+    <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">↔️ Transferts par catégorie</div>
+    <div id="flux-transfer-table" style="margin-bottom:18px"></div>
+    <!-- Dépôts globaux -->
+    <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">💰 Dépôts globaux</div>
+    <div id="flux-depots-section" style="margin-bottom:18px"></div>
+    <!-- Retraits globaux -->
+    <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">💸 Retraits globaux</div>
+    <div id="flux-retraits-section" style="margin-bottom:18px"></div>
   </div>
   <nav class="bnav" id="bnav-txns"></nav>
 </div>
@@ -3179,6 +3207,143 @@ async function chargerTxns(){
       el.appendChild(div);
     });
   }catch(e){el.innerHTML='<div style="color:var(--r);padding:12px;font-size:13px">'+e.message+'</div>';}
+}
+
+// ════════════════════════════════════════════════════════════
+// FLUX ANALYTICS — module complet
+// ════════════════════════════════════════════════════════════
+var _fluxActiveTab='list',_fluxPeriod='month',_fluxStatut='complete',_fluxData=null,_fluxChartInst=null,_fluxChartCat='client\u2194client';
+var FLUX_TRANSFER_CATS=[
+  {id:'client\u2194client',          label:'Clients \u2194 Clients',           col:'#059669'},
+  {id:'agent\u2194agent',            label:'Agents \u2194 Agents',             col:'#d97706'},
+  {id:'mini_master\u2194mini_master',label:'Mini-Masters \u2194 Mini-Masters', col:'#2563eb'},
+  {id:'master\u2194master',          label:'Masters \u2194 Masters',           col:'#92400e'},
+  {id:'agent\u2194mini_master',      label:'Mini-Masters \u2194 Agents',       col:'#7c3aed'},
+  {id:'agent\u2194master',           label:'Masters \u2194 Agents',            col:'#be185d'},
+  {id:'mini_master\u2194master',     label:'Masters \u2194 Mini-Masters',      col:'#0e7490'},
+  {id:'agent\u2194business',         label:'Business \u2194 Agents',           col:'#4f46e5'},
+  {id:'business\u2194business',      label:'Business \u2194 Business',         col:'#b45309'},
+];
+
+function setFluxTab(tab){
+  _fluxActiveTab=tab;
+  ['list','analytics'].forEach(function(t){
+    var btn=document.getElementById('flux-tab-'+t),panel=document.getElementById('flux-panel-'+t),a=t===tab;
+    if(btn){btn.style.color=a?'var(--y2)':'#6b7280';btn.style.borderBottomColor=a?'var(--y)':'transparent';}
+    if(panel)panel.style.display=a?'':'none';
+  });
+  if(tab==='analytics'){_fluxAnalyticsInit();_fluxAnalyticsLoad();}
+}
+
+function _fluxAnalyticsInit(){
+  var pBar=document.getElementById('flux-period-filters');
+  if(pBar&&pBar.childElementCount===0){
+    [["Aujourd'hui",'today'],['Semaine','week'],['Ce mois','month'],['Ann\xe9e','year']].forEach(function(p){
+      var btn=document.createElement('button');btn.textContent=p[0];btn.dataset.p=p[1];
+      var a=p[1]===_fluxPeriod;
+      btn.style.cssText='padding:5px 13px;border-radius:99px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap;border:1.5px solid '+(a?'var(--y)':'#e5e7eb')+';background:'+(a?'var(--y)':'#fff')+';color:'+(a?'#fff':'#374151');
+      btn.addEventListener('click',function(){
+        _fluxPeriod=this.dataset.p;
+        pBar.querySelectorAll('button').forEach(function(b){var ia=b.dataset.p===_fluxPeriod;b.style.background=ia?'var(--y)':'#fff';b.style.color=ia?'#fff':'#374151';b.style.borderColor=ia?'var(--y)':'#e5e7eb';});
+        _fluxAnalyticsLoad();
+      });
+      pBar.appendChild(btn);
+    });
+  }
+  var sBar=document.getElementById('flux-statut-filters');
+  if(sBar&&sBar.childElementCount===0){
+    [['Compl\xe8tes','complete'],['En cours','en_cours'],['Toutes','all']].forEach(function(s){
+      var btn=document.createElement('button');btn.textContent=s[0];btn.dataset.s=s[1];
+      var a=s[1]===_fluxStatut;
+      btn.style.cssText='padding:4px 11px;border-radius:99px;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit;white-space:nowrap;border:1.5px solid '+(a?'#3b82f6':'#e5e7eb')+';background:'+(a?'#eff6ff':'#fff')+';color:'+(a?'#1d4ed8':'#6b7280');
+      btn.addEventListener('click',function(){
+        _fluxStatut=this.dataset.s;
+        sBar.querySelectorAll('button').forEach(function(b){var ia=b.dataset.s===_fluxStatut;b.style.background=ia?'#eff6ff':'#fff';b.style.color=ia?'#1d4ed8':'#6b7280';b.style.borderColor=ia?'#3b82f6':'#e5e7eb';});
+        _fluxAnalyticsLoad();
+      });
+      sBar.appendChild(btn);
+    });
+  }
+  var cBar=document.getElementById('flux-chart-cat-btns');
+  if(cBar&&cBar.childElementCount===0){
+    FLUX_TRANSFER_CATS.forEach(function(cat){
+      var btn=document.createElement('button');btn.textContent=cat.label;btn.dataset.c=cat.id;
+      var a=cat.id===_fluxChartCat;
+      btn.style.cssText='padding:4px 9px;border-radius:99px;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit;white-space:nowrap;border:1.5px solid '+(a?cat.col:'#e5e7eb')+';background:'+(a?cat.col+'18':'#f9fafb')+';color:'+(a?cat.col:'#6b7280');
+      btn.addEventListener('click',function(){
+        _fluxChartCat=this.dataset.c;
+        cBar.querySelectorAll('button').forEach(function(b2){var bc=FLUX_TRANSFER_CATS.find(function(x){return x.id===b2.dataset.c;})||{col:'#888'};var ia=b2.dataset.c===_fluxChartCat;b2.style.background=ia?bc.col+'18':'#f9fafb';b2.style.color=ia?bc.col:'#6b7280';b2.style.borderColor=ia?bc.col:'#e5e7eb';});
+        _fluxRenderChart();
+      });
+      cBar.appendChild(btn);
+    });
+  }
+}
+
+async function _fluxAnalyticsLoad(){
+  ['flux-transfer-table','flux-depots-section','flux-retraits-section'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML='<div style="padding:14px;text-align:center"><div class="spin"></div></div>';});
+  try{
+    var r=await apiGet('/flux/analytics?period='+_fluxPeriod+'&statut='+_fluxStatut);
+    _fluxData=r.data||r;
+    _fluxRenderChart();
+    _fluxRenderTransferTable();
+    _fluxRenderFlowSection('depots', _fluxData.depots, ['master','mini_master','agent','autre'],['Masters','Mini-Masters','Agents','Autres'],['#92400e','#2563eb','#d97706','#9ca3af']);
+    _fluxRenderFlowSection('retraits',_fluxData.retraits,['master','mini_master','agent','autre'],['Masters','Mini-Masters','Agents','Autres'],['#b91c1c','#c2410c','#ea580c','#9ca3af']);
+  }catch(e){
+    var msg='<div style="background:#fef3c7;border:1px solid var(--y);border-radius:12px;padding:14px;text-align:center;font-size:11px;color:#92400e">'+e.message+' <button onclick="_fluxAnalyticsLoad()" style="margin-left:8px;background:var(--y);color:#fff;border:none;border-radius:6px;padding:3px 8px;font-size:10px;cursor:pointer;font-family:inherit">\u21bb</button></div>';
+    ['flux-transfer-table','flux-depots-section','flux-retraits-section'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML=msg;});
+  }
+}
+
+function _fluxRenderChart(){
+  var canvas=document.getElementById('flux-main-chart');
+  if(!canvas||typeof Chart==='undefined'||!_fluxData)return;
+  var catDef=FLUX_TRANSFER_CATS.find(function(c){return c.id===_fluxChartCat;})||FLUX_TRANSFER_CATS[0];
+  var courbe=_fluxData.courbe||[],now=new Date(),labels=[];
+  if(_fluxPeriod==='today'){for(var h=0;h<24;h++)labels.push(h+'h');}
+  else if(_fluxPeriod==='week'){for(var d=6;d>=0;d--){var dy=new Date(now);dy.setDate(dy.getDate()-d);labels.push(dy.toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit'}));}}
+  else if(_fluxPeriod==='year'){labels=['Jan','F\xe9v','Mar','Avr','Mai','Jun','Jul','Ao\xfb','Sep','Oct','Nov','D\xe9c'];}
+  else{var dim=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();for(var i=1;i<=dim;i++)labels.push(i.toString());}
+  var cm={};courbe.forEach(function(c){cm[c.label]=c;});
+  var data=labels.map(function(l){return Math.round((cm[l]&&cm[l][catDef.id])||0);});
+  if(_fluxChartInst){try{_fluxChartInst.destroy();}catch(e){}}
+  _fluxChartInst=new Chart(canvas,{type:'line',data:{labels:labels,datasets:[{data:data,borderColor:catDef.col,backgroundColor:catDef.col+'22',borderWidth:2.5,pointRadius:data.map(function(v){return v>0?4:0;}),pointBackgroundColor:catDef.col,fill:true,tension:0.4}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){var v=ctx.parsed.y;return ' '+(v>=1000?(v/1000).toFixed(1)+'k':v)+' FCFA';}}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},color:'#9ca3af',maxTicksLimit:10,maxRotation:0}},y:{grid:{color:'#f3f4f6'},ticks:{font:{size:8},color:'#9ca3af',callback:function(v){return v>=1000?(v/1000)+'k':v;}},beginAtZero:true}}}});
+}
+
+function _fluxRenderTransferTable(){
+  var el=document.getElementById('flux-transfer-table');if(!el||!_fluxData)return;
+  var list=_fluxData.transferts||[];el.innerHTML='';
+  var tbl=document.createElement('div');tbl.style.cssText='background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)';
+  var hdr=document.createElement('div');hdr.style.cssText='display:grid;grid-template-columns:1fr 50px 80px 65px 48px;gap:4px;padding:8px 12px;background:#f9fafb;border-bottom:1px solid #f3f4f6';
+  hdr.innerHTML='<span style="font-size:9px;font-weight:700;color:#9ca3af">TYPE</span><span style="font-size:9px;font-weight:700;color:#9ca3af;text-align:right">NB</span><span style="font-size:9px;font-weight:700;color:#9ca3af;text-align:right">VOLUME</span><span style="font-size:9px;font-weight:700;color:#9ca3af;text-align:right">MOY.</span><span style="font-size:9px;font-weight:700;color:#9ca3af;text-align:right">\xc9VOL</span>';
+  tbl.appendChild(hdr);
+  list.forEach(function(row){
+    var catDef=FLUX_TRANSFER_CATS.find(function(c){return c.id===row.id;})||{col:'#888'};
+    var evolCol=row.evol_vol>=0?'#16a34a':'#ef4444',evolPfx=row.evol_vol>=0?'\u25b2':'\u25bc';
+    var r=document.createElement('div');r.style.cssText='display:grid;grid-template-columns:1fr 50px 80px 65px 48px;gap:4px;padding:9px 12px;border-bottom:1px solid #f9fafb;align-items:center';
+    r.innerHTML='<div style="display:flex;align-items:center;gap:5px"><div style="width:7px;height:7px;border-radius:50%;background:'+catDef.col+';flex-shrink:0"></div><span style="font-size:10px;font-weight:600;color:#374151">'+row.label+'</span></div>'
+      +'<span style="font-size:10px;font-weight:700;color:#374151;text-align:right">'+row.n+'</span>'
+      +'<span style="font-size:10px;font-weight:700;color:'+catDef.col+';text-align:right">'+F(row.vol)+'</span>'
+      +'<span style="font-size:10px;color:#6b7280;text-align:right">'+F(row.avg)+'</span>'
+      +'<span style="font-size:10px;font-weight:700;color:'+evolCol+';text-align:right">'+evolPfx+Math.abs(row.evol_vol)+'%</span>';
+    tbl.appendChild(r);
+  });
+  el.appendChild(tbl);
+}
+
+function _fluxRenderFlowSection(sId,data,keys,labels,colors){
+  var el=document.getElementById('flux-'+sId+'-section');if(!el||!data)return;
+  el.innerHTML='';
+  var total=keys.reduce(function(s,k){return s+(data[k]?data[k].vol:0);},0);
+  keys.forEach(function(k,i){
+    var d=data[k]||{n:0,vol:0,avg:0,evol_vol:0},pct=total>0?Math.round(d.vol/total*100):0;
+    var evolCol=d.evol_vol>=0?'#16a34a':'#ef4444';
+    var card=document.createElement('div');card.style.cssText='background:#fff;border:1px solid #f3f4f6;border-left:3px solid '+colors[i]+';border-radius:12px;padding:10px 13px;margin-bottom:7px';
+    card.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><div style="font-size:11px;font-weight:700;color:#374151">'+labels[i]+'</div><div style="text-align:right"><div style="font-size:13px;font-weight:900;color:'+colors[i]+'">'+F(d.vol)+'</div><div style="font-size:9px;color:#9ca3af">'+d.n+' op. \xb7 moy. '+F(d.avg)+'</div></div></div>'
+      +'<div style="background:#f3f4f6;border-radius:99px;height:5px;overflow:hidden;margin-bottom:5px"><div style="background:'+colors[i]+';height:100%;width:'+pct+'%;border-radius:99px"></div></div>'
+      +'<div style="display:flex;justify-content:space-between"><span style="font-size:9px;color:#9ca3af">'+pct+'% du total</span><span style="font-size:9px;font-weight:700;color:'+evolCol+'">'+(d.evol_vol>=0?'\u25b2':'\u25bc')+Math.abs(d.evol_vol)+'% vs p\xe9r. pr\xe9c.</span></div>';
+    el.appendChild(card);
+  });
 }
 
 // ── MONITORING ──

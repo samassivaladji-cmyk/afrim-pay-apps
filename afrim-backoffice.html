@@ -214,9 +214,21 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
     <div id="flux-transfer-table" style="margin-bottom:18px"></div>
     <!-- Dépôts globaux -->
     <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">💰 Dépôts globaux</div>
+    <!-- Courbe dépôts -->
+    <div style="background:#fff;border-radius:16px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:10px">
+      <div style="font-size:10px;font-weight:700;color:#15803d;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Courbe — Évolution des dépôts</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px" id="flux-depot-chart-btns"></div>
+      <canvas id="flux-depot-chart" height="140"></canvas>
+    </div>
     <div id="flux-depots-section" style="margin-bottom:18px"></div>
     <!-- Retraits globaux -->
     <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">💸 Retraits globaux</div>
+    <!-- Courbe retraits -->
+    <div style="background:#fff;border-radius:16px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:10px">
+      <div style="font-size:10px;font-weight:700;color:#b91c1c;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Courbe — Évolution des retraits</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px" id="flux-retrait-chart-btns"></div>
+      <canvas id="flux-retrait-chart" height="140"></canvas>
+    </div>
     <div id="flux-retraits-section" style="margin-bottom:18px"></div>
   </div>
   <nav class="bnav" id="bnav-txns"></nav>
@@ -3213,6 +3225,8 @@ async function chargerTxns(){
 // FLUX ANALYTICS — module complet
 // ════════════════════════════════════════════════════════════
 var _fluxActiveTab='list',_fluxPeriod='month',_fluxStatut='complete',_fluxData=null,_fluxChartInst=null,_fluxChartCat='client\u2194client';
+var _fluxDepotChartInst=null,_fluxRetraitChartInst=null;
+var _fluxDepotCat='master',_fluxRetraitCat='master';
 var FLUX_TRANSFER_CATS=[
   {id:'client\u2194client',          label:'Clients \u2194 Clients',           col:'#059669'},
   {id:'agent\u2194agent',            label:'Agents \u2194 Agents',             col:'#d97706'},
@@ -3264,6 +3278,7 @@ function _fluxAnalyticsInit(){
       sBar.appendChild(btn);
     });
   }
+  // Boutons catégorie courbe principale (transferts)
   var cBar=document.getElementById('flux-chart-cat-btns');
   if(cBar&&cBar.childElementCount===0){
     FLUX_TRANSFER_CATS.forEach(function(cat){
@@ -3278,6 +3293,38 @@ function _fluxAnalyticsInit(){
       cBar.appendChild(btn);
     });
   }
+  // Boutons catégorie courbe dépôts
+  var dBar=document.getElementById('flux-depot-chart-btns');
+  if(dBar&&dBar.childElementCount===0){
+    var dCats=[{id:'master',label:'Masters',col:'#92400e'},{id:'mini_master',label:'Mini-Masters',col:'#2563eb'},{id:'agent',label:'Agents',col:'#d97706'},{id:'autre',label:'Autres',col:'#9ca3af'}];
+    dCats.forEach(function(cat){
+      var btn=document.createElement('button');btn.textContent=cat.label;btn.dataset.dc=cat.id;
+      var a=cat.id===_fluxDepotCat;
+      btn.style.cssText='padding:4px 9px;border-radius:99px;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit;white-space:nowrap;border:1.5px solid '+(a?cat.col:'#e5e7eb')+';background:'+(a?cat.col+'18':'#f9fafb')+';color:'+(a?cat.col:'#6b7280');
+      btn.addEventListener('click',function(){
+        _fluxDepotCat=this.dataset.dc;
+        dBar.querySelectorAll('button').forEach(function(b2){var bc=dCats.find(function(x){return x.id===b2.dataset.dc;})||{col:'#888'};var ia=b2.dataset.dc===_fluxDepotCat;b2.style.background=ia?bc.col+'18':'#f9fafb';b2.style.color=ia?bc.col:'#6b7280';b2.style.borderColor=ia?bc.col:'#e5e7eb';});
+        _fluxRenderDepotChart();
+      });
+      dBar.appendChild(btn);
+    });
+  }
+  // Boutons catégorie courbe retraits
+  var rBar=document.getElementById('flux-retrait-chart-btns');
+  if(rBar&&rBar.childElementCount===0){
+    var rCats=[{id:'master',label:'Masters',col:'#b91c1c'},{id:'mini_master',label:'Mini-Masters',col:'#c2410c'},{id:'agent',label:'Agents',col:'#ea580c'},{id:'autre',label:'Autres',col:'#9ca3af'}];
+    rCats.forEach(function(cat){
+      var btn=document.createElement('button');btn.textContent=cat.label;btn.dataset.rc=cat.id;
+      var a=cat.id===_fluxRetraitCat;
+      btn.style.cssText='padding:4px 9px;border-radius:99px;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit;white-space:nowrap;border:1.5px solid '+(a?cat.col:'#e5e7eb')+';background:'+(a?cat.col+'18':'#f9fafb')+';color:'+(a?cat.col:'#6b7280');
+      btn.addEventListener('click',function(){
+        _fluxRetraitCat=this.dataset.rc;
+        rBar.querySelectorAll('button').forEach(function(b2){var bc=rCats.find(function(x){return x.id===b2.dataset.rc;})||{col:'#888'};var ia=b2.dataset.rc===_fluxRetraitCat;b2.style.background=ia?bc.col+'18':'#f9fafb';b2.style.color=ia?bc.col:'#6b7280';b2.style.borderColor=ia?bc.col:'#e5e7eb';});
+        _fluxRenderRetraitChart();
+      });
+      rBar.appendChild(btn);
+    });
+  }
 }
 
 async function _fluxAnalyticsLoad(){
@@ -3287,6 +3334,8 @@ async function _fluxAnalyticsLoad(){
     _fluxData=r.data||r;
     _fluxRenderChart();
     _fluxRenderTransferTable();
+    _fluxRenderDepotChart();
+    _fluxRenderRetraitChart();
     _fluxRenderFlowSection('depots', _fluxData.depots, ['master','mini_master','agent','autre'],['Masters','Mini-Masters','Agents','Autres'],['#92400e','#2563eb','#d97706','#9ca3af']);
     _fluxRenderFlowSection('retraits',_fluxData.retraits,['master','mini_master','agent','autre'],['Masters','Mini-Masters','Agents','Autres'],['#b91c1c','#c2410c','#ea580c','#9ca3af']);
   }catch(e){
@@ -3308,6 +3357,41 @@ function _fluxRenderChart(){
   var data=labels.map(function(l){return Math.round((cm[l]&&cm[l][catDef.id])||0);});
   if(_fluxChartInst){try{_fluxChartInst.destroy();}catch(e){}}
   _fluxChartInst=new Chart(canvas,{type:'line',data:{labels:labels,datasets:[{data:data,borderColor:catDef.col,backgroundColor:catDef.col+'22',borderWidth:2.5,pointRadius:data.map(function(v){return v>0?4:0;}),pointBackgroundColor:catDef.col,fill:true,tension:0.4}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){var v=ctx.parsed.y;return ' '+(v>=1000?(v/1000).toFixed(1)+'k':v)+' FCFA';}}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},color:'#9ca3af',maxTicksLimit:10,maxRotation:0}},y:{grid:{color:'#f3f4f6'},ticks:{font:{size:8},color:'#9ca3af',callback:function(v){return v>=1000?(v/1000)+'k':v;}},beginAtZero:true}}}});
+}
+
+function _fluxBuildLabels(){
+  var now=new Date(),labels=[];
+  if(_fluxPeriod==='today'){for(var h=0;h<24;h++)labels.push(h+'h');}
+  else if(_fluxPeriod==='week'){for(var d=6;d>=0;d--){var dy=new Date(now);dy.setDate(dy.getDate()-d);labels.push(dy.toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit'}));}}
+  else if(_fluxPeriod==='year'){labels=['Jan','F\xe9v','Mar','Avr','Mai','Jun','Jul','Ao\xfb','Sep','Oct','Nov','D\xe9c'];}
+  else{var dim=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();for(var i=1;i<=dim;i++)labels.push(i.toString());}
+  return labels;
+}
+
+function _fluxRenderDepotChart(){
+  var canvas=document.getElementById('flux-depot-chart');
+  if(!canvas||typeof Chart==='undefined'||!_fluxData)return;
+  var cat=_fluxDepotCat;
+  var colMap={master:'#92400e',mini_master:'#2563eb',agent:'#d97706',autre:'#9ca3af'};
+  var col=colMap[cat]||'#15803d';
+  var courbe=_fluxData.courbe||[],labels=_fluxBuildLabels();
+  var cm={};courbe.forEach(function(c){cm[c.label]=c;});
+  var data=labels.map(function(l){return Math.round((cm[l]&&cm[l]['depot_'+cat])||0);});
+  if(_fluxDepotChartInst){try{_fluxDepotChartInst.destroy();}catch(e){}}
+  _fluxDepotChartInst=new Chart(canvas,{type:'line',data:{labels:labels,datasets:[{data:data,borderColor:col,backgroundColor:col+'22',borderWidth:2.5,pointRadius:data.map(function(v){return v>0?4:0;}),pointBackgroundColor:col,fill:true,tension:0.4}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){var v=ctx.parsed.y;return ' '+(v>=1000?(v/1000).toFixed(1)+'k':v)+' FCFA';}}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},color:'#9ca3af',maxTicksLimit:10,maxRotation:0}},y:{grid:{color:'#f3f4f6'},ticks:{font:{size:8},color:'#9ca3af',callback:function(v){return v>=1000?(v/1000)+'k':v;}},beginAtZero:true}}}});
+}
+
+function _fluxRenderRetraitChart(){
+  var canvas=document.getElementById('flux-retrait-chart');
+  if(!canvas||typeof Chart==='undefined'||!_fluxData)return;
+  var cat=_fluxRetraitCat;
+  var colMap={master:'#b91c1c',mini_master:'#c2410c',agent:'#ea580c',autre:'#9ca3af'};
+  var col=colMap[cat]||'#dc2626';
+  var courbe=_fluxData.courbe||[],labels=_fluxBuildLabels();
+  var cm={};courbe.forEach(function(c){cm[c.label]=c;});
+  var data=labels.map(function(l){return Math.round((cm[l]&&cm[l]['retrait_'+cat])||0);});
+  if(_fluxRetraitChartInst){try{_fluxRetraitChartInst.destroy();}catch(e){}}
+  _fluxRetraitChartInst=new Chart(canvas,{type:'line',data:{labels:labels,datasets:[{data:data,borderColor:col,backgroundColor:col+'22',borderWidth:2.5,pointRadius:data.map(function(v){return v>0?4:0;}),pointBackgroundColor:col,fill:true,tension:0.4}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){var v=ctx.parsed.y;return ' '+(v>=1000?(v/1000).toFixed(1)+'k':v)+' FCFA';}}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},color:'#9ca3af',maxTicksLimit:10,maxRotation:0}},y:{grid:{color:'#f3f4f6'},ticks:{font:{size:8},color:'#9ca3af',callback:function(v){return v>=1000?(v/1000)+'k':v;}},beginAtZero:true}}}});
 }
 
 function _fluxRenderTransferTable(){

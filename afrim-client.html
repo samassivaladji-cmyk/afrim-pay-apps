@@ -34,7 +34,7 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 #toast.err{background:var(--r)}
 .spin{width:24px;height:24px;border:3px solid #e5e7eb;border-top-color:var(--g);border-radius:50%;animation:sp .7s linear infinite;margin:0 auto}
 @keyframes sp{to{transform:rotate(360deg)}}
-.sh-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.sh-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:10000;display:none;align-items:flex-end;justify-content:center}
 .sh-ov.on{display:flex}
 .sh{width:100%;max-width:430px;background:#fff;border-radius:24px 24px 0 0;max-height:92vh;overflow-y:auto}
 .sh-bar{width:40px;height:4px;background:#e5e7eb;border-radius:99px;margin:12px auto 0}
@@ -143,7 +143,11 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
 
 <!-- HOME -->
 <div class="scr" id="s-home">
-  <div style="background:linear-gradient(135deg,var(--g2),var(--g));padding:20px 20px 32px">
+  <div style="background:linear-gradient(135deg,var(--g2),var(--g));padding:20px 20px 32px;position:relative">
+    <!-- Bouton déconnexion au bord, hors du flux -->
+    <button onclick="confirmLogout()" style="position:absolute;top:12px;right:12px;background:rgba(255,255,255,.18);border:none;border-radius:10px;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5" title="Déconnexion">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" width="16" height="16"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+    </button>
     <!-- Barre supérieure : Bonjour + cloche + refresh -->
     <div class="row" style="margin-bottom:18px">
       <div>
@@ -151,10 +155,6 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
         <div id="h-name" style="color:#fff;font-size:20px;font-weight:800;margin-top:2px"></div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
-        <!-- Cloche notifications style Paytou -->
-        <button onclick="confirmLogout()" style="background:rgba(255,255,255,.18);border:none;border-radius:12px;width:40px;height:40px;cursor:pointer;display:flex;align-items:center;justify-content:center" title="Déconnexion">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" width="18" height="18"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-        </button>
         <button onclick="ouvrirNotifications()" style="background:rgba(255,255,255,.18);border:none;border-radius:12px;width:40px;height:40px;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative">
           <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2.2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
           <span id="notif-badge" style="display:none;position:absolute;top:4px;right:4px;min-width:16px;height:16px;background:#ef4444;border-radius:99px;border:2px solid rgba(255,255,255,.3);font-size:9px;font-weight:800;color:#fff;align-items:center;justify-content:center;padding:0 3px"></span>
@@ -1034,37 +1034,37 @@ function rstPayDet(){
 // Scanner direct depuis QR accueil (onglet scanner de la popup Wave)
 function ouvrirScannerDirect(){
   ouvrirPopupQR(function(tel,parts){
-    // Si c'est un client → ouvrir envoi
-    if(!parts[2]||parts[2]==='client'){
-      document.getElementById('send-tel').value=parts[0];
-      openSh('send');selDest(parts[0]);
-    }
-    // Si c'est un marchand → ouvrir paiement direct
-    else if(parts[2]==='business'||parts[2]==='marchand'){
-      var s={id:'marchand2',cat:'Marchands',nom:'Payer '+parts[0],icon:'🏪',couleur:'#ecfdf5',bientot:false,ref:'Référence (optionnel)'};
-      payServiceActif=s;
-      document.getElementById('pay-det-title').textContent='Payer le marchand';
-      document.getElementById('pay-det-icon').textContent='🏪';
-      document.getElementById('pay-det-icon').style.background='#ecfdf5';
-      document.getElementById('pay-det-name').textContent=parts[0];
-      document.getElementById('pay-det-cat').textContent='Marchand AFRIM PAY';
-      document.getElementById('pay-det-ref-label').textContent='Référence (optionnel)';
-      document.getElementById('pay-det-ref').placeholder='Motif ou référence';
-      document.getElementById('pay-det-bientot').style.display='none';
-      document.getElementById('btn-pay-det').disabled=true;
-      document.getElementById('btn-pay-det').style.opacity='.4';
-      document.getElementById('pay-det-form').style.display='';
-      document.getElementById('pay-det-loading').style.display='none';
-      document.getElementById('pay-det-success').style.display='none';
-      document.getElementById('pay-det-ref').value='';
-      document.getElementById('pay-det-amt').value='';
-      setTab('pay-detail');
-    }
-    // QR inconnu → essayer envoi
-    else{
-      document.getElementById('send-tel').value=parts[0];
-      openSh('send');selDest(parts[0]);
-    }
+    // Fermer le scanner d'abord, puis ouvrir le sheet avec un délai
+    setTimeout(function(){
+      if(!parts[2]||parts[2]==='client'){
+        document.getElementById('send-tel').value=parts[0];
+        openSh('send');selDest(parts[0]);
+      }
+      else if(parts[2]==='business'||parts[2]==='marchand'){
+        var s={id:'marchand2',cat:'Marchands',nom:'Payer '+parts[0],icon:'🏪',couleur:'#ecfdf5',bientot:false,ref:'Référence (optionnel)'};
+        payServiceActif=s;
+        document.getElementById('pay-det-title').textContent='Payer le marchand';
+        document.getElementById('pay-det-icon').textContent='🏪';
+        document.getElementById('pay-det-icon').style.background='#ecfdf5';
+        document.getElementById('pay-det-name').textContent=parts[0];
+        document.getElementById('pay-det-cat').textContent='Marchand AFRIM PAY';
+        document.getElementById('pay-det-ref-label').textContent='Référence (optionnel)';
+        document.getElementById('pay-det-ref').placeholder='Motif ou référence';
+        document.getElementById('pay-det-bientot').style.display='none';
+        document.getElementById('btn-pay-det').disabled=true;
+        document.getElementById('btn-pay-det').style.opacity='.4';
+        document.getElementById('pay-det-form').style.display='';
+        document.getElementById('pay-det-loading').style.display='none';
+        document.getElementById('pay-det-success').style.display='none';
+        document.getElementById('pay-det-ref').value='';
+        document.getElementById('pay-det-amt').value='';
+        setTab('pay-detail');
+      }
+      else{
+        document.getElementById('send-tel').value=parts[0];
+        openSh('send');selDest(parts[0]);
+      }
+    }, 300);
   });
 }
 

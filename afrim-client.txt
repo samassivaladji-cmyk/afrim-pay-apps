@@ -1,0 +1,2121 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="theme-color" content="#059669"/>
+<title>AFRIM PAY — Client</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--g:#059669;--g2:#047857;--g3:#d1fae5;--g4:#ecfdf5;--r:#ef4444;--b:#3b82f6;--o:#f97316;--p:#8b5cf6;--y:#f59e0b;--t:#111827;--m:#6b7280;--d:#9ca3af;--bg:#f9fafb;--card:#ffffff}
+html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:var(--t);-webkit-font-smoothing:antialiased}
+#app{width:100%;max-width:430px;margin:0 auto;min-height:100vh;background:var(--bg);position:relative}
+.scr{display:none;flex-direction:column;min-height:100vh}
+.scr.on{display:flex}
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#fff;border-top:1px solid #e5e7eb;display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px 8px;border:none;background:none;cursor:pointer;font-size:10px;font-weight:600;color:var(--m);font-family:'Inter',sans-serif;transition:.2s}
+.nb svg{width:22px;height:22px;stroke:var(--m);fill:none;transition:.2s}
+.nb.on{color:var(--g)}
+.nb.on svg{stroke:var(--g)}
+.card{background:var(--card);border-radius:16px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.inp{width:100%;background:#f3f4f6;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px 16px;font-size:15px;font-family:'Inter',sans-serif;color:var(--t);outline:none;transition:.2s}
+.inp:focus{border-color:var(--g);background:#fff}
+.inp::placeholder{color:var(--d)}
+.btn{width:100%;padding:15px;border-radius:14px;border:none;font-size:15px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;transition:.15s}
+.btn-g{background:linear-gradient(135deg,var(--g2),var(--g));color:#fff}
+.btn-g:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{background:#f3f4f6;color:var(--t)}
+.btn-r{background:#fef2f2;color:var(--r);border:1px solid #fecaca}
+.tag{padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700}
+.lbl{font-size:11px;font-weight:700;color:var(--m);margin-bottom:6px;display:block;letter-spacing:.05em;text-transform:uppercase}
+#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:#111827;color:#fff;padding:10px 20px;border-radius:99px;font-size:13px;font-weight:600;z-index:999;transition:.3s;white-space:nowrap;pointer-events:none}
+#toast.on{transform:translateX(-50%) translateY(0)}
+#toast.err{background:var(--r)}
+.spin{width:24px;height:24px;border:3px solid #e5e7eb;border-top-color:var(--g);border-radius:50%;animation:sp .7s linear infinite;margin:0 auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+.sh-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.sh-ov.on{display:flex}
+.sh{width:100%;max-width:430px;background:#fff;border-radius:24px 24px 0 0;max-height:92vh;overflow-y:auto}
+.sh-bar{width:40px;height:4px;background:#e5e7eb;border-radius:99px;margin:12px auto 0}
+.sh-top{display:flex;justify-content:space-between;align-items:flex-start;padding:16px 20px 12px}
+.sh-title{font-size:18px;font-weight:800}
+.sh-x{background:#f3f4f6;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:15px;color:var(--m)}
+.sh-body{padding:0 20px 32px}
+.row{display:flex;justify-content:space-between;align-items:center}
+.srow{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f3f4f6}
+.act-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.act-btn{display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:none;cursor:pointer;padding:4px}
+.act-icon{width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.act-label{font-size:11px;font-weight:600;color:var(--t);text-align:center;line-height:1.3}
+.tx-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f9fafb}
+.tx-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid #d1d5db;transition:.15s}
+.pin-dot.on{background:var(--g);border-color:var(--g)}
+.pin-key{padding:18px;border-radius:16px;border:none;background:#f3f4f6;font-size:22px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;color:var(--t)}
+.pin-key:active{background:#e5e7eb;transform:scale(.94)}
+.pin-key.empty{background:none;cursor:default}
+.chip{padding:8px 16px;border-radius:99px;border:1.5px solid #e5e7eb;background:#fff;color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap}
+.chip.on{border-color:var(--g);background:#ecfdf5;color:var(--g)}
+.photo-slot{border:2px dashed #d1d5db;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:.2s;background:#fafafa}
+.photo-slot.done{border-style:solid;border-color:var(--g);background:#f0fdf4}
+
+/* Popup QR style Wave */
+.wave-qr-popup{position:fixed;inset:0;z-index:300;display:none;flex-direction:column;}
+.wave-qr-popup.on{display:flex;}
+.wave-tab-bar{display:flex;background:rgba(0,0,0,.7);padding:5px;border-radius:99px;gap:4px;white-space:nowrap;}
+.wave-tab-btn{padding:10px 22px;border-radius:99px;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;color:rgba(255,255,255,.7);background:transparent;transition:.2s;}
+.wave-tab-btn.on{background:#fff;color:#111;}
+/* Grille 5 boutons */
+.act-grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;}
+.params-item{display:flex;align-items:center;gap:14px;padding:14px 16px;background:#fff;border-radius:14px;border:1px solid #f3f4f6;cursor:pointer;margin-bottom:8px;text-align:left;width:100%;font-family:inherit;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.params-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.params-label{font-size:14px;font-weight:700;color:#111827}
+.params-sub{font-size:12px;color:#6b7280;margin-top:1px}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+
+</head>
+<body>
+<div id="app">
+<div id="toast"></div>
+
+<div class="scr" id="s-login" style="justify-content:center;align-items:center;min-height:100vh;padding:40px 24px;background:linear-gradient(160deg,#ecfdf5 0%,#f9fafb 60%)">
+  <div style="width:100%;max-width:360px">
+    <div style="text-align:center;margin-bottom:40px">
+      <div style="width:90px;height:90px;border-radius:22px;overflow:hidden;margin:0 auto 16px;box-shadow:0 12px 32px rgba(5,150,105,.2)">
+        <img src="https://samassivaladji-cmyk.github.io/afrim-pay-apps/logo.png" style="width:100%;height:100%;object-fit:contain" alt="AFRIM PAY"/>
+      </div>
+      <h1 style="font-size:26px;font-weight:900;color:var(--t)">AFRIM PAY</h1>
+      <p style="color:var(--m);font-size:13px;margin-top:4px">Africa connected to the world</p>
+      <div style="margin-top:10px;display:inline-block;padding:4px 14px;border-radius:99px;background:#ecfdf5;border:1px solid #a7f3d0;color:var(--g);font-size:11px;font-weight:700;letter-spacing:.08em">ESPACE CLIENT</div>
+    </div>
+    <div id="err-login" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:12px 16px;border-radius:12px;margin-bottom:16px;font-size:13px;font-weight:600"></div>
+    <label class="lbl">Numéro de téléphone</label>
+    <input class="inp" id="login-tel" type="tel" placeholder="+225 07 XX XX XX" inputmode="numeric" oninput="chkLogin()" style="margin-bottom:16px"/>
+    <button class="btn btn-g" id="lg-btn" onclick="goPin()" disabled style="opacity:.4">Continuer →</button>
+    <div style="text-align:center;margin-top:20px;font-size:14px;color:var(--m)">
+      Pas encore de compte ? <a onclick="openSh('inscription')" style="color:var(--g);font-weight:700;cursor:pointer">S'inscrire</a>
+    </div>
+  </div>
+</div>
+
+<div class="scr" id="s-pin" style="justify-content:center;align-items:center;min-height:100vh;padding:32px 24px;background:#fff">
+  <div style="width:100%;max-width:320px;text-align:center">
+    <button onclick="S('s-login')" style="background:none;border:none;color:var(--m);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:32px;display:flex;align-items:center;gap:6px">← Retour</button>
+    <h2 style="font-size:24px;font-weight:800;margin-bottom:6px">Entrez votre PIN</h2>
+    <div id="pin-tel-disp" style="color:var(--m);font-size:15px;margin-bottom:32px;font-family:monospace"></div>
+    <div id="err-pin" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:10px 16px;border-radius:12px;margin-bottom:16px;font-size:13px"></div>
+    <div id="pin-loading" style="display:none;padding:24px"><div class="spin"></div></div>
+    <div id="pin-keys">
+      <div style="display:flex;gap:16px;justify-content:center;margin-bottom:36px">
+        <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div><div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+        <button class="pin-key" onclick="PIN(1)">1</button><button class="pin-key" onclick="PIN(2)">2</button><button class="pin-key" onclick="PIN(3)">3</button>
+        <button class="pin-key" onclick="PIN(4)">4</button><button class="pin-key" onclick="PIN(5)">5</button><button class="pin-key" onclick="PIN(6)">6</button>
+        <button class="pin-key" onclick="PIN(7)">7</button><button class="pin-key" onclick="PIN(8)">8</button><button class="pin-key" onclick="PIN(9)">9</button>
+        <button class="pin-key empty"></button><button class="pin-key" onclick="PIN(0)">0</button><button class="pin-key" onclick="DELP()">⌫</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="scr" id="s-notif" style="background:#f9fafb;min-height:100vh">
+  <div style="background:#fff;padding:52px 20px 16px;border-bottom:1px solid #f3f4f6;position:sticky;top:0;z-index:10">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button onclick="S('s-home')" style="background:#f3f4f6;border:none;border-radius:10px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center">
+          <svg width="16" height="16" fill="none" stroke="#374151" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        </button>
+        <div style="font-size:20px;font-weight:900">Notifications</div>
+      </div>
+      <button onclick="toutLireNotifs()" id="btn-tout-lire" style="display:none;background:none;border:none;color:var(--g);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Tout lire</button>
+    </div>
+  </div>
+  <div id="notif-list" style="padding:12px 16px 80px">
+    <div style="padding:40px;text-align:center"><div class="spin"></div></div>
+  </div>
+</div>
+
+<div class="scr" id="s-home">
+  <div style="background:linear-gradient(135deg,var(--g2),var(--g));padding:20px 20px 32px">
+
+    <div class="row" style="margin-bottom:18px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <button onclick="confirmLogout()" style="background:rgba(255,255,255,.18);border:none;border-radius:10px;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0" title="Déconnexion">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" width="16" height="16"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        </button>
+        <div>
+          <div style="color:rgba(255,255,255,.75);font-size:13px">Bonjour 👋</div>
+          <div id="h-name" style="color:#fff;font-size:20px;font-weight:800;margin-top:2px"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button onclick="ouvrirNotifications()" style="background:rgba(255,255,255,.18);border:none;border-radius:12px;width:40px;height:40px;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative">
+          <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2.2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span id="notif-badge" style="display:none;position:absolute;top:4px;right:4px;min-width:16px;height:16px;background:#ef4444;border-radius:99px;border:2px solid rgba(255,255,255,.3);font-size:9px;font-weight:800;color:#fff;align-items:center;justify-content:center;padding:0 3px"></span>
+        </button>
+        <button onclick="rafraichir()" style="background:rgba(255,255,255,.18);border:none;border-radius:12px;width:40px;height:40px;cursor:pointer;display:flex;align-items:center;justify-content:center">
+          <svg width="18" height="18" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="color:rgba(255,255,255,.75);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">SOLDE DISPONIBLE</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px">
+        <div id="h-solde" style="color:#fff;font-size:32px;font-weight:900;letter-spacing:-.5px">••••• FCFA</div>
+        <button onclick="toggleSolde()" style="background:rgba(255,255,255,.18);border:none;border-radius:10px;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="17" height="17" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+      <div id="h-badges" style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;justify-content:center"></div>
+    </div>
+
+    <div onclick="ouvrirScannerDirect()" style="cursor:pointer;margin:0 auto;max-width:260px">
+      <div style="background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.3);border-radius:20px;padding:16px;position:relative">
+
+        <div style="position:absolute;top:10px;left:10px;width:22px;height:22px;border-top:3px solid #fff;border-left:3px solid #fff;border-radius:4px 0 0 0"></div>
+        <div style="position:absolute;top:10px;right:10px;width:22px;height:22px;border-top:3px solid #fff;border-right:3px solid #fff;border-radius:0 4px 0 0"></div>
+        <div style="position:absolute;bottom:32px;left:10px;width:22px;height:22px;border-bottom:3px solid #fff;border-left:3px solid #fff;border-radius:0 0 0 4px"></div>
+        <div style="position:absolute;bottom:32px;right:10px;width:22px;height:22px;border-bottom:3px solid #fff;border-right:3px solid #fff;border-radius:0 0 4px 0"></div>
+        <div style="background:#fff;border-radius:12px;padding:12px;cursor:pointer" onclick="ouvrirPopupQR()">
+          <div id="h-qr-canvas" style="width:200px;height:200px;margin:0 auto"></div>
+        </div>
+        <button onclick="ouvrirPopupQR()" style="margin-top:10px;background:rgba(255,255,255,.2);border:none;border-radius:12px;padding:10px 24px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;margin-left:auto;margin-right:auto">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="3" width="7" height="7" rx="1"/><rect x="15" y="3" width="7" height="7" rx="1"/><rect x="2" y="14" width="7" height="7" rx="1"/><path d="M15 14h2m0 0h5m-5 0v2m0 3v2m5-7v7h-3"/></svg>
+          Scanner QR
+        </button>
+        <div style="text-align:center;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:6px">
+          <svg width="14" height="14" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2" viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          <span style="color:rgba(255,255,255,.85);font-size:12px;font-weight:700">Appuyer pour scanner</span>
+        </div>
+      </div>
+      <div id="h-qr-name" style="color:rgba(255,255,255,.9);font-size:13px;font-weight:700;text-align:center;margin-top:8px;letter-spacing:.02em"></div>
+    </div>
+  </div>
+
+  <div style="padding:16px 16px 0;margin-top:-4px">
+    <div class="card" style="padding:16px">
+      <div class="act-grid5">
+        <button class="act-btn" onclick="ouvrirTransfert()">
+          <div class="act-icon" style="background:#ecfdf5;width:46px;height:46px;font-size:20px;border-radius:14px">📤</div>
+          <span class="act-label" style="font-size:10px">Transfert</span>
+        </button>
+        <button class="act-btn" onclick="ouvrirPaiements()">
+          <div class="act-icon" style="background:#fdf4ff;width:46px;height:46px;font-size:20px;border-radius:14px">🏪</div>
+          <span class="act-label" style="font-size:10px">Payer</span>
+        </button>
+        <button class="act-btn" onclick="T('Banque — bientôt disponible')">
+          <div class="act-icon" style="background:#eff6ff;width:46px;height:46px;font-size:20px;border-radius:14px">🏦</div>
+          <span class="act-label" style="font-size:10px">Banque</span>
+        </button>
+        <button class="act-btn" onclick="T('Carte — bientôt disponible')">
+          <div class="act-icon" style="background:#fff7ed;width:46px;height:46px;font-size:20px;border-radius:14px">💳</div>
+          <span class="act-label" style="font-size:10px">Carte</span>
+        </button>
+        <button class="act-btn" onclick="T('Crédit Appel — bientôt disponible')">
+          <div class="act-icon" style="background:#fef3c7;width:46px;height:46px;font-size:20px;border-radius:14px">📞</div>
+          <span class="act-label" style="font-size:10px">Crédit</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="h-parrain" style="display:none;margin-top:12px">
+      <div class="card" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1px solid #a7f3d0;padding:14px 16px">
+        <div class="row">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--g2);letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px">💚 Code parrainage</div>
+            <div id="h-code" style="font-size:22px;font-weight:900;font-family:monospace;color:var(--t)"></div>
+          </div>
+          <button onclick="copierCode()" style="padding:8px 14px;background:var(--g);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Copier</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px">
+      <div class="row" style="margin-bottom:12px">
+        <div style="font-size:16px;font-weight:800">Transactions récentes</div>
+        <button onclick="setTab('history')" style="background:none;border:none;color:var(--g);font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">Voir tout →</button>
+      </div>
+      <div id="h-txns"></div>
+    </div>
+  </div>
+  <div style="height:80px"></div>
+  <nav class="bnav">
+    <button class="nb on" id="nb-home" onclick="setTab('home')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Accueil</button>
+    <button class="nb" id="nb-history" onclick="setTab('history')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Historique</button>
+
+    <button class="nb" id="nb-commissions-n1" onclick="setTab('commissions')"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Gains</button>
+    <button class="nb" id="nb-profile" onclick="setTab('profile')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/></svg>Paramètres</button>
+  </nav>
+</div>
+
+<div class="scr" id="s-history">
+  <div style="background:#fff;padding:16px 20px 12px;border-bottom:1px solid #f3f4f6;position:sticky;top:0;z-index:10">
+    <div style="font-size:20px;font-weight:800">Historique</div>
+  </div>
+  <div style="padding:16px">
+    <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:16px" id="hist-chips"></div>
+    <div id="hist-list"></div>
+  </div>
+  <div style="height:80px"></div>
+  <nav class="bnav">
+    <button class="nb" id="nb-home" onclick="setTab('home')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Accueil</button>
+    <button class="nb on" id="nb-history" onclick="setTab('history')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Historique</button>
+    <button class="nb" id="nb-commissions-h" onclick="setTab('commissions')"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Gains</button>
+    <button class="nb" id="nb-profile" onclick="setTab('profile')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/></svg>Paramètres</button>
+  </nav>
+</div>
+
+<div class="wave-qr-popup" id="wave-qr-popup">
+
+  <div id="wqr-scanner" style="flex:1;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;">
+    <button onclick="fermerPopupQR()" style="position:absolute;top:20px;left:20px;background:rgba(255,255,255,.15);border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;">
+      <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <button id="wqr-flash-btn" onclick="toggleFlash()" style="position:absolute;top:20px;right:20px;background:rgba(255,255,255,.15);border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;">
+      <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    </button>
+    <input type="file" id="wqr-native-input" accept="image/*" style="display:none"/>
+    <canvas id="wqr-canvas" style="display:none"></canvas>
+
+    <video id="wqr-video" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none" autoplay playsinline muted></video>
+
+    <div id="wqr-overlay" style="position:relative;width:240px;height:240px;z-index:2;pointer-events:none;box-shadow:0 0 0 9999px rgba(0,0,0,.5);">
+      <div style="position:absolute;top:0;left:0;width:44px;height:44px;border-top:3px solid #059669;border-left:3px solid #059669;border-radius:6px 0 0 0"></div>
+      <div style="position:absolute;top:0;right:0;width:44px;height:44px;border-top:3px solid #059669;border-right:3px solid #059669;border-radius:0 6px 0 0"></div>
+      <div style="position:absolute;bottom:0;left:0;width:44px;height:44px;border-bottom:3px solid #059669;border-left:3px solid #059669;border-radius:0 0 0 6px"></div>
+      <div style="position:absolute;bottom:0;right:0;width:44px;height:44px;border-bottom:3px solid #059669;border-right:3px solid #059669;border-radius:0 0 6px 0"></div>
+    </div>
+    <div id="wqr-scan-msg" style="color:rgba(255,255,255,.7);font-size:13px;margin-top:16px;z-index:2">Chargement caméra...</div>
+    <div class="wave-tab-bar" style="position:absolute;bottom:36px;left:50%;transform:translateX(-50%);">
+      <button class="wave-tab-btn on" id="wtab-scan" onclick="wqrTab('scan')">Scanner un code</button>
+      <button class="wave-tab-btn" id="wtab-carte" onclick="wqrTab('carte')">Ma carte</button>
+    </div>
+  </div>
+
+  <div id="wqr-carte" style="display:none;flex:1;background:#fff;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;position:relative;">
+    <button onclick="fermerPopupQR()" style="position:absolute;top:20px;left:20px;background:#f3f4f6;border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+      <svg width="20" height="20" fill="none" stroke="#111" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <div style="background:linear-gradient(135deg,var(--g2),var(--g));border-radius:24px;padding:24px;width:100%;max-width:300px;text-align:center;box-shadow:0 12px 40px rgba(5,150,105,.25);position:relative;overflow:hidden;">
+      <div style="position:absolute;inset:0;opacity:.08;background-image:repeating-linear-gradient(45deg,#fff 0,#fff 2px,transparent 0,transparent 50%);background-size:12px 12px;"></div>
+      <div style="position:relative;z-index:1;">
+        <div style="background:#fff;border-radius:16px;padding:14px;margin-bottom:14px;">
+          <div id="wqr-carte-canvas" style="width:200px;height:200px;margin:0 auto"></div>
+        </div>
+        <div id="wqr-carte-name" style="color:#fff;font-size:17px;font-weight:800;margin-bottom:4px;"></div>
+        <div id="wqr-carte-tel" style="color:rgba(255,255,255,.8);font-size:13px;font-family:monospace;"></div>
+      </div>
+    </div>
+    <div style="margin-top:14px;text-align:center;color:#6b7280;font-size:13px;">Montrez ce QR pour recevoir de l'argent</div>
+    <div class="wave-tab-bar" style="position:absolute;bottom:36px;left:50%;transform:translateX(-50%);background:#f0f0f0;">
+      <button class="wave-tab-btn" id="wtab-scan2" onclick="wqrTab('scan')" style="color:#6b7280;">Scanner un code</button>
+      <button class="wave-tab-btn on" id="wtab-carte2" onclick="wqrTab('carte')" style="background:#fff;color:#111;">Ma carte</button>
+    </div>
+  </div>
+</div>
+
+<div class="scr" id="s-profile">
+  <div style="background:linear-gradient(135deg,var(--g2),var(--g));padding:28px 20px 24px;text-align:center">
+    <div style="color:rgba(255,255,255,.75);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">ESPACE CLIENT</div>
+
+    <div style="width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.22);border:3px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:26px;font-weight:900;color:#fff" id="prof-avatar">AP</div>
+    <div style="font-size:20px;font-weight:900;color:#fff;margin-bottom:3px" id="prof-name-top">—</div>
+    <div style="color:rgba(255,255,255,.7);font-size:13px;font-family:monospace;margin-bottom:0" id="prof-tel-top">—</div>
+  </div>
+  <div style="padding:16px 16px 100px;background:#f9fafb">
+    <div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Mon compte</div>
+    <button class="params-item" onclick="ouvrirInfos()">
+      <div class="params-icon" style="background:#ecfdf5">👤</div>
+      <div><div class="params-label">Mes informations</div><div class="params-sub">Nom, Prenom, Telephone, KYC</div></div>
+      <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+    <button class="params-item" onclick="ouvrirKycUpgrade()">
+      <div class="params-icon" style="background:#eff6ff">🪪</div>
+      <div><div class="params-label">Compléter mon KYC</div><div class="params-sub" id="kyc-sub-label">Documents d'identité</div></div>
+      <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+    <button class="params-item" onclick="openSh('change-pin')">
+      <div class="params-icon" style="background:#fef3c7">🔐</div>
+      <div><div class="params-label">Modifier le code secret</div><div class="params-sub">Changer votre PIN de connexion</div></div>
+      <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+    <button class="params-item" onclick="voirPlafond()">
+      <div class="params-icon" style="background:#eff6ff">📊</div>
+      <div><div class="params-label">Verifier mon plafond</div><div class="params-sub">Limites KYC et transactions</div></div>
+      <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+    <div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-top:18px;margin-bottom:10px">Services</div>
+    <button class="params-item" onclick="trouverAgents()">
+      <div class="params-icon" style="background:#fdf4ff">📍</div>
+      <div><div class="params-label">Trouver des agents</div><div class="params-sub">Agents AFRIM PAY pres de vous</div></div>
+      <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+    <button class="params-item" onclick="inviterAmi()">
+      <div class="params-icon" style="background:#ecfdf5">🎁</div>
+      <div><div class="params-label">Inviter un ami</div><div class="params-sub">Partager votre code parrainage</div></div>
+      <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+    <div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-top:18px;margin-bottom:10px">Partenaires</div>
+    <div style="background:#fff;border-radius:14px;border:1px solid #f3f4f6;padding:16px;margin-bottom:8px">
+      <div style="font-size:13px;font-weight:600;color:#111827;margin-bottom:12px">Partenaires bancaires</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <span style="padding:7px 12px;background:#f9fafb;border-radius:10px;font-size:12px;font-weight:700;color:#374151">BNI</span>
+        <span style="padding:7px 12px;background:#f9fafb;border-radius:10px;font-size:12px;font-weight:700;color:#374151">SIB</span>
+        <span style="padding:7px 12px;background:#f9fafb;border-radius:10px;font-size:12px;font-weight:700;color:#374151">SGBCI</span>
+        <span style="padding:7px 12px;background:#f9fafb;border-radius:10px;font-size:12px;font-weight:700;color:#374151">ECOBANK</span>
+        <span style="padding:7px 12px;background:#f9fafb;border-radius:10px;font-size:12px;font-weight:700;color:#374151">UBA</span>
+        <span style="padding:7px 12px;background:#f9fafb;border-radius:10px;font-size:12px;font-weight:700;color:#374151">MTN MoMo</span>
+        <span style="padding:7px 12px;background:#f9fafb;border-radius:10px;font-size:12px;font-weight:700;color:#374151">Orange Money</span>
+      </div>
+    </div>
+    <button class="params-item" style="background:#fef2f2;border:1px solid #fecaca;margin-top:8px" onclick="confirmLogout()">
+      <div class="params-icon" style="background:#fee2e2">🚪</div>
+      <div><div class="params-label" style="color:#ef4444">Deconnexion</div><div class="params-sub">Quitter l'application</div></div>
+    </button>
+  </div>
+  <div style="height:80px"></div>
+  <nav class="bnav">
+    <button class="nb" id="nb-home" onclick="setTab('home')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Accueil</button>
+    <button class="nb" id="nb-history" onclick="setTab('history')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Historique</button>
+
+    <button class="nb" id="nb-commissions-a0" onclick="setTab('commissions')"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Gains</button>
+    <button class="nb on" id="nb-profile" onclick="setTab('profile')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/></svg>Paramètres</button>
+  </nav>
+</div>
+
+<div class="scr" id="s-commissions">
+  <div style="background:linear-gradient(135deg,#d97706,#f59e0b);padding:52px 20px 20px;position:sticky;top:0;z-index:10">
+    <div style="font-size:22px;font-weight:800;color:#fff">Mes gains 💰</div>
+    <div style="color:rgba(255,255,255,.8);font-size:13px">Commissions de parrainage</div>
+  </div>
+  <div id="comm-content" style="padding:16px 16px 100px"><div style="padding:32px;text-align:center"><div class="spin"></div></div></div>
+  <nav class="bnav">
+    <button class="nb" id="nb-home-c" onclick="setTab('home')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>Accueil</button>
+    <button class="nb" id="nb-history-c" onclick="setTab('history')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Historique</button>
+    <button class="nb on" id="nb-commissions-c" onclick="setTab('commissions')"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Gains</button>
+    <button class="nb" id="nb-profile-c" onclick="setTab('profile')"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"/></svg>Paramètres</button>
+  </nav>
+</div>
+
+<div class="scr" id="s-lock" style="background:#fff;justify-content:center;align-items:center;min-height:100vh;padding:32px 24px;">
+  <div style="width:100%;max-width:320px;text-align:center;display:flex;flex-direction:column;align-items:center;">
+    <div style="width:64px;height:64px;border-radius:16px;overflow:hidden;margin:0 auto 12px;border:2px solid #d1fae5;">
+      <img src="https://samassivaladji-cmyk.github.io/afrim-pay-apps/logo.png" style="width:100%;height:100%;object-fit:contain" alt="AFRIM PAY"/>
+    </div>
+    <div style="font-size:17px;font-weight:800;color:#059669;margin-bottom:4px">Session verrouillée</div>
+    <div style="font-size:12px;color:#9ca3af;margin-bottom:24px">Entrez votre code secret pour continuer</div>
+    <div id="lock-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#ef4444;padding:8px 12px;border-radius:10px;font-size:12px;margin-bottom:12px;width:100%;box-sizing:border-box"></div>
+
+    <div style="display:flex;gap:22px;justify-content:center;margin-bottom:36px">
+      <div id="lk0" style="width:18px;height:18px;border-radius:50%;border:2.5px solid #d1d5db;transition:.15s;background:transparent"></div>
+      <div id="lk1" style="width:18px;height:18px;border-radius:50%;border:2.5px solid #d1d5db;transition:.15s;background:transparent"></div>
+      <div id="lk2" style="width:18px;height:18px;border-radius:50%;border:2.5px solid #d1d5db;transition:.15s;background:transparent"></div>
+      <div id="lk3" style="width:18px;height:18px;border-radius:50%;border:2.5px solid #d1d5db;transition:.15s;background:transparent"></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:260px;margin:0 auto 24px">
+      <button onclick="lockPIN(1)" style="height:58px;border-radius:50%;border:none;background:#f3f4f6;font-size:24px;font-weight:500;cursor:pointer;font-family:inherit;color:#111827" ontouchstart="this.style.background='#e5e7eb'" ontouchend="this.style.background='#f3f4f6'">1</button>
+      <button onclick="lockPIN(2)" style="height:58px;border-radius:50%;border:none;background:#f3f4f6;font-size:24px;font-weight:500;cursor:pointer;font-family:inherit;color:#111827" ontouchstart="this.style.background='#e5e7eb'" ontouchend="this.style.background='#f3f4f6'">2</button>
+      <button onclick="lockPIN(3)" style="height:58px;border-radius:50%;border:none;background:#f3f4f6;font-size:24px;font-weight:500;cursor:pointer;font-family:inherit;color:#111827" ontouchstart="this.style.background='#e5e7eb'" ontouchend="this.style.background='#f3f4f6'">3</button>
+      <button onclick="lockPIN(4)" style="height:58px;border-radius:50%;border:none;background:#f3f4f6;font-size:24px;font-weight:500;cursor:pointer;font-family:inherit;color:#111827" ontouchstart="this.style.background='#e5e7eb'" ontouchend="this.style.background='#f3f4f6'">4</button>
+      <button onclick="lockPIN(5)" style="height:58px;border-radius:50%;border:none;background:#f3f4f6;font-size:24px;font-weight:500;cursor:pointer;font-family:inherit;color:#111827" ontouchstart="this.style.background='#e5e7eb'" ontouchend="this.style.background='#f3f4f6'">5</button>
+      <button onclick="lockPIN(6)" style="height:58px;border-radius:50%;border:none;background:#f3f4f6;font-size:24px;font-weight:500;cursor:pointer;font-family:inherit;color:#111827" ontouchstart="this.style.background='#e5e7eb'" ontouchend="this.style.background='#f3f4f6'">6</button>
+      <button onclick="lockPIN(7)" style="height:58px;border-radius:50%;border:none;background:#f3f4f6;font-size:24px;font-weight:500;cursor:pointer;font-family:inherit;color:#111827" ontouchstart="this.style.background='#e5e7eb'" ontouchend="this.style.background='#f3f4f6'">7</button>
+      <button onclick="lockPIN(8)" style="height:58px;border-radius:50%;border:none;background:#f3f4f6;font-size:24px;font-weight:500;cursor:pointer;font-family:inherit;color:#111827" ontouchstart="this.style.background='#e5e7eb'" ontouchend="this.style.background='#f3f4f6'">8</button>
+      <button onclick="lockPIN(9)" style="height:58px;border-radius:50%;border:none;background:#f3f4f6;font-size:24px;font-weight:500;cursor:pointer;font-family:inherit;color:#111827" ontouchstart="this.style.background='#e5e7eb'" ontouchend="this.style.background='#f3f4f6'">9</button>
+      <button onclick="logoutFromLock()" style="height:58px;border-radius:50%;border:none;background:none;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;color:#ef4444">Quitter</button>
+      <button onclick="lockPIN(0)" style="height:58px;border-radius:50%;border:none;background:#f3f4f6;font-size:24px;font-weight:500;cursor:pointer;font-family:inherit;color:#111827" ontouchstart="this.style.background='#e5e7eb'" ontouchend="this.style.background='#f3f4f6'">0</button>
+      <button onclick="lockDEL()" style="height:58px;border-radius:50%;border:none;background:none;font-size:22px;cursor:pointer;color:#374151">&#x232B;</button>
+    </div>
+  </div>
+</div>
+
+<div class="sh-ov" id="sh-send">
+  <div class="sh">
+    <div class="sh-bar"></div>
+    <div class="sh-top"><div><div class="sh-title">Envoyer de l'argent</div><div style="color:var(--m);font-size:12px">Transfert instantané · Gratuit</div></div><button class="sh-x" onclick="closeSh('send');rstSend()">✕</button></div>
+    <div class="sh-body">
+      <div id="send-s1">
+        <div id="send-err1" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:13px"></div>
+        <label class="lbl">Numéro destinataire</label>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <input class="inp" id="send-tel" type="tel" placeholder="07 XX XX XX" inputmode="numeric" style="flex:1" oninput="var ok=!!this.value;document.getElementById('send-ok-btn').disabled=!ok;document.getElementById('send-ok-btn').style.opacity=ok?'1':'.4'"/>
+          <button id="send-ok-btn" onclick="selDest(document.getElementById('send-tel').value)" disabled style="opacity:.4;padding:0 18px;background:var(--g);color:#fff;border:none;border-radius:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif">OK</button>
+        </div>
+        <button id="contacts-btn" onclick="choisirContact()" style="width:100%;padding:12px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:12px;color:#059669;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:4px">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          Choisir dans les contacts
+        </button>
+        <div id="contacts-list" style="max-height:200px;overflow-y:auto;margin-bottom:4px"></div>
+      </div>
+      <div id="send-s2" style="display:none">
+        <div id="send-dest" class="card" style="margin-bottom:14px;display:flex;align-items:center;gap:12px"></div>
+        <div id="send-err2" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:10px 14px;border-radius:10px;margin-bottom:10px;font-size:13px"></div>
+        <label class="lbl">Montant rapide</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <button onclick="setSendAmt(1000)" style="padding:8px 12px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">1 000</button>
+          <button onclick="setSendAmt(5000)" style="padding:8px 12px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">5 000</button>
+          <button onclick="setSendAmt(10000)" style="padding:8px 12px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">10 000</button>
+          <button onclick="setSendAmt(50000)" style="padding:8px 12px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">50 000</button>
+        </div>
+        <input class="inp" id="send-amt" type="number" placeholder="Montant en FCFA" inputmode="numeric" oninput="calcSend()" onkeydown="if(event.key='Enter'&&!document.getElementById('btn-send').disabled)doSend()" style="margin-bottom:10px"/>
+        <div id="send-recap" style="display:none;background:#f9fafb;border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:13px"></div>
+        <button class="btn btn-g" id="btn-send" onclick="doSend()" disabled style="opacity:.4;width:100%">Envoyer</button>
+      </div>
+      <div id="send-loading" style="display:none;text-align:center;padding:32px"><div class="spin"></div><p style="margin-top:12px;color:var(--m);font-size:14px">Envoi en cours...</p></div>
+      <div id="send-success" style="display:none;text-align:center;padding:24px">
+        <div style="width:64px;height:64px;border-radius:50%;background:#ecfdf5;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px">✅</div>
+        <div style="font-size:20px;font-weight:800;margin-bottom:6px">Envoyé !</div>
+        <div id="send-succ-txt" style="color:var(--m);font-size:14px;margin-bottom:4px"></div>
+        <div id="send-succ-ref" style="color:var(--d);font-size:11px;font-family:monospace;margin-bottom:20px"></div>
+        <div style="display:flex;gap:10px"><button class="btn btn-g" style="flex:1" onclick="rstSend()">Nouvel envoi</button><button class="btn btn-ghost" style="flex:1" onclick="closeSh('send');rstSend();rafraichir()">Fermer</button></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="scr" id="s-paiements" style="background:#fff;">
+
+  <div style="background:#fff;padding:16px 20px 12px;display:flex;align-items:center;gap:14px;border-bottom:1px solid #f3f4f6;position:sticky;top:0;z-index:5;">
+    <button onclick="fermerPaiements()" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;">
+      <svg width="22" height="22" fill="none" stroke="#111" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    </button>
+    <div style="font-size:20px;font-weight:800;flex:1">Paiements</div>
+  </div>
+
+  <div style="padding:12px 16px;background:#fff;border-bottom:1px solid #f3f4f6;">
+    <div style="display:flex;align-items:center;gap:10px;background:#f3f4f6;border-radius:12px;padding:10px 14px;">
+      <svg width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input id="pay-search" type="text" placeholder="Rechercher un service..." style="border:none;background:none;font-size:15px;font-family:'Inter',sans-serif;color:#111;outline:none;flex:1;" oninput="filtrerPaiements(this.value)"/>
+      <button id="pay-search-cancel" onclick="annulerRecherche()" style="display:none;background:none;border:none;color:#6b7280;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">Annuler</button>
+    </div>
+  </div>
+
+  <div id="pay-list" style="flex:1;overflow-y:auto;padding-bottom:32px;"></div>
+</div>
+
+<div class="scr" id="s-pay-detail" style="background:#fff;flex-direction:column;">
+
+  <div style="background:#fff;padding:16px 20px 12px;display:flex;align-items:center;gap:14px;border-bottom:1px solid #f3f4f6;position:sticky;top:0;z-index:5;flex-shrink:0;">
+    <button onclick="fermerDetailPaiement()" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;">
+      <svg width="22" height="22" fill="none" stroke="#111" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    </button>
+    <div style="font-size:18px;font-weight:800;flex:1" id="pay-det-title">Payer</div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:20px 16px 16px;">
+
+    <div id="pay-det-card" style="display:flex;align-items:center;gap:14px;background:#f9fafb;border-radius:16px;padding:16px;margin-bottom:20px;">
+      <div id="pay-det-icon" style="width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;"></div>
+      <div>
+        <div id="pay-det-name" style="font-size:16px;font-weight:800;color:#111;"></div>
+        <div id="pay-det-cat" style="font-size:12px;color:#6b7280;margin-top:3px;"></div>
+      </div>
+    </div>
+
+    <div id="pay-det-form">
+      <div id="pay-det-bientot" style="display:none;background:#fffbeb;border:1px solid #fde68a;border-radius:14px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:20px;">⏳</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#92400e;">Bientôt disponible</div>
+          <div style="font-size:12px;color:#b45309;margin-top:2px;">Ce service sera intégré très prochainement.</div>
+        </div>
+      </div>
+      <label class="lbl" id="pay-det-ref-label">Numéro de référence</label>
+      <input class="inp" id="pay-det-ref" type="text" placeholder="Ex: 12345678" inputmode="numeric" style="margin-bottom:16px;" oninput="calcPayDet()"/>
+      <div id="pay-det-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#ef4444;padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:13px;"></div>
+      <label class="lbl">Montant</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+        <button onclick="setPayDetAmt(500)"   style="padding:9px 14px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">500</button>
+        <button onclick="setPayDetAmt(1000)"  style="padding:9px 14px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">1 000</button>
+        <button onclick="setPayDetAmt(5000)"  style="padding:9px 14px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">5 000</button>
+        <button onclick="setPayDetAmt(10000)" style="padding:9px 14px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">10 000</button>
+        <button onclick="setPayDetAmt(25000)" style="padding:9px 14px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">25 000</button>
+      </div>
+      <input class="inp" id="pay-det-amt" type="number" placeholder="Montant en FCFA" inputmode="numeric" oninput="calcPayDet()" style="margin-bottom:0;"/>
+    </div>
+
+    <div id="pay-det-loading" style="display:none;text-align:center;padding:48px 0;">
+      <div class="spin"></div>
+      <p style="margin-top:14px;color:#6b7280;font-size:14px;">Paiement en cours...</p>
+    </div>
+
+    <div id="pay-det-success" style="display:none;text-align:center;padding:32px 0;">
+      <div style="width:72px;height:72px;border-radius:50%;background:#ecfdf5;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:36px;">✅</div>
+      <div style="font-size:22px;font-weight:900;margin-bottom:8px;">Paiement réussi !</div>
+      <div id="pay-det-succ-txt" style="color:#6b7280;font-size:15px;margin-bottom:6px;"></div>
+      <div id="pay-det-succ-ref" style="color:#9ca3af;font-size:12px;font-family:monospace;margin-bottom:28px;"></div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-g" style="flex:1" onclick="rstPayDet()">Nouveau paiement</button>
+        <button class="btn btn-ghost" style="flex:1" onclick="fermerDetailPaiement();fermerPaiements();rafraichir()">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="pay-det-footer" style="padding:10px 16px 24px;background:#fff;border-top:1px solid #f3f4f6;flex-shrink:0;">
+    <button class="btn btn-g" id="btn-pay-det" onclick="doPayDet()" disabled style="opacity:.4;width:100%">Confirmer le paiement</button>
+  </div>
+</div>
+
+<div class="scr" id="s-send-wave" style="background:#fff;flex-direction:column;">
+  <div style="background:#fff;padding:16px 20px 12px;display:flex;align-items:center;gap:14px;border-bottom:1px solid #f3f4f6;position:sticky;top:0;z-index:5;flex-shrink:0;">
+    <button onclick="setTab('home')" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;">
+      <svg width="22" height="22" fill="none" stroke="#111" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    </button>
+    <div style="font-size:18px;font-weight:800;flex:1">Envoyer de l'Argent</div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:20px 16px 16px;">
+
+    <div style="font-size:12px;color:#9ca3af;margin-bottom:4px">À</div>
+    <div id="sw-dest-name" style="font-size:16px;font-weight:800;color:#111;margin-bottom:2px"></div>
+    <div id="sw-dest-tel" style="font-size:14px;color:#6b7280;margin-bottom:20px;font-family:monospace"></div>
+    <div style="height:1px;background:#f3f4f6;margin-bottom:20px"></div>
+
+    <div style="font-size:13px;color:#2563eb;font-weight:600;margin-bottom:8px">Montant Envoyé</div>
+    <input id="sw-amt" type="number" inputmode="numeric" placeholder="" oninput="calcSW()"
+      style="width:100%;border:none;border-bottom:2px solid #2563eb;outline:none;font-size:28px;font-weight:700;padding:4px 0;margin-bottom:20px;font-family:'Inter',sans-serif;color:#111;background:transparent"/>
+
+    <div id="sw-recap" style="display:none">
+      <div style="font-size:13px;color:#9ca3af;margin-bottom:4px">Montant Reçu</div>
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:20px">
+        <div id="sw-recu" style="font-size:22px;font-weight:800;color:#111"></div>
+        <div style="font-size:12px;color:#059669;font-weight:600">Frais gratuit ✓</div>
+      </div>
+      <button class="btn btn-g" id="sw-btn" onclick="doSW()" style="width:100%;border-radius:99px;font-size:17px;padding:16px">Envoyer</button>
+    </div>
+    <div id="sw-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#ef4444;padding:10px 14px;border-radius:10px;margin-top:12px;font-size:13px;"></div>
+
+    <div id="sw-loading" style="display:none;text-align:center;padding:48px 0;">
+      <div class="spin"></div>
+      <p style="margin-top:14px;color:#6b7280;font-size:14px;">Envoi en cours...</p>
+    </div>
+
+    <div id="sw-success" style="display:none;text-align:center;padding:32px 0;">
+      <div style="width:72px;height:72px;border-radius:50%;background:#ecfdf5;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:36px;">✅</div>
+      <div style="font-size:22px;font-weight:900;margin-bottom:8px;">Envoyé !</div>
+      <div id="sw-succ-txt" style="color:#6b7280;font-size:15px;margin-bottom:4px;"></div>
+      <div id="sw-succ-ref" style="color:#9ca3af;font-size:12px;font-family:monospace;margin-bottom:28px;"></div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-g" style="flex:1" onclick="setTab('home');rafraichir()">Accueil</button>
+        <button class="btn btn-ghost" style="flex:1" onclick="setTab('history')">Historique</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+<div class="sh-ov" id="sh-pay" style="display:none!important;pointer-events:none;"></div>
+
+<div class="sh-ov" id="sh-inscription">
+  <div class="sh">
+    <div class="sh-bar"></div>
+    <div class="sh-top"><div><div class="sh-title">Créer un compte</div><div style="color:var(--m);font-size:12px">Client AFRIM PAY</div></div><button class="sh-x" onclick="closeSh('inscription');rstIns()">✕</button></div>
+    <div class="sh-body">
+      <div id="ins-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:13px"></div>
+      <div id="ins-form">
+        <div style="display:flex;gap:10px;margin-bottom:12px">
+          <div style="flex:1"><label class="lbl">Prénom *</label><input class="inp" id="ins-prenom" type="text" placeholder="Prénom"/></div>
+          <div style="flex:1"><label class="lbl">Nom *</label><input class="inp" id="ins-nom" type="text" placeholder="Nom"/></div>
+        </div>
+        <label class="lbl">Téléphone *</label>
+        <input class="inp" id="ins-tel" type="tel" placeholder="+225 07 XX XX XX" inputmode="numeric" style="margin-bottom:12px"/>
+        <label class="lbl">Code PIN (4 chiffres) *</label>
+        <input class="inp" id="ins-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••"/>
+        <label class="lbl" style="margin-top:12px;display:block">Confirmer le code secret *</label>
+        <input class="inp" id="ins-pin2" type="password" inputmode="numeric" maxlength="4" placeholder="••••" style="margin-bottom:12px"/>
+        <label class="lbl">Code parrainage (optionnel)</label>
+        <input class="inp" id="ins-parrain" type="text" placeholder="Ex: VAL-430Y" style="margin-bottom:16px"/>
+        <label class="lbl">Niveau KYC</label>
+        <div style="display:flex;gap:8px;margin-bottom:16px">
+          <button onclick="setKyc('KYC1',this)" class="chip on">KYC 1</button>
+          <button onclick="setKyc('KYC2',this)" class="chip">KYC 2</button>
+          <button onclick="setKyc('KYC3',this)" class="chip">KYC 3</button>
+        </div>
+        <div id="photos-kyc" style="margin-bottom:16px"></div>
+        <button class="btn btn-g" onclick="doInscrire()">Créer mon compte</button>
+      </div>
+      <div id="ins-loading" style="display:none;text-align:center;padding:32px"><div class="spin"></div></div>
+      <div id="ins-success" style="display:none;text-align:center;padding:24px">
+        <div style="font-size:48px;margin-bottom:12px">🎉</div>
+        <div style="font-size:20px;font-weight:800;margin-bottom:8px">Compte créé !</div>
+        <div id="ins-succ-txt" style="color:var(--m);font-size:14px;margin-bottom:20px"></div>
+        <button class="btn btn-g" onclick="closeSh('inscription');rstIns();S('s-login')">Se connecter →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API='https://afrim-pay-backend.onrender.com/api/v1';
+var LS={get:function(k){try{return localStorage.getItem(k);}catch(e){return null;}},set:function(k,v){try{localStorage.setItem(k,v);}catch(e){}},remove:function(k){try{localStorage.removeItem(k);}catch(e){}}};
+let G={token:LS.get('afrim_token'),refresh:LS.get('afrim_refresh'),user:null,compte:null,pin:'',soldeVisible:false,tab:'home',loginTel:''};
+try{G.user=JSON.parse(LS.get('afrim_user'));}catch(e){}
+
+async function api(path,opts){
+  opts=opts||{};
+  var h={'Content-Type':'application/json'};
+  if(G.token)h['Authorization']='Bearer '+G.token;
+  var r=await fetch(API+path,Object.assign({headers:h},opts));
+  var d=await r.json();
+  if(!r.ok){if(r.status===401&&!opts._retry&&G.refresh){var ok=await doRefresh();if(ok)return api(path,Object.assign({},opts,{_retry:true}));}throw new Error(d.message||'Erreur '+r.status);}
+  return d;
+}
+var get=p=>api(p);
+var post=(p,b)=>api(p,{method:'POST',body:JSON.stringify(b)});
+var patch=(p,b)=>api(p,{method:'PATCH',body:JSON.stringify(b)});
+
+async function doRefresh(){
+  try{var r=await fetch(API+'/auth/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refreshToken:G.refresh})});var d=await r.json();if(!r.ok)throw 0;G.token=d.data.accessToken;G.refresh=d.data.refreshToken;LS.set('afrim_token',G.token);LS.set('afrim_refresh',G.refresh);return true;}
+  catch(e){logout();return false;}
+}
+
+function T(msg,isErr){var el=document.getElementById('toast');el.textContent=msg;el.className=isErr?'on err':'on';clearTimeout(T._t);T._t=setTimeout(()=>el.className='',2800);}
+function F(n){return Number(n||0).toLocaleString('fr-FR')+' FCFA';}
+function FD(d){if(!d)return'—';return new Date(d).toLocaleString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}
+
+function S(id){if(G.locked)return;document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');window.scrollTo(0,0);if(typeof fbLogScreen==='function')fbLogScreen(id);}
+function openSh(id){document.getElementById('sh-'+id).classList.add('on');}
+function closeSh(id){document.getElementById('sh-'+id).classList.remove('on');}
+
+function setTab(t){
+  if(G.locked)return;
+  G.tab=t;
+  document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on');});
+  document.querySelectorAll('[id^="nb-'+t+'"]').forEach(function(b){b.classList.add('on');});
+  document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});
+  if(t==='home'){document.getElementById('s-home').classList.add('on');chargerAccueil();chargerBadgeNotifs();}
+  else if(t==='history'){document.getElementById('s-history').classList.add('on');chargerHistorique();}
+  else if(t==='receive'){ouvrirPopupQR();return;}
+  else if(t==='profile'){document.getElementById('s-profile').classList.add('on');chargerProfil();}
+  else if(t==='commissions'){document.getElementById('s-commissions').classList.add('on');setTimeout(chargerCommissions,50);}
+  else if(t==='paiements'){document.getElementById('s-paiements').classList.add('on');}
+  else if(t==='pay-detail'){document.getElementById('s-pay-detail').classList.add('on');}
+  else if(t==='send-wave'){document.getElementById('s-send-wave').classList.add('on');}
+}
+
+function chkLogin(){var v=document.getElementById('login-tel').value.trim();document.getElementById('lg-btn').disabled=!v;document.getElementById('lg-btn').style.opacity=v?'1':'.4';}
+
+async function chargerAccueil(){
+  var u=G.user;if(!u)return;
+  document.getElementById('h-name').textContent=(u.prenom||'')+' '+(u.nom||'');
+  try{var cr=await get('/accounts/me');G.compte=cr.data;var ur=await get('/users/me');G.user=ur.data;LS.set('afrim_user',JSON.stringify(G.user));}catch(e){}
+  afficherSolde();
+  // Grand QR centré sur accueil
+  if(document.getElementById('h-qr-canvas') && u.telephone) {
+    dessinerQRHome('h-qr-canvas', u.telephone+'|'+(u.codeParrainage||'')+'|client', '#059669');
+  }
+  if(document.getElementById('h-qr-name'))document.getElementById('h-qr-name').textContent=(u.prenom||'')+' '+(u.nom||'').toUpperCase();
+  var b='';
+  if(u.kycNiveau)b+='<span class="tag" style="background:rgba(255,255,255,.25);color:#fff">'+u.kycNiveau+'</span> ';
+  b+='<span class="tag" style="background:rgba(255,255,255,.18);color:rgba(255,255,255,.9)">'+u.telephone+'</span>';
+  document.getElementById('h-badges').innerHTML=b;
+  if(u.codeParrainage){document.getElementById('h-code').textContent=u.codeParrainage;document.getElementById('h-parrain').style.display='';}
+  chargerTxns();
+}
+function afficherSolde(){var s=G.compte?Number(G.compte.solde):0;document.getElementById('h-solde').textContent=G.soldeVisible?F(s):'••••• FCFA';}
+function toggleSolde(){G.soldeVisible=!G.soldeVisible;afficherSolde();}
+function copierCode(){var c=G.user&&G.user.codeParrainage;if(c&&navigator.clipboard)navigator.clipboard.writeText(c);T('✓ Code copié !');}
+
+// ── NOTIFICATIONS ─────────────────────────────────────────────────────
+var _notifCount=0;
+
+async function chargerBadgeNotifs(){
+  if(!G.token)return;
+  try{
+    var tel=G.user&&G.user.telephone?'&tel='+encodeURIComponent(G.user.telephone):'';
+    var r=await get('/notifications?limit=1'+tel);
+    _notifCount=Number((r.data&&r.data.nonLues!=null?r.data.nonLues:r.nonLues)||0);
+    var badge=document.getElementById('notif-badge');
+    if(badge){
+      badge.style.display=_notifCount>0?'flex':'none';
+      badge.textContent=_notifCount>9?'9+':(_notifCount>0?String(_notifCount):'');
+    }
+  }catch(e){
+    // Table pas encore créée ou erreur réseau — silencieux
+    console.warn('notif badge:',e.message);
+  }
+}
+
+async function ouvrirNotifications(){
+  S('s-notif');
+  var el=document.getElementById('notif-list');
+  var btnLire=document.getElementById('btn-tout-lire');
+  if(!el)return;
+  el.innerHTML='<div style="padding:40px;text-align:center"><div class="spin"></div></div>';
+  try{
+    var tel=G.user&&G.user.telephone?'&tel='+encodeURIComponent(G.user.telephone):'';
+    var r=await get('/notifications?limit=50'+tel);
+    var list=(r.data&&r.data.notifications)||r.notifications||[];
+    _notifCount=Number(r.data&&r.data.nonLues!=null?r.data.nonLues:r.nonLues)||0;
+    if(btnLire)btnLire.style.display=_notifCount>0?'block':'none';
+    // Mettre à jour le badge avec le vrai nombre de l'API
+    var badge=document.getElementById('notif-badge');
+    if(badge){
+      if(_notifCount>0){
+        badge.style.display='flex';
+        badge.textContent=_notifCount>9?'9+':String(_notifCount);
+      } else {
+        badge.style.display='none';
+        badge.textContent='';
+      }
+    }
+    if(!list.length){
+      el.innerHTML='<div style="text-align:center;padding:60px 20px">'
+        +'<div style="font-size:48px;margin-bottom:16px">🔔</div>'
+        +'<div style="font-size:15px;font-weight:700;color:#374151">Aucune notification</div>'
+        +'<div style="font-size:13px;color:#9ca3af;margin-top:6px">Vos activités apparaîtront ici</div></div>';
+      return;
+    }
+    var icons={transaction:'💳',kyc:'📋',securite:'🔐',systeme:'📢',parrainage:'🤝'};
+    var colors={transaction:'#3b82f6',kyc:'#22c55e',securite:'#f59e0b',systeme:'#8b5cf6',parrainage:'#f97316'};
+    var nonLuesCount=list.filter(function(n){return !n.lu;}).length;
+    // Séparer non-lues et lues
+    var nonLues=list.filter(function(n){return !n.lu;});
+    var lues=list.filter(function(n){return n.lu;});
+    function renderNotif(n){
+      var icon=icons[n.type]||'\uD83D\uDD14';
+      var col=colors[n.type]||'#6b7280';
+      var lu=n.lu;
+      var d=new Date(n.created_at||n.createdAt||Date.now());
+      var ds=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      var bg=lu?'#f9fafb':'#fff';
+      var shadow=lu?'0 1px 3px rgba(0,0,0,.04)':'0 1px 3px rgba(0,0,0,.10)';
+      var border=lu?'transparent':col;
+      var fw=lu?'500':'800';
+      var tc=lu?'#6b7280':'#111827';
+      var mc=lu?'#9ca3af':'#374151';
+      var dot=lu?'':'<div style="width:9px;height:9px;background:#ef4444;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 2px #fee2e2"></div>';
+      var html='<div onclick="lireNotifUI(this)" data-nid="'+n.id+'" data-lu="'+(lu?'1':'0')+'" style="background:'+bg+';border-radius:14px;padding:14px 16px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start;box-shadow:'+shadow+';cursor:pointer;border-left:4px solid '+border+';transition:all .2s">';
+      html+='<div style="width:42px;height:42px;border-radius:13px;background:'+col+'22;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;opacity:'+(lu?'.6':'1')+'">'+icon+'</div>';
+      html+='<div style="flex:1;min-width:0">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">';
+      html+='<div style="font-size:13px;font-weight:'+fw+';color:'+tc+';line-height:1.3">'+n.titre+'</div>';
+      html+='<div style="display:flex;align-items:center;gap:6px"><span style="font-size:10px;color:#9ca3af;white-space:nowrap">'+ds+'</span>'+dot+'</div>';
+      html+='</div>';
+      html+='<div style="font-size:12px;color:'+mc+';margin-top:3px;line-height:1.4">'+n.message+'</div>';
+      html+='</div></div>';
+      return html;
+    }
+    var html='';
+    if(nonLues.length){
+      html+='<div style="font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.5px;padding:0 4px 8px">Non lues ('+nonLues.length+')</div>';
+      html+=nonLues.map(renderNotif).join('');
+    }
+    if(lues.length){
+      html+='<div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;padding:'+(nonLues.length?'16px':'0')+' 4px 8px">Lues</div>';
+      html+=lues.map(renderNotif).join('');
+    }
+    el.innerHTML=html;
+  }catch(e){
+    var msg=e.message||'Erreur';
+    if(msg.indexOf('does not exist')>=0||msg.indexOf('relation')>=0){
+      // Table pas encore créée → backend pas à jour
+      el.innerHTML='<div style="text-align:center;padding:40px 20px">'
+        +'<div style="font-size:40px;margin-bottom:12px">🔔</div>'
+        +'<div style="font-size:14px;font-weight:700;color:#374151">Notifications bientôt disponibles</div>'
+        +'<div style="font-size:12px;color:#9ca3af;margin-top:6px">Mettez à jour le backend pour activer ce service.</div>'
+        +'</div>';
+    } else {
+      el.innerHTML='<div style="color:var(--r);padding:20px;font-size:13px;text-align:center">'+msg+'</div>';
+    }
+  }
+}
+
+async function lireNotifUI(el, id){
+  if(el.dataset.lu==='1') return; // déjà lue
+  el.dataset.lu='1';
+  // Mise à jour visuelle immédiate
+  el.style.background='#f9fafb';
+  el.style.borderLeft='4px solid transparent';
+  el.style.boxShadow='0 1px 3px rgba(0,0,0,.04)';
+  var iconEl=el.querySelector('div:first-child');
+  if(iconEl)iconEl.style.opacity='0.6';
+  var titreEl=el.querySelector('[style*="font-weight"]');
+  if(titreEl){titreEl.style.fontWeight='500';titreEl.style.color='#6b7280';}
+  var dot=el.querySelector('[style*="border-radius:50%"]');
+  if(dot)dot.remove();
+  // Mise à jour compteur badge
+  _notifCount=Math.max(0,_notifCount-1);
+  var badge=document.getElementById('notif-badge');
+  if(badge){if(_notifCount>0){badge.style.display='flex';badge.textContent=_notifCount>9?'9+':String(_notifCount);}else{badge.style.display='none';}}
+  // Mettre à jour le header "Non lues"
+  var headers=document.querySelectorAll('#notif-list div');
+  // Appel API silencieux
+  try{await patch('/notifications/'+id+'/lu',{});}catch(e){}
+}
+async function lireNotif(id){
+  try{await patch('/notifications/'+id+'/lu',{});}catch(e){}
+}
+
+async function toutLireNotifs(){
+  try{
+    await patch('/notifications/tout-lire',{});
+    var btnLire=document.getElementById('btn-tout-lire');
+    if(btnLire)btnLire.style.display='none';
+    // Actualiser la liste pour enlever les indicateurs
+    ouvrirNotifications();
+    T('Toutes les notifications lues');
+  }catch(e){T('Erreur',true);}
+}
+
+function rafraichir(){chargerAccueil();chargerBadgeNotifs();}
+
+// Polling notifications toutes les 60 secondes
+setInterval(function(){
+  if(G.token&&G.user&&!G.locked){chargerBadgeNotifs();}
+},60000);
+
+var TX_CFG={
+  depot:{c:'#059669',bg:'#ecfdf5',i:'📥',l:'Dépôt'},
+  retrait:{c:'#f97316',bg:'#fff7ed',i:'📤',l:'Retrait'},
+  transfert:{c:'#3b82f6',bg:'#eff6ff',i:'↔️',l:'Transfert'},
+  paiement_marchand:{c:'#8b5cf6',bg:'#fdf4ff',i:'🏪',l:'Paiement marchand'},
+  commission_depot:{c:'#f59e0b',bg:'#fffbeb',i:'⭐',l:'Commission dépôt'},
+  commission:{c:'#f59e0b',bg:'#fffbeb',i:'⭐',l:'Commission'},
+  bonus_reseau:{c:'#10b981',bg:'#ecfdf5',i:'🎁',l:'Bonus réseau'},
+};
+
+function txRow(tx){
+  var cfg=TX_CFG[tx.type]||TX_CFG.transfert;
+  var cid=G.compte?G.compte.id:'';
+  var isIn=tx.compteDestId===cid||['commission','commission_depot','bonus_reseau','depot'].includes(tx.type);
+  var sign=isIn?'+':'−';
+  var col=isIn?cfg.c:'#ef4444';
+  var label=cfg.l;
+  if(tx.type==='transfert'){
+    if(isIn&&tx.compteSource&&tx.compteSource.utilisateur)label='Reçu de '+tx.compteSource.utilisateur.prenom;
+    else if(!isIn&&tx.compteDest&&tx.compteDest.utilisateur)label='Envoyé à '+tx.compteDest.utilisateur.prenom;
+  }
+  return '<div class="tx-row">'
+    +'<div class="tx-icon" style="background:'+cfg.bg+'">'+cfg.i+'</div>'
+    +'<div style="flex:1"><div style="font-size:14px;font-weight:600">'+label+'</div><div style="color:var(--m);font-size:12px;margin-top:2px">'+FD(tx.dateCreation)+'</div></div>'
+    +'<div style="text-align:right"><div style="color:'+col+';font-size:15px;font-weight:800">'+sign+F(tx.montant)+'</div><div style="color:var(--d);font-size:10px;font-family:monospace">'+(tx.reference||'')+'</div></div>'
+    +'</div>';
+}
+
+async function chargerTxns(){
+  var el=document.getElementById('h-txns');
+  el.innerHTML='<div style="padding:20px;text-align:center"><div class="spin"></div></div>';
+  try{var r=await get('/transactions?limit=5');var list=r.data||[];el.innerHTML=list.length?'<div class="card">'+list.map(txRow).join('')+'</div>':'<div style="text-align:center;padding:24px;color:var(--m);font-size:14px">Aucune transaction pour l\'instant</div>';}
+  catch(e){el.innerHTML='<div style="background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:12px;border-radius:12px;font-size:13px">'+e.message+'</div>';}
+}
+
+var histFilter='all';
+async function chargerHistorique(){
+  var chips=['all','transfert','paiement_marchand','commission'].map(f=>'<button onclick="setHistFilter(\''+f+'\')" class="chip'+(histFilter===f?' on':'')+'">'
+    +{all:'Tous',transfert:'Envois/Reçus',paiement_marchand:'Paiements',commission:'Commissions'}[f]+'</button>').join('');
+  document.getElementById('hist-chips').innerHTML=chips;
+  var el=document.getElementById('hist-list');
+  el.innerHTML='<div style="padding:20px;text-align:center"><div class="spin"></div></div>';
+  try{var p='/transactions?limit=50';if(histFilter!=='all')p+='&type='+histFilter;var r=await get(p);var list=r.data||[];el.innerHTML=list.length?'<div class="card">'+list.map(txRow).join('')+'</div>':'<div style="text-align:center;padding:24px;color:var(--m);font-size:14px">Aucune transaction</div>';}
+  catch(e){el.innerHTML='<div style="background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:12px;border-radius:12px;font-size:13px">'+e.message+'</div>';}
+}
+function setHistFilter(f){histFilter=f;chargerHistorique();}
+
+function doRequest(){T('Fonctionnalité disponible dans la popup QR');}
+
+function chargerProfil(){
+  var u=G.user;if(!u)return;
+  if(document.getElementById('prof-name-top'))document.getElementById('prof-name-top').textContent=(u.prenom||'')+' '+(u.nom||'');
+  if(document.getElementById('prof-tel-top'))document.getElementById('prof-tel-top').textContent=u.telephone;
+  // Avatar initiales
+  if(document.getElementById('prof-avatar')){var ini=((u.prenom||'').charAt(0)+(u.nom||'').charAt(0)).toUpperCase();document.getElementById('prof-avatar').textContent=ini||'AP';}
+}
+
+var sendDest=null;
+function selDest(tel){if(!tel)return;sendDest={tel};document.getElementById('send-s1').style.display='none';document.getElementById('send-s2').style.display='';document.getElementById('send-dest').innerHTML='<div style="width:44px;height:44px;border-radius:50%;background:#eff6ff;display:flex;align-items:center;justify-content:center;color:var(--b);font-size:16px;font-weight:800;flex-shrink:0">'+tel.slice(-2)+'</div><div style="flex:1"><div style="font-size:14px;font-weight:700">Destinataire</div><div style="color:var(--m);font-size:12px;font-family:monospace">'+tel+'</div></div><button onclick="rstSend()" style="background:none;border:none;color:var(--g);font-size:12px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif">Changer</button>';}
+function setSendAmt(v){document.getElementById('send-amt').value=v;calcSend();doSend();}
+function calcSend(){var v=Number(document.getElementById('send-amt').value),ok=v>0;document.getElementById('send-recap').style.display=ok?'':'none';if(ok)document.getElementById('send-recap').innerHTML='<div class="srow"><span style="color:var(--m);font-size:13px">Montant</span><span style="font-weight:700">'+F(v)+'</span></div><div class="srow"><span style="color:var(--m);font-size:13px">Frais</span><span style="color:var(--g);font-weight:700">Gratuit ✓</span></div><div class="row" style="padding-top:10px"><span style="font-weight:700">Total débité</span><span style="color:var(--g);font-size:18px;font-weight:900">'+F(v)+'</span></div>';document.getElementById('btn-send').disabled=!ok;document.getElementById('btn-send').style.opacity=ok?'1':'.4';}
+async function doSend(){var amt=Number(document.getElementById('send-amt').value);var motif=undefined;var solde=G.compte?Number(G.compte.solde):0;if(amt>solde){document.getElementById('send-err2').textContent='Solde insuffisant ('+F(solde)+' disponible)';document.getElementById('send-err2').style.display='';return;}document.getElementById('send-s2').style.display='none';document.getElementById('send-loading').style.display='';try{var r=await post('/transactions/transfer',{telephone:sendDest.tel,montant:amt,});document.getElementById('send-loading').style.display='none';document.getElementById('send-success').style.display='';document.getElementById('send-succ-txt').textContent=F(amt)+' envoyés à '+sendDest.tel;document.getElementById('send-succ-ref').textContent=r.data.reference;if(typeof fbLogTransaction==='function')fbLogTransaction('transfert',amt);rafraichir();}catch(e){document.getElementById('send-loading').style.display='none';document.getElementById('send-s2').style.display='';document.getElementById('send-err2').textContent=e.message;document.getElementById('send-err2').style.display='';}}
+function rstSend(){var cl=document.getElementById('contacts-list');if(cl)cl.innerHTML='';var cb=document.getElementById('contacts-btn');if(cb)cb.style.display='';sendDest=null;['send-tel','send-amt'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});document.getElementById('send-s1').style.display='';document.getElementById('send-s2').style.display='none';document.getElementById('send-loading').style.display='none';document.getElementById('send-success').style.display='none';document.getElementById('send-recap').style.display='none';document.getElementById('send-err1').style.display='none';document.getElementById('send-err2').style.display='none';document.getElementById('btn-send').disabled=true;document.getElementById('btn-send').style.opacity='.4';document.getElementById('send-ok-btn').disabled=true;document.getElementById('send-ok-btn').style.opacity='.4';}
+
+// ——— PAGE PAIEMENTS STYLE WAVE ———
+var SERVICES_PAY=[
+  {id:'cie-fact',  cat:'Eau & Électricité',nom:'Factures CIE',      icon:'💡',couleur:'#fef3c7',bientot:true, ref:'Numéro de contrat'},
+  {id:'cie-prep',  cat:'Eau & Électricité',nom:'Prépayé CIE',       icon:'⚡',couleur:'#fef3c7',bientot:true, ref:'Numéro de compteur'},
+  {id:'sodeci',    cat:'Eau & Électricité',nom:'SODECI',             icon:'💧',couleur:'#dbeafe',bientot:true, ref:'Numéro de contrat'},
+  {id:'fer',       cat:'Transport',         nom:'FER Péage',          icon:'🛣️',couleur:'#d1fae5',bientot:true, ref:'Numéro de badge'},
+  {id:'sotra',     cat:'Transport',         nom:'SOTRA Carte Liberté',icon:'🚌',couleur:'#fce7f3',bientot:true, ref:'Numéro de carte'},
+  {id:'pont-hkb',  cat:'Transport',         nom:'Pont HKB',           icon:'🌉',couleur:'#ede9fe',bientot:true, ref:'Numéro de badge'},
+  {id:'ci-term',   cat:'Transport',         nom:'CI Terminal',         icon:'⚓',couleur:'#e0f2fe',bientot:true, ref:'Référence dossier'},
+  {id:'canal',     cat:'TV & Télécom',      nom:'Canal+',             icon:'📺',couleur:'#1f2937',bientot:true, ref:"Numéro d'abonné"},
+  {id:'startimes', cat:'TV & Télécom',      nom:'StarTimes',           icon:'📡',couleur:'#fef3c7',bientot:true, ref:"Numéro d'abonné"},
+  {id:'mtn-credit',cat:'TV & Télécom',      nom:'Crédit MTN',          icon:'📞',couleur:'#fef3c7',bientot:false,ref:'Numéro MTN'},
+  {id:'orange-cred',cat:'TV & Télécom',     nom:'Crédit Orange',       icon:'🍊',couleur:'#fff7ed',bientot:false,ref:'Numéro Orange'},
+  {id:'moov-cred', cat:'TV & Télécom',      nom:'Crédit Moov',         icon:'💜',couleur:'#fdf4ff',bientot:true, ref:'Numéro Moov'},
+  {id:'cnps',      cat:'État & Social',     nom:'RSTI CNPS',           icon:'🏛️',couleur:'#dbeafe',bientot:true, ref:'Numéro employeur'},
+  {id:'mena',      cat:'État & Social',     nom:'MENA Scolarité',      icon:'🎓',couleur:'#d1fae5',bientot:true, ref:'Numéro de dossier'},
+  {id:'dgi',       cat:'État & Social',     nom:'DGI Impôts',          icon:'📋',couleur:'#fef3c7',bientot:true, ref:'Numéro contribuable'},
+  {id:'marchand',  cat:'Marchands',         nom:'Payer par QR code',   icon:'🔲',couleur:'#ecfdf5',bientot:false,ref:'Scanner le QR'},
+  {id:'marchand2', cat:'Marchands',         nom:'Code marchand',       icon:'🏪',couleur:'#ecfdf5',bientot:false,ref:'Code BUS-XXXX'},
+];
+var payServiceActif=null,payMerch=null;
+
+function ouvrirPaiements(){
+  setTab('paiements');
+  document.getElementById('pay-search').value='';
+  document.getElementById('pay-search-cancel').style.display='none';
+  renderListePaiements(SERVICES_PAY);
+}
+function fermerPaiements(){setTab('home');}
+function filtrerPaiements(q){
+  document.getElementById('pay-search-cancel').style.display=q?'':'none';
+  var q2=q.toLowerCase().trim();
+  var res=q2?SERVICES_PAY.filter(s=>s.nom.toLowerCase().includes(q2)||s.cat.toLowerCase().includes(q2)):SERVICES_PAY;
+  renderListePaiements(res);
+}
+function annulerRecherche(){document.getElementById('pay-search').value='';document.getElementById('pay-search-cancel').style.display='none';renderListePaiements(SERVICES_PAY);}
+function renderListePaiements(liste){
+  var cats={};liste.forEach(s=>{if(!cats[s.cat])cats[s.cat]=[];cats[s.cat].push(s);});
+  var html='';
+  Object.keys(cats).forEach(cat=>{
+    html+='<div style="padding:14px 16px 6px;font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;">'+cat+'</div>';
+    cats[cat].forEach(s=>{
+      var iconStyle='background:'+s.couleur+';'+(s.id==='canal'?'color:#fff':'');
+      html+='<button onclick="selService(\''+s.id+'\')" style="display:flex;align-items:center;gap:14px;width:100%;background:none;border:none;border-bottom:1px solid #f9fafb;padding:14px 16px;cursor:pointer;font-family:inherit;text-align:left;">'
+        +'<div style="width:52px;height:52px;border-radius:14px;'+iconStyle+';display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">'+s.icon+'</div>'
+        +'<div style="flex:1"><div style="font-size:15px;font-weight:600;color:#111827;">'+s.nom+'</div>'
+        +'<div style="font-size:12px;color:#9ca3af;margin-top:2px;">'+s.cat+(s.bientot?' · <span style=\"color:#f59e0b;font-weight:700;\">Bientôt</span>':'')+'</div></div>'
+        +'<svg width="16" height="16" fill="none" stroke="#d1d5db" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>';
+    });
+  });
+  if(!html)html='<div style="text-align:center;padding:48px 24px;color:#9ca3af;font-size:14px;">Aucun service trouvé</div>';
+  document.getElementById('pay-list').innerHTML=html;
+}
+function selService(id){
+  var s=SERVICES_PAY.find(x=>x.id===id);if(!s)return;
+  payServiceActif=s;
+  // QR marchand direct → scanner
+  if(s.id==='marchand'){fermerPaiements();ouvrirScannerDirect();return;}
+  // Ouvrir page de détail
+  document.getElementById('pay-det-title').textContent=s.nom;
+  document.getElementById('pay-det-icon').textContent=s.icon;
+  document.getElementById('pay-det-icon').style.background=s.couleur;
+  document.getElementById('pay-det-name').textContent=s.nom;
+  document.getElementById('pay-det-cat').textContent=s.cat;
+  document.getElementById('pay-det-ref-label').textContent=s.ref;
+  document.getElementById('pay-det-ref').placeholder=s.ref;
+  var bientot=document.getElementById('pay-det-bientot');
+  bientot.style.display=s.bientot?'flex':'none';
+  document.getElementById('btn-pay-det').disabled=s.bientot;
+  document.getElementById('btn-pay-det').style.opacity=s.bientot?'.4':'1';
+  document.getElementById('pay-det-form').style.display='';
+  document.getElementById('pay-det-loading').style.display='none';
+  document.getElementById('pay-det-success').style.display='none';
+  document.getElementById('pay-det-err').style.display='none';
+  document.getElementById('pay-det-ref').value='';
+  document.getElementById('pay-det-amt').value='';
+  setTab('pay-detail');
+}
+function fermerDetailPaiement(){setTab('paiements');renderListePaiements(SERVICES_PAY);}
+function setPayDetAmt(v){document.getElementById('pay-det-amt').value=v;calcPayDet();}
+function calcPayDet(){
+  var v=Number(document.getElementById('pay-det-amt').value);
+  var ok=v>0&&payServiceActif&&!payServiceActif.bientot;
+  document.getElementById('btn-pay-det').disabled=!ok;
+  document.getElementById('btn-pay-det').style.opacity=ok?'1':'.4';
+}
+async function doPayDet(){
+  var s=payServiceActif;if(!s||s.bientot)return;
+  var amt=Number(document.getElementById('pay-det-amt').value);
+  var ref=document.getElementById('pay-det-ref').value.trim();
+  var solde=G.compte?Number(G.compte.solde):0;
+  var errEl=document.getElementById('pay-det-err');errEl.style.display='none';
+  if(amt>solde){errEl.textContent='Solde insuffisant ('+F(solde)+' disponible)';errEl.style.display='';return;}
+  document.getElementById('pay-det-form').style.display='none';
+  document.getElementById('pay-det-loading').style.display='';document.getElementById('pay-det-footer').style.display='none';
+  try{
+    var r=await post('/transactions/pay',{merchantCode:s.id,montant:amt,reference:ref});
+    document.getElementById('pay-det-loading').style.display='none';
+    document.getElementById('pay-det-success').style.display='';document.getElementById('pay-det-footer').style.display='none';
+    document.getElementById('pay-det-succ-txt').textContent=F(amt)+' payés · '+s.nom;
+    document.getElementById('pay-det-succ-ref').textContent='Réf: '+(r.data.reference||'');
+    if(typeof fbLogTransaction==='function')fbLogTransaction('paiement',amt);
+    rafraichir();
+  }catch(e){
+    document.getElementById('pay-det-loading').style.display='none';
+    document.getElementById('pay-det-form').style.display='';
+    errEl.textContent=e.message;errEl.style.display='';
+  }
+}
+function rstPayDet(){
+  document.getElementById('pay-det-ref').value='';
+  document.getElementById('pay-det-amt').value='';
+  document.getElementById('pay-det-err').style.display='none';
+  document.getElementById('pay-det-form').style.display='';
+  document.getElementById('pay-det-loading').style.display='none';
+  document.getElementById('pay-det-success').style.display='none';
+  document.getElementById('btn-pay-det').disabled=true;
+  document.getElementById('btn-pay-det').style.opacity='.4';
+}
+
+// Scanner direct depuis QR accueil (onglet scanner de la popup Wave)
+function ouvrirSendWave(tel, nom) {
+  document.getElementById('sw-dest-name').textContent = nom || tel;
+  document.getElementById('sw-dest-tel').textContent  = tel;
+  document.getElementById('sw-amt').value = '';
+  document.getElementById('sw-recap').style.display = 'none';
+  document.getElementById('sw-err').style.display = 'none';
+  document.getElementById('sw-loading').style.display = 'none';
+  document.getElementById('sw-success').style.display = 'none';
+
+  document.getElementById('sw-recap').style.display = 'none';
+  window._swTel = tel;
+  setTab('send-wave');
+  setTimeout(function(){ document.getElementById('sw-amt').focus(); }, 400);
+}
+
+function calcSW() {
+  var v = Number(document.getElementById('sw-amt').value);
+  var ok = v > 0;
+  document.getElementById('sw-recap').style.display = ok ? '' : 'none';
+  if (ok) document.getElementById('sw-recu').textContent = F(v);
+
+}
+
+async function doSW() {
+  var amt = Number(document.getElementById('sw-amt').value);
+  var solde = G.compte ? Number(G.compte.solde) : 0;
+  var errEl = document.getElementById('sw-err');
+  errEl.style.display = 'none';
+  if (amt > solde) {
+    errEl.textContent = 'Solde insuffisant (' + F(solde) + ' disponible)';
+    errEl.style.display = '';
+    return;
+  }
+
+  document.getElementById('sw-loading').style.display = '';
+  try {
+    var r = await post('/transactions/transfer', {telephone: window._swTel, montant: amt});
+    document.getElementById('sw-loading').style.display = 'none';
+    document.getElementById('sw-success').style.display = '';
+    document.getElementById('sw-succ-txt').textContent = F(amt) + ' FCFA envoyés à ' + window._swTel;
+    document.getElementById('sw-succ-ref').textContent = r.data.reference;
+    rafraichir();
+  } catch(e) {
+    document.getElementById('sw-loading').style.display = 'none';
+
+    errEl.textContent = e.message;
+    errEl.style.display = '';
+  }
+}
+
+function ouvrirScannerDirect(){
+  ouvrirPopupQR(function(tel,parts){
+    setTimeout(function(){
+      var role = parts[2] || 'client';
+      if(role==='business'||role==='marchand'){
+        // Paiement marchand → page pay-detail
+        var s={id:'marchand2',cat:'Marchands',nom:'Payer '+parts[0],icon:'🏪',couleur:'#ecfdf5',bientot:false,ref:'Référence (optionnel)'};
+        payServiceActif=s;
+        document.getElementById('pay-det-title').textContent='Payer le marchand';
+        document.getElementById('pay-det-icon').textContent='🏪';
+        document.getElementById('pay-det-icon').style.background='#ecfdf5';
+        document.getElementById('pay-det-name').textContent=parts[0];
+        document.getElementById('pay-det-cat').textContent='Marchand AFRIM PAY';
+        document.getElementById('pay-det-ref-label').textContent='Référence (optionnel)';
+        document.getElementById('pay-det-ref').placeholder='Motif ou référence';
+        document.getElementById('pay-det-bientot').style.display='none';
+        document.getElementById('btn-pay-det').disabled=true;
+        document.getElementById('btn-pay-det').style.opacity='.4';
+        document.getElementById('pay-det-form').style.display='';
+        document.getElementById('pay-det-loading').style.display='none';
+        document.getElementById('pay-det-success').style.display='none';
+        document.getElementById('pay-det-ref').value='';
+        document.getElementById('pay-det-amt').value='';
+        setTab('pay-detail');
+      } else {
+        // Transfert client → page style Wave
+        ouvrirSendWave(parts[0], parts[1]||parts[0]);
+      }
+    }, 300);
+  });
+}
+
+var payMerch=null;
+function selMarchand(code){if(!code)return;payMerch={code};}
+function setPayAmt(v){document.getElementById('pay-det-amt')&&(document.getElementById('pay-det-amt').value=v);calcPayDet();}
+function calcPay(){}
+async function doPay(){}
+function rstPay(){}
+
+var kycLevel='KYC1';var kycPhotos={};
+function setKyc(lvl,btn){kycLevel=lvl;document.querySelectorAll('.chip').forEach(b=>b.classList.remove('on'));if(btn)btn.classList.add('on');renderPhotos();}
+function renderPhotos(){
+  var photos={KYC1:[{id:'selfie',label:'📸 Selfie'}],KYC2:[{id:'selfie',label:'📸 Selfie'},{id:'cni-r',label:'🪪 CNI Recto'},{id:'cni-v',label:'🪪 CNI Verso'}],KYC3:[{id:'selfie',label:'📸 Selfie'},{id:'cni-r',label:'🪪 CNI Recto'},{id:'cni-v',label:'🪪 CNI Verso'},{id:'justif',label:'📄 Justificatif domicile'}]};
+  var list=photos[kycLevel]||[];
+  document.getElementById('photos-kyc').innerHTML=list.map(function(p){
+    var cam=p.id==='selfie'?'user':'environment';
+    return'<div style="margin-bottom:10px"><label class="lbl">'+p.label+'</label><div class="photo-slot" id="slot-'+p.id+'" onclick="document.getElementById(\'file-'+p.id+'\').click()"><input type="file" id="file-'+p.id+'" accept="image/*" capture="'+cam+'" style="display:none" onchange="photoChange(\''+p.id+'\',this)"/><div id="preview-'+p.id+'" style="color:var(--m);font-size:13px">📷 Appuyer pour prendre une photo</div></div></div>';
+  }).join('');
+}
+function photoChange(id,input){if(!input.files[0])return;var reader=new FileReader();reader.onload=function(e){kycPhotos[id]=e.target.result;document.getElementById('preview-'+id).innerHTML='<img src="'+e.target.result+'" style="width:100%;height:80px;object-fit:cover;border-radius:8px"/>';document.getElementById('slot-'+id).classList.add('done');};reader.readAsDataURL(input.files[0]);}
+function rstIns(){['ins-prenom','ins-nom','ins-tel','ins-pin','ins-parrain'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});document.getElementById('ins-err').style.display='none';document.getElementById('ins-form').style.display='';document.getElementById('ins-loading').style.display='none';document.getElementById('ins-success').style.display='none';kycPhotos={};setKyc('KYC1',null);}
+async function doInscrire(){
+  var prenom=document.getElementById('ins-prenom').value.trim();var nom=document.getElementById('ins-nom').value.trim();var telephone=document.getElementById('ins-tel').value.trim();var pin=document.getElementById('ins-pin').value.trim();var parrainCode=document.getElementById('ins-parrain').value.trim();
+  var errEl=document.getElementById('ins-err');errEl.style.display='none';
+  var pin2=document.getElementById('ins-pin2');var pin2val=pin2?pin2.value.trim():'';
+  if(!prenom||!nom||!telephone||!pin){errEl.textContent='Tous les champs obligatoires doivent être remplis';errEl.style.display='';return;}
+  if(pin.length!==4){errEl.textContent='Le code secret doit avoir exactement 4 chiffres';errEl.style.display='';return;}
+  if(pin2val&&pin!==pin2val){errEl.textContent='Les codes secrets ne correspondent pas';errEl.style.display='';return;}
+  if(!/^\d{4}$/.test(pin)){errEl.textContent='Le PIN doit contenir exactement 4 chiffres';errEl.style.display='';return;}
+  document.getElementById('ins-form').style.display='none';document.getElementById('ins-loading').style.display='';
+  try{var r=await post('/auth/register',{prenom,nom,telephone,pin,role:'client',kycNiveau:kycLevel,parrainCode:parrainCode||undefined});document.getElementById('ins-loading').style.display='none';document.getElementById('ins-success').style.display='';document.getElementById('ins-succ-txt').textContent='Votre compte a été créé ! Code parrainage : '+(r.data.codeParrainage||'');}
+  catch(e){document.getElementById('ins-loading').style.display='none';document.getElementById('ins-form').style.display='';errEl.textContent=e.message;errEl.style.display='';}
+}
+
+function goPin(){var tel=document.getElementById('login-tel').value.trim();if(!tel)return;G.loginTel=tel;G.pin='';document.getElementById('pin-tel-disp').textContent=tel;rDots();S('s-pin');}
+function PIN(n){if(G.pin.length>=4)return;G.pin+=n;rDots();if(G.pin.length===4)setTimeout(doLogin,200);}
+function DELP(){G.pin=G.pin.slice(0,-1);rDots();}
+function rDots(){for(var i=0;i<4;i++){var d=document.getElementById('d'+i);if(d)d.className='pin-dot'+(i<G.pin.length?' on':'');}}
+
+async function doLogin(){
+  document.getElementById('pin-keys').style.display='none';document.getElementById('pin-loading').style.display='';document.getElementById('err-pin').style.display='none';
+  try{var r=await post('/auth/login',{telephone:G.loginTel,pin:G.pin});G.token=r.data.accessToken;G.refresh=r.data.refreshToken;G.user=r.data.user;LS.set('afrim_token',G.token);LS.set('afrim_refresh',G.refresh);LS.set('afrim_user',JSON.stringify(G.user));document.getElementById('pin-loading').style.display='none';document.getElementById('pin-keys').style.display='';G.pin='';rDots();if(typeof fbLogLogin==='function')fbLogLogin();setTab('home');chargerBadgeNotifs();}
+  catch(e){document.getElementById('pin-loading').style.display='none';document.getElementById('pin-keys').style.display='';document.getElementById('err-pin').textContent=e.message;document.getElementById('err-pin').style.display='';G.pin='';rDots();}
+}
+
+function dessinerQRHome(cid,data,color){
+  var el=document.getElementById(cid);if(!el)return;
+  el.innerHTML='';
+  var img=document.createElement('img');
+  img.style.cssText='width:200px;height:200px;display:block;margin:0 auto;border-radius:8px';
+  img.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(data)+'&color=000000&bgcolor=ffffff&qzone=1';
+  img.onerror=function(){var p=data.split('|');el.innerHTML='<div style="padding:16px;text-align:center;font-size:15px;font-weight:900;color:#059669;font-family:monospace">'+(p[0]||data)+'</div>';};
+  el.appendChild(img);
+}
+
+var _scanStream=null,_scanInterval=null,wqrTrack=null,wqrFlashOn=false;
+
+function ouvrirPopupQR(){
+  var popup=document.getElementById('wave-qr-popup');
+  popup.style.display='flex';
+  wqrTab('scan');
+  // Attendre que le navigateur ait rendu le popup avant de lancer la caméra
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      _lancerCamera();
+    });
+  });
+}
+function fermerPopupQR(){
+  _arreterCamera();
+  document.getElementById('wave-qr-popup').style.display='none';
+}
+function _lancerCamera(){
+  var video=document.getElementById('wqr-video');
+  var msg=document.getElementById('wqr-scan-msg');
+  var overlay=document.getElementById('wqr-overlay');
+  // Essayer BarcodeDetector d'abord (API native Android Chrome 83+)
+  if('BarcodeDetector' in window){
+    var bd=new BarcodeDetector({formats:['qr_code']});
+    navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}})
+    .then(function(stream){
+      _scanStream=stream;
+      wqrTrack=stream.getVideoTracks()[0];
+      video.srcObject=stream;
+      video.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block';
+      video.play().catch(function(){});
+      if(msg)msg.textContent='Pointez vers le QR code';
+      _scanInterval=setInterval(function(){
+        if(video.readyState<2)return;
+        bd.detect(video).then(function(codes){
+          if(codes.length>0&&codes[0].rawValue){
+            _arreterCamera();
+            var parts=codes[0].rawValue.split('|'),tel=parts[0]||codes[0].rawValue;
+            fermerPopupQR();
+            setTimeout(function(){
+              if(typeof _qrCallback==='function'&&_qrCallback){_qrCallback(tel,parts);_qrCallback=null;}
+              else{ouvrirSendWave(tel,parts[1]||tel);}
+            },300);
+          }
+        }).catch(function(){});
+      },300);
+    })
+    .catch(function(){_fallbackScanner(video,msg,overlay);});
+    return;
+  }
+  // getUserMedia + jsQR
+  if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
+    navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}})
+    .then(function(stream){
+      _scanStream=stream;
+      wqrTrack=stream.getVideoTracks()[0];
+      video.srcObject=stream;
+      video.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block';
+      video.play().catch(function(){});
+      if(msg)msg.textContent='Pointez vers le QR code';
+      _scanInterval=setInterval(function(){_lireQRVideo();},300);
+    })
+    .catch(function(){_fallbackScanner(video,msg,overlay);});
+    return;
+  }
+  _fallbackScanner(video,msg,overlay);
+}
+function _fallbackScanner(video,msg,overlay){
+  if(msg)msg.textContent='Appuyez pour scanner';
+  if(overlay){overlay.style.cursor='pointer';overlay.onclick=function(){document.getElementById('wqr-native-input').click();};}
+}
+function _arreterCamera(){
+  if(_scanInterval){clearInterval(_scanInterval);_scanInterval=null;}
+  if(_scanStream){_scanStream.getTracks().forEach(function(t){t.stop();});_scanStream=null;}
+  var video=document.getElementById('wqr-video');
+  if(video){video.srcObject=null;video.style.display='none';}
+}
+function _lireQRVideo(){
+  var video=document.getElementById('wqr-video');
+  if(!video||video.readyState<2||!window.jsQR)return;
+  var cvs=document.getElementById('wqr-canvas');
+  cvs.width=video.videoWidth;cvs.height=video.videoHeight;
+  var ctx=cvs.getContext('2d');ctx.drawImage(video,0,0);
+  var d=ctx.getImageData(0,0,cvs.width,cvs.height);
+  var code=jsQR(d.data,d.width,d.height);
+  if(code&&code.data){
+    _arreterCamera();
+    var parts=code.data.split('|'),tel=parts[0]||code.data;
+    fermerPopupQR();
+    setTimeout(function(){
+      if(typeof _qrCallback==='function'&&_qrCallback){_qrCallback(tel,parts);_qrCallback=null;}
+      else{ouvrirSendWave(tel,parts[1]||tel);}
+    },300);
+  }
+}
+function wqrTab(tab){
+  var sc=document.getElementById('wqr-scanner');
+  var ca=document.getElementById('wqr-carte');
+  if(!sc||!ca)return;
+  if(tab==='carte'){sc.style.display='none';ca.style.display='flex';afficherCarteQR();}
+  else{ca.style.display='none';sc.style.display='flex';}
+  ['wtab-scan','wtab-scan2'].forEach(function(id){var b=document.getElementById(id);if(b){b.classList.toggle('on',tab==='scan');}});
+  ['wtab-carte','wtab-carte2'].forEach(function(id){var b=document.getElementById(id);if(b){b.classList.toggle('on',tab==='carte');}});
+}
+function afficherCarteQR(){
+  var u=G.user||JSON.parse(LS.get('afrim_user')||'null');if(!u)return;
+  var nm=document.getElementById('wqr-carte-name');if(nm)nm.textContent=(u.prenom||'')+' '+(u.nom||'');
+  var tl=document.getElementById('wqr-carte-tel');if(tl)tl.textContent=u.telephone||'';
+  dessinerQRHome('wqr-carte-canvas',(u.telephone||'')+'|'+(u.codeParrainage||u.id||'')+'|client','#059669');
+}
+
+function toggleFlash(){
+  if(!wqrTrack)return;
+  wqrFlashOn=!wqrFlashOn;
+  wqrTrack.applyConstraints({advanced:[{torch:wqrFlashOn}]}).catch(function(){T('Flash non disponible');wqrFlashOn=false;});
+}
+
+// ——— Ancienne fonction pour compatibilité ———
+function ouvrirScanner(callback){ouvrirPopupQR(callback);}
+function fermerScanner(){fermerPopupQR();}
+function rstChangePin(){['cp-old','cp-new','cp-new2'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});document.getElementById('cp-err').style.display='none';document.getElementById('cp-form').style.display='';document.getElementById('cp-loading').style.display='none';document.getElementById('cp-ok').style.display='none';}
+async function doChangePin(){
+  var a=document.getElementById('cp-old').value.trim();var n=document.getElementById('cp-new').value.trim();var n2=document.getElementById('cp-new2').value.trim();
+  var errEl=document.getElementById('cp-err');errEl.style.display='none';
+  if(!a||!n||!n2){errEl.textContent='Tous les champs sont obligatoires';errEl.style.display='';return;}
+  if(n.length!==4||isNaN(n)){errEl.textContent='Le nouveau PIN doit etre 4 chiffres';errEl.style.display='';return;}
+  if(n!==n2){errEl.textContent='Les PIN ne correspondent pas';errEl.style.display='';return;}
+  document.getElementById('cp-form').style.display='none';document.getElementById('cp-loading').style.display='';
+  try{await post('/users/change-pin',{ancienPin:a,nouveauPin:n});document.getElementById('cp-loading').style.display='none';document.getElementById('cp-ok').style.display='';}
+  catch(e){document.getElementById('cp-loading').style.display='none';document.getElementById('cp-form').style.display='';errEl.textContent=e.message;errEl.style.display='';}
+}
+function ouvrirInfos(){
+  var u=G.user;if(!u)return;openSh('infos');
+  document.getElementById('sh-infos-body').innerHTML=
+    '<div class="srow"><span style="color:var(--m);font-size:13px">Prenom</span><span style="font-weight:700">'+u.prenom+'</span></div>'+
+    '<div class="srow"><span style="color:var(--m);font-size:13px">Nom</span><span style="font-weight:700">'+u.nom+'</span></div>'+
+    '<div class="srow"><span style="color:var(--m);font-size:13px">Telephone</span><span style="font-weight:700;font-family:monospace">'+u.telephone+'</span></div>'+
+    '<div class="srow"><span style="color:var(--m);font-size:13px">Niveau KYC</span><span style="font-weight:700;color:var(--g)">'+u.kycNiveau+'</span></div>'+
+    '<div class="srow" style="border:none"><span style="color:var(--m);font-size:13px">Statut</span><span style="font-weight:700;color:'+(u.statut==='actif'?'#22c55e':'#f59e0b')+'">'+u.statut+'</span></div>'+
+    (u.codeParrainage?'<div style="margin-top:16px;background:#f0fdf4;border:1px solid #d1fae5;border-radius:12px;padding:14px;text-align:center"><div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:4px">Code parrainage</div><div style="font-size:24px;font-weight:900;font-family:monospace;color:#059669">'+u.codeParrainage+'</div></div>':'');
+}
+function voirPlafond(){
+  var u=G.user;if(!u)return;openSh('plafond');
+  var plafonds={'KYC1':20000,'KYC2':50000,'KYC3':100000};
+  var p=plafonds[u.kycNiveau]||200000;
+  document.getElementById('sh-plafond-body').innerHTML=
+    '<div style="text-align:center;padding:20px 0"><div style="font-size:36px;font-weight:900;color:#059669">'+Number(p).toLocaleString('fr-FR')+' FCFA</div><div style="color:#6b7280;font-size:14px;margin-top:4px">Plafond mensuel '+u.kycNiveau+'</div></div>'+
+    '<div class="srow"><span style="color:#6b7280;font-size:13px">Depot mensuel max</span><span style="font-weight:700">'+Number(p).toLocaleString('fr-FR')+' FCFA</span></div>'+
+    '<div class="srow" style="border:none"><span style="color:#6b7280;font-size:13px">Retrait mensuel max</span><span style="font-weight:700">'+Number(p).toLocaleString('fr-FR')+' FCFA</span></div>';
+}
+function trouverAgents(){T('Fonctionnalite bientot disponible');}
+function inviterAmi(){
+  var u=G.user;if(!u)return;var code=u.codeParrainage||'';
+  var msg='Rejoignez AFRIM PAY avec mon code '+code+' !';
+  if(navigator.share)navigator.share({title:'AFRIM PAY',text:msg});
+  else if(navigator.clipboard){navigator.clipboard.writeText(msg);T('Message copie !');}
+  else T('Code: '+code);
+}
+
+function ouvrirTransfert(){
+  rstSend();
+  // Afficher étape 1 (saisie numéro)
+  var s1=document.getElementById('send-s1');if(s1)s1.style.display='';
+  var s2=document.getElementById('send-s2');if(s2)s2.style.display='none';
+  openSh('send');
+  // Focus sur le champ téléphone
+  setTimeout(function(){var t=document.getElementById('send-tel');if(t)t.focus();},300);
+}
+async function chargerCommissions(){
+  var el=document.getElementById('comm-content');
+  if(!el){if(!chargerCommissions._r){chargerCommissions._r=1;setTimeout(chargerCommissions,500);}return;}
+  chargerCommissions._r=0;
+  var u=G.user||{};
+  var kyc=u.kycNiveau||'KYC1',nbRatt=Number(u.nbRattaches)||0,nbFil=Number(u.nbFilleuls)||0;
+  var condF=kyc==='KYC3'?500:kyc==='KYC2'?200:0,cRatt=nbRatt>=(condF||1)?'#22c55e':'#f59e0b';
+  var h='<div style="background:linear-gradient(135deg,#d97706,#f59e0b);border-radius:16px;padding:20px;margin-bottom:14px;text-align:center;color:#fff">'
+    +'<div style="font-size:11px;font-weight:700;opacity:.75;text-transform:uppercase;margin-bottom:6px">CE MOIS-CI</div>'
+    +'<div id="cm-mois" style="font-size:36px;font-weight:900">-- FCFA</div>'
+    +'<div style="display:flex;gap:16px;justify-content:center;margin-top:12px">'
+    +'<div><div id="cm-nb" style="font-size:18px;font-weight:800">--</div><div style="font-size:10px;opacity:.7">opérations</div></div>'
+    +'<div style="width:1px;background:rgba(255,255,255,.2)"></div>'
+    +'<div><div id="cm-prec" style="font-size:18px;font-weight:800">--</div><div style="font-size:10px;opacity:.7">mois préc.</div></div>'
+    +'</div></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">'
+    +'<div style="background:#fff;border-radius:14px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:900;color:#059669">'+nbFil+'</div><div style="font-size:11px;color:#6b7280">Parrainés</div></div>'
+    +'<div style="background:#fff;border-radius:14px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:900;color:'+cRatt+'">'+nbRatt+'</div>'
+    +'<div style="font-size:11px;color:#6b7280">Rattachés'+(condF?'<br><span style="font-size:10px;color:'+cRatt+'">'+nbRatt+'/'+condF+'</span>':'')+'</div></div>'
+    +'</div>'
+    +'<div style="background:#fefce8;border:1px solid #fde68a;border-radius:14px;padding:14px;margin-bottom:14px">'
+    +'<div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:6px">Comment gagner ?</div>'
+    +'<div style="font-size:11px;color:#a16207;line-height:1.7">Parrainez des contacts. Ils font un <b>dépôt ou reçoivent un transfert</b> ≥500 FCFA = rattachés à vie.<br>À chaque <b>retrait ou paiement</b> de votre filleul → <b>10% des frais</b> pour vous.</div>'
+    +'</div>'
+    +'<div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px;margin-bottom:14px"><div style="font-size:12px;font-weight:700;margin-bottom:10px">Virer mes gains vers mon compte</div><div style="display:flex;gap:8px"><input id="gains-vir-amt" type="number" placeholder="Montant en FCFA" style="flex:1;padding:10px 14px;border:1px solid #e5e7eb;border-radius:10px;font-size:14px;outline:none;font-family:inherit"/><button onclick="virerGains()" style="padding:10px 18px;background:#059669;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Virer</button></div></div>'
+    +'<div id="cm-detail" style="background:#f9fafb;border-radius:12px;padding:14px;text-align:center"><div class="spin" style="width:16px;height:16px;border-width:2px;margin:0 auto"></div></div>';
+  el.innerHTML=h;
+  try{
+    var resp=await fetch(API+'/commissions?type=commission_parrain&userId='+(u.id||'')+'&limit=200',{headers:{Authorization:'Bearer '+(G.token||'')}});
+    var rd=await resp.json();if(!resp.ok)throw new Error(rd.message||'Erreur');
+    var comms=rd.data||[],now=new Date(),d1=new Date(now.getFullYear(),now.getMonth(),1);
+    var tM=0,tP=0,tH=0,nM=0,cM=[];
+    comms.forEach(function(c){var d=new Date(c.dateCalcul||c.date_calcul||0),m=Number(c.montant||0);tH+=m;if(d>=d1){tM+=m;nM++;cM.push(c);}else tP+=m;});
+    var e=document.getElementById('cm-mois');if(e)e.textContent=tM.toLocaleString('fr-FR')+' FCFA';
+    var e2=document.getElementById('cm-nb');if(e2)e2.textContent=nM;
+    var e3=document.getElementById('cm-prec');if(e3)e3.textContent=tP.toLocaleString('fr-FR')+' FCFA';
+    var det=document.getElementById('cm-detail');if(!det)return;
+    var dh='<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:8px">Détail ce mois</div>';
+    if(!cM.length){dh+='<div style="font-size:13px;font-weight:600">Aucune commission<br><span style="font-size:12px;color:#6b7280">Total historique : '+tH.toLocaleString('fr-FR')+' FCFA</span></div>';}
+    else{cM.forEach(function(c){var d=new Date(c.dateCalcul||c.date_calcul);dh+='<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb"><div><div style="font-size:13px;font-weight:600">Commission filleul</div><div style="font-size:11px;color:#6b7280">'+d.toLocaleDateString('fr-FR')+'</div></div><div style="font-size:15px;font-weight:900;color:#f59e0b">+'+Number(c.montant).toLocaleString('fr-FR')+' FCFA</div></div>';});}
+    det.innerHTML=dh;
+  }catch(e){var det2=document.getElementById('cm-detail');if(det2)det2.innerHTML='<div style="color:#6b7280;font-size:12px">'+e.message+'</div>';}
+}
+// Listener QR natif
+document.addEventListener('DOMContentLoaded',function(){
+  var ni=document.getElementById('wqr-native-input');
+  if(!ni)return;
+  ni.addEventListener('change',function(){
+    if(!this.files||!this.files[0])return;
+    var file=this.files[0];this.value='';
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      var img=new Image();
+      img.onload=function(){
+        var cvs=document.createElement('canvas');cvs.width=img.width;cvs.height=img.height;
+        var ctx=cvs.getContext('2d');ctx.drawImage(img,0,0);
+        if(window.jsQR){
+          var d=ctx.getImageData(0,0,img.width,img.height);
+          var code=jsQR(d.data,d.width,d.height);
+          if(code&&code.data){
+            var parts=code.data.split('|'),tel=parts[0]||code.data;
+            fermerPopupQR();
+            setTimeout(function(){
+              if(typeof _qrCallback==='function'&&_qrCallback){_qrCallback(tel,parts);_qrCallback=null;}
+              else{ouvrirSendWave(tel,parts[1]||tel);}
+            },300);
+            return;
+          }
+        }
+        T('QR non reconnu — saisissez le numéro manuellement',true);
+      };
+      img.src=ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+});
+
+function ouvrirKycUpgrade(){
+  openSh('kyc-upgrade');
+  var el=document.getElementById('kyc-body');
+  if(!el)return;
+  el.innerHTML='<div style="padding:24px;text-align:center"><div class="spin"></div></div>';
+  // Charger les docs déjà soumis depuis le backend → source de vérité permanente
+  var uid=G.user&&G.user.id;
+  get('/kyc/documents?userId='+uid).then(function(r){
+    _renderKyc(r.data||[]);
+  }).catch(function(){
+    _renderKyc([]);
+  });
+}
+
+function _renderKyc(docsExistants){
+  var u=G.user||{};
+  var kyc=u.kycNiveau||'KYC1';   // niveau actuel de l'utilisateur
+  var statut=u.statut||'';        // 'actif' ou 'en_attente'
+  var el=document.getElementById('kyc-body');
+  if(!el)return;
+
+  // ── Définitions ──────────────────────────────────────────────────
+  var KYC_DOCS={
+    KYC1:[{id:'selfie',         label:'Selfie',                  icon:'🤳',camera:'user'}],
+    KYC2:[{id:'selfie',         label:'Selfie',                  icon:'🤳',camera:'user'},
+          {id:'cni_recto',      label:'CNI Recto',               icon:'🪪',camera:'environment'},
+          {id:'cni_verso',      label:'CNI Verso',               icon:'🪪',camera:'environment'}],
+    KYC3:[{id:'selfie',         label:'Selfie',                  icon:'🤳',camera:'user'},
+          {id:'cni_recto',      label:'CNI Recto',               icon:'🪪',camera:'environment'},
+          {id:'cni_verso',      label:'CNI Verso',               icon:'🪪',camera:'environment'},
+          {id:'extrait_naissance',     label:'Extrait de naissance',    icon:'📄',camera:'environment'},
+          {id:'justificatif_domicile', label:'Justificatif de domicile',icon:'🏠',camera:'environment'}]
+  };
+  // Docs propres à chaque niveau (ceux qu'on soumet pour ce niveau)
+  var DOCS_NIVEAU={
+    KYC1:['selfie'],
+    KYC2:['cni_recto','cni_verso'],
+    KYC3:['extrait_naissance','justificatif_domicile']
+  };
+  var PLAFONDS={KYC1:'20 000',KYC2:'50 000',KYC3:'100 000'};
+  var KYC_CONDITIONS={
+    KYC1:{filleuls:0,  desc:'Accès de base — Un simple selfie suffit'},
+    KYC2:{filleuls:200,desc:'200 filleuls requis pour le plafond 50 000 F'},
+    KYC3:{filleuls:500,desc:'500 filleuls requis pour le plafond 100 000 F'}
+  };
+  var colors={KYC1:'#22c55e',KYC2:'#3b82f6',KYC3:'#8b5cf6'};
+  var ORDER={KYC1:1,KYC2:2,KYC3:3};
+  var niveaux=['KYC1','KYC2','KYC3'];
+  var nbRatt=Number(u.nbRattaches||0);
+
+  // Docs soumis en base (pour référence uniquement sur le niveau en_attente)
+  var docsSoumis={};
+  (docsExistants||[]).forEach(function(d){
+    docsSoumis[d.typeDocument||d.type_document]=true;
+  });
+
+  // Docs définitivement validés par niveau (règle métier fixe — indépendante de l'API)
+  // Si KYC1 actif → selfie validé
+  // Si KYC2 actif → selfie + cni_recto + cni_verso validés
+  // Si KYC3 actif → tous validés
+  var DOCS_VALIDES_PAR_NIVEAU={
+    KYC1:['selfie'],
+    KYC2:['selfie','cni_recto','cni_verso'],
+    KYC3:['selfie','cni_recto','cni_verso','extrait_naissance','justificatif_domicile']
+  };
+  // Ensemble de tous les docs validés définitivement
+  var docsDefinitivementValides={};
+  // Un doc est validé définitivement si son niveau d'appartenance <= niveau actuel ET actif
+  // OU si son niveau d'appartenance < niveau actuel (toujours vrai peu importe statut)
+  niveaux.forEach(function(n){
+    var docsN=DOCS_VALIDES_PAR_NIVEAU[n]||[];
+    if(ORDER[n]<ORDER[kyc]){
+      // Niveaux passés → forcément validés
+      docsN.forEach(function(id){docsDefinitivementValides[id]=true;});
+    } else if(ORDER[n]===ORDER[kyc]&&statut==='actif'){
+      // Niveau actuel validé
+      docsN.forEach(function(id){docsDefinitivementValides[id]=true;});
+    }
+  });
+
+  window._kycPhotos={};
+
+  function docVerrouille(niv, docId){
+    // Un doc est verrouillé s'il est dans les docs définitivement validés
+    return !!docsDefinitivementValides[docId];
+  }
+
+  function docModifiable(niv, docId){
+    // Niveau actuel EN ATTENTE → les docs de ce niveau sont modifiables
+    return ORDER[niv]===ORDER[kyc] && statut!=='actif';
+  }
+
+  function docAFournir(niv, docId){
+    // Prochain niveau → docs à fournir pour upgrade
+    return ORDER[niv]===ORDER[kyc]+1;
+  }
+
+  // ── Barre de progression ─────────────────────────────────────────
+  var statutLabel = statut==='actif'
+    ? '<span style="color:#22c55e;font-size:11px;font-weight:700">● Actif</span>'
+    : '<span style="color:#f59e0b;font-size:11px;font-weight:700">● En attente</span>';
+  var h='<div style="background:#f9fafb;border-radius:14px;padding:14px;margin-bottom:16px">';
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+  h+='<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase">Niveau actuel : '+kyc+'</div>';
+  h+=statutLabel+'</div>';
+  h+='<div style="background:#e5e7eb;border-radius:99px;height:8px">';
+  h+='<div style="background:var(--g);border-radius:99px;height:8px;transition:.4s;width:'+(kyc==='KYC1'?'33':kyc==='KYC2'?'66':'100')+'%"></div>';
+  h+='</div></div>';
+
+  // ── Rendu de chaque niveau ───────────────────────────────────────
+  niveaux.forEach(function(niv){
+    var col=colors[niv];
+    var ord=ORDER[niv];
+    var actOrd=ORDER[kyc];
+    var allDocs=KYC_DOCS[niv]||[];
+    var docsNiv=DOCS_NIVEAU[niv]||[];
+    var estNiveauActuel=(ord===actOrd);
+    var estNiveauSuivant=(ord===actOrd+1);
+    var estNiveauFutur=(ord>actOrd+1);
+    var estNiveauPasse=(ord<actOrd);
+    var estActif=(estNiveauActuel && statut==='actif');
+    var estEnAttente=(estNiveauActuel && statut!=='actif');
+
+    // Style bordure
+    var border;
+    if(estActif||estNiveauPasse) border='2px solid '+col;
+    else if(estEnAttente)        border='2px solid #f59e0b';
+    else if(estNiveauSuivant)    border='1.5px solid '+col+'66';
+    else                         border='1.5px solid #e5e7eb';
+
+    var opacity=estNiveauFutur?'opacity:.4;':'';
+    h+='<div style="'+opacity+'border:'+border+';border-radius:16px;padding:16px;margin-bottom:12px">';
+
+    // En-tête
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
+    h+='<div style="font-size:16px;font-weight:900;color:'+col+'">'+niv+'</div>';
+    if(estActif){
+      h+='<span style="background:'+col+'18;color:'+col+';padding:4px 12px;border-radius:99px;font-size:10px;font-weight:800">✓ Actif</span>';
+    } else if(estNiveauPasse){
+      h+='<span style="background:#f0fdf4;color:#15803d;padding:4px 12px;border-radius:99px;font-size:10px;font-weight:700">✓ Validé</span>';
+    } else if(estEnAttente){
+      h+='<span style="background:#fef3c7;color:#92400e;padding:4px 12px;border-radius:99px;font-size:10px;font-weight:700">⏳ En attente</span>';
+    } else {
+      h+='<span style="background:#f3f4f6;color:#6b7280;padding:4px 12px;border-radius:99px;font-size:10px">'+PLAFONDS[niv]+' F/mois</span>';
+    }
+    h+='</div>';
+
+    // Message informatif
+    if(estActif){
+      h+='<div style="background:#f0fdf4;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:#15803d">✅ Dossier validé par le back-office. Documents verrouillés.</div>';
+    } else if(estEnAttente){
+      h+='<div style="background:#fef3c7;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:#92400e">⏳ En attente de validation (délai : 48h). Vous pouvez encore remplacer vos photos.</div>';
+    }
+
+    // Conditions filleuls pour le niveau suivant
+    var cond=KYC_CONDITIONS[niv];
+    if(cond&&estNiveauSuivant&&cond.filleuls>0){
+      var condOk=nbRatt>=cond.filleuls;
+      h+='<div style="background:'+(condOk?'#f0fdf4':'#fef3c7')+';border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:11px;color:'+(condOk?'#15803d':'#92400e')+'">';
+      h+=(condOk?'✅ ':'⚠️ ')+cond.desc+' <b>('+nbRatt+'/'+cond.filleuls+')</b>';
+      h+='</div>';
+    }
+
+    // Documents
+    allDocs.forEach(function(doc){
+      var key=niv+'-'+doc.id;
+      var verr=docVerrouille(niv,doc.id);
+      var modif=docModifiable(niv,doc.id);
+      var afournir=docAFournir(niv,doc.id);
+
+      if(verr){
+        // ✅ Verrouillé — validé définitivement
+        h+='<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f0fdf4;border-radius:10px;border:1px solid #a7f3d0;margin-bottom:6px">';
+        h+='<div style="width:38px;height:38px;border-radius:10px;background:#dcfce7;display:flex;align-items:center;justify-content:center;font-size:18px">'+doc.icon+'</div>';
+        h+='<div style="flex:1"><div style="font-size:13px;font-weight:700;color:#15803d">'+doc.label+'</div>';
+        h+='<div style="font-size:11px;color:#22c55e">Validé ✓</div></div>';
+        h+='<div style="font-size:20px">✅</div></div>';
+      } else if(modif){
+        // 🔄 Modifiable — soumis mais en attente, peut remplacer
+        var dejaSoumis=docsSoumis[doc.id];
+        var bg=dejaSoumis?'#fef3c7':'#f9fafb';
+        var borderC=dejaSoumis?'#fde68a':'#e5e7eb';
+        var textColor=dejaSoumis?'#92400e':'#6b7280';
+        var desc=dejaSoumis?'Soumis — Appuyer pour remplacer':'Appuyer pour prendre la photo';
+        var icon=dejaSoumis?'🔄':'📷';
+        h+='<div id="ks-'+key+'" data-niv="'+niv+'" data-doc="'+doc.id+'" data-cam="'+doc.camera+'" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:'+bg+';border-radius:10px;border:1px solid '+borderC+';margin-bottom:6px;cursor:pointer">';
+        h+='<div style="width:38px;height:38px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:18px">'+doc.icon+'</div>';
+        h+='<div style="flex:1"><div style="font-size:13px;font-weight:600;color:'+textColor+'">'+doc.label+'</div>';
+        h+='<div id="kl-'+key+'" style="font-size:11px;color:'+textColor+'">'+desc+'</div></div>';
+        h+='<div id="kc-'+key+'" style="font-size:18px">'+icon+'</div></div>';
+        h+='<input type="file" accept="image/*" capture="'+doc.camera+'" id="ki-'+key+'" style="display:none"/>';
+      } else if(afournir){
+        // 📷 À fournir pour le niveau suivant
+        h+='<div id="ks-'+key+'" data-niv="'+niv+'" data-doc="'+doc.id+'" data-cam="'+doc.camera+'" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f9fafb;border-radius:10px;border:1px solid #e5e7eb;margin-bottom:6px;cursor:pointer">';
+        h+='<div style="width:38px;height:38px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:18px">'+doc.icon+'</div>';
+        h+='<div style="flex:1"><div style="font-size:13px;font-weight:600">'+doc.label+'</div>';
+        h+='<div id="kl-'+key+'" style="font-size:11px;color:#9ca3af">Appuyer pour prendre la photo</div></div>';
+        h+='<div id="kc-'+key+'" style="font-size:18px">📷</div></div>';
+        h+='<input type="file" accept="image/*" capture="'+doc.camera+'" id="ki-'+key+'" style="display:none"/>';
+      }
+    });
+
+    // Boutons d'action
+    if(estEnAttente){
+      h+='<button data-niv="'+niv+'" id="btn-kyc-'+niv+'" style="width:100%;padding:14px;background:#f59e0b;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:10px;opacity:.5">Resoumettre le dossier →</button>';
+    } else if(estNiveauSuivant){
+      h+='<button data-niv="'+niv+'" id="btn-kyc-'+niv+'" style="width:100%;padding:14px;background:'+col+';color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:10px;opacity:.5">Upgrade vers '+niv+' →</button>';
+    }
+    h+='</div>';
+  });
+
+  el.innerHTML=h;
+
+  // Clic slot → ouvre caméra directement
+  el.querySelectorAll('[data-niv][data-doc]').forEach(function(slot){
+    slot.addEventListener('click',function(){
+      var inp=document.getElementById('ki-'+slot.dataset.niv+'-'+slot.dataset.doc);
+      if(inp)inp.click();
+    });
+  });
+
+  // Photo prise → aperçu + vérification bouton
+  niveaux.forEach(function(niv){
+    KYC_DOCS[niv].forEach(function(doc){
+      var inp=document.getElementById('ki-'+niv+'-'+doc.id);
+      if(!inp)return;
+      inp.addEventListener('change',function(){
+        if(!this.files||!this.files[0])return;
+        var file=this.files[0];
+        window._kycPhotos[niv+'-'+doc.id]=file;
+        var sl=document.getElementById('ks-'+niv+'-'+doc.id);
+        if(sl){sl.style.background='#f0fdf4';sl.style.borderColor='#22c55e';}
+        var lb=document.getElementById('kl-'+niv+'-'+doc.id);
+        if(lb){lb.textContent='Photo prise ✓';lb.style.color='#22c55e';}
+        var ck=document.getElementById('kc-'+niv+'-'+doc.id);
+        if(ck){
+          var reader=new FileReader();
+          reader.onload=function(e){
+            ck.innerHTML='<img src="'+e.target.result+'" style="width:38px;height:38px;border-radius:8px;object-fit:cover;border:2px solid #22c55e"/>';
+          };
+          reader.readAsDataURL(file);
+        }
+        _checkKycBtn(niv);
+      });
+    });
+    var btn=document.getElementById('btn-kyc-'+niv);
+    if(btn)btn.addEventListener('click',function(){soumettreKyc(this.dataset.niv);});
+  });
+}
+
+function _checkKycBtn(niv){
+  var NOUVEAUX_DOCS={KYC1:['selfie'],KYC2:['cni_recto','cni_verso'],KYC3:['extrait_naissance','justificatif_domicile']};
+  var docs=NOUVEAUX_DOCS[niv]||[];
+  var photos=window._kycPhotos||{};
+  var tous=docs.every(function(id){return !!photos[niv+'-'+id];});
+  var btn=document.getElementById('btn-kyc-'+niv);
+  if(btn){
+    btn.style.opacity=tous?'1':'.5';
+    btn.textContent=tous?'Soumettre pour '+niv+' →':'Upgrade vers '+niv+' ('+docs.filter(function(id){return !photos[niv+'-'+id];}).length+' document(s) manquant)';
+  }
+}
+
+function prendrePhotoKyc(niv,docId,camera){
+  document.getElementById('kyc-inp-'+niv+'-'+docId).click();
+}
+function photoKycChange(niv,docId,inp){
+  if(!inp.files||!inp.files[0])return;
+  window._kycPhotos=window._kycPhotos||{};
+  window._kycPhotos[niv+'-'+docId]=inp.files[0];
+  var slot=document.getElementById('kyc-slot-'+niv+'-'+docId);
+  if(slot){slot.style.background='#f0fdf4';slot.style.border='1px solid #22c55e';}
+  var lbl=document.getElementById('kyc-lbl-'+niv+'-'+docId);
+  if(lbl){lbl.style.color='#22c55e';lbl.textContent='Photo prise ✓';}
+  var chk=document.getElementById('kyc-chk-'+niv+'-'+docId);
+  if(chk)chk.textContent='✅';
+}
+async function soumettreKyc(niv){
+  var NOUVEAUX_DOCS={
+    'KYC1':[{id:'selfie'}],
+    'KYC2':[{id:'cni_recto'},{id:'cni_verso'}],
+    'KYC3':[{id:'extrait_naissance'},{id:'justificatif_domicile'}]
+  };
+  var docs=NOUVEAUX_DOCS[niv]||[];
+  var photos=window._kycPhotos||{};
+  var manq=docs.filter(function(d){return !photos[niv+'-'+d.id];}).map(function(d){return d.id;});
+  if(manq.length){T('Documents manquants : '+manq.join(', '),true);return;}
+
+  // Désactiver le bouton pendant l'envoi
+  var btn=document.getElementById('btn-kyc-'+niv);
+  if(btn){btn.disabled=true;btn.textContent='Envoi en cours...';}
+  T('Envoi en cours...');
+
+  var uid=G.user&&G.user.id;
+  for(var i=0;i<docs.length;i++){
+    var doc=docs[i];var file=photos[niv+'-'+doc.id];if(!file)continue;
+    try{
+      var fd=new FormData();
+      fd.append('file',file);
+      fd.append('upload_preset','afrim-kyc');
+      fd.append('folder','afrim-pay/kyc');
+      var r=await fetch('https://api.cloudinary.com/v1_1/dzofjvhwu/image/upload',{method:'POST',body:fd});
+      var d=await r.json();
+      if(!r.ok||!d.secure_url)throw new Error('Upload échoué pour '+doc.id);
+      await post('/kyc/documents',{userId:uid,typeDocument:doc.id,urlFichier:d.secure_url});
+    }catch(e){
+      T('Erreur '+doc.id+': '+e.message,true);
+      if(btn){btn.disabled=false;btn.textContent='Réessayer →';}
+      return;
+    }
+  }
+
+  // Soumettre la demande → le backend passe statut à 'en_attente'
+  try{
+    await post('/kyc/request',{userId:uid,niveauDemande:niv});
+  }catch(e){
+    T('Erreur soumission: '+e.message,true);
+    if(btn){btn.disabled=false;}
+    return;
+  }
+
+  // Mettre à jour G.user localement immédiatement
+  if(G.user){
+    G.user.statut='en_attente';
+    // Sauvegarder dans localStorage pour persistance
+    try{LS.set('afrim_user',JSON.stringify(G.user));}catch(e){}
+  }
+
+  window._kycPhotos={};
+  T('✓ Dossier soumis — Validation sous 48h.');
+
+  // Rafraîchir le sheet KYC pour afficher "En attente" immédiatement
+  closeSh('kyc-upgrade');
+  rafraichir();
+}
+
+async function virerGains(){
+  var amtEl=document.getElementById('gains-vir-amt');
+  var amt=Number(amtEl?amtEl.value:0);
+  if(!amt||amt<100){T('Montant minimum 100 FCFA',true);return;}
+  try{
+    var r=await post('/accounts/transfer-gains',{montant:amt});
+    T('Virement de '+amt.toLocaleString('fr-FR')+' FCFA effectué');
+    if(amtEl)amtEl.value='';
+    chargerCommissions();
+    rafraichir();
+  }catch(e){T(e.message,true);}
+}
+
+// ── VERROUILLAGE AUTO ──
+var _lockTimer=null;
+var _idleTimer=null;
+var _lockDelay=60000;
+
+function resetIdleTimer(){
+  if(!G.token||!G.user||G.locked)return;
+  if(_idleTimer)clearTimeout(_idleTimer);
+  _idleTimer=setTimeout(function(){
+    _idleTimer=null;
+    verrouillerApp();
+  },_lockDelay);
+}
+
+// Écouter toute activité utilisateur
+['touchstart','touchend','click','keydown','scroll','mousemove'].forEach(function(ev){
+  document.addEventListener(ev,resetIdleTimer,{passive:true});
+});
+
+function verrouillerApp(){
+  if(!G.token)return;
+  if(_idleTimer){clearTimeout(_idleTimer);_idleTimer=null;}
+  G.locked=true;
+  document.querySelectorAll('.sh-ov.on').forEach(function(s){s.classList.remove('on');});
+  var p=document.getElementById('wave-qr-popup');if(p)p.style.display='none';
+  document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});
+  var lockScr=document.getElementById('s-lock');
+  if(lockScr){
+    lockScr.classList.add('on');
+    _lockPin='';
+    for(var _li=0;_li<4;_li++){var _ld=document.getElementById('lk'+_li);if(_ld){_ld.style.background='';_ld.style.borderColor='#d1d5db';}}
+    var errEl=document.getElementById('lock-err');
+    if(errEl)errEl.style.display='none';
+  }
+}
+
+var _lockPin = '';
+function lockPIN(n) {
+  if (_lockPin.length >= 4) return;
+  _lockPin += String(n);
+  for (var i = 0; i < 4; i++) {
+    var d = document.getElementById('lk'+i);
+    if (d) {
+      d.style.background = i < _lockPin.length ? '#059669' : '';
+      d.style.borderColor = i < _lockPin.length ? '#059669' : '#d1d5db';
+    }
+  }
+  if (_lockPin.length === 4) { setTimeout(deverrouillerApp, 100); }
+}
+function lockDEL() {
+  if (_lockPin.length === 0) return;
+  _lockPin = _lockPin.slice(0, -1);
+  for (var i = 0; i < 4; i++) {
+    var d = document.getElementById('lk'+i);
+    if (d) {
+      d.style.background = i < _lockPin.length ? '#059669' : '';
+      d.style.borderColor = i < _lockPin.length ? '#059669' : '#d1d5db';
+    }
+  }
+}
+async function deverrouillerApp(){
+  var errEl=document.getElementById('lock-err');
+  var pin=_lockPin;
+  if(pin.length!==4){return;}
+  function resetDots(){
+    _lockPin='';
+    for(var i=0;i<4;i++){var d=document.getElementById('lk'+i);if(d){d.style.background='';d.style.borderColor='#d1d5db';}}
+  }
+  try{
+    var r=await post('/auth/login',{telephone:G.user.telephone,pin:pin});
+    if(r.data&&r.data.accessToken){G.token=r.data.accessToken;LS.set('afrim_token',G.token);}
+    resetDots();
+    if(errEl)errEl.style.display='none';
+    G.locked=false;
+    document.getElementById('s-lock').classList.remove('on');
+    setTab(G.tab||'home');
+    resetIdleTimer();
+  }catch(e){
+    if(errEl){errEl.textContent='Code incorrect';errEl.style.display='';}
+    // Shake des points
+    var dots=document.querySelectorAll('[id^="lk"]');
+    dots.forEach(function(d){d.style.borderColor='#ef4444';d.style.background='#fecaca';});
+    setTimeout(resetDots,600);
+  }
+}
+
+async function logoutFromLock(){
+  // Déconnexion depuis l'écran verrouillé
+  G.locked=false;
+  await logout();
+}
+
+// Détecter arrière-plan / premier plan
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden){
+    if(G.token&&G.user){
+      LS.set('afrim_lock_time', Date.now().toString());
+      _lockTimer=setTimeout(function(){
+        _lockTimer=null;
+        verrouillerApp();
+      },_lockDelay);
+    }
+  } else {
+    if(_lockTimer){clearTimeout(_lockTimer);_lockTimer=null;}
+    var t=LS.get('afrim_lock_time');
+    if(t&&G.token&&G.user&&(Date.now()-Number(t))>=_lockDelay){
+      verrouillerApp();
+    } else {
+      resetIdleTimer();
+    }
+  }
+});
+
+// Sauvegarder l'heure à la fermeture
+window.addEventListener('pagehide',function(){
+  if(G.token&&G.user)LS.set('afrim_lock_time',Date.now().toString());
+});
+
+// Au chargement : vérifier si 60s écoulées (exécuté dans init)
+function checkLockOnLoad(){
+  var t=LS.get('afrim_lock_time');
+  LS.remove('afrim_lock_time');
+  if(t&&G.token&&Date.now()-Number(t)>=_lockDelay){
+    return true; // doit verrouiller
+  }
+  return false;
+}
+
+async function choisirContact(){
+  var btn=document.getElementById('contacts-btn');
+  var listEl=document.getElementById('contacts-list');
+
+  // Méthode 1 : Contact Picker API (Android Chrome 80+)
+  if('contacts' in navigator && 'ContactsManager' in window){
+    try{
+      var contacts=await navigator.contacts.select(['name','tel'],{multiple:false});
+      if(contacts&&contacts.length&&contacts[0].tel&&contacts[0].tel.length){
+        var tel=contacts[0].tel[0].replace(/[^0-9+]/g,'');
+        var inp=document.getElementById('send-tel');
+        if(inp){
+          inp.value=tel;
+          inp.dispatchEvent(new Event('input'));
+          // Activer le bouton OK
+          var okBtn=document.getElementById('send-ok-btn');
+          if(okBtn){okBtn.disabled=false;okBtn.style.opacity='1';}
+        }
+        if(listEl)listEl.innerHTML='';
+      }
+      return;
+    }catch(e){
+      // Utilisateur a annulé ou API non dispo — continuer
+      if(e.name==='AbortError')return;
+    }
+  }
+
+  // Méthode 2 : Afficher les contacts récents AFRIM PAY (depuis l'historique)
+  if(btn)btn.style.display='none';
+  if(listEl){
+    listEl.innerHTML='<div style="padding:8px;color:#6b7280;font-size:12px;text-align:center">Chargement des contacts récents...</div>';
+  }
+  try{
+    var r=await get('/transactions?limit=50&type=transfert');
+    var txns=r.data||[];
+    // Extraire les destinataires uniques
+    var seen={};var contacts2=[];
+    txns.forEach(function(t){
+      var tel=t.destinataireTelephone||t.receiverPhone||'';
+      var nom=t.destinataireNom||t.receiverName||tel;
+      if(tel&&!seen[tel]){seen[tel]=1;contacts2.push({tel:tel,nom:nom});}
+    });
+    if(!contacts2.length){
+      if(listEl)listEl.innerHTML='<div style="padding:10px;color:#6b7280;font-size:13px;text-align:center">Aucun contact récent</div>';
+      if(btn)btn.style.display='';
+      return;
+    }
+    if(!listEl)return;
+    listEl.innerHTML='<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;padding:6px 4px;margin-bottom:4px">Contacts récents</div>';
+    contacts2.slice(0,10).forEach(function(c){
+      var initiale=(c.nom||c.tel).charAt(0).toUpperCase();
+      var div=document.createElement('div');
+      div.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border-radius:12px;border:1px solid #f3f4f6;margin-bottom:6px;cursor:pointer';
+      div.innerHTML='<div style="width:40px;height:40px;border-radius:50%;background:#ecfdf5;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#059669;flex-shrink:0">'+initiale+'</div><div><div style="font-size:14px;font-weight:700">'+c.nom+'</div><div style="font-size:12px;color:#6b7280;font-family:monospace">'+c.tel+'</div></div>';
+      (function(tel,nom){div.addEventListener('click',function(){selContactRecent(tel,nom);});})(c.tel,c.nom);
+      listEl.appendChild(div);
+    });
+    if(btn)btn.style.display='';
+  }catch(e){
+    if(listEl)listEl.innerHTML='';
+    if(btn)btn.style.display='';
+  }
+}
+
+function selContactRecent(tel,nom){
+  var inp=document.getElementById('send-tel');
+  if(inp){
+    inp.value=tel;
+    inp.dispatchEvent(new Event('input'));
+    var okBtn=document.getElementById('send-ok-btn');
+    if(okBtn){okBtn.disabled=false;okBtn.style.opacity='1';}
+  }
+  var listEl=document.getElementById('contacts-list');
+  if(listEl)listEl.innerHTML='';
+}
+
+function confirmLogout(){
+  var existing=document.getElementById('logout-ov');if(existing)existing.remove();
+  var ov=document.createElement('div');
+  ov.id='logout-ov';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+  var sheet=document.createElement('div');
+  sheet.style.cssText='background:#fff;border-radius:20px 20px 0 0;padding:28px 20px 36px;width:100%;max-width:420px;text-align:center';
+  sheet.innerHTML='<div style="width:40px;height:4px;background:#e5e7eb;border-radius:2px;margin:0 auto 20px"></div>'
+    +'<div style="font-size:34px;margin-bottom:10px">&#x1F6AA;</div>'
+    +'<div style="font-size:17px;font-weight:800;color:#111827;margin-bottom:6px">D&#233;connexion</div>'
+    +'<div style="font-size:13px;color:#6b7280;margin-bottom:24px">Voulez-vous vraiment vous d&#233;connecter ?</div>'
+    +'<div style="display:flex;gap:10px">'
+    +'<button id="cl-cancel-btn" style="flex:1;padding:14px;border-radius:13px;border:1.5px solid #e5e7eb;background:#f9fafb;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;color:#374151">Annuler</button>'
+    +'<button id="cl-confirm-btn" style="flex:1;padding:14px;border-radius:13px;border:none;background:#ef4444;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Se d&#233;connecter</button>'
+    +'</div>';
+  ov.appendChild(sheet);
+  document.body.appendChild(ov);
+  document.getElementById('cl-cancel-btn').onclick=function(){ov.remove();};
+  document.getElementById('cl-confirm-btn').onclick=function(){doLogout();};
+  ov.addEventListener('click',function(e){if(e.target===ov)ov.remove();});
+}
+async function doLogout(){
+  var ov=document.getElementById('logout-ov');if(ov)ov.remove();
+  try{await post('/auth/logout',{refreshToken:G.refresh});}catch(e){}
+  if(typeof fbLogLogout==='function')fbLogLogout();
+  G.token=G.refresh=G.user=G.compte=null;
+  LS.remove('afrim_token');LS.remove('afrim_refresh');LS.remove('afrim_user');
+  S('s-login');
+}
+async function logout(){try{await post('/auth/logout',{refreshToken:G.refresh});}catch(e){}if(typeof fbLogLogout==='function')fbLogLogout();G.token=G.refresh=G.user=G.compte=null;LS.remove('afrim_token');LS.remove('afrim_refresh');LS.remove('afrim_user');S('s-login');}
+
+document.querySelectorAll('.sh-ov').forEach(function(el){el.addEventListener('click',function(e){if(e.target===el){var id=el.id.replace('sh-','');closeSh(id);if(id==='send')rstSend();if(id==='pay')rstPay();if(id==='inscription')rstIns();}});});
+
+(function init(){
+  setKyc('KYC1',null);
+  if(G.token&&G.user&&G.user.role==='client'){
+    // Vérifier si l'app doit être verrouillée
+    if(checkLockOnLoad()){
+      G.locked=false; // reset pour que verrouillerApp puisse s'afficher
+      verrouillerApp();
+    } else {
+      setTab('home');
+    }
+    return;
+  }
+  S('s-login');
+})();
+</script>
+</div>
+<div class="sh-ov" id="sh-change-pin">
+  <div class="sh">
+    <div class="sh-bar"></div>
+    <div class="sh-top"><div><div class="sh-title">Changer mon PIN</div></div><button class="sh-x" onclick="closeSh('change-pin');rstChangePin()">x</button></div>
+    <div style="padding:0 22px 40px">
+      <div id="cp-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#ef4444;padding:10px 14px;border-radius:10px;margin-bottom:14px;font-size:13px"></div>
+      <div id="cp-form">
+        <div style="margin-bottom:14px"><label style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:block">Ancien PIN</label><input id="cp-old" type="password" inputmode="numeric" maxlength="4" placeholder="..." style="width:100%;background:#f3f4f6;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;font-size:24px;font-family:inherit;color:#111827;outline:none;text-align:center;letter-spacing:10px"/></div>
+        <div style="margin-bottom:14px"><label style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:block">Nouveau PIN</label><input id="cp-new" type="password" inputmode="numeric" maxlength="4" placeholder="..." style="width:100%;background:#f3f4f6;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;font-size:24px;font-family:inherit;color:#111827;outline:none;text-align:center;letter-spacing:10px"/></div>
+        <div style="margin-bottom:20px"><label style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:block">Confirmer nouveau PIN</label><input id="cp-new2" type="password" inputmode="numeric" maxlength="4" placeholder="..." style="width:100%;background:#f3f4f6;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;font-size:24px;font-family:inherit;color:#111827;outline:none;text-align:center;letter-spacing:10px"/></div>
+        <button onclick="doChangePin()" style="width:100%;padding:15px;border-radius:14px;border:none;background:linear-gradient(135deg,#047857,#059669);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Confirmer</button>
+      </div>
+      <div id="cp-loading" style="display:none;text-align:center;padding:32px"><div class="spin"></div></div>
+      <div id="cp-ok" style="display:none;text-align:center;padding:24px">
+        <div style="font-size:48px;margin-bottom:12px">OK</div>
+        <div style="font-size:20px;font-weight:800;margin-bottom:8px">PIN modifie !</div>
+        <div style="color:#6b7280;font-size:14px;margin-bottom:20px">Reconnectez-vous avec votre nouveau PIN.</div>
+        <button onclick="closeSh('change-pin');logout()" style="width:100%;padding:15px;border-radius:14px;border:none;background:linear-gradient(135deg,#047857,#059669);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Se reconnecter</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="sh-ov" id="sh-infos">
+  <div class="sh">
+    <div class="sh-bar"></div>
+    <div class="sh-top"><div><div class="sh-title">Mes informations</div></div><button class="sh-x" onclick="closeSh('infos')">x</button></div>
+    <div style="padding:0 22px 40px" id="sh-infos-body"></div>
+  </div>
+</div>
+<div class="sh-ov" id="sh-plafond">
+  <div class="sh">
+    <div class="sh-bar"></div>
+    <div class="sh-top"><div><div class="sh-title">Mon plafond</div></div><button class="sh-x" onclick="closeSh('plafond')">x</button></div>
+    <div style="padding:0 22px 40px" id="sh-plafond-body"></div>
+  </div>
+</div>
+
+<div class="sh-ov" id="sh-kyc-upgrade">
+  <div class="sh"><div class="sh-bar"></div>
+    <div class="sh-top">
+      <div><div class="sh-title">Compléter mon KYC</div><div style="color:var(--m);font-size:12px">Augmentez votre plafond de transactions</div></div>
+      <button class="sh-x" onclick="closeSh('kyc-upgrade')">✕</button>
+    </div>
+    <div class="sh-body" id="kyc-body">
+      <div style="padding:24px;text-align:center"><div class="spin"></div></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+  import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-analytics.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCtWT_Z6VznIIgM5mOp_Ikt-aTyrm5JGyY",
+    authDomain: "afrim-pay.firebaseapp.com",
+    projectId: "afrim-pay",
+    storageBucket: "afrim-pay.firebasestorage.app",
+    messagingSenderId: "20456105449",
+    appId: "1:20456105449:web:7cd703cf77924420621778",
+    measurementId: "G-VZ1C89BDTE"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+
+  // Événement : ouverture de l'app
+  logEvent(analytics, 'app_open', { app: 'afrim-client' });
+
+  // Suivi des navigations entre écrans
+  window.fbLogScreen = (screenName) => {
+    logEvent(analytics, 'screen_view', { screen_name: screenName, app: 'afrim-client' });
+  };
+
+  // Suivi des transactions
+  window.fbLogTransaction = (type, amount) => {
+    logEvent(analytics, 'transaction', { type: type, amount: amount, currency: 'XOF' });
+  };
+
+  // Suivi login/logout
+  window.fbLogLogin = () => logEvent(analytics, 'login', { method: 'PIN' });
+  window.fbLogLogout = () => logEvent(analytics, 'logout');
+</script>
+</body>
+</html>

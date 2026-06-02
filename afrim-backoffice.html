@@ -199,9 +199,24 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
     <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px" id="flux-period-filters"></div>
     <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap" id="flux-statut-filters"></div>
     <div style="background:#fff;border-radius:16px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:14px">
-      <div style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Évolution des flux</div>
-      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px" id="flux-chart-cat-btns"></div>
-      <canvas id="flux-main-chart" height="160"></canvas>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.06em">Évolution des flux</div>
+        <div style="display:flex;gap:0;background:#f3f4f6;border-radius:8px;padding:2px">
+          <button id="flux-view-single" onclick="setFluxChartView('single')" style="padding:4px 10px;border-radius:6px;border:none;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;background:var(--y);color:#fff">Individuel</button>
+          <button id="flux-view-compare" onclick="setFluxChartView('compare')" style="padding:4px 10px;border-radius:6px;border:none;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;background:transparent;color:#6b7280">Comparatif</button>
+        </div>
+      </div>
+      <!-- Vue individuelle -->
+      <div id="flux-chart-single">
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px" id="flux-chart-cat-btns"></div>
+        <canvas id="flux-main-chart" height="160"></canvas>
+      </div>
+      <!-- Vue comparative multi-séries -->
+      <div id="flux-chart-compare" style="display:none">
+        <div style="font-size:10px;color:#6b7280;margin-bottom:8px">Toutes les 9 catégories superposées — cliquer la légende pour masquer/afficher</div>
+        <canvas id="flux-compare-chart" height="220"></canvas>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:10px" id="flux-compare-legend"></div>
+      </div>
     </div>
     <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">↔️ Transferts par catégorie</div>
     <div id="flux-transfer-table" style="margin-bottom:18px"></div>
@@ -238,13 +253,14 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
     </div>
     <!-- Onglets monitoring (masqués par défaut, affichés par JS selon le rôle) -->
     <div id="mon-tab-bar" style="display:none;overflow-x:auto;gap:0;padding-bottom:0">
-      <button id="mon-tab-alertes" onclick="setMonTab('alertes')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:var(--y2);border-bottom:2px solid var(--y);white-space:nowrap">&#x1F6A8; Alertes</button>
-      <button id="mon-tab-bo" onclick="setMonTab('bo')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F4BB; Back-Office</button>
-      <button id="mon-tab-sup" onclick="setMonTab('sup')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F3A7; Support</button>
-      <button id="mon-tab-tech" onclick="setMonTab('tech')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F527; Tech</button>
+      <button id="mon-tab-alertes"     onclick="setMonTab('alertes')"     style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:var(--y2);border-bottom:2px solid var(--y);white-space:nowrap">&#x1F6A8; Alertes</button>
+      <button id="mon-tab-bo"          onclick="setMonTab('bo')"          style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F4BB; Back-Office</button>
+      <button id="mon-tab-sup"         onclick="setMonTab('sup')"         style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F3A7; Support</button>
+      <button id="mon-tab-tech"        onclick="setMonTab('tech')"        style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F527; Tech</button>
       <button id="mon-tab-superviseur" onclick="setMonTab('superviseur')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F7E0; Superviseur</button>
-      <button id="mon-tab-admin" onclick="setMonTab('admin')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F451; Admin</button>
-      <button id="mon-tab-global" onclick="setMonTab('global')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F30D; Global</button>
+      <button id="mon-tab-admin"       onclick="setMonTab('admin')"       style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F451; Admin</button>
+      <button id="mon-tab-global"      onclick="setMonTab('global')"      style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F30D; Global</button>
+      <button id="mon-tab-stats"       onclick="setMonTab('stats')"       style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">&#x1F4CA; Stats</button>
     </div>
   </div>
   <div style="padding:14px 16px 100px">
@@ -332,38 +348,198 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
     <!-- Panel Global — Vue par entité -->
     <!-- PANNEAU SUPERVISEUR — alertes + tickets directement -->
     <div id="mon-panel-superviseur" style="display:none">
-      <!-- Navigation retour pour superviseur -->
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #f3f4f6">
+      <!-- Navigation -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #f3f4f6">
         <button onclick="setTab('home')" style="background:#f3f4f6;border:none;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;color:#374151;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px">
           <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
           Accueil
         </button>
         <button onclick="setTab('monitoring')" style="background:#fef3c7;border:1px solid var(--y);border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;color:var(--y2);cursor:pointer;font-family:inherit">↻ Rafraîchir</button>
       </div>
-      <!-- Alertes actives -->
-      <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">🚨 Alertes actives</div>
-      <div id="sup-alertes-inline"><div style="padding:12px;text-align:center"><div class="spin"></div></div></div>
-      <!-- Tickets à traiter -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:18px;margin-bottom:8px">
-        <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em">🎫 Mes tickets à traiter</div>
-        <button onclick="chargerTicketsSuperviseur()" style="background:#f3f4f6;border:none;border-radius:8px;padding:4px 9px;font-size:10px;font-weight:700;color:#6b7280;cursor:pointer;font-family:inherit">↻</button>
+      <!-- Onglets internes superviseur -->
+      <div style="display:flex;gap:0;overflow-x:auto;margin-bottom:14px;border-bottom:1px solid #f3f4f6">
+        <button id="sup-mon-tab-alertes"  onclick="setSupMonTab('alertes')"  style="padding:8px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#ea580c;border-bottom:2px solid #ea580c;white-space:nowrap">🚨 Alertes</button>
+        <button id="sup-mon-tab-tickets"  onclick="setSupMonTab('tickets')"  style="padding:8px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">🎫 Tickets</button>
+        <button id="sup-mon-tab-stats"    onclick="setSupMonTab('stats')"    style="padding:8px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">📊 Stats</button>
       </div>
-      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px" id="sup-tk-sup-filters"></div>
-      <div id="sup-tk-sup-list"><div style="padding:14px;text-align:center"><div class="spin"></div></div></div>
+
+      <!-- ONGLET ALERTES -->
+      <div id="sup-mon-panel-alertes">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em">🚨 Alertes actives</div>
+          <div style="display:flex;gap:6px">
+            <button onclick="creerAlerteSupModal()" style="background:#ea580c;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">+ Créer</button>
+            <button onclick="chargerZoneSuperviseur()" style="background:#f3f4f6;border:none;border-radius:8px;padding:5px 9px;font-size:10px;color:#6b7280;cursor:pointer;font-family:inherit">↻</button>
+          </div>
+        </div>
+        <!-- Formulaire création alerte inline superviseur -->
+        <div id="sup-alerte-create-form" style="display:none;background:#fff7ed;border:1.5px solid #ea580c;border-radius:12px;padding:12px;margin-bottom:12px">
+          <div style="font-size:11px;font-weight:700;color:#c2410c;margin-bottom:8px">🟠 Nouvelle alerte — Superviseur</div>
+          <input class="inp" id="sup-al-titre-mon" placeholder="Titre de l'alerte" style="margin-bottom:6px;font-size:12px">
+          <textarea class="inp" id="sup-al-desc-mon" placeholder="Description détaillée..." rows="2" style="margin-bottom:6px;font-size:12px;resize:none"></textarea>
+          <select class="inp" id="sup-al-gravite-mon" style="font-size:11px;margin-bottom:8px">
+            <option value="faible">🟢 Faible</option>
+            <option value="moyenne" selected>🟡 Moyenne</option>
+            <option value="elevee">🟠 Élevée</option>
+            <option value="critique">🔴 Critique</option>
+          </select>
+          <div style="display:flex;gap:6px">
+            <button onclick="envoyerAlerteSupMon()" style="flex:1;padding:8px;background:#ea580c;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">🚨 Envoyer</button>
+            <button onclick="document.getElementById('sup-alerte-create-form').style.display='none'" style="padding:8px 12px;background:#f3f4f6;border:none;border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit">✕</button>
+          </div>
+        </div>
+        <div id="sup-alertes-inline"><div style="padding:12px;text-align:center"><div class="spin"></div></div></div>
+      </div>
+
+      <!-- ONGLET TICKETS -->
+      <div id="sup-mon-panel-tickets" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em">🎫 Mes tickets à traiter</div>
+          <button onclick="chargerTicketsSuperviseur()" style="background:#f3f4f6;border:none;border-radius:8px;padding:4px 9px;font-size:10px;font-weight:700;color:#6b7280;cursor:pointer;font-family:inherit">↻</button>
+        </div>
+        <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px" id="sup-tk-sup-filters"></div>
+        <div id="sup-tk-sup-list"><div style="padding:14px;text-align:center"><div class="spin"></div></div></div>
+      </div>
+
+      <!-- ONGLET STATS SUPERVISEUR -->
+      <div id="sup-mon-panel-stats" style="display:none">
+        <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px">📊 Mes statistiques personnelles</div>
+        <!-- Compteurs personnels -->
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px">
+          <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:20px;font-weight:900;color:#f59e0b" id="supst-tk-ouvert">--</div><div style="font-size:9px;color:#6b7280">⏳ Tickets att.</div></div>
+          <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:20px;font-weight:900;color:#3b82f6" id="supst-tk-cours">--</div><div style="font-size:9px;color:#6b7280">🔄 En cours</div></div>
+          <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:20px;font-weight:900;color:#22c55e" id="supst-tk-resolu">--</div><div style="font-size:9px;color:#6b7280">✅ Résolus</div></div>
+          <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:20px;font-weight:900;color:#ea580c" id="supst-alertes">--</div><div style="font-size:9px;color:#6b7280">🚨 Mes alertes</div></div>
+          <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:20px;font-weight:900;color:#059669" id="supst-comptes">--</div><div style="font-size:9px;color:#6b7280">📋 Tickets ce mois</div></div>
+          <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:20px;font-weight:900;color:#0e7490" id="supst-alertes-crit">--</div><div style="font-size:9px;color:#6b7280">🔴 Alertes crit.</div></div>
+        </div>
+        <!-- Courbe alertes créées -->
+        <div style="background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:14px">
+          <div style="font-size:10px;font-weight:700;color:#ea580c;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Alertes créées — 30 derniers jours</div>
+          <canvas id="supst-chart" height="130"></canvas>
+        </div>
+        <!-- Répartition alertes par gravité -->
+        <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Alertes par gravité</div>
+        <div id="supst-gravite-detail"></div>
+      </div>
     </div>
 
     <!-- PANNEAU ADMIN (backoffice gestionnaire) -->
     <div id="mon-panel-admin" style="display:none">
-      <div style="font-size:11px;font-weight:800;color:#ca8a04;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">👑 Administration — Tickets</div>
-      <div id="mon-admin-tb" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca;margin-bottom:8px">
-        <span style="font-size:11px;font-weight:700;color:#ef4444;flex:1" id="mon-admin-tb-count">0 sélectionné(s)</span>
-        <button onclick="_tkSelAll('mon-admin-list')" style="background:#fff;border:1px solid #fecaca;border-radius:7px;padding:3px 9px;font-size:10px;font-weight:700;color:#ef4444;cursor:pointer;font-family:inherit">☐ Tout</button>
-        <button onclick="supprimerTicketsSelection('mon-admin-list')" style="background:#ef4444;border:none;border-radius:7px;padding:3px 9px;font-size:10px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit">🗑 Supprimer</button>
+      <!-- Onglets internes Admin -->
+      <div style="display:flex;gap:0;margin-bottom:14px;border-bottom:1px solid #f3f4f6">
+        <button id="adm-mon-tab-stats"   onclick="setAdmMonTab('stats')"   style="padding:8px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#ca8a04;border-bottom:2px solid #ca8a04;white-space:nowrap">📊 Stats</button>
+        <button id="adm-mon-tab-tickets" onclick="setAdmMonTab('tickets')" style="padding:8px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">🎫 Tickets</button>
+        <button id="adm-mon-tab-alertes" onclick="setAdmMonTab('alertes')" style="padding:8px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">🚨 Alertes</button>
       </div>
-      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px" id="mon-admin-filters"></div>
-      <div id="mon-admin-list"><div style="padding:16px;text-align:center"><div class="spin"></div></div></div>
+
+      <!-- STATS ADMIN -->
+      <div id="adm-mon-panel-stats">
+        <div style="font-size:10px;font-weight:700;color:#ca8a04;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">👑 Statistiques — Admin</div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px">
+          <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:20px;font-weight:900;color:#f59e0b" id="admst-ouvert">--</div><div style="font-size:9px;color:#6b7280">⏳ En attente</div></div>
+          <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:20px;font-weight:900;color:#3b82f6" id="admst-cours">--</div><div style="font-size:9px;color:#6b7280">🔄 En cours</div></div>
+          <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:20px;font-weight:900;color:#22c55e" id="admst-resolu">--</div><div style="font-size:9px;color:#6b7280">✅ Résolus</div></div>
+          <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:20px;font-weight:900;color:#ef4444" id="admst-rejete">--</div><div style="font-size:9px;color:#6b7280">❌ Rejetés</div></div>
+          <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:20px;font-weight:900;color:#9ca3af" id="admst-ferme">--</div><div style="font-size:9px;color:#6b7280">🔒 Clôturés</div></div>
+          <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:20px;font-weight:900;color:#ca8a04" id="admst-alertes">--</div><div style="font-size:9px;color:#6b7280">🚨 Alertes</div></div>
+        </div>
+        <div style="background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+          <div style="font-size:10px;font-weight:700;color:#ca8a04;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Tickets Admin — 30 derniers jours</div>
+          <canvas id="admst-chart" height="130"></canvas>
+        </div>
+      </div>
+
+      <!-- TICKETS ADMIN -->
+      <div id="adm-mon-panel-tickets" style="display:none">
+        <div style="font-size:11px;font-weight:800;color:#ca8a04;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">👑 Administration — Tickets</div>
+        <!-- Toolbar suppression (Super Admin seulement) -->
+        <div id="mon-admin-tb" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;padding:7px 10px;background:#fef2f2;border-radius:8px;border:1px solid #fecaca;margin-bottom:8px">
+          <span style="font-size:11px;font-weight:700;color:#ef4444;flex:1" id="mon-admin-tb-count">0 sélectionné(s)</span>
+          <button onclick="_tkSelAll('mon-admin-list')" style="background:#fff;border:1px solid #fecaca;border-radius:7px;padding:3px 9px;font-size:10px;font-weight:700;color:#ef4444;cursor:pointer;font-family:inherit">☐ Tout</button>
+          <button onclick="supprimerTicketsSelection('mon-admin-list')" style="background:#ef4444;border:none;border-radius:7px;padding:3px 9px;font-size:10px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit">🗑 Supprimer</button>
+        </div>
+        <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px" id="mon-admin-filters"></div>
+        <div id="mon-admin-list"><div style="padding:16px;text-align:center"><div class="spin"></div></div></div>
+      </div>
+
+      <!-- ALERTES ADMIN -->
+      <div id="adm-mon-panel-alertes" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:11px;font-weight:800;color:#ca8a04;text-transform:uppercase;letter-spacing:.05em">🚨 Alertes Admin</div>
+          <div style="display:flex;gap:6px">
+            <button onclick="creerAlerteAdminModal()" style="background:#ca8a04;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">+ Créer</button>
+            <button onclick="chargerAdmAlertes()" style="background:#f3f4f6;border:none;border-radius:8px;padding:5px 9px;font-size:10px;color:#6b7280;cursor:pointer;font-family:inherit">↻</button>
+          </div>
+        </div>
+        <!-- Formulaire création alerte inline Admin -->
+        <div id="adm-alerte-create-form" style="display:none;background:#fefce8;border:1.5px solid #ca8a04;border-radius:12px;padding:12px;margin-bottom:12px">
+          <div style="font-size:11px;font-weight:700;color:#92400e;margin-bottom:8px">👑 Nouvelle alerte — Admin</div>
+          <input class="inp" id="adm-al-titre" placeholder="Titre de l'alerte" style="margin-bottom:6px;font-size:12px">
+          <textarea class="inp" id="adm-al-desc" placeholder="Description détaillée..." rows="2" style="margin-bottom:6px;font-size:12px;resize:none"></textarea>
+          <select class="inp" id="adm-al-gravite" style="font-size:11px;margin-bottom:8px">
+            <option value="faible">🟢 Faible</option>
+            <option value="moyenne" selected>🟡 Moyenne</option>
+            <option value="elevee">🟠 Élevée</option>
+            <option value="critique">🔴 Critique</option>
+          </select>
+          <div style="display:flex;gap:6px">
+            <button onclick="envoyerAlerteAdmin()" style="flex:1;padding:8px;background:#ca8a04;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">🚨 Envoyer</button>
+            <button onclick="document.getElementById('adm-alerte-create-form').style.display='none'" style="padding:8px 12px;background:#f3f4f6;border:none;border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit">✕</button>
+          </div>
+        </div>
+        <div id="adm-alertes-list"><div style="padding:14px;text-align:center"><div class="spin"></div></div></div>
+      </div>
     </div>
 
+    <!-- PANNEAU STATS MONITORING -->
+    <div id="mon-panel-stats" style="display:none">
+      <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px">📊 Statistiques Back-Office & Globales</div>
+
+      <!-- Sélecteur de vue -->
+      <div style="display:flex;gap:6px;margin-bottom:16px">
+        <button id="monst-btn-bo"     onclick="setMonStatsView('bo')"     style="flex:1;padding:8px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid var(--y);background:var(--y);color:#fff">🖥️ Back-Office</button>
+        <button id="monst-btn-global" onclick="setMonStatsView('global')" style="flex:1;padding:8px;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid #e5e7eb;background:#fff;color:#374151">🌍 Globales</button>
+      </div>
+
+      <!-- VUE BACK-OFFICE -->
+      <div id="monst-panel-bo">
+        <div style="font-size:10px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">🖥️ Statistiques Back-Office</div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px">
+          <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:20px;font-weight:900;color:#f59e0b" id="monst-bo-ouvert">--</div><div style="font-size:9px;color:#6b7280">⏳ BO en attente</div></div>
+          <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:20px;font-weight:900;color:#3b82f6" id="monst-bo-cours">--</div><div style="font-size:9px;color:#6b7280">🔄 BO en cours</div></div>
+          <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:20px;font-weight:900;color:#22c55e" id="monst-bo-resolu">--</div><div style="font-size:9px;color:#6b7280">✅ BO résolus</div></div>
+          <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:20px;font-weight:900;color:#ea580c" id="monst-bo-alertes">--</div><div style="font-size:9px;color:#6b7280">🚨 Alertes BO</div></div>
+          <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:20px;font-weight:900;color:#ef4444" id="monst-bo-rejete">--</div><div style="font-size:9px;color:#6b7280">❌ BO rejetés</div></div>
+          <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:20px;font-weight:900;color:#9ca3af" id="monst-bo-ferme">--</div><div style="font-size:9px;color:#6b7280">🔒 BO clôturés</div></div>
+        </div>
+        <div style="background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:14px">
+          <div style="font-size:10px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Tickets BO — 30 derniers jours</div>
+          <canvas id="monst-bo-chart" height="130"></canvas>
+        </div>
+      </div>
+
+      <!-- VUE GLOBALE -->
+      <div id="monst-panel-global" style="display:none">
+        <div style="font-size:10px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">🌍 Statistiques globales plateforme</div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px">
+          <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:20px;font-weight:900;color:#059669" id="monst-gl-clients">--</div><div style="font-size:9px;color:#6b7280">👤 Clients actifs</div></div>
+          <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:20px;font-weight:900;color:#d97706" id="monst-gl-agents">--</div><div style="font-size:9px;color:#6b7280">🏪 Agents</div></div>
+          <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:20px;font-weight:900;color:#f59e0b" id="monst-gl-tickets-open">--</div><div style="font-size:9px;color:#6b7280">🎫 Tickets ouverts</div></div>
+          <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:20px;font-weight:900;color:#ef4444" id="monst-gl-alertes-crit">--</div><div style="font-size:9px;color:#6b7280">🔴 Alertes critiques</div></div>
+          <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:20px;font-weight:900;color:#3b82f6" id="monst-gl-txns">--</div><div style="font-size:9px;color:#6b7280">💸 Txns du jour</div></div>
+          <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:20px;font-weight:900;color:#7c3aed" id="monst-gl-kyc">--</div><div style="font-size:9px;color:#6b7280">⏳ KYC en attente</div></div>
+        </div>
+        <!-- Alertes par service -->
+        <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Alertes actives par service</div>
+        <div id="monst-gl-alertes-detail" style="margin-bottom:14px"></div>
+        <!-- Tickets par service -->
+        <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Tickets ouverts par service</div>
+        <div id="monst-gl-tickets-detail"></div>
+      </div>
+    </div>
+
+    <!-- PANNEAU GLOBAL -->
     <div id="mon-panel-global" style="display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <div style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.06em">&#x1F30D; Suivi global par entité</div>
@@ -419,11 +595,12 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
     </div>
     <!-- ONGLETS MODULE SUPPORT -->
     <div style="display:flex;gap:0;overflow-x:auto;padding-bottom:0;margin:0 -20px;padding:0 16px">
-      <button id="sup-tab-notif" onclick="setSupTab('notif')" style="padding:10px 14px;font-size:12px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:var(--y2);border-bottom:2px solid var(--y);white-space:nowrap">📢 Notif</button>
-      <button id="sup-tab-search" onclick="setSupTab('search')" style="padding:10px 14px;font-size:12px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">🔍 Client</button>
+      <button id="sup-tab-notif"     onclick="setSupTab('notif')"     style="padding:10px 14px;font-size:12px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:var(--y2);border-bottom:2px solid var(--y);white-space:nowrap">📢 Notif</button>
+      <button id="sup-tab-search"    onclick="setSupTab('search')"    style="padding:10px 14px;font-size:12px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">🔍 Client</button>
       <button id="sup-tab-newticket" onclick="setSupTab('newticket')" style="padding:10px 14px;font-size:12px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">➕ Ticket</button>
-      <button id="sup-tab-tickets" onclick="setSupTab('tickets')" style="padding:10px 14px;font-size:12px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">📋 Suivi</button>
-      <button id="sup-tab-alertes" onclick="setSupTab('alertes')" style="padding:10px 14px;font-size:12px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">⚠️ Alertes</button>
+      <button id="sup-tab-tickets"   onclick="setSupTab('tickets')"   style="padding:10px 14px;font-size:12px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">📋 Suivi</button>
+      <button id="sup-tab-alertes"   onclick="setSupTab('alertes')"   style="padding:10px 14px;font-size:12px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">⚠️ Alertes</button>
+      <button id="sup-tab-stats"     onclick="setSupTab('stats')"     style="padding:10px 14px;font-size:12px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">📊 Stats</button>
     </div>
   </div>
 
@@ -568,7 +745,26 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
     <div id="sup-panel-alertes" style="display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div style="font-size:13px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em">⚠️ Alertes</div>
-        <button onclick="chargerAlertesCentralisees()" style="background:#f3f4f6;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;color:#6b7280;cursor:pointer;font-family:inherit">↻</button>
+        <div style="display:flex;gap:6px">
+          <button onclick="supCreerAlerteModal()" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">+ Créer</button>
+          <button onclick="_chargerSupClientAlertes('','')" style="background:#f3f4f6;border:none;border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700;color:#6b7280;cursor:pointer;font-family:inherit">↻</button>
+        </div>
+      </div>
+      <!-- Formulaire création alerte inline -->
+      <div id="sup-alerte-create-form" style="display:none;background:#eff6ff;border:1.5px solid #2563eb;border-radius:12px;padding:12px;margin-bottom:12px">
+        <div style="font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:8px">🎧 Nouvelle alerte — Support Client</div>
+        <input class="inp" id="sup-al-titre" placeholder="Titre de l'alerte" style="margin-bottom:6px;font-size:12px">
+        <textarea class="inp" id="sup-al-desc" placeholder="Description détaillée..." rows="2" style="margin-bottom:6px;font-size:12px;resize:none"></textarea>
+        <select class="inp" id="sup-al-gravite" style="font-size:11px;margin-bottom:8px">
+          <option value="faible">🟢 Faible</option>
+          <option value="moyenne" selected>🟡 Moyenne</option>
+          <option value="elevee">🟠 Élevée</option>
+          <option value="critique">🔴 Critique</option>
+        </select>
+        <div style="display:flex;gap:6px">
+          <button onclick="supEnvoyerAlerte()" style="flex:1;padding:8px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">🚨 Envoyer</button>
+          <button onclick="document.getElementById('sup-alerte-create-form').style.display='none'" style="padding:8px 12px;background:#f3f4f6;border:none;border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit">✕</button>
+        </div>
       </div>
       <div style="display:flex;gap:5px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px" id="sup-alerte-grav-filters"></div>
       <div style="display:flex;gap:5px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px" id="sup-alerte-stat-filters"></div>
@@ -577,8 +773,14 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
 
     <!-- PANNEAU 4 : SUIVI TICKETS -->
     <div id="sup-panel-tickets" style="display:none">
+      <!-- Stats rapides -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px" id="sup-tk-stats-grid">
+        <div class="card" style="text-align:center;padding:8px 4px"><div style="font-size:16px;font-weight:900;color:#f59e0b" id="sup-tk-count-ouvert">--</div><div style="font-size:9px;color:#6b7280">⏳ Attente</div></div>
+        <div class="card" style="text-align:center;padding:8px 4px"><div style="font-size:16px;font-weight:900;color:#3b82f6" id="sup-tk-count-en_cours">--</div><div style="font-size:9px;color:#6b7280">🔄 En cours</div></div>
+        <div class="card" style="text-align:center;padding:8px 4px"><div style="font-size:16px;font-weight:900;color:#22c55e" id="sup-tk-count-resolu">--</div><div style="font-size:9px;color:#6b7280">✅ Résolus</div></div>
+      </div>
       <!-- Vue globale tous tickets -->
-      <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">&#x1F4CB; Tous les tickets (vue globale)</div>
+      <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">📋 Tous les tickets (vue globale)</div>
       <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px">
         <button id="tkf-all" onclick="filtrerTicketsSupport('')" style="padding:5px 12px;border-radius:99px;border:1.5px solid var(--y);background:var(--y);color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">Tous</button>
         <button id="tkf-ouvert" onclick="filtrerTicketsSupport('ouvert')" style="padding:5px 12px;border-radius:99px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">⏳ En attente</button>
@@ -588,7 +790,28 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
         <button id="tkf-ferme" onclick="filtrerTicketsSupport('ferme')" style="padding:5px 12px;border-radius:99px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">🔒 Clôturés</button>
       </div>
       <div id="sup-tickets"><div style="padding:24px;text-align:center"><div class="spin"></div></div></div>
+    </div>
 
+    <!-- PANNEAU 5 : STATS -->
+    <div id="sup-panel-stats" style="display:none">
+      <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px">📊 Statistiques — Support Client</div>
+      <!-- Compteurs tickets -->
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px">
+        <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:22px;font-weight:900;color:#f59e0b" id="scs-ouvert">--</div><div style="font-size:10px;color:#6b7280">⏳ En attente</div></div>
+        <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:22px;font-weight:900;color:#3b82f6" id="scs-en_cours">--</div><div style="font-size:10px;color:#6b7280">🔄 En cours</div></div>
+        <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:22px;font-weight:900;color:#22c55e" id="scs-resolu">--</div><div style="font-size:10px;color:#6b7280">✅ Résolus</div></div>
+        <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:22px;font-weight:900;color:#ef4444" id="scs-rejete">--</div><div style="font-size:10px;color:#6b7280">❌ Rejetés</div></div>
+        <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:22px;font-weight:900;color:#2563eb" id="scs-alertes">--</div><div style="font-size:10px;color:#6b7280">🚨 Alertes actives</div></div>
+        <div class="card" style="text-align:center;padding:12px 8px"><div style="font-size:22px;font-weight:900;color:#7c3aed" id="scs-remb">--</div><div style="font-size:10px;color:#6b7280">💸 Remboursements</div></div>
+      </div>
+      <!-- Courbe tickets résolus 30j -->
+      <div style="background:#fff;border-radius:14px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:14px">
+        <div style="font-size:10px;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Tickets résolus — 30 derniers jours</div>
+        <canvas id="sup-stats-canvas-sc" height="140"></canvas>
+      </div>
+      <!-- Répartition par motif -->
+      <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Répartition par motif</div>
+      <div id="scs-motifs-list" style="margin-bottom:14px"></div>
     </div>
 
 
@@ -1997,6 +2220,103 @@ var _supTabActif = 'notif';
 var _supTicketFilter = '';
 
 
+function supCreerAlerteModal() {
+  var f = document.getElementById('sup-alerte-create-form');
+  if (f) f.style.display = f.style.display==='none' ? 'block' : 'none';
+}
+
+async function supEnvoyerAlerte() {
+  var titre   = document.getElementById('sup-al-titre').value.trim();
+  var desc    = document.getElementById('sup-al-desc').value.trim();
+  var gravite = document.getElementById('sup-al-gravite').value;
+  if (!titre || !desc) { toast('Titre et description requis', true); return; }
+  try {
+    await callAPI('/alerts', {method:'POST', body:JSON.stringify({titre:titre, description:desc, gravite:gravite, service:'support_client'})});
+    toast('🚨 Alerte créée');
+    document.getElementById('sup-al-titre').value = '';
+    document.getElementById('sup-al-desc').value  = '';
+    document.getElementById('sup-alerte-create-form').style.display = 'none';
+    _chargerSupClientAlertes('','');
+  } catch(e) { toast('Erreur: '+e.message, true); }
+}
+
+async function _chargerSupTkStats() {
+  var statuts = ['ouvert','en_cours','resolu'];
+  statuts.forEach(function(st) {
+    apiGet('/tickets?service=support_client&statut='+st+'&limit=1').then(function(r){
+      var el = document.getElementById('sup-tk-count-'+st);
+      if (el) el.textContent = r.total || r.count || (r.data ? r.data.length : 0);
+    }).catch(function(){});
+  });
+}
+
+async function _chargerSupClientStats() {
+  // Compteurs
+  var statuts = ['ouvert','en_cours','resolu','rejete'];
+  statuts.forEach(function(st) {
+    apiGet('/tickets?service=support_client&statut='+st+'&limit=1').then(function(r){
+      var el = document.getElementById('scs-'+st);
+      if (el) el.textContent = r.total || r.count || (r.data ? r.data.length : 0);
+    }).catch(function(){});
+  });
+  // Alertes actives
+  apiGet('/alerts?service=support_client&statut=ouverte&limit=1').then(function(r){
+    var el = document.getElementById('scs-alertes');
+    if (el) el.textContent = (r.data&&(r.data.total||(r.data.alertes&&r.data.alertes.length)))||0;
+  }).catch(function(){});
+  // Remboursements du mois
+  apiGet('/transactions?type=remboursement&limit=1').then(function(r){
+    var el = document.getElementById('scs-remb');
+    if (el) el.textContent = r.total || r.count || (r.data ? r.data.length : 0);
+  }).catch(function(){});
+  // Courbe tickets résolus 30j
+  try {
+    var r = await apiGet('/tickets?service=support_client&statut=resolu&limit=200');
+    var list = r.data || [];
+    var canvas = document.getElementById('sup-stats-canvas-sc');
+    if (canvas && typeof Chart !== 'undefined') {
+      var now = new Date(), labels = [], data = [];
+      for (var i=29; i>=0; i--) {
+        var d=new Date(now); d.setDate(d.getDate()-i);
+        labels.push(d.getDate()+'/'+(d.getMonth()+1));
+        var dayStr=d.toISOString().slice(0,10);
+        var count=list.filter(function(tk){return (tk.dateCreation||tk.date_creation||'').slice(0,10)===dayStr;}).length;
+        data.push(count);
+      }
+      if (canvas._scChartInst) { try{canvas._scChartInst.destroy();}catch(e){} }
+      canvas._scChartInst = new Chart(canvas, {
+        type:'bar',
+        data:{labels:labels,datasets:[{data:data,backgroundColor:'#2563eb33',borderColor:'#2563eb',borderWidth:1.5,borderRadius:4}]},
+        options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:8},color:'#9ca3af',maxTicksLimit:10,maxRotation:0}},y:{grid:{color:'#f3f4f6'},ticks:{font:{size:8},color:'#9ca3af',stepSize:1},beginAtZero:true}}}
+      });
+    }
+  } catch(e) {}
+  // Répartition par motif (sujet des tickets)
+  try {
+    var r2 = await apiGet('/tickets?service=support_client&limit=100');
+    var list2 = r2.data || [];
+    var motifCount = {};
+    list2.forEach(function(tk){ var m=tk.sujet||'Autre'; motifCount[m]=(motifCount[m]||0)+1; });
+    var sorted = Object.entries(motifCount).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+    var total = list2.length;
+    var mEl = document.getElementById('scs-motifs-list');
+    if (mEl) {
+      mEl.innerHTML = '';
+      sorted.forEach(function(entry) {
+        var pct = total > 0 ? Math.round(entry[1]/total*100) : 0;
+        var div = document.createElement('div');
+        div.style.cssText = 'background:#fff;border:1px solid #f3f4f6;border-radius:10px;padding:9px 12px;margin-bottom:7px';
+        div.innerHTML = '<div style="display:flex;justify-content:space-between;margin-bottom:5px">'
+          +'<span style="font-size:11px;font-weight:600;color:#374151">'+entry[0]+'</span>'
+          +'<span style="font-size:11px;font-weight:800;color:#2563eb">'+entry[1]+' ('+pct+'%)</span>'
+          +'</div>'
+          +'<div style="background:#f3f4f6;border-radius:99px;height:5px;overflow:hidden"><div style="background:#2563eb;height:100%;width:'+pct+'%;border-radius:99px"></div></div>';
+        mEl.appendChild(div);
+      });
+    }
+  } catch(e) {}
+}
+
 async function _chargerSupClientAlertes(gravite, statut) {
   var el = document.getElementById('sup-alertes-list');
   if (!el) return;
@@ -2052,7 +2372,7 @@ async function _chargerSupClientAlertes(gravite, statut) {
 
 function setSupTab(tab) {
   _supTabActif = tab;
-  var tabs = ['notif','search','newticket','tickets','alertes'];
+  var tabs = ['notif','search','newticket','tickets','alertes','stats'];
   tabs.forEach(function(t) {
     var btn = document.getElementById('sup-tab-'+t);
     var panel = document.getElementById('sup-panel-'+t);
@@ -2065,18 +2385,16 @@ function setSupTab(tab) {
   });
   if (tab === 'notif') setTimeout(function(){ if(typeof chargerCampagnes==='function') chargerCampagnes(); }, 100);
   if (tab === 'newticket') {
-    // Charger les tickets à traiter dans l'onglet Ticket
     _tkInitFilters('mytk-filters', 'mytk-', function(v){ _tkLoadList('mytk-list', v, 'support_client'); });
     _tkLoadList('mytk-list', '', 'support_client');
   }
   if (tab === 'tickets') {
     chargerTicketsSupport(_supTicketFilter||'');
+    _chargerSupTkStats();
   }
   if (tab === 'alertes') {
-    // Charger les alertes du support_client dans le panel dédié
     var supAlEl = document.getElementById('sup-alertes-list');
     if (supAlEl) {
-      // Init filtres si pas encore fait
       var sgBar = document.getElementById('sup-alerte-grav-filters');
       if (sgBar && sgBar.childElementCount === 0) {
         [['Toutes',''],['🟢 Faible','faible'],['🟡 Moyenne','moyenne'],['🟠 Élevée','elevee'],['🔴 Critique','critique']].forEach(function(g){
@@ -2090,7 +2408,6 @@ function setSupTab(tab) {
           sgBar.appendChild(b);
         });
       }
-      // Init filtres statut
       var ssBar = document.getElementById('sup-alerte-stat-filters');
       if (ssBar && ssBar.childElementCount === 0) {
         [['Toutes',''],['🔴 Ouvertes','ouverte'],['🟠 En cours','en_cours'],['✅ Résolues','resolue'],['🔒 Fermées','fermee']].forEach(function(s){
@@ -2107,7 +2424,7 @@ function setSupTab(tab) {
       _chargerSupClientAlertes('','');
     }
   }
-
+  if (tab === 'stats') { _chargerSupClientStats(); }
 }
 
 function filtrerTicketsSupport(statut) {
@@ -3433,6 +3750,7 @@ async function _fluxAnalyticsLoad(){
     var r=await apiGet('/flux/analytics?period='+_fluxPeriod+'&statut='+_fluxStatut);
     _fluxData=r.data||r;
     _fluxRenderChart();_fluxRenderTransferTable();_fluxRenderDepotChart();_fluxRenderRetraitChart();
+    if (_fluxChartView === 'compare') _fluxRenderCompareChart();
     _fluxRenderFlowSection('depots',_fluxData.depots,['master','mini_master','agent','autre'],['Masters','Mini-Masters','Agents','Autres'],['#92400e','#2563eb','#d97706','#9ca3af']);
     _fluxRenderFlowSection('retraits',_fluxData.retraits,['master','mini_master','agent','autre'],['Masters','Mini-Masters','Agents','Autres'],['#b91c1c','#c2410c','#ea580c','#9ca3af']);
   }catch(e){
@@ -3457,6 +3775,96 @@ function _fluxMakeChart(canvasId,catKey,col,instVar){
   var cm={};courbe.forEach(function(c){cm[c.label]=c;});
   var data=labels.map(function(l){return Math.round((cm[l]&&cm[l][catKey])||0);});
   return new Chart(canvas,{type:'line',data:{labels:labels,datasets:[{data:data,borderColor:col,backgroundColor:col+'22',borderWidth:2.5,pointRadius:data.map(function(v){return v>0?4:0;}),pointBackgroundColor:col,fill:true,tension:0.4}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){var v=ctx.parsed.y;return ' '+(v>=1000?(v/1000).toFixed(1)+'k':v)+' FCFA';}}}},scales:{x:{grid:{display:false},ticks:{font:{size:8},color:'#9ca3af',maxTicksLimit:10,maxRotation:0}},y:{grid:{color:'#f3f4f6'},ticks:{font:{size:8},color:'#9ca3af',callback:function(v){return v>=1000?(v/1000)+'k':v;}},beginAtZero:true}}}});
+}
+
+var _fluxChartView = 'single';
+var _fluxCompareInst = null;
+
+function setFluxChartView(view) {
+  _fluxChartView = view;
+  var btnS = document.getElementById('flux-view-single');
+  var btnC = document.getElementById('flux-view-compare');
+  var panS = document.getElementById('flux-chart-single');
+  var panC = document.getElementById('flux-chart-compare');
+  if (btnS) { btnS.style.background = view==='single'?'var(--y)':'transparent'; btnS.style.color = view==='single'?'#fff':'#6b7280'; }
+  if (btnC) { btnC.style.background = view==='compare'?'var(--y)':'transparent'; btnC.style.color = view==='compare'?'#fff':'#6b7280'; }
+  if (panS) panS.style.display = view==='single' ? '' : 'none';
+  if (panC) panC.style.display = view==='compare' ? '' : 'none';
+  if (view === 'compare' && _fluxData) _fluxRenderCompareChart();
+}
+
+function _fluxRenderCompareChart() {
+  var canvas = document.getElementById('flux-compare-chart');
+  if (!canvas || typeof Chart === 'undefined' || !_fluxData) return;
+  var courbe = _fluxData.courbe || [];
+  var now = new Date(), labels = [];
+  if (_fluxPeriod==='today')  { for(var h=0;h<24;h++) labels.push(h+'h'); }
+  else if(_fluxPeriod==='week'){ for(var d=6;d>=0;d--){var dy=new Date(now);dy.setDate(dy.getDate()-d);labels.push(dy.toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit'}));} }
+  else if(_fluxPeriod==='year'){ labels=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc']; }
+  else { var dim=new Date(now.getFullYear(),now.getMonth()+1,0).getDate(); for(var i=1;i<=dim;i++) labels.push(i.toString()); }
+  var cm = {}; courbe.forEach(function(c){ cm[c.label]=c; });
+
+  var datasets = FLUX_TRANSFER_CATS.map(function(cat) {
+    var data = labels.map(function(l){ return Math.round((cm[l]&&cm[l][cat.id])||0); });
+    var hasData = data.some(function(v){ return v>0; });
+    return {
+      label: cat.label,
+      data: data,
+      borderColor: cat.col,
+      backgroundColor: 'transparent',
+      borderWidth: hasData ? 2 : 1,
+      pointRadius: data.map(function(v){ return v>0?3:0; }),
+      pointBackgroundColor: cat.col,
+      tension: 0.4,
+      hidden: !hasData  // masquer par défaut si pas de données
+    };
+  });
+
+  if (_fluxCompareInst) { try{_fluxCompareInst.destroy();}catch(e){} }
+  _fluxCompareInst = new Chart(canvas, {
+    type: 'line',
+    data: { labels: labels, datasets: datasets },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false }, // légende custom ci-dessous
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              if (!ctx.parsed.y) return null;
+              return ' ' + ctx.dataset.label + ' : ' + (ctx.parsed.y>=1000?(ctx.parsed.y/1000).toFixed(1)+'k':ctx.parsed.y) + ' FCFA';
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid:{display:false}, ticks:{font:{size:8},color:'#9ca3af',maxTicksLimit:10,maxRotation:0} },
+        y: { grid:{color:'#f3f4f6'}, ticks:{font:{size:8},color:'#9ca3af',callback:function(v){return v>=1000?(v/1000)+'k':v;}}, beginAtZero:true }
+      }
+    }
+  });
+
+  // Légende custom cliquable
+  var legEl = document.getElementById('flux-compare-legend');
+  if (legEl) {
+    legEl.innerHTML = '';
+    FLUX_TRANSFER_CATS.forEach(function(cat, i) {
+      var pill = document.createElement('button');
+      pill.style.cssText = 'padding:3px 8px;border-radius:99px;font-size:9px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;border:1.5px solid '+cat.col+';background:'+(datasets[i].hidden?'#f9fafb':cat.col+'18')+';color:'+(datasets[i].hidden?'#9ca3af':cat.col);
+      pill.innerHTML = '<span style="width:7px;height:7px;border-radius:50%;background:'+cat.col+';flex-shrink:0;display:inline-block"></span>'+cat.label.replace(' ↔ ','↔');
+      (function(idx, catCol, c) {
+        pill.addEventListener('click', function() {
+          var meta = _fluxCompareInst.getDatasetMeta(idx);
+          meta.hidden = !meta.hidden;
+          _fluxCompareInst.update();
+          this.style.background = meta.hidden ? '#f9fafb' : catCol+'18';
+          this.style.color = meta.hidden ? '#9ca3af' : catCol;
+        });
+      })(i, cat.col, cat);
+      legEl.appendChild(pill);
+    });
+  }
 }
 
 function _fluxRenderChart(){
@@ -6378,48 +6786,37 @@ function _tkRender(el, list, listId) {
 // ════════════════════════════════════════════════════════════════
 function setMonTab(tab) {
   var role = G.user ? G.user.role : '';
-  // Tabs visibility by role
-  var allTabs = ['alertes','bo','sup','tech','superviseur','global'];
+  var allTabs = ['alertes','bo','sup','tech','superviseur','admin','global','stats'];
   allTabs.forEach(function(t) {
     var btn = document.getElementById('mon-tab-'+t);
     if (!btn) return;
     var show = true;
-    if (role === 'support_tech') show = (t === 'alertes' || t === 'tech');
-    else if (role === 'superviseur') show = false; // superviseur has no tabs - direct view
+    if (role === 'support_tech')   show = (t === 'alertes' || t === 'tech');
     else if (role === 'superviseur') show = false;
-    else if (role === 'backoffice') show = (t !== 'bo'); // backoffice voit tout sauf l'onglet bo
+    else if (role === 'backoffice')  show = (t !== 'bo');
     btn.style.display = show ? '' : 'none';
   });
-  // Superviseur: hide tab bar entirely, show alertes + tickets directly
-  // Hide tab bar for superviseur immediately
   var monNav = document.getElementById('mon-tab-bar');
   if (monNav) {
     var showTabs = (role === 'admin' || role === 'backoffice' || role === 'support_client');
     monNav.style.display = showTabs ? 'flex' : 'none';
   }
-  // Bouton retour pour backoffice
   var backBtn = document.getElementById('mon-back-btn');
   if (backBtn) backBtn.style.display = (role === 'backoffice') ? 'flex' : 'none';
-  // If requested tab not allowed, redirect
   var tabMap = {support_tech:'tech', support_client:'sup'};
   if (role === 'superviseur') tab = 'superviseur';
   else if (tabMap[role] && !['alertes', tabMap[role], (role==='support_client'?'tech':'')].includes(tab)) {
     tab = tabMap[role];
   }
   _monActiveTab = tab;
-  var tabs = ['alertes','bo','sup','tech','superviseur','admin','global'];
-  tabs.forEach(function(t) {
-    var btn = document.getElementById('mon-tab-'+t);
+  allTabs.forEach(function(t) {
+    var btn   = document.getElementById('mon-tab-'+t);
     var panel = document.getElementById('mon-panel-'+t);
     var active = t === tab;
-    if (btn) {
-      btn.style.color = active ? 'var(--y2)' : '#6b7280';
-      btn.style.borderBottom = active ? '2px solid var(--y)' : '2px solid transparent';
-    }
+    if (btn)   { btn.style.color = active?'var(--y2)':'#6b7280'; btn.style.borderBottom = active?'2px solid var(--y)':'2px solid transparent'; }
     if (panel) { panel.style.display = active ? 'block' : 'none'; }
   });
   if (tab === 'alertes') {
-    // Charger alertes via chargerMonitoring existante
     var el = document.getElementById('m-alerts');
     if (!el || el.innerHTML.indexOf('spin') >= 0) chargerMonitoring();
   }
@@ -6435,15 +6832,17 @@ function setMonTab(tab) {
     _tkInitFilters('mon-tech-filters', 'mon-tech-', function(v) { _monTechFilter = v; _tkLoadList('mon-tech-list', v, 'support_tech'); });
     _tkLoadList('mon-tech-list', _monTechFilter, 'support_tech');
   }
-  if (tab === 'superviseur') {
-    chargerZoneSuperviseur();
-  }
+  if (tab === 'superviseur') { chargerZoneSuperviseur(); }
   if (tab === 'admin') {
-    _tkInitFilters('mon-admin-filters', 'mon-admin-', function(v) { _tkLoadList('mon-admin-list', v, 'admin'); });
-    _tkLoadList('mon-admin-list', '', 'admin');
+    setAdmMonTab('stats');
+    // Masquer le bouton Supprimer pour le gestionnaire backoffice
+    var tbAdm = document.getElementById('mon-admin-tb');
+    if (tbAdm && !isSuperAdmin()) {
+      var btnSupAdm = tbAdm.querySelector('button[onclick*="supprimerTickets"]');
+      if (btnSupAdm) btnSupAdm.style.display = 'none';
+    }
   }
   if (tab === 'global') {
-    // Vue structurée par entité
     _tkInitFilters('mon-global-filters', 'mon-global-', function(v) {
       _monGlobalFilter = v;
       _tkLoadList('mon-global-bo', v, 'backoffice');
@@ -6458,6 +6857,192 @@ function setMonTab(tab) {
     _tkLoadList('mon-global-superviseur', _monGlobalFilter, 'superviseur');
     _tkLoadList('mon-global-admin', _monGlobalFilter, 'admin');
   }
+  if (tab === 'stats') { chargerMonStats(); }
+}
+
+// ── PANNEAU ADMIN — onglets internes ──
+function setAdmMonTab(tab) {
+  ['stats','tickets','alertes'].forEach(function(t) {
+    var btn   = document.getElementById('adm-mon-tab-'+t);
+    var panel = document.getElementById('adm-mon-panel-'+t);
+    var active = t === tab;
+    if (btn)   { btn.style.color = active?'#ca8a04':'#6b7280'; btn.style.borderBottomColor = active?'#ca8a04':'transparent'; }
+    if (panel) panel.style.display = active ? '' : 'none';
+  });
+  if (tab === 'stats')   _chargerAdmStats();
+  if (tab === 'tickets') {
+    _tkInitFilters('mon-admin-filters', 'mon-admin-', function(v){ _tkLoadList('mon-admin-list', v, 'admin'); });
+    _tkLoadList('mon-admin-list', '', 'admin');
+    // Cacher suppression pour backoffice gestionnaire
+    var role = G.user ? G.user.role : '';
+    var tbAdm = document.getElementById('mon-admin-tb');
+    if (tbAdm) {
+      tbAdm.querySelectorAll('button').forEach(function(b){
+        if(b.onclick && b.onclick.toString().indexOf('supprimer')>=0) b.style.display = role==='admin'?'none':'';
+      });
+    }
+  }
+  if (tab === 'alertes') chargerAdmAlertes();
+}
+
+async function _chargerAdmStats() {
+  var statuts = [{st:'ouvert',id:'admst-ouvert'},{st:'en_cours',id:'admst-cours'},{st:'resolu',id:'admst-resolu'},{st:'rejete',id:'admst-rejete'},{st:'ferme',id:'admst-ferme'}];
+  statuts.forEach(function(s){
+    apiGet('/tickets?service=admin&statut='+s.st+'&limit=1').then(function(r){
+      var el=document.getElementById(s.id); if(el) el.textContent=r.total||r.count||(r.data?r.data.length:0);
+    }).catch(function(){});
+  });
+  apiGet('/alerts?service=admin&statut=ouverte&limit=1').then(function(r){
+    var el=document.getElementById('admst-alertes');
+    if(el) el.textContent=(r.data&&(r.data.total||(r.data.alertes&&r.data.alertes.length)))||0;
+  }).catch(function(){});
+  // Courbe 30j
+  try {
+    var r=await apiGet('/tickets?service=admin&limit=200');
+    var list=r.data||[];
+    var canvas=document.getElementById('admst-chart');
+    if(canvas&&typeof Chart!=='undefined'){
+      var now=new Date(),labels=[],data=[];
+      for(var i=29;i>=0;i--){var d=new Date(now);d.setDate(d.getDate()-i);labels.push(d.getDate()+'/'+(d.getMonth()+1));var ds=d.toISOString().slice(0,10);data.push(list.filter(function(tk){return (tk.dateCreation||tk.date_creation||'').slice(0,10)===ds;}).length);}
+      if(canvas._admChart){try{canvas._admChart.destroy();}catch(e){}}
+      canvas._admChart=new Chart(canvas,{type:'bar',data:{labels:labels,datasets:[{data:data,backgroundColor:'#ca8a0433',borderColor:'#ca8a04',borderWidth:1.5,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:8},color:'#9ca3af',maxTicksLimit:10,maxRotation:0}},y:{grid:{color:'#f3f4f6'},ticks:{font:{size:8},color:'#9ca3af',stepSize:1},beginAtZero:true}}}});
+    }
+  } catch(e) {}
+}
+
+function creerAlerteAdminModal() {
+  var f=document.getElementById('adm-alerte-create-form');
+  if(f) f.style.display=f.style.display==='none'?'block':'none';
+}
+
+async function envoyerAlerteAdmin() {
+  var titre=document.getElementById('adm-al-titre').value.trim();
+  var desc=document.getElementById('adm-al-desc').value.trim();
+  var gravite=document.getElementById('adm-al-gravite').value;
+  if(!titre||!desc){toast('Titre et description requis',true);return;}
+  try {
+    await callAPI('/alerts',{method:'POST',body:JSON.stringify({titre:titre,description:desc,gravite:gravite,service:'admin'})});
+    toast('🚨 Alerte créée');
+    document.getElementById('adm-al-titre').value='';
+    document.getElementById('adm-al-desc').value='';
+    document.getElementById('adm-alerte-create-form').style.display='none';
+    chargerAdmAlertes();
+  } catch(e){toast('Erreur: '+e.message,true);}
+}
+
+async function chargerAdmAlertes() {
+  var el=document.getElementById('adm-alertes-list'); if(!el)return;
+  el.innerHTML='<div style="padding:14px;text-align:center"><div class="spin"></div></div>';
+  try {
+    var ar=await apiGet('/alerts?limit=30&service=admin');
+    var list=(ar.data&&ar.data.alertes)||[];
+    el.innerHTML='';
+    if(!list.length){el.innerHTML='<div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:12px;padding:14px;text-align:center;color:#059669;font-size:12px;font-weight:600">✓ Aucune alerte</div>';return;}
+    var gv={faible:{col:'#22c55e',label:'🟢 Faible'},moyenne:{col:'#f59e0b',label:'🟡 Moyenne'},elevee:{col:'#f97316',label:'🟠 Élevée'},critique:{col:'#ef4444',label:'🔴 Critique'}};
+    var st={ouverte:{col:'#ef4444',label:'Ouverte'},en_cours:{col:'#f59e0b',label:'En cours'},resolue:{col:'#22c55e',label:'Résolue'},fermee:{col:'#9ca3af',label:'Fermée'}};
+    var frag=document.createDocumentFragment();
+    list.forEach(function(a){
+      var g=gv[a.gravite]||{col:'#f59e0b',label:'Moyenne'},s=st[a.statut]||{col:'#9ca3af',label:a.statut};
+      var d=new Date(a.created_at||a.createdAt||Date.now());
+      var ds=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      var card=document.createElement('div');
+      card.style.cssText='background:#fff;border:1px solid #f3f4f6;border-left:3px solid '+g.col+';border-radius:12px;padding:11px 13px;margin-bottom:8px';
+      card.innerHTML='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:5px">'
+        +'<div style="font-size:12px;font-weight:700;color:#111827;flex:1">'+a.titre+'</div>'
+        +'<div style="display:flex;gap:4px;flex-shrink:0">'
+          +'<span style="background:'+g.col+'15;color:'+g.col+';border-radius:99px;padding:1px 7px;font-size:9px;font-weight:700">'+g.label+'</span>'
+          +'<span style="background:'+s.col+'15;color:'+s.col+';border-radius:99px;padding:1px 7px;font-size:9px;font-weight:700">'+s.label+'</span>'
+        +'</div></div>'
+        +'<div style="font-size:11px;color:#6b7280;margin-bottom:5px">'+a.description+'</div>'
+        +'<div style="font-size:9px;color:#9ca3af">'+ds+' · par '+(a.auteur||'système')+'</div>';
+      frag.appendChild(card);
+    });
+    el.appendChild(frag);
+  } catch(e){el.innerHTML='<div style="color:var(--r);font-size:12px;padding:8px">'+e.message+'</div>';}
+}
+
+var _monStatsView = 'bo';
+function setMonStatsView(view) {
+  _monStatsView = view;
+  ['bo','global'].forEach(function(v){
+    var btn   = document.getElementById('monst-btn-'+v);
+    var panel = document.getElementById('monst-panel-'+v);
+    var active = v === view;
+    if (btn)   { btn.style.background=active?'var(--y)':'#fff'; btn.style.color=active?'#fff':'#374151'; btn.style.borderColor=active?'var(--y)':'#e5e7eb'; }
+    if (panel) panel.style.display = active ? '' : 'none';
+  });
+  if (view === 'bo')     _chargerMonStatsBO();
+  if (view === 'global') _chargerMonStatsGlobal();
+}
+
+async function chargerMonStats() {
+  setMonStatsView('bo');
+}
+
+async function _chargerMonStatsBO() {
+  var statuts = [
+    {st:'ouvert',  id:'monst-bo-ouvert'},
+    {st:'en_cours',id:'monst-bo-cours'},
+    {st:'resolu',  id:'monst-bo-resolu'},
+    {st:'rejete',  id:'monst-bo-rejete'},
+    {st:'ferme',   id:'monst-bo-ferme'},
+  ];
+  statuts.forEach(function(s){
+    apiGet('/tickets?service=backoffice&statut='+s.st+'&limit=1').then(function(r){
+      var el=document.getElementById(s.id); if(el) el.textContent=r.total||r.count||(r.data?r.data.length:0);
+    }).catch(function(){});
+  });
+  // Alertes backoffice actives
+  apiGet('/alerts?service=backoffice&statut=ouverte&limit=1').then(function(r){
+    var el=document.getElementById('monst-bo-alertes');
+    if(el) el.textContent=(r.data&&(r.data.total||(r.data.alertes&&r.data.alertes.length)))||0;
+  }).catch(function(){});
+  // Courbe tickets BO 30j
+  try {
+    var r=await apiGet('/tickets?service=backoffice&limit=200');
+    var list=r.data||[];
+    var canvas=document.getElementById('monst-bo-chart');
+    if(canvas&&typeof Chart!=='undefined'){
+      var now=new Date(),labels=[],data=[];
+      for(var i=29;i>=0;i--){var d=new Date(now);d.setDate(d.getDate()-i);labels.push(d.getDate()+'/'+(d.getMonth()+1));var ds=d.toISOString().slice(0,10);data.push(list.filter(function(tk){return (tk.dateCreation||tk.date_creation||'').slice(0,10)===ds;}).length);}
+      if(canvas._bostChart){try{canvas._bostChart.destroy();}catch(e){}}
+      canvas._bostChart=new Chart(canvas,{type:'bar',data:{labels:labels,datasets:[{data:data,backgroundColor:'#d9770633',borderColor:'#d97706',borderWidth:1.5,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:8},color:'#9ca3af',maxTicksLimit:10,maxRotation:0}},y:{grid:{color:'#f3f4f6'},ticks:{font:{size:8},color:'#9ca3af',stepSize:1},beginAtZero:true}}}});
+    }
+  } catch(e){}
+}
+
+async function _chargerMonStatsGlobal() {
+  // Clients actifs
+  apiGet('/users?role=client&statut=actif&limit=1').then(function(r){var el=document.getElementById('monst-gl-clients');if(el)el.textContent=r.total||r.count||(r.data?r.data.length:0);}).catch(function(){});
+  // Agents
+  apiGet('/users?role=agent&statut=actif&limit=1').then(function(r){var el=document.getElementById('monst-gl-agents');if(el)el.textContent=r.total||r.count||(r.data?r.data.length:0);}).catch(function(){});
+  // Tickets ouverts total
+  apiGet('/tickets?statut=ouvert&limit=1').then(function(r){var el=document.getElementById('monst-gl-tickets-open');if(el)el.textContent=r.total||r.count||(r.data?r.data.length:0);}).catch(function(){});
+  // Alertes critiques globales
+  apiGet('/alerts?gravite=critique&statut=ouverte&limit=1').then(function(r){var el=document.getElementById('monst-gl-alertes-crit');if(el)el.textContent=(r.data&&(r.data.total||(r.data.alertes&&r.data.alertes.length)))||0;}).catch(function(){});
+  // Transactions du jour
+  var today=new Date().toISOString().slice(0,10);
+  apiGet('/transactions?date='+today+'&limit=1').then(function(r){var el=document.getElementById('monst-gl-txns');if(el)el.textContent=r.total||r.count||(r.data?r.data.length:0);}).catch(function(){});
+  // KYC en attente
+  apiGet('/users?statut=en_attente&limit=1').then(function(r){var el=document.getElementById('monst-gl-kyc');if(el)el.textContent=r.total||r.count||(r.data?r.data.length:0);}).catch(function(){});
+  // Alertes par service
+  var services2=[{s:'backoffice',label:'🖥️ Back-Office',col:'#d97706'},{s:'support_client',label:'🎧 Support Client',col:'#2563eb'},{s:'support_tech',label:'🛠️ Support Tech',col:'#7c3aed'},{s:'superviseur',label:'🟠 Superviseur',col:'#ea580c'},{s:'admin',label:'👑 Admin',col:'#ca8a04'}];
+  var aEl=document.getElementById('monst-gl-alertes-detail'); if(aEl) aEl.innerHTML='';
+  var tEl=document.getElementById('monst-gl-tickets-detail'); if(tEl) tEl.innerHTML='';
+  var aPromises=services2.map(function(sv){return apiGet('/alerts?service='+sv.s+'&statut=ouverte&limit=1').then(function(r){return{s:sv,n:(r.data&&(r.data.total||(r.data.alertes&&r.data.alertes.length)))||0};}).catch(function(){return{s:sv,n:0};});});
+  var tPromises=services2.map(function(sv){return apiGet('/tickets?service='+sv.s+'&statut=ouvert&limit=1').then(function(r){return{s:sv,n:r.total||r.count||(r.data?r.data.length:0)};}).catch(function(){return{s:sv,n:0};});});
+  function renderBars(results, elId) {
+    var el2=document.getElementById(elId); if(!el2)return;
+    el2.innerHTML=''; var maxN=Math.max.apply(null,results.map(function(r){return r.n;}));
+    results.forEach(function(res){
+      var pct=maxN>0?Math.round(res.n/maxN*100):0;
+      var div=document.createElement('div');div.style.cssText='background:#fff;border:1px solid #f3f4f6;border-left:3px solid '+res.s.col+';border-radius:10px;padding:9px 12px;margin-bottom:7px;display:flex;align-items:center;gap:10px';
+      div.innerHTML='<span style="font-size:11px;font-weight:600;color:#374151;flex:1">'+res.s.label+'</span><span style="font-size:13px;font-weight:800;color:'+res.s.col+'">'+res.n+'</span><div style="background:#f3f4f6;border-radius:99px;height:5px;width:70px;overflow:hidden"><div style="background:'+res.s.col+';height:100%;width:'+pct+'%;border-radius:99px"></div></div>';
+      el2.appendChild(div);
+    });
+  }
+  Promise.all(aPromises).then(function(r){renderBars(r,'monst-gl-alertes-detail');});
+  Promise.all(tPromises).then(function(r){renderBars(r,'monst-gl-tickets-detail');});
 }
 
 // ── ZONE SUPERVISEUR ──
@@ -7087,6 +7672,107 @@ async function envoyerAlerte() {
     document.getElementById('alerte-create-form').style.display='none';
     chargerAlertesCentralisees();
   } catch(e) { toast('Erreur: '+e.message, true); }
+}
+
+function creerAlerteSupModal() {
+  var f = document.getElementById('sup-alerte-create-form');
+  if (f) f.style.display = f.style.display==='none' ? 'block' : 'none';
+}
+
+async function envoyerAlerteSupMon() {
+  var titre   = document.getElementById('sup-al-titre-mon').value.trim();
+  var desc    = document.getElementById('sup-al-desc-mon').value.trim();
+  var gravite = document.getElementById('sup-al-gravite-mon').value;
+  if (!titre || !desc) { toast('Titre et description requis', true); return; }
+  try {
+    await callAPI('/alerts', {method:'POST', body:JSON.stringify({titre:titre, description:desc, gravite:gravite, service:'superviseur'})});
+    toast('🚨 Alerte créée');
+    document.getElementById('sup-al-titre-mon').value = '';
+    document.getElementById('sup-al-desc-mon').value  = '';
+    document.getElementById('sup-alerte-create-form').style.display = 'none';
+    chargerZoneSuperviseur();
+  } catch(e) { toast('Erreur: '+e.message, true); }
+}
+
+function setSupMonTab(tab) {
+  ['alertes','tickets','stats'].forEach(function(t) {
+    var btn   = document.getElementById('sup-mon-tab-'+t);
+    var panel = document.getElementById('sup-mon-panel-'+t);
+    var active = t === tab;
+    if (btn)   { btn.style.color = active?'#ea580c':'#6b7280'; btn.style.borderBottomColor = active?'#ea580c':'transparent'; }
+    if (panel) panel.style.display = active ? '' : 'none';
+  });
+  if (tab === 'tickets') chargerTicketsSuperviseur();
+  if (tab === 'stats')   _chargerStatsSupMon();
+}
+
+async function _chargerStatsSupMon() {
+  // Tickets superviseur
+  ['ouvert','en_cours','resolu'].forEach(function(st) {
+    var idMap = {ouvert:'supst-tk-ouvert', en_cours:'supst-tk-cours', resolu:'supst-tk-resolu'};
+    apiGet('/tickets?service=superviseur&statut='+st+'&limit=1').then(function(r){
+      var el=document.getElementById(idMap[st]);
+      if(el) el.textContent = r.total||r.count||(r.data?r.data.length:0);
+    }).catch(function(){});
+  });
+  // Alertes créées par le superviseur
+  apiGet('/alerts?service=superviseur&limit=1').then(function(r){
+    var el=document.getElementById('supst-alertes');
+    if(el) el.textContent=(r.data&&(r.data.total||(r.data.alertes&&r.data.alertes.length)))||0;
+  }).catch(function(){});
+  // Alertes critiques
+  apiGet('/alerts?service=superviseur&gravite=critique&statut=ouverte&limit=1').then(function(r){
+    var el=document.getElementById('supst-alertes-crit');
+    if(el) el.textContent=(r.data&&(r.data.total||(r.data.alertes&&r.data.alertes.length)))||0;
+  }).catch(function(){});
+  // Tickets ce mois (superviseur)
+  var debutMois = new Date(); debutMois.setDate(1); debutMois.setHours(0,0,0,0);
+  apiGet('/tickets?service=superviseur&limit=100').then(function(r){
+    var list = r.data||[];
+    var count = list.filter(function(tk){
+      return new Date(tk.dateCreation||tk.date_creation||0) >= debutMois;
+    }).length;
+    var el=document.getElementById('supst-comptes');
+    if(el) el.textContent = count;
+  }).catch(function(){});
+  // Courbe alertes créées 30j
+  try {
+    var r = await apiGet('/alerts?service=superviseur&limit=100');
+    var list = (r.data&&r.data.alertes)||[];
+    var canvas = document.getElementById('supst-chart');
+    if (canvas && typeof Chart !== 'undefined') {
+      var now=new Date(), labels=[], data=[];
+      for (var i=29;i>=0;i--) {
+        var d=new Date(now); d.setDate(d.getDate()-i);
+        labels.push(d.getDate()+'/'+(d.getMonth()+1));
+        var ds=d.toISOString().slice(0,10);
+        data.push(list.filter(function(a){return (a.created_at||a.createdAt||'').slice(0,10)===ds;}).length);
+      }
+      if (canvas._supstChart) { try{canvas._supstChart.destroy();}catch(e){} }
+      canvas._supstChart = new Chart(canvas, {
+        type:'bar',
+        data:{labels:labels,datasets:[{data:data,backgroundColor:'#ea580c33',borderColor:'#ea580c',borderWidth:1.5,borderRadius:4}]},
+        options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:8},color:'#9ca3af',maxTicksLimit:10,maxRotation:0}},y:{grid:{color:'#f3f4f6'},ticks:{font:{size:8},color:'#9ca3af',stepSize:1},beginAtZero:true}}}
+      });
+    }
+    // Répartition par gravité
+    var counts={faible:0,moyenne:0,elevee:0,critique:0};
+    list.filter(function(a){return a.statut==='ouverte'||a.statut==='en_cours';}).forEach(function(a){if(counts[a.gravite]!==undefined)counts[a.gravite]++;});
+    var total=Object.values(counts).reduce(function(s,v){return s+v;},0);
+    var defs=[{k:'critique',label:'🔴 Critique',col:'#ef4444'},{k:'elevee',label:'🟠 Élevée',col:'#f97316'},{k:'moyenne',label:'🟡 Moyenne',col:'#f59e0b'},{k:'faible',label:'🟢 Faible',col:'#22c55e'}];
+    var gEl=document.getElementById('supst-gravite-detail'); if(!gEl) return;
+    gEl.innerHTML='';
+    if(!total){gEl.innerHTML='<div style="text-align:center;color:#9ca3af;font-size:12px;padding:10px">Aucune alerte active</div>';return;}
+    defs.forEach(function(d){
+      var pct=total>0?Math.round(counts[d.k]/total*100):0;
+      var card=document.createElement('div');
+      card.style.cssText='background:#fff;border:1px solid #f3f4f6;border-left:3px solid '+d.col+';border-radius:10px;padding:9px 12px;margin-bottom:7px;display:flex;align-items:center;gap:10px';
+      card.innerHTML='<span style="font-size:11px;font-weight:700;color:'+d.col+';flex:1">'+d.label+'</span>'
+        +'<span style="font-size:14px;font-weight:900;color:'+d.col+'">'+counts[d.k]+'</span>'
+        +'<div style="background:#f3f4f6;border-radius:99px;height:6px;width:70px;overflow:hidden"><div style="background:'+d.col+';height:100%;width:'+pct+'%;border-radius:99px"></div></div>';
+      gEl.appendChild(card);
+    });
+  } catch(e) { console.warn('Stats sup:', e.message); }
 }
 
 async function chargerZoneSuperviseur() {

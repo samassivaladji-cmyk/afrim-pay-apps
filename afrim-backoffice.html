@@ -1881,10 +1881,8 @@ function voirU(id){
 async function activerAvecKyc(clientId,niveauKyc){
   if(!confirm('Activer ce compte au niveau '+niveauKyc+' ?'))return;
   try{
-    var h={'Content-Type':'application/json'};if(G.token)h['Authorization']='Bearer '+G.token;
-    var resp=await fetch(API+'/users/'+clientId+'/kyc',{method:'PATCH',headers:h,body:JSON.stringify({kycNiveau:niveauKyc})});
-    var rd=await resp.json();
-    if(!resp.ok)throw new Error(rd.message||'Erreur '+resp.status);
+    var rd=await apiPatch('/users/'+clientId+'/kyc',{kycNiveau:niveauKyc});
+    if(!rd||!rd.success)throw new Error((rd&&rd.message)||'Erreur serveur');
     toast('✅ Compte activé — niveau '+niveauKyc);
     closeSh('user');chargerUsers();
   }catch(e){toast('Activation: '+e.message,true);}
@@ -2209,10 +2207,10 @@ async function validerKyc(clientId,ticketId,niveau){
 
   // 4. Valider
   try{
-    var h={'Content-Type':'application/json'};if(G.token)h['Authorization']='Bearer '+G.token;
-    await fetch(API+'/users/'+clientId+'/kyc',{method:'PATCH',headers:h,body:JSON.stringify({kycNiveau:niveauAValider})});
+    var rd=await apiPatch('/users/'+clientId+'/kyc',{kycNiveau:niveauAValider});
+    if(!rd||!rd.success)throw new Error((rd&&rd.message)||'Erreur serveur');
     await apiPost('/tickets/'+ticketId+'/status',{statut:'resolu'}).catch(function(){});
-    toast('KYC '+niveauAValider+' validé — client actif');
+    toast('✅ KYC '+niveauAValider+' validé — client actif');
     chargerTicketsKyc();
   }catch(e){toast('Validation: '+e.message,true);}
 }
@@ -3500,10 +3498,8 @@ function voirU(id){
 async function activerAvecKyc(clientId,niveauKyc){
   if(!confirm('Activer ce compte au niveau '+niveauKyc+' ?'))return;
   try{
-    var h={'Content-Type':'application/json'};if(G.token)h['Authorization']='Bearer '+G.token;
-    var resp=await fetch(API+'/users/'+clientId+'/kyc',{method:'PATCH',headers:h,body:JSON.stringify({kycNiveau:niveauKyc})});
-    var rd=await resp.json();
-    if(!resp.ok)throw new Error(rd.message||'Erreur '+resp.status);
+    var rd=await apiPatch('/users/'+clientId+'/kyc',{kycNiveau:niveauKyc});
+    if(!rd||!rd.success)throw new Error((rd&&rd.message)||'Erreur serveur');
     toast('✅ Compte activé — niveau '+niveauKyc);
     closeSh('user');chargerUsers();
   }catch(e){toast('Activation: '+e.message,true);}
@@ -4247,17 +4243,13 @@ async function chargerClientsTech(statut){
 }
 
 async function activerClientTech(clientId,prenom){
-  // Récupérer les docs pour déterminer le niveau max
   var docs=[];
   try{var dr=await apiGet('/kyc/documents?userId='+clientId);docs=dr&&dr.data?dr.data:[];}catch(e){}
-  // Déterminer le niveau — si pas de docs, activer en KYC1 par défaut
   var niveauMax=niveauKycValidable(docs)||'KYC1';
   if(!confirm('Activer le compte de '+prenom+' au niveau '+niveauMax+' ?'))return;
   try{
-    var h={'Content-Type':'application/json'};if(G.token)h['Authorization']='Bearer '+G.token;
-    var resp=await fetch(API+'/users/'+clientId+'/kyc',{method:'PATCH',headers:h,body:JSON.stringify({kycNiveau:niveauMax})});
-    var rd=await resp.json();
-    if(!resp.ok)throw new Error(rd.message||'Erreur '+resp.status);
+    var rd=await apiPatch('/users/'+clientId+'/kyc',{kycNiveau:niveauMax});
+    if(!rd||!rd.success)throw new Error((rd&&rd.message)||'Erreur serveur');
     toast('✅ Compte activé en '+niveauMax);
     chargerClientsTech(techStatutActif);
   }catch(e){toast('Activation: '+e.message,true);}

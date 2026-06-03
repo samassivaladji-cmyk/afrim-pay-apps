@@ -1454,6 +1454,7 @@ async function chargerCommissions(){
   var kycRaw=u.kycNiveau||'en_attente';
   var kyc=['KYC1','KYC2','KYC3'].includes(kycRaw)?kycRaw:'KYC1';
   var nbRatt=Number(u.nbRattaches)||0,nbFil=Number(u.nbFilleuls)||0;
+  var condF=kyc==='KYC3'?500:kyc==='KYC2'?200:0,cRatt=nbRatt>=(condF||1)?'#22c55e':'#f59e0b';
   var h='<div style="background:linear-gradient(135deg,#d97706,#f59e0b);border-radius:16px;padding:20px;margin-bottom:14px;text-align:center;color:#fff">'
     +'<div style="font-size:11px;font-weight:700;opacity:.75;text-transform:uppercase;margin-bottom:6px">CE MOIS-CI</div>'
     +'<div id="cm-mois" style="font-size:36px;font-weight:900">-- FCFA</div>'

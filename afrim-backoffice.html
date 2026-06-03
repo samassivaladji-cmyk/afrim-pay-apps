@@ -1882,8 +1882,10 @@ async function activerAvecKyc(clientId,niveauKyc){
   if(!confirm('Activer ce compte au niveau '+niveauKyc+' ?'))return;
   try{
     var h={'Content-Type':'application/json'};if(G.token)h['Authorization']='Bearer '+G.token;
-    await fetch(API+'/users/'+clientId+'/kyc',{method:'PATCH',headers:h,body:JSON.stringify({kycNiveau:niveauKyc})});
-    toast('Compte activé — niveau '+niveauKyc);
+    var resp=await fetch(API+'/users/'+clientId+'/kyc',{method:'PATCH',headers:h,body:JSON.stringify({kycNiveau:niveauKyc})});
+    var rd=await resp.json();
+    if(!resp.ok)throw new Error(rd.message||'Erreur '+resp.status);
+    toast('✅ Compte activé — niveau '+niveauKyc);
     closeSh('user');chargerUsers();
   }catch(e){toast('Activation: '+e.message,true);}
 }
@@ -3499,8 +3501,10 @@ async function activerAvecKyc(clientId,niveauKyc){
   if(!confirm('Activer ce compte au niveau '+niveauKyc+' ?'))return;
   try{
     var h={'Content-Type':'application/json'};if(G.token)h['Authorization']='Bearer '+G.token;
-    await fetch(API+'/users/'+clientId+'/kyc',{method:'PATCH',headers:h,body:JSON.stringify({kycNiveau:niveauKyc})});
-    toast('Compte activé — niveau '+niveauKyc);
+    var resp=await fetch(API+'/users/'+clientId+'/kyc',{method:'PATCH',headers:h,body:JSON.stringify({kycNiveau:niveauKyc})});
+    var rd=await resp.json();
+    if(!resp.ok)throw new Error(rd.message||'Erreur '+resp.status);
+    toast('✅ Compte activé — niveau '+niveauKyc);
     closeSh('user');chargerUsers();
   }catch(e){toast('Activation: '+e.message,true);}
 }
@@ -4243,19 +4247,18 @@ async function chargerClientsTech(statut){
 }
 
 async function activerClientTech(clientId,prenom){
-  // Vérifier les docs avant d'activer
+  // Récupérer les docs pour déterminer le niveau max
   var docs=[];
-  try{var dr=await apiGet('/kyc/documents?userId='+clientId);docs=dr.data||[];}catch(e){}
-  var niveauMax=niveauKycValidable(docs);
-  if(!niveauMax){
-    toast('Activation impossible : aucun document valide soumis. Le client doit fournir au minimum son selfie.',true);
-    return;
-  }
+  try{var dr=await apiGet('/kyc/documents?userId='+clientId);docs=dr&&dr.data?dr.data:[];}catch(e){}
+  // Déterminer le niveau — si pas de docs, activer en KYC1 par défaut
+  var niveauMax=niveauKycValidable(docs)||'KYC1';
   if(!confirm('Activer le compte de '+prenom+' au niveau '+niveauMax+' ?'))return;
   try{
     var h={'Content-Type':'application/json'};if(G.token)h['Authorization']='Bearer '+G.token;
-    await fetch(API+'/users/'+clientId+'/kyc',{method:'PATCH',headers:h,body:JSON.stringify({kycNiveau:niveauMax})});
-    toast('Compte activé en '+niveauMax);
+    var resp=await fetch(API+'/users/'+clientId+'/kyc',{method:'PATCH',headers:h,body:JSON.stringify({kycNiveau:niveauMax})});
+    var rd=await resp.json();
+    if(!resp.ok)throw new Error(rd.message||'Erreur '+resp.status);
+    toast('✅ Compte activé en '+niveauMax);
     chargerClientsTech(techStatutActif);
   }catch(e){toast('Activation: '+e.message,true);}
 }

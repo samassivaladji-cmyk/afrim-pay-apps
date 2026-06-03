@@ -1415,7 +1415,7 @@ function ouvrirInfos(){
     '<div class="srow"><span style="color:var(--m);font-size:13px">Prenom</span><span style="font-weight:700">'+u.prenom+'</span></div>'+
     '<div class="srow"><span style="color:var(--m);font-size:13px">Nom</span><span style="font-weight:700">'+u.nom+'</span></div>'+
     '<div class="srow"><span style="color:var(--m);font-size:13px">Telephone</span><span style="font-weight:700;font-family:monospace">'+u.telephone+'</span></div>'+
-    '<div class="srow"><span style="color:var(--m);font-size:13px">Niveau KYC</span><span style="font-weight:700;color:var(--g)">'+u.kycNiveau+'</span></div>'+
+    '<div class="srow"><span style="color:var(--m);font-size:13px">Niveau KYC</span><span style="font-weight:700;color:var(--g)">'+((['KYC1','KYC2','KYC3'].includes(u.kycNiveau)?u.kycNiveau:'En attente (KYC1)')+'</span></div>')+
     '<div class="srow" style="border:none"><span style="color:var(--m);font-size:13px">Statut</span><span style="font-weight:700;color:'+(u.statut==='actif'?'#22c55e':'#f59e0b')+'">'+u.statut+'</span></div>'+
     (u.codeParrainage?'<div style="margin-top:16px;background:#f0fdf4;border:1px solid #d1fae5;border-radius:12px;padding:14px;text-align:center"><div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:4px">Code parrainage</div><div style="font-size:24px;font-weight:900;font-family:monospace;color:#059669">'+u.codeParrainage+'</div></div>':'');
 }
@@ -1451,8 +1451,9 @@ async function chargerCommissions(){
   if(!el){if(!chargerCommissions._r){chargerCommissions._r=1;setTimeout(chargerCommissions,500);}return;}
   chargerCommissions._r=0;
   var u=G.user||{};
-  var kyc=u.kycNiveau||'KYC1',nbRatt=Number(u.nbRattaches)||0,nbFil=Number(u.nbFilleuls)||0;
-  var condF=kyc==='KYC3'?500:kyc==='KYC2'?200:0,cRatt=nbRatt>=(condF||1)?'#22c55e':'#f59e0b';
+  var kycRaw=u.kycNiveau||'en_attente';
+  var kyc=['KYC1','KYC2','KYC3'].includes(kycRaw)?kycRaw:'KYC1';
+  var nbRatt=Number(u.nbRattaches)||0,nbFil=Number(u.nbFilleuls)||0;
   var h='<div style="background:linear-gradient(135deg,#d97706,#f59e0b);border-radius:16px;padding:20px;margin-bottom:14px;text-align:center;color:#fff">'
     +'<div style="font-size:11px;font-weight:700;opacity:.75;text-transform:uppercase;margin-bottom:6px">CE MOIS-CI</div>'
     +'<div id="cm-mois" style="font-size:36px;font-weight:900">-- FCFA</div>'
@@ -1539,7 +1540,8 @@ function ouvrirKycUpgrade(){
 
 function _renderKyc(docsExistants){
   var u=G.user||{};
-  var kyc=u.kycNiveau||'KYC1';   // niveau actuel de l'utilisateur
+  var kycRaw=u.kycNiveau||'en_attente';
+  var kyc=['KYC1','KYC2','KYC3'].includes(kycRaw)?kycRaw:'KYC1'; // en_attente = KYC1 en cours
   var statut=u.statut||'';        // 'actif' ou 'en_attente'
   var el=document.getElementById('kyc-body');
   if(!el)return;

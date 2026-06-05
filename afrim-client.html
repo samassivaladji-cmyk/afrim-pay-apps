@@ -1252,8 +1252,32 @@ async function doInscrire(){
   if(pin.length!==4){errEl.textContent='Le code secret doit avoir exactement 4 chiffres';errEl.style.display='';return;}
   if(pin2val&&pin!==pin2val){errEl.textContent='Les codes secrets ne correspondent pas';errEl.style.display='';return;}
   if(!/^\d{4}$/.test(pin)){errEl.textContent='Le PIN doit contenir exactement 4 chiffres';errEl.style.display='';return;}
+  // Selfie obligatoire pour KYC1 — vérifier avant de soumettre
+  var selfieFile=kycPhotos['selfie'];
+  if(!selfieFile){errEl.textContent='Veuillez prendre votre selfie avant de créer le compte';errEl.style.display='';return;}
   document.getElementById('ins-form').style.display='none';document.getElementById('ins-loading').style.display='';
-  try{var r=await post('/auth/register',{prenom,nom,telephone,pin,role:'client',kycNiveau:kycLevel,parrainCode:parrainCode||undefined});document.getElementById('ins-loading').style.display='none';document.getElementById('ins-success').style.display='';document.getElementById('ins-succ-txt').textContent='Votre compte a été créé ! Code parrainage : '+(r.data.codeParrainage||'');}
+  try{
+    // 1. Créer le compte
+    var r=await post('/auth/register',{prenom,nom,telephone,pin,role:'client',kycNiveau:kycLevel,parrainCode:parrainCode||undefined});
+    var userId=r.data.id;
+    // 2. Se connecter pour obtenir le token (nécessaire pour /kyc/documents)
+    var loginR=await post('/auth/login',{telephone,pin});
+    var tempToken=loginR.data.accessToken;
+    // 3. Uploader le selfie sur Cloudinary
+    try{
+      var fd=new FormData();fd.append('file',selfieFile);fd.append('upload_preset','afrim-kyc');fd.append('folder','afrim-pay/kyc');
+      var up=await fetch('https://api.cloudinary.com/v1_1/dzofjvhwu/image/upload',{method:'POST',body:fd});
+      var ud=await up.json();
+      if(up.ok&&ud.secure_url){
+        // 4. Sauvegarder le selfie en base
+        await fetch(API+'/kyc/documents',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tempToken},body:JSON.stringify({userId,typeDocument:'selfie',urlFichier:ud.secure_url})});
+        // 5. Soumettre la demande KYC1
+        await fetch(API+'/kyc/request',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tempToken},body:JSON.stringify({userId,niveauDemande:'KYC1'})});
+      }
+    }catch(eKyc){console.warn('Upload selfie inscription:',eKyc.message);}
+    document.getElementById('ins-loading').style.display='none';document.getElementById('ins-success').style.display='';
+    document.getElementById('ins-succ-txt').textContent='Votre compte a été créé ! Code parrainage : '+(r.data.codeParrainage||'');
+  }
   catch(e){document.getElementById('ins-loading').style.display='none';document.getElementById('ins-form').style.display='';errEl.textContent=e.message;errEl.style.display='';}
 }
 
@@ -1541,24 +1565,25 @@ function ouvrirKycUpgrade(){
 
 function _renderKyc(docsExistants){
   var u=G.user||{};
-  var kycRaw=u.kycNiveau||null;
-  // kyc = niveau VALIDÉ. Si null/en_attente → pas encore de niveau validé → on affiche KYC1 comme "en cours"
-  var kyc=(kycRaw&&['KYC1','KYC2','KYC3'].includes(kycRaw))?kycRaw:'KYC1';
+  var kycRaw=u.kycNiveau||'en_attente';
+  var kyc=['KYC1','KYC2','KYC3'].includes(kycRaw)?kycRaw:'KYC1'; // en_attente = KYC1 en cours
   var statut=u.statut||'';        // 'actif' ou 'en_attente'
   var el=document.getElementById('kyc-body');
   if(!el)return;
 
   // ── Définitions ──────────────────────────────────────────────────
-  // KYC_DOCS : uniquement les documents PROPRES à chaque niveau
-  // KYC2 n'affiche PAS le selfie (déjà couvert par KYC1)
   var KYC_DOCS={
-    KYC1:[{id:'selfie',              label:'Selfie',                  icon:'🤳',camera:'user'}],
-    KYC2:[{id:'cni_recto',           label:'CNI Recto',               icon:'🪪',camera:'environment'},
-          {id:'cni_verso',           label:'CNI Verso',               icon:'🪪',camera:'environment'}],
-    KYC3:[{id:'extrait_naissance',   label:'Extrait de naissance',    icon:'📄',camera:'environment'},
-          {id:'justificatif_domicile',label:'Justificatif de domicile',icon:'🏠',camera:'environment'}]
+    KYC1:[{id:'selfie',         label:'Selfie',                  icon:'🤳',camera:'user'}],
+    KYC2:[{id:'selfie',         label:'Selfie',                  icon:'🤳',camera:'user'},
+          {id:'cni_recto',      label:'CNI Recto',               icon:'🪪',camera:'environment'},
+          {id:'cni_verso',      label:'CNI Verso',               icon:'🪪',camera:'environment'}],
+    KYC3:[{id:'selfie',         label:'Selfie',                  icon:'🤳',camera:'user'},
+          {id:'cni_recto',      label:'CNI Recto',               icon:'🪪',camera:'environment'},
+          {id:'cni_verso',      label:'CNI Verso',               icon:'🪪',camera:'environment'},
+          {id:'extrait_naissance',     label:'Extrait de naissance',    icon:'📄',camera:'environment'},
+          {id:'justificatif_domicile', label:'Justificatif de domicile',icon:'🏠',camera:'environment'}]
   };
-  // DOCS_NIVEAU = même chose (docs propres à soumettre pour chaque niveau)
+  // Docs propres à chaque niveau (ceux qu'on soumet pour ce niveau)
   var DOCS_NIVEAU={
     KYC1:['selfie'],
     KYC2:['cni_recto','cni_verso'],
@@ -1575,77 +1600,63 @@ function _renderKyc(docsExistants){
   var niveaux=['KYC1','KYC2','KYC3'];
   var nbRatt=Number(u.nbRattaches||0);
 
-  // ── Source de vérité : docs réellement soumis en base ───────────
-  // docsSoumis[typeDocument] = statut ('soumis' | 'valide' | 'rejete')
+  // Docs soumis en base (pour référence uniquement sur le niveau en_attente)
   var docsSoumis={};
   (docsExistants||[]).forEach(function(d){
-    var key=d.typeDocument||d.type_document;
-    // Garder le statut le plus récent (premier de la liste, triée DESC)
-    if(!docsSoumis[key]) docsSoumis[key]=d.statut||'soumis';
+    docsSoumis[d.typeDocument||d.type_document]=true;
   });
 
-  // ── Docs validés définitivement ──────────────────────────────────
-  // RÈGLE STRICTE : un doc est "validé" UNIQUEMENT si :
-  //   1) Il appartient à un niveau KYC INFÉRIEUR au niveau actuel (niveaux passés forcément validés)
-  //   2) OU il appartient au niveau actuel ET statut utilisateur === 'actif'
-  // JAMAIS un doc d'un niveau supérieur n'est validé
-  // JAMAIS un doc n'est validé sans que son niveau soit réellement actif
-  var DOCS_PAR_NIVEAU={
+  // Docs définitivement validés par niveau (règle métier fixe — indépendante de l'API)
+  // Si KYC1 actif → selfie validé
+  // Si KYC2 actif → selfie + cni_recto + cni_verso validés
+  // Si KYC3 actif → tous validés
+  var DOCS_VALIDES_PAR_NIVEAU={
     KYC1:['selfie'],
-    KYC2:['cni_recto','cni_verso'],
-    KYC3:['extrait_naissance','justificatif_domicile']
+    KYC2:['selfie','cni_recto','cni_verso'],
+    KYC3:['selfie','cni_recto','cni_verso','extrait_naissance','justificatif_domicile']
   };
+  // Ensemble de tous les docs validés définitivement
   var docsDefinitivementValides={};
+  // Un doc est validé définitivement si son niveau d'appartenance <= niveau actuel ET actif
+  // OU si son niveau d'appartenance < niveau actuel (toujours vrai peu importe statut)
   niveaux.forEach(function(n){
-    var docsN=DOCS_PAR_NIVEAU[n]||[];
+    var docsN=DOCS_VALIDES_PAR_NIVEAU[n]||[];
     if(ORDER[n]<ORDER[kyc]){
-      // Niveau passé et validé → ses docs propres sont verrouillés
+      // Niveaux passés → forcément validés
       docsN.forEach(function(id){docsDefinitivementValides[id]=true;});
-    } else if(ORDER[n]===ORDER[kyc] && statut==='actif'){
-      // Niveau actuel validé par admin → ses docs propres sont verrouillés
+    } else if(ORDER[n]===ORDER[kyc]&&statut==='actif'){
+      // Niveau actuel validé
       docsN.forEach(function(id){docsDefinitivementValides[id]=true;});
     }
-    // Niveau futur ou niveau actuel en_attente → jamais verrouillé
   });
 
   window._kycPhotos={};
 
   function docVerrouille(niv, docId){
-    // Verrouillé = validé définitivement par admin (ne peut plus être modifié)
+    // Un doc est verrouillé s'il est dans les docs définitivement validés
     return !!docsDefinitivementValides[docId];
   }
 
   function docModifiable(niv, docId){
-    // Modifiable = niveau actuel EN ATTENTE de validation admin
-    // Le doc peut être soumis ou resoumis
+    // Niveau actuel EN ATTENTE → les docs de ce niveau sont modifiables
     return ORDER[niv]===ORDER[kyc] && statut!=='actif';
   }
 
   function docAFournir(niv, docId){
-    // À fournir = niveau suivant (upgrade)
+    // Prochain niveau → docs à fournir pour upgrade
     return ORDER[niv]===ORDER[kyc]+1;
   }
 
   // ── Barre de progression ─────────────────────────────────────────
-  // kycNiveau = niveau VALIDÉ (null si aucun encore validé)
-  // kycNiveauDemande = niveau en cours de demande
-  var niveauValide=kyc; // KYC1/KYC2/KYC3 uniquement si validé par admin
-  var niveauDemande=u.kycNiveauDemande||null;
-  var aucunValide=(kycRaw===null||kycRaw==='en_attente'||kycRaw==='');
-  var niveauAffiche=aucunValide?'Aucun':niveauValide;
-  var progressPct=aucunValide?'5':(kyc==='KYC1'?'33':kyc==='KYC2'?'66':'100');
   var statutLabel = statut==='actif'
     ? '<span style="color:#22c55e;font-size:11px;font-weight:700">● Actif</span>'
-    : '<span style="color:#f59e0b;font-size:11px;font-weight:700">● En attente de validation</span>';
+    : '<span style="color:#f59e0b;font-size:11px;font-weight:700">● En attente</span>';
   var h='<div style="background:#f9fafb;border-radius:14px;padding:14px;margin-bottom:16px">';
   h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
-  h+='<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase">Niveau validé : '+niveauAffiche+'</div>';
+  h+='<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase">Niveau actuel : '+kyc+'</div>';
   h+=statutLabel+'</div>';
-  if(niveauDemande&&statut!=='actif'){
-    h+='<div style="font-size:11px;color:#92400e;margin-bottom:6px">📋 Demande en cours : '+niveauDemande+'</div>';
-  }
   h+='<div style="background:#e5e7eb;border-radius:99px;height:8px">';
-  h+='<div style="background:var(--g);border-radius:99px;height:8px;transition:.4s;width:'+progressPct+'%"></div>';
+  h+='<div style="background:var(--g);border-radius:99px;height:8px;transition:.4s;width:'+(kyc==='KYC1'?'33':kyc==='KYC2'?'66':'100')+'%"></div>';
   h+='</div></div>';
 
   // ── Rendu de chaque niveau ───────────────────────────────────────
@@ -1821,10 +1832,30 @@ async function soumettreKyc(niv){
     'KYC2':[{id:'cni_recto'},{id:'cni_verso'}],
     'KYC3':[{id:'extrait_naissance'},{id:'justificatif_domicile'}]
   };
+  // Docs pré-requis des niveaux précédents (doivent déjà être en base)
+  var DOCS_PREREQUIS={
+    'KYC1':[],
+    'KYC2':['selfie'],
+    'KYC3':['selfie','cni_recto','cni_verso']
+  };
   var docs=NOUVEAUX_DOCS[niv]||[];
   var photos=window._kycPhotos||{};
   var manq=docs.filter(function(d){return !photos[niv+'-'+d.id];}).map(function(d){return d.id;});
   if(manq.length){T('Documents manquants : '+manq.join(', '),true);return;}
+  // Vérifier que les pré-requis sont en base (docs niveaux précédents)
+  var prerequis=DOCS_PREREQUIS[niv]||[];
+  if(prerequis.length){
+    try{
+      var uid=G.user&&G.user.id;
+      var docsBase=await get('/kyc/documents?userId='+uid);
+      var docsIds=(docsBase.data||[]).map(function(d){return d.typeDocument||d.type_document;});
+      var manqPrereq=prerequis.filter(function(id){return !docsIds.includes(id);});
+      if(manqPrereq.length){
+        T('Documents pré-requis manquants en base : '+manqPrereq.join(', ')+'. Soumettez KYC1 en premier.',true);
+        return;
+      }
+    }catch(e){console.warn('Vérif prérequis:',e.message);}
+  }
 
   // Désactiver le bouton pendant l'envoi
   var btn=document.getElementById('btn-kyc-'+niv);

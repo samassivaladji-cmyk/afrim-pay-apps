@@ -1549,18 +1549,16 @@ function _renderKyc(docsExistants){
   if(!el)return;
 
   // ── Définitions ──────────────────────────────────────────────────
+  // KYC_DOCS : uniquement les documents PROPRES à chaque niveau
+  // KYC2 n'affiche PAS le selfie (déjà couvert par KYC1)
   var KYC_DOCS={
-    KYC1:[{id:'selfie',         label:'Selfie',                  icon:'🤳',camera:'user'}],
-    KYC2:[{id:'selfie',         label:'Selfie',                  icon:'🤳',camera:'user'},
-          {id:'cni_recto',      label:'CNI Recto',               icon:'🪪',camera:'environment'},
-          {id:'cni_verso',      label:'CNI Verso',               icon:'🪪',camera:'environment'}],
-    KYC3:[{id:'selfie',         label:'Selfie',                  icon:'🤳',camera:'user'},
-          {id:'cni_recto',      label:'CNI Recto',               icon:'🪪',camera:'environment'},
-          {id:'cni_verso',      label:'CNI Verso',               icon:'🪪',camera:'environment'},
-          {id:'extrait_naissance',     label:'Extrait de naissance',    icon:'📄',camera:'environment'},
-          {id:'justificatif_domicile', label:'Justificatif de domicile',icon:'🏠',camera:'environment'}]
+    KYC1:[{id:'selfie',              label:'Selfie',                  icon:'🤳',camera:'user'}],
+    KYC2:[{id:'cni_recto',           label:'CNI Recto',               icon:'🪪',camera:'environment'},
+          {id:'cni_verso',           label:'CNI Verso',               icon:'🪪',camera:'environment'}],
+    KYC3:[{id:'extrait_naissance',   label:'Extrait de naissance',    icon:'📄',camera:'environment'},
+          {id:'justificatif_domicile',label:'Justificatif de domicile',icon:'🏠',camera:'environment'}]
   };
-  // Docs propres à chaque niveau (ceux qu'on soumet pour ce niveau)
+  // DOCS_NIVEAU = même chose (docs propres à soumettre pour chaque niveau)
   var DOCS_NIVEAU={
     KYC1:['selfie'],
     KYC2:['cni_recto','cni_verso'],

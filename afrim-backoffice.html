@@ -1392,11 +1392,20 @@ function acteur(){ var u=G.user; if(!u)return 'inconnu'; return (u.prenom||'')+'
 // canActOnUser : peut-on suspendre/bloquer/réinitialiser cet utilisateur ?
 function canActOnUser(target){
   var me=G.user; if(!me||!target) return false;
-  // Super BO peut tout faire sur tout le monde sauf lui-même
   if(isSuperAdmin()) return target.telephone!==SUPER_ADMIN_TEL;
-  // Back-office peut agir sur tout le monde sauf le Super BO
   if(me.role==='backoffice') return target.telephone!==SUPER_ADMIN_TEL;
-  // Admin peut agir uniquement sur client/agent/business/mini_master/master/superviseur
+  if(me.role==='admin') return !['backoffice','admin'].includes(target.role);
+  return false;
+}
+// canResetPin : qui peut réinitialiser le PIN de qui ?
+function canResetPin(target){
+  var me=G.user; if(!me||!target) return false;
+  // Super BO peut réinitialiser tout le monde sauf lui-même
+  if(isSuperAdmin()) return target.telephone!==SUPER_ADMIN_TEL;
+  // Back-office : peut réinitialiser admin + autres, PAS Super BO, PAS autres backoffice
+  if(me.role==='backoffice') return target.telephone!==SUPER_ADMIN_TEL && target.role!=='backoffice';
+  // Admin : peut réinitialiser client/agent/business/mini_master/master/superviseur
+  //         PAS Super BO, PAS backoffice, PAS autres admin
   if(me.role==='admin') return !['backoffice','admin'].includes(target.role);
   return false;
 }
@@ -1745,6 +1754,8 @@ async function chargerUsers(){
   var rolesVis=u.role==='superviseur'
     ?['agent','business','mini_master','master']
     :(function(){
+      // Super BO voit tout y compris l'onglet dédié super_bo
+      if(isSuperAdmin()) return ['all','client','agent','business','mini_master','master','superviseur','admin','backoffice','super_bo'];
       if(u.role==='backoffice') return ['all','client','agent','business','mini_master','master','superviseur','admin'];
       if(u.role==='admin') return ['all','client','agent','business','mini_master','master','superviseur'];
       return ['all','client','agent','business','mini_master','master','superviseur','backoffice','admin'];
@@ -1753,7 +1764,7 @@ async function chargerUsers(){
   if(u.role==='superviseur'&&(uFilter==='all'||uFilter==='client'))uFilter='agent';
   var chipsEl=document.getElementById('u-chips');chipsEl.innerHTML='';
   rolesVis.forEach(function(r){
-    var on=uFilter===r;var RLBL={'all':'Tous','client':'client','agent':'agent','business':'business','mini_master':'Mini-M.','master':'master','superviseur':'Superv.','backoffice':'Back-office','admin':'Admin'};var lbl=RLBL[r]||r;
+    var on=uFilter===r;var RLBL={'all':'Tous','client':'client','agent':'agent','business':'business','mini_master':'Mini-M.','master':'master','superviseur':'Superv.','backoffice':'Back-office','admin':'Admin','super_bo':'⭐ Super BO'};var lbl=RLBL[r]||r;
     var btn=document.createElement('button');
     btn.setAttribute('data-r',r);
     btn.style.cssText='padding:6px 14px;border-radius:99px;border:1.5px solid '+(on?'#ca8a04':'#e5e7eb')+';background:'+(on?'#fef3c7':'#fff')+';color:'+(on?'#a16207':'#6b7280')+';font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;flex-shrink:0';
@@ -1771,18 +1782,31 @@ async function chargerUsers(){
       var roleToLoad=allowedRoles.indexOf(uFilter)>=0?uFilter:'agent';
       p+='&role='+roleToLoad;
       if(u.zone)p+='&zone='+encodeURIComponent(u.zone);
+    } else if(uFilter==='super_bo'){
+      // Filtre spécial : uniquement le Super Back-office (admin + tel=0505414751)
+      p+='&role=admin&telephone='+SUPER_ADMIN_TEL;
     } else if(uFilter!=='all'){
       p+='&role='+uFilter;
     }
     var r=await apiGet(p);
-    usersData=r.data||[];
-    renderU(usersData);
+    // Si super_bo, filtrer côté client aussi (double sécurité)
+    var data=r.data||[];
+    if(uFilter==='super_bo') data=data.filter(function(u){return u.telephone===SUPER_ADMIN_TEL;});
+    usersData=data;
+    // Exclure le Super BO de la liste "Tous" sauf pour lui-même
+    var toRender=isSuperAdmin()?usersData:usersData.filter(function(u){return u.telephone!==SUPER_ADMIN_TEL;});
+    renderU(toRender);
   }catch(e){el.innerHTML='<div style="color:var(--r);padding:12px;font-size:13px">'+e.message+'</div>';}
 }
 function setUFilter(r){uFilter=r;chargerUsers();}
 function filtrerUsers(q){
-  if(!q){renderU(usersData);return;}
-  var f=usersData.filter(function(u){return(u.prenom+' '+u.nom).toLowerCase().indexOf(q.toLowerCase())>=0||u.telephone.indexOf(q)>=0;});
+  // Toujours exclure le Super BO de la vue admin/backoffice (sauf si on est Super BO)
+  var base=usersData.filter(function(u){
+    if(!isSuperAdmin() && u.telephone===SUPER_ADMIN_TEL) return false;
+    return true;
+  });
+  if(!q){renderU(base);return;}
+  var f=base.filter(function(u){return(u.prenom+' '+u.nom).toLowerCase().indexOf(q.toLowerCase())>=0||u.telephone.indexOf(q)>=0;});
   renderU(f);
 }
 function renderU(list){
@@ -1885,7 +1909,7 @@ function voirU(id){
     if(u.statut==='bloque')mkBtn('Debloquer','btn-g','',function(){chgStatut(id,'actif');});
   }
   if(perm('rembourser'))mkBtn('Rembourser dernier transfert','','background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){toast('Remboursement bientot disponible');});
-  mkBtn('🔐 Réinitialiser le code PIN','','background:#f0fdf4;color:#15803d;border:1px solid #a7f3d0;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){resetPinClient(u.id,(u.prenom||'')+' '+(u.nom||''));});
+  if(canResetPin(u))mkBtn('🔐 Réinitialiser le code PIN','','background:#f0fdf4;color:#15803d;border:1px solid #a7f3d0;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){resetPinClient(u.id,(u.prenom||'')+' '+(u.nom||''));});
   mkBtn('🔔 Historique notifications','','background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){afficherHistoriqueNotifs(u.id,(u.prenom||'')+' '+(u.nom||''));});
   if(canDeleteComptes() && u.telephone!==SUPER_ADMIN_TEL)mkBtn('Supprimer le compte','btn-r','margin-top:6px',function(){
     document.getElementById('sh-confirm-nom').textContent=(u.prenom||'')+' '+(u.nom||'');
@@ -3368,6 +3392,8 @@ async function chargerUsers(){
   var rolesVis=u.role==='superviseur'
     ?['agent','business','mini_master','master']
     :(function(){
+      // Super BO voit tout y compris l'onglet dédié super_bo
+      if(isSuperAdmin()) return ['all','client','agent','business','mini_master','master','superviseur','admin','backoffice','super_bo'];
       if(u.role==='backoffice') return ['all','client','agent','business','mini_master','master','superviseur','admin'];
       if(u.role==='admin') return ['all','client','agent','business','mini_master','master','superviseur'];
       return ['all','client','agent','business','mini_master','master','superviseur','backoffice','admin'];
@@ -3376,7 +3402,7 @@ async function chargerUsers(){
   if(u.role==='superviseur'&&(uFilter==='all'||uFilter==='client'))uFilter='agent';
   var chipsEl=document.getElementById('u-chips');chipsEl.innerHTML='';
   rolesVis.forEach(function(r){
-    var on=uFilter===r;var RLBL={'all':'Tous','client':'client','agent':'agent','business':'business','mini_master':'Mini-M.','master':'master','superviseur':'Superv.','backoffice':'Back-office','admin':'Admin'};var lbl=RLBL[r]||r;
+    var on=uFilter===r;var RLBL={'all':'Tous','client':'client','agent':'agent','business':'business','mini_master':'Mini-M.','master':'master','superviseur':'Superv.','backoffice':'Back-office','admin':'Admin','super_bo':'⭐ Super BO'};var lbl=RLBL[r]||r;
     var btn=document.createElement('button');
     btn.setAttribute('data-r',r);
     btn.style.cssText='padding:6px 14px;border-radius:99px;border:1.5px solid '+(on?'#ca8a04':'#e5e7eb')+';background:'+(on?'#fef3c7':'#fff')+';color:'+(on?'#a16207':'#6b7280')+';font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;flex-shrink:0';
@@ -3394,18 +3420,31 @@ async function chargerUsers(){
       var roleToLoad=allowedRoles.indexOf(uFilter)>=0?uFilter:'agent';
       p+='&role='+roleToLoad;
       if(u.zone)p+='&zone='+encodeURIComponent(u.zone);
+    } else if(uFilter==='super_bo'){
+      // Filtre spécial : uniquement le Super Back-office (admin + tel=0505414751)
+      p+='&role=admin&telephone='+SUPER_ADMIN_TEL;
     } else if(uFilter!=='all'){
       p+='&role='+uFilter;
     }
     var r=await apiGet(p);
-    usersData=r.data||[];
-    renderU(usersData);
+    // Si super_bo, filtrer côté client aussi (double sécurité)
+    var data=r.data||[];
+    if(uFilter==='super_bo') data=data.filter(function(u){return u.telephone===SUPER_ADMIN_TEL;});
+    usersData=data;
+    // Exclure le Super BO de la liste "Tous" sauf pour lui-même
+    var toRender=isSuperAdmin()?usersData:usersData.filter(function(u){return u.telephone!==SUPER_ADMIN_TEL;});
+    renderU(toRender);
   }catch(e){el.innerHTML='<div style="color:var(--r);padding:12px;font-size:13px">'+e.message+'</div>';}
 }
 function setUFilter(r){uFilter=r;chargerUsers();}
 function filtrerUsers(q){
-  if(!q){renderU(usersData);return;}
-  var f=usersData.filter(function(u){return(u.prenom+' '+u.nom).toLowerCase().indexOf(q.toLowerCase())>=0||u.telephone.indexOf(q)>=0;});
+  // Toujours exclure le Super BO de la vue admin/backoffice (sauf si on est Super BO)
+  var base=usersData.filter(function(u){
+    if(!isSuperAdmin() && u.telephone===SUPER_ADMIN_TEL) return false;
+    return true;
+  });
+  if(!q){renderU(base);return;}
+  var f=base.filter(function(u){return(u.prenom+' '+u.nom).toLowerCase().indexOf(q.toLowerCase())>=0||u.telephone.indexOf(q)>=0;});
   renderU(f);
 }
 function renderU(list){
@@ -3508,7 +3547,7 @@ function voirU(id){
     if(u.statut==='bloque')mkBtn('Debloquer','btn-g','',function(){chgStatut(id,'actif');});
   }
   if(perm('rembourser'))mkBtn('Rembourser dernier transfert','','background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){toast('Remboursement bientot disponible');});
-  mkBtn('🔐 Réinitialiser le code PIN','','background:#f0fdf4;color:#15803d;border:1px solid #a7f3d0;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){resetPinClient(u.id,(u.prenom||'')+' '+(u.nom||''));});
+  if(canResetPin(u))mkBtn('🔐 Réinitialiser le code PIN','','background:#f0fdf4;color:#15803d;border:1px solid #a7f3d0;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){resetPinClient(u.id,(u.prenom||'')+' '+(u.nom||''));});
   mkBtn('🔔 Historique notifications','','background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){afficherHistoriqueNotifs(u.id,(u.prenom||'')+' '+(u.nom||''));});
   if(canDeleteComptes() && u.telephone!==SUPER_ADMIN_TEL)mkBtn('Supprimer le compte','btn-r','margin-top:6px',function(){
     document.getElementById('sh-confirm-nom').textContent=(u.prenom||'')+' '+(u.nom||'');
@@ -5348,12 +5387,10 @@ function _updateNotifToolbar(){
   var isAdmin=G.user&&G.user.role==='admin'&&!isSuperAdmin();
   if(btnTout)btnTout.style.display=isAdmin?'none':'';
   if(btnSupprAll)btnSupprAll.style.display=isAdmin?'none':(count>0?'':'none');
-  if(btnPartout)btnPartout.style.display=isAdmin?'none':'none';
+  if(btnPartout)btnPartout.style.display='none';
   tb.style.display='flex';
   document.getElementById('notif-sel-count').textContent = count > 0 ? count+' sélectionnée(s)' : total+' notification(s)';
   document.getElementById('notif-btn-selall').textContent = count===total && total>0 ? '☑ Tout désélect.' : '☐ Tout sélect.';
-  document.getElementById('notif-btn-suppr').style.display = count>0?'':'none';
-  document.getElementById('notif-btn-partout').style.display = count===1?'':'none';
 }
 
 function _toggleSelectAll(){

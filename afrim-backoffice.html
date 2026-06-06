@@ -1384,7 +1384,7 @@ var SUPER_ADMIN_TEL = '0505414751';
 function isSuperAdmin(){ return G.user && (G.user.role==='admin'||G.user.role==='backoffice') && G.user.telephone===SUPER_ADMIN_TEL; }
 function isAdminGestionnaire(){ return G.user && (G.user.role==='backoffice'||G.user.role==='admin'); }
 // canDeleteContent : Super Back-office + Back-office (PAS admin simple)
-function canDeleteContent(){ return isSuperAdmin() || (G.user && G.user.role==='backoffice'); }
+function canDeleteContent(){ var u=G.user; if(!u) return false; if(isSuperAdmin()) return true; return u.role==='backoffice'; }
 // canDeleteComptes : Super Back-office uniquement
 function canDeleteComptes(){ return isSuperAdmin(); }
 // acteur : identifiant de l'opérateur pour traçabilité
@@ -5383,16 +5383,10 @@ function _updateNotifToolbar(){
   if(!tb) return;
   var count = Object.keys(_notifSelection).length;
   var total = _notifListCache.length;
+  // Seuls Super BO et Back-office peuvent supprimer les notifs
   if(!canDeleteContent()){tb.style.display='none';return;}
-  // Masquer les boutons de suppression pour role admin
-  var btnTout=document.getElementById('notif-btn-tout');
-  var btnSupprAll=document.getElementById('notif-btn-suppr');
-  var btnPartout=document.getElementById('notif-btn-partout');
-  var isAdmin=G.user&&G.user.role==='admin'&&!isSuperAdmin();
-  if(btnTout)btnTout.style.display=isAdmin?'none':'';
-  if(btnSupprAll)btnSupprAll.style.display=isAdmin?'none':(count>0?'':'none');
-  if(btnPartout)btnPartout.style.display='none';
   tb.style.display='flex';
+  document.getElementById('notif-btn-suppr').style.display = count>0?'':'none';
   document.getElementById('notif-sel-count').textContent = count > 0 ? count+' sélectionnée(s)' : total+' notification(s)';
   document.getElementById('notif-btn-selall').textContent = count===total && total>0 ? '☑ Tout désélect.' : '☐ Tout sélect.';
 }
@@ -5409,6 +5403,7 @@ function _toggleSelectAll(){
 }
 
 async function _supprimerSelection(){
+  if(!canDeleteContent()) return;
   var ids = Object.keys(_notifSelection);
   if(!ids.length) return;
   if(!confirm('Supprimer '+ids.length+' notification(s) pour cet utilisateur ?')) return;
@@ -5434,6 +5429,7 @@ async function _supprimerPourTous(){
 }
 
 async function supprimerToutesNotifsUser(){
+  if(!canDeleteContent()){toast('Permission refusée',true);return;}
   if(!_notifUserId) return;
   if(!confirm('Supprimer TOUTES les notifications de cet utilisateur ?')) return;
   try{

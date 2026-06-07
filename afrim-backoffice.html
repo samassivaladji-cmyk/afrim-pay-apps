@@ -17,6 +17,8 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
 .inp::placeholder{color:var(--d)}
 .btn{width:100%;padding:15px;border-radius:14px;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s}
 .btn-y{background:linear-gradient(135deg,var(--y2),var(--y));color:#fff}
+.jf-btn{padding:4px 10px;border-radius:99px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid #e5e7eb;background:#f9fafb;color:#6b7280;white-space:nowrap}
+.jf-active{border-color:#7c3aed!important;background:#f5f3ff!important;color:#7c3aed!important}
 .btn-g{background:linear-gradient(135deg,#15803d,#22c55e);color:#fff}
 .btn-r{background:#fef2f2;color:var(--r);border:1px solid #fecaca}
 .btn-gh{background:#f3f4f6;color:var(--t)}
@@ -836,6 +838,7 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
       <button id="tech-tab-tickets"  onclick="setTechTab('tickets')"  style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">🎫 Tickets</button>
       <button id="tech-tab-alertes"  onclick="setTechTab('alertes')"  style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">🚨 Alertes</button>
       <button id="tech-tab-stats"    onclick="setTechTab('stats')"    style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">📊 Stats</button>
+      <button id="tech-tab-journal"  onclick="setTechTab('journal')"  style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">📋 Journal</button>
     </div>
   </div>
 
@@ -925,6 +928,27 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
     <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin:18px 0 8px">🕑 Historique des actions</div>
     <div id="tech-actions-history"><div style="padding:14px;text-align:center"><div class="spin"></div></div></div>
 
+  </div>
+
+  <!-- ═══ ONGLET JOURNAL ═══ -->
+  <div id="tech-panel-journal" style="display:none;padding:16px 16px 100px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em">📋 Journal des actions</div>
+      <button onclick="chargerJournal()" style="background:#f3f4f6;border:none;border-radius:8px;padding:4px 9px;font-size:10px;font-weight:700;color:#6b7280;cursor:pointer;font-family:inherit">↻ Actualiser</button>
+    </div>
+    <!-- Filtres par type d'action -->
+    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px" id="journal-filters">
+      <button onclick="setJournalFilter('all')"              id="jf-all"    class="jf-btn jf-active">Toutes</button>
+      <button onclick="setJournalFilter('statut_suspendu')"  id="jf-susp"   class="jf-btn">Suspensions</button>
+      <button onclick="setJournalFilter('statut_bloque')"    id="jf-bloq"   class="jf-btn">Blocages</button>
+      <button onclick="setJournalFilter('statut_actif')"     id="jf-actif"  class="jf-btn">Réactivations</button>
+      <button onclick="setJournalFilter('reset_pin')"        id="jf-pin"    class="jf-btn">Reset PIN</button>
+      <button onclick="setJournalFilter('suppression_compte')" id="jf-suppr" class="jf-btn">Suppressions</button>
+    </div>
+    <div id="journal-list"><div style="padding:24px;text-align:center"><div class="spin"></div></div></div>
+    <div id="journal-more" style="text-align:center;margin-top:10px;display:none">
+      <button onclick="chargerJournalPlus()" style="background:#f3f4f6;border:none;border-radius:8px;padding:6px 16px;font-size:11px;font-weight:700;color:#374151;cursor:pointer;font-family:inherit">Charger plus</button>
+    </div>
   </div>
 
   <!-- ═══ ONGLET TICKETS ═══ -->
@@ -4385,7 +4409,7 @@ async function chargerTech(){
 }
 
 function setTechTab(tab) {
-  ['systeme','tickets','alertes','stats'].forEach(function(t) {
+  ['systeme','tickets','alertes','stats','journal'].forEach(function(t) {
     var panel = document.getElementById('tech-panel-'+t);
     var btn   = document.getElementById('tech-tab-'+t);
     var active = t === tab;
@@ -4399,6 +4423,7 @@ function setTechTab(tab) {
   if (tab === 'tickets')  chargerTechTickets();
   if (tab === 'alertes')  chargerTechAlertes();
   if (tab === 'stats')    chargerTechStats();
+  if (tab === 'journal')  chargerJournal();
 }
 
 async function _chargerTechSysteme() {
@@ -8273,6 +8298,96 @@ if (_origChargerTechFn) {
       _tkLoadList('tech-tk-list', '', 'support_tech');
     }, 400);
   };
+}
+
+// ══════════════════════════════════════════
+// JOURNAL DES ACTIONS (traçabilité)
+// ══════════════════════════════════════════
+var _journalFilter = 'all';
+var _journalOffset = 0;
+
+var ACTION_LABELS = {
+  'statut_suspendu':   {ico:'⚠️', txt:'Suspension',    col:'#c2410c'},
+  'statut_bloque':     {ico:'🔴', txt:'Blocage',        col:'#dc2626'},
+  'statut_actif':      {ico:'✅', txt:'Réactivation',   col:'#15803d'},
+  'statut_en_attente': {ico:'⏳', txt:'Mise en attente',col:'#d97706'},
+  'reset_pin':         {ico:'🔐', txt:'Reset PIN',      col:'#7c3aed'},
+  'suppression_compte':{ico:'🗑', txt:'Suppression',    col:'#ef4444'},
+};
+
+function setJournalFilter(f){
+  _journalFilter=f; _journalOffset=0;
+  document.querySelectorAll('.jf-btn').forEach(function(b){b.classList.remove('jf-active');});
+  var map={'all':'jf-all','statut_suspendu':'jf-susp','statut_bloque':'jf-bloq','statut_actif':'jf-actif','reset_pin':'jf-pin','suppression_compte':'jf-suppr'};
+  var el=document.getElementById(map[f]);
+  if(el) el.classList.add('jf-active');
+  chargerJournal();
+}
+
+async function chargerJournal(){
+  _journalOffset=0;
+  var el=document.getElementById('journal-list');
+  if(!el) return;
+  el.innerHTML='<div style="padding:24px;text-align:center"><div class="spin"></div></div>';
+  try{
+    var url='/actions-log?limit=30&offset=0'+(_journalFilter!=='all'?'&action='+_journalFilter:'');
+    var r=await apiGet(url);
+    var logs=r.logs||[];
+    _journalOffset=logs.length;
+    el.innerHTML='';
+    if(!logs.length){el.innerHTML='<div style="padding:24px;text-align:center;color:#9ca3af;font-size:13px">Aucune action enregistrée</div>';return;}
+    logs.forEach(function(log){ el.appendChild(_journalCard(log)); });
+    var more=document.getElementById('journal-more');
+    if(more) more.style.display=r.total>_journalOffset?'block':'none';
+  }catch(e){
+    document.getElementById('journal-list').innerHTML='<div style="color:#ef4444;padding:12px;font-size:13px">'+e.message+'</div>';
+  }
+}
+
+async function chargerJournalPlus(){
+  try{
+    var url='/actions-log?limit=30&offset='+_journalOffset+(_journalFilter!=='all'?'&action='+_journalFilter:'');
+    var r=await apiGet(url);
+    var logs=r.logs||[];
+    _journalOffset+=logs.length;
+    var el=document.getElementById('journal-list');
+    logs.forEach(function(log){ el.appendChild(_journalCard(log)); });
+    var more=document.getElementById('journal-more');
+    if(more) more.style.display=r.total>_journalOffset?'block':'none';
+  }catch(e){}
+}
+
+function _journalCard(log){
+  var meta = ACTION_LABELS[log.action] || {ico:'📌', txt:log.action, col:'#374151'};
+  var d = new Date(log.created_at);
+  var dateStr = d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  var card = document.createElement('div');
+  card.style.cssText='background:#fff;border-radius:14px;padding:14px;margin-bottom:10px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,.04)';
+  card.innerHTML=
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+      +'<span style="font-size:13px;font-weight:800;color:'+meta.col+'">'+meta.ico+' '+meta.txt+'</span>'
+      +'<span style="font-size:10px;color:#9ca3af">'+dateStr+'</span>'
+    +'</div>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+      +'<div style="flex:1;min-width:120px;background:#f9fafb;border-radius:10px;padding:8px 10px">'
+        +'<div style="font-size:9px;color:#9ca3af;font-weight:700;margin-bottom:2px">OPÉRATEUR</div>'
+        +'<div style="font-size:12px;font-weight:700;color:#374151">'+(log.acteur_nom||'—')+'</div>'
+        +'<div style="font-size:10px;color:#6b7280">'+_roleBadge(log.acteur_role)+' · '+log.acteur_tel+'</div>'
+      +'</div>'
+      +'<div style="flex:1;min-width:120px;background:#f9fafb;border-radius:10px;padding:8px 10px">'
+        +'<div style="font-size:9px;color:#9ca3af;font-weight:700;margin-bottom:2px">COMPTE CIBLÉ</div>'
+        +'<div style="font-size:12px;font-weight:700;color:#374151">'+(log.cible_nom||'—')+'</div>'
+        +'<div style="font-size:10px;color:#6b7280">'+_roleBadge(log.cible_role)+' · '+log.cible_tel+'</div>'
+      +'</div>'
+    +'</div>'
+    +(log.detail?'<div style="margin-top:8px;font-size:11px;color:#6b7280;background:#fafafa;border-radius:8px;padding:6px 8px">'+log.detail+'</div>':'');
+  return card;
+}
+
+function _roleBadge(role){
+  var COLS={admin:'#7c3aed',backoffice:'#0369a1',superviseur:'#c2410c',master:'#b45309',agent:'#15803d',client:'#374151',support_client:'#9d174d',support_tech:'#1d4ed8'};
+  var c=COLS[role]||'#6b7280';
+  return '<span style="background:'+c+'18;color:'+c+';border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700">'+role+'</span>';
 }
 </script>
 <!-- SHEET HISTORIQUE NOTIFICATIONS -->

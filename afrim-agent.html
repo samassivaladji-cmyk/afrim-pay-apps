@@ -6,6 +6,8 @@
 <meta name="theme-color" content="#d97706"/>
 <title>AFRIM PAY — Agent</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#ffffff;--s:#fffbeb;--c:#fffdf5;--b:#fde68a;--a:#d97706;--a2:#b45309;--t:#451a03;--m:#6b7280;--d:#9ca3af;--r:#ef4444;--g:#22c55e;--bl:#3b82f6;--p:#a855f7}
@@ -15,9 +17,10 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
 .scr{display:none;flex-direction:column;min-height:100vh;padding-bottom:80px}
 .scr.on{display:flex}
 .bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;background:#ffffff;border-top:1px solid var(--b);box-shadow:0 -4px 20px rgba(0,0,0,0.08);display:flex;z-index:100;padding:8px 0 22px}
-.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;padding:6px 0;color:var(--d);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;transition:color .2s}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;padding:6px 0;color:var(--d);font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;transition:color .2s;position:relative}
 .nb.on{color:var(--a)}
 .nb svg{width:22px;height:22px}
+.nb-badge{position:absolute;top:2px;right:calc(50% - 18px);background:#ef4444;color:#fff;font-size:9px;font-weight:800;border-radius:99px;padding:1px 5px;min-width:16px;text-align:center;display:none}
 .inp{width:100%;background:var(--bg);border:1.5px solid var(--b);border-radius:13px;padding:13px 16px;color:var(--t);font-size:15px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s}
 .inp:focus{border-color:var(--a)}
 .inp::placeholder{color:var(--d)}
@@ -61,24 +64,91 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
 .badge-req{position:absolute;top:5px;left:6px;padding:2px 7px;border-radius:99px;font-size:9px;font-weight:800;background:rgba(245,158,11,.15);color:var(--a)}
 .badge-opt{position:absolute;top:5px;left:6px;padding:2px 7px;border-radius:99px;font-size:9px;font-weight:800;background:rgba(100,100,100,.2);color:var(--m)}
 .photo-ok{position:absolute;top:5px;right:6px;width:20px;height:20px;border-radius:50%;background:var(--a);color:#030200;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center}
-
-.qr-scan-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:300;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px}
-.qr-scan-overlay.on{display:flex}
 .params-item{display:flex;align-items:center;gap:14px;padding:14px 16px;background:#fff;border-radius:14px;border:1px solid #f3f4f6;cursor:pointer;margin-bottom:8px;text-align:left;width:100%;font-family:inherit;box-shadow:0 1px 3px rgba(0,0,0,.05)}
 .params-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
 .params-label{font-size:14px;font-weight:700;color:#111827}
 .params-sub{font-size:12px;color:#6b7280;margin-top:1px}
+.chip{padding:6px 14px;border-radius:99px;border:1.5px solid var(--b);background:transparent;color:var(--m);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+.chip.on{border-color:var(--a);background:rgba(245,158,11,.08);color:var(--a)}
+/* QR Wave style */
+.wave-qr-popup{position:fixed;inset:0;z-index:300;display:none;flex-direction:column;}
+.wave-qr-popup.on{display:flex;}
+.wave-tab-btn{flex:1;padding:10px;border:none;background:transparent;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;}
+.wave-tab-btn.on{color:#111;border-bottom-color:#111;}
+/* Lock screen */
+#s-lock{position:fixed;inset:0;z-index:250;background:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;}
+#s-lock.on{display:flex;}
+/* Stats chart */
+.stat-bar-wrap{display:flex;align-items:flex-end;gap:4px;height:80px;padding:0 4px;}
+.stat-bar{flex:1;border-radius:4px 4px 0 0;min-width:8px;transition:height .4s;}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
-
 </head>
 <body>
 <div id="app">
 <div id="toast"></div>
+
+<!-- LOCK SCREEN -->
+<div id="s-lock">
+  <div style="width:72px;height:72px;border-radius:20px;overflow:hidden;margin-bottom:20px;box-shadow:0 8px 24px rgba(217,119,6,.2)"><img src="https://samassivaladji-cmyk.github.io/afrim-pay-apps/logo.png" style="width:100%;height:100%;object-fit:contain"/></div>
+  <div style="font-size:20px;font-weight:800;margin-bottom:4px" id="lock-name">—</div>
+  <div style="color:var(--m);font-size:13px;margin-bottom:28px">Entrez votre PIN pour déverrouiller</div>
+  <div style="display:flex;gap:12px;justify-content:center;margin-bottom:24px">
+    <div class="pin-dot" id="ld0"></div><div class="pin-dot" id="ld1"></div><div class="pin-dot" id="ld2"></div><div class="pin-dot" id="ld3"></div>
+  </div>
+  <div id="lock-err" style="color:#ef4444;font-size:13px;margin-bottom:12px;display:none">PIN incorrect</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:280px">
+    <button class="pin-key" onclick="lockPIN(1)">1</button><button class="pin-key" onclick="lockPIN(2)">2</button><button class="pin-key" onclick="lockPIN(3)">3</button>
+    <button class="pin-key" onclick="lockPIN(4)">4</button><button class="pin-key" onclick="lockPIN(5)">5</button><button class="pin-key" onclick="lockPIN(6)">6</button>
+    <button class="pin-key" onclick="lockPIN(7)">7</button><button class="pin-key" onclick="lockPIN(8)">8</button><button class="pin-key" onclick="lockPIN(9)">9</button>
+    <button class="pin-key empty"></button><button class="pin-key" onclick="lockPIN(0)">0</button><button class="pin-key" onclick="lockDEL()">⌫</button>
+  </div>
+  <button onclick="logout()" style="margin-top:28px;background:none;border:none;color:var(--m);font-size:13px;cursor:pointer;font-family:inherit">Se déconnecter</button>
+</div>
+
+<!-- QR POPUP WAVE STYLE -->
+<div class="wave-qr-popup" id="wave-qr-popup">
+  <div id="wqr-scanner" style="flex:1;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;">
+    <button onclick="fermerPopupQR()" style="position:absolute;top:20px;left:20px;background:rgba(255,255,255,.15);border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;font-size:20px;color:#fff">←</button>
+    <button id="wqr-flash-btn" onclick="toggleFlash()" style="position:absolute;top:20px;right:20px;background:rgba(255,255,255,.15);border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;font-size:20px">🔦</button>
+    <input type="file" id="wqr-native-input" accept="image/*" style="display:none"/>
+    <canvas id="wqr-canvas" style="display:none"></canvas>
+    <video id="wqr-video" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none" autoplay playsinline muted></video>
+    <div id="wqr-overlay" style="position:relative;width:240px;height:240px;z-index:2;pointer-events:none;box-shadow:0 0 0 9999px rgba(0,0,0,.5);border-radius:16px;">
+      <div style="position:absolute;top:0;left:0;width:28px;height:28px;border-top:3px solid var(--a);border-left:3px solid var(--a);border-radius:4px 0 0 0"></div>
+      <div style="position:absolute;top:0;right:0;width:28px;height:28px;border-top:3px solid var(--a);border-right:3px solid var(--a);border-radius:0 4px 0 0"></div>
+      <div style="position:absolute;bottom:0;left:0;width:28px;height:28px;border-bottom:3px solid var(--a);border-left:3px solid var(--a);border-radius:0 0 0 4px"></div>
+      <div style="position:absolute;bottom:0;right:0;width:28px;height:28px;border-bottom:3px solid var(--a);border-right:3px solid var(--a);border-radius:0 0 4px 0"></div>
+    </div>
+    <div id="wqr-scan-msg" style="color:rgba(255,255,255,.7);font-size:13px;margin-top:16px;z-index:2">Chargement caméra...</div>
+    <button onclick="document.getElementById('wqr-native-input').click()" style="position:absolute;bottom:100px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:10px 20px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;z-index:10">📁 Depuis galerie</button>
+  </div>
+  <div style="background:#fff;display:flex;border-top:1px solid #e5e7eb;">
+    <button class="wave-tab-btn on" id="wtab-scan" onclick="wqrTab('scan')">Scanner un code</button>
+    <button class="wave-tab-btn" id="wtab-carte" onclick="wqrTab('carte')">Mon QR</button>
+  </div>
+  <div id="wqr-carte" style="display:none;flex:1;background:#fff;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;position:relative;">
+    <button onclick="fermerPopupQR()" style="position:absolute;top:20px;left:20px;background:#f3f4f6;border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px">←</button>
+    <div style="background:linear-gradient(135deg,var(--a2),var(--a));border-radius:20px;padding:20px;text-align:center;width:100%;max-width:280px;">
+      <div style="background:#fff;border-radius:12px;padding:12px;margin-bottom:12px;">
+        <div id="wqr-carte-canvas" style="width:200px;height:200px;margin:0 auto"></div>
+      </div>
+      <div id="wqr-carte-name" style="color:#fff;font-size:17px;font-weight:800;margin-bottom:4px;"></div>
+      <div id="wqr-carte-tel" style="color:rgba(255,255,255,.8);font-size:13px;font-family:monospace;"></div>
+      <div style="color:rgba(255,255,255,.7);font-size:11px;font-weight:700;margin-top:4px;">🔶 Agent AFRIM PAY</div>
+    </div>
+    <div style="margin-top:14px;text-align:center;color:#6b7280;font-size:13px;">Montrez ce QR pour vous identifier</div>
+    <div style="display:flex;width:100%;margin-top:12px;">
+      <button class="wave-tab-btn" id="wtab-scan2" onclick="wqrTab('scan')" style="color:#6b7280;">Scanner un code</button>
+      <button class="wave-tab-btn on" id="wtab-carte2" onclick="wqrTab('carte')" style="background:#fff;color:#111;">Mon QR</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const API='https://afrim-pay-backend.onrender.com/api/v1';
-let G={token:localStorage.getItem('afrim_token'),refresh:localStorage.getItem('afrim_refresh'),user:null,compte:null,pin:'',tab:'home'};
-try{G.user=JSON.parse(localStorage.getItem('afrim_user')||'null')}catch(e){}
+var _ls={get:function(k){try{return localStorage.getItem(k);}catch(e){return null;}},set:function(k,v){try{localStorage.setItem(k,v);}catch(e){}},del:function(k){try{localStorage.removeItem(k);}catch(e){}}};
+let G={token:_ls.get('afrim_token'),refresh:_ls.get('afrim_refresh'),user:null,compte:null,pin:'',lockPin:'',tab:'home'};
+try{G.user=JSON.parse(_ls.get('afrim_user')||'null');}catch(e){}
 
 async function api(path,opts){
   opts=opts||{};
@@ -94,26 +164,32 @@ async function api(path,opts){
 }
 var get=(p)=>api(p);
 var post=(p,b)=>api(p,{method:'POST',body:JSON.stringify(b)});
+var patch=(p,b)=>api(p,{method:'PATCH',body:JSON.stringify(b)});
 
 async function doRefresh(){
-  try{var r=await fetch(API+'/auth/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refreshToken:G.refresh})});var d=await r.json();if(!r.ok)throw 0;G.token=d.data.accessToken;G.refresh=d.data.refreshToken;localStorage.setItem('afrim_token',G.token);localStorage.setItem('afrim_refresh',G.refresh);return true;}
-  catch(e){logout();return false;}
+  try{
+    var r=await fetch(API+'/auth/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refreshToken:G.refresh})});
+    var d=await r.json();if(!r.ok)throw new Error();
+    G.token=d.data.accessToken;_ls.set('afrim_token',G.token);return true;
+  }catch(e){logout();return false;}
 }
 
-function T(msg,err){var el=document.getElementById('toast');el.textContent=msg;el.className=err?'on err':'on';clearTimeout(T._t);T._t=setTimeout(()=>el.className='',2800);}
+function T(msg,err){var el=document.getElementById('toast');el.textContent=msg;el.className=err?'on err':'on';clearTimeout(T._t);T._t=setTimeout(function(){el.className='';},2800);}
 function F(n){return Number(n||0).toLocaleString('fr-FR')+' FCFA';}
 function FD(d){if(!d)return'—';return new Date(d).toLocaleString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}
-function S(id){document.querySelectorAll('.scr').forEach(e=>e.classList.remove('on'));document.getElementById(id).classList.add('on');window.scrollTo(0,0);}
+function S(id){document.querySelectorAll('.scr').forEach(function(e){e.classList.remove('on');});document.getElementById(id).classList.add('on');window.scrollTo(0,0);}
 function openSh(id){document.getElementById('sh-'+id).classList.add('on');}
 function closeSh(id){document.getElementById('sh-'+id).classList.remove('on');}
+
 function setTab(t){
   G.tab=t;
-  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
-  document.querySelectorAll('#nb-'+t).forEach(b=>b.classList.add('on'));
-  document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on');});
+  document.querySelectorAll('#nb-'+t).forEach(function(b){b.classList.add('on');});
+  document.querySelectorAll('.scr').forEach(function(s){s.classList.remove('on');});
   if(t==='home'){document.getElementById('s-home').classList.add('on');chargerAccueil();}
   else if(t==='history'){document.getElementById('s-history').classList.add('on');chargerHistorique();}
-  else if(t==='network'){document.getElementById('s-network').classList.add('on');chargerReseau();}
+  else if(t==='gains'){document.getElementById('s-gains').classList.add('on');chargerGains();}
+  else if(t==='stats'){document.getElementById('s-stats').classList.add('on');chargerStats();}
   else if(t==='profile'){document.getElementById('s-profile').classList.add('on');chargerProfil();}
 }
 </script>
@@ -169,28 +245,33 @@ function setTab(t){
         <div style="font-size:22px;font-weight:800" id="h-name">—</div>
         <div style="color:var(--d);font-size:11px" id="h-zone">—</div>
       </div>
-      <button onclick="rafraichir()" style="background:var(--s);border:1px solid var(--b);border-radius:11px;width:38px;height:38px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">🔄</button>
+      <div style="display:flex;gap:8px">
+        <button onclick="ouvrirPopupQR()" style="background:var(--s);border:1px solid var(--b);border-radius:11px;width:38px;height:38px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">📷</button>
+        <button onclick="rafraichir()" style="background:var(--s);border:1px solid var(--b);border-radius:11px;width:38px;height:38px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">🔄</button>
+      </div>
     </div>
     <div style="background:linear-gradient(135deg,var(--a2),var(--a));border-radius:20px;padding:20px 22px;box-shadow:0 10px 32px rgba(245,158,11,.2)">
       <div style="font-size:10px;font-weight:700;color:#030200;opacity:.6;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Liquidité disponible</div>
       <div style="font-size:28px;font-weight:900;color:#030200;margin-bottom:12px" id="h-solde">—</div>
-      <div style="display:flex;gap:18px" id="h-stats">
-        <div><div style="font-size:16px;font-weight:800;color:#030200" id="h-dep">—</div><div style="font-size:10px;color:rgba(3,2,0,.5)">Dépôts mois</div></div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <div><div style="font-size:15px;font-weight:800;color:#030200" id="h-dep">—</div><div style="font-size:10px;color:rgba(3,2,0,.5)">Dépôts mois</div></div>
         <div style="width:1px;background:rgba(3,2,0,.15)"></div>
-        <div><div style="font-size:16px;font-weight:800;color:#030200" id="h-gains">—</div><div style="font-size:10px;color:rgba(3,2,0,.5)">Gains mois</div></div>
+        <div><div style="font-size:15px;font-weight:800;color:#030200" id="h-gains">—</div><div style="font-size:10px;color:rgba(3,2,0,.5)">Gains mois</div></div>
         <div style="width:1px;background:rgba(3,2,0,.15)"></div>
-        <div><div style="font-size:16px;font-weight:800;color:#030200" id="h-ret">—</div><div style="font-size:10px;color:rgba(3,2,0,.5)">Retraits mois</div></div>
+        <div><div style="font-size:15px;font-weight:800;color:#030200" id="h-ret">—</div><div style="font-size:10px;color:rgba(3,2,0,.5)">Retraits mois</div></div>
+        <div style="width:1px;background:rgba(3,2,0,.15)"></div>
+        <div><div style="font-size:15px;font-weight:800;color:#030200" id="h-nb-ops">—</div><div style="font-size:10px;color:rgba(3,2,0,.5)">Opérations</div></div>
       </div>
     </div>
   </div>
   <div class="sc">
-    <span class="lbl">Opérations</span>
+    <span class="lbl">Opérations rapides</span>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
-      <button onclick="openSh('depot')" style="background:#071a08;border:1px solid rgba(34,197,94,.15);border-radius:16px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer">
+      <button onclick="ouvrirDepot()" style="background:#071a08;border:1px solid rgba(34,197,94,.15);border-radius:16px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer">
         <div style="width:46px;height:46px;border-radius:13px;background:rgba(34,197,94,.12);display:flex;align-items:center;justify-content:center;color:#22c55e;font-size:24px">↓</div>
         <div style="text-align:center"><div style="font-size:13px;font-weight:700;color:#4ade80">Dépôt Client</div><div style="font-size:10px;color:var(--m);margin-top:2px">Commission 0,2%</div></div>
       </button>
-      <button onclick="openSh('retrait')" style="background:#180a00;border:1px solid rgba(249,115,22,.15);border-radius:16px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer">
+      <button onclick="ouvrirRetrait()" style="background:#180a00;border:1px solid rgba(249,115,22,.15);border-radius:16px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer">
         <div style="width:46px;height:46px;border-radius:13px;background:rgba(249,115,22,.12);display:flex;align-items:center;justify-content:center;color:#f97316;font-size:24px">↑</div>
         <div style="text-align:center"><div style="font-size:13px;font-weight:700;color:#fb923c">Retrait Client</div><div style="font-size:10px;color:var(--m);margin-top:2px">35% des frais</div></div>
       </button>
@@ -209,47 +290,87 @@ function setTab(t){
   <nav class="bnav">
     <button class="nb on" id="nb-home" onclick="setTab('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Accueil</button>
     <button class="nb" id="nb-history" onclick="setTab('history')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historique</button>
-    <button class="nb" id="nb-network" onclick="setTab('network')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><line x1="12" y1="8" x2="5" y2="16"/><line x1="12" y1="8" x2="19" y2="16"/></svg>Réseau</button>
-    <button class="nb" id="nb-profile" onclick="setTab('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Parametres</button>
+    <button class="nb" id="nb-gains" onclick="setTab('gains')"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Gains</button>
+    <button class="nb" id="nb-stats" onclick="setTab('stats')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Stats</button>
+    <button class="nb" id="nb-profile" onclick="setTab('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</button>
   </nav>
 </div>
 
 <!-- HISTORY -->
 <div class="scr" id="s-history">
-  <div class="ph"><div style="font-size:24px;font-weight:800;margin-bottom:4px">Historique</div><div style="color:var(--m);font-size:13px">Vos opérations</div></div>
+  <div class="ph">
+    <div style="font-size:24px;font-weight:800;margin-bottom:4px">Historique</div>
+    <div style="color:var(--m);font-size:13px">Vos opérations</div>
+    <div style="display:flex;gap:8px;overflow-x:auto;padding:12px 0 4px" id="hist-chips">
+      <button class="chip on" onclick="setHistFilter('all')">Toutes</button>
+      <button class="chip" onclick="setHistFilter('depot')">Dépôts</button>
+      <button class="chip" onclick="setHistFilter('retrait')">Retraits</button>
+      <button class="chip" onclick="setHistFilter('transfert')">Transferts</button>
+      <button class="chip" onclick="setHistFilter('commission')">Commissions</button>
+    </div>
+  </div>
   <div class="sc"><div id="hist-list"><div style="text-align:center;padding:20px"><div class="spin"></div></div></div></div>
   <nav class="bnav">
     <button class="nb" id="nb-home" onclick="setTab('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Accueil</button>
     <button class="nb on" id="nb-history" onclick="setTab('history')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historique</button>
-    <button class="nb" id="nb-network" onclick="setTab('network')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><line x1="12" y1="8" x2="5" y2="16"/><line x1="12" y1="8" x2="19" y2="16"/></svg>Réseau</button>
-    <button class="nb" id="nb-profile" onclick="setTab('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Parametres</button>
+    <button class="nb" id="nb-gains" onclick="setTab('gains')"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Gains</button>
+    <button class="nb" id="nb-stats" onclick="setTab('stats')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Stats</button>
+    <button class="nb" id="nb-profile" onclick="setTab('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</button>
   </nav>
 </div>
 
-<!-- NETWORK -->
-<div class="scr" id="s-network">
-  <div class="ph"><div style="font-size:24px;font-weight:800;margin-bottom:4px">Mon Réseau</div><div style="color:var(--m);font-size:13px">Clients inscrits via vous</div></div>
-  <div class="sc"><div id="net-list"><div style="text-align:center;padding:20px"><div class="spin"></div></div></div></div>
+<!-- GAINS / COMMISSIONS -->
+<div class="scr" id="s-gains">
+  <div style="background:linear-gradient(135deg,var(--a2),var(--a));padding:52px 22px 24px">
+    <div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:2px">Mes gains 💰</div>
+    <div style="color:rgba(255,255,255,.75);font-size:13px">Commissions professionnelles</div>
+  </div>
+  <div class="sc" style="margin-top:16px" id="gains-content">
+    <div style="text-align:center;padding:32px"><div class="spin"></div></div>
+  </div>
   <nav class="bnav">
     <button class="nb" id="nb-home" onclick="setTab('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Accueil</button>
     <button class="nb" id="nb-history" onclick="setTab('history')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historique</button>
-    <button class="nb on" id="nb-network" onclick="setTab('network')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="3"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="19" r="3"/><line x1="12" y1="8" x2="5" y2="16"/><line x1="12" y1="8" x2="19" y2="16"/></svg>Réseau</button>
-    <button class="nb" id="nb-profile" onclick="setTab('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Parametres</button>
+    <button class="nb on" id="nb-gains" onclick="setTab('gains')"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Gains</button>
+    <button class="nb" id="nb-stats" onclick="setTab('stats')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Stats</button>
+    <button class="nb" id="nb-profile" onclick="setTab('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</button>
   </nav>
 </div>
 
-<!-- PROFILE -->
-<!-- PARAMETRES -->
+<!-- STATISTIQUES -->
+<div class="scr" id="s-stats">
+  <div style="background:linear-gradient(135deg,#030d1a,#0f172a);padding:52px 22px 24px">
+    <div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:2px">Statistiques 📊</div>
+    <div style="color:rgba(255,255,255,.6);font-size:13px">Volume et performance</div>
+    <div style="display:flex;gap:8px;margin-top:14px;overflow-x:auto;padding-bottom:4px">
+      <button class="chip on" id="stp-week" onclick="setStatPeriod('week')" style="border-color:rgba(245,158,11,.4);color:var(--a)">Semaine</button>
+      <button class="chip" id="stp-month" onclick="setStatPeriod('month')" style="border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.7)">Ce mois</button>
+      <button class="chip" id="stp-year" onclick="setStatPeriod('year')" style="border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.7)">Cette année</button>
+    </div>
+  </div>
+  <div class="sc" style="margin-top:16px" id="stats-content">
+    <div style="text-align:center;padding:32px"><div class="spin"></div></div>
+  </div>
+  <nav class="bnav">
+    <button class="nb" id="nb-home" onclick="setTab('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Accueil</button>
+    <button class="nb" id="nb-history" onclick="setTab('history')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historique</button>
+    <button class="nb" id="nb-gains" onclick="setTab('gains')"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Gains</button>
+    <button class="nb on" id="nb-stats" onclick="setTab('stats')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Stats</button>
+    <button class="nb" id="nb-profile" onclick="setTab('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</button>
+  </nav>
+</div>
+
+<!-- PROFIL -->
 <div class="scr" id="s-profile">
   <div style="background:linear-gradient(135deg,var(--a2),var(--a));padding:28px 22px 24px;text-align:center">
     <div style="color:rgba(255,255,255,.75);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px">ESPACE AGENT</div>
     <div style="font-size:20px;font-weight:900;color:#fff;margin-bottom:3px" id="prof-name-top">—</div>
     <div style="color:rgba(255,255,255,.7);font-size:13px;font-family:monospace;margin-bottom:20px" id="prof-tel-top">—</div>
-    <div onclick="ouvrirScanner(function(tel,parts){T('Scanne: '+tel);})" style="display:inline-block;cursor:pointer">
+    <div onclick="ouvrirPopupQR()" style="display:inline-block;cursor:pointer">
       <div style="background:#fff;border-radius:14px;padding:10px;box-shadow:0 8px 24px rgba(0,0,0,.2);position:relative">
         <canvas id="qr-profil-canvas" width="130" height="130" style="display:block;border-radius:6px"></canvas>
         <div style="position:absolute;bottom:10px;left:0;right:0;text-align:center">
-          <span style="background:rgba(0,0,0,.55);border-radius:8px;padding:3px 8px;color:#fff;font-size:10px;font-weight:700">Scanner</span>
+          <span style="background:rgba(0,0,0,.55);border-radius:8px;padding:3px 8px;color:#fff;font-size:10px;font-weight:700">📷 Scanner</span>
         </div>
       </div>
       <div style="color:rgba(255,255,255,.75);font-size:11px;font-weight:600;margin-top:8px">Mon QR · Toucher pour scanner</div>
@@ -259,7 +380,7 @@ function setTab(t){
     <div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">Mon compte</div>
     <button class="params-item" onclick="ouvrirInfos()">
       <div class="params-icon" style="background:#ecfdf5">👤</div>
-      <div><div class="params-label">Mes informations</div><div class="params-sub">Nom, Prenom, Telephone, KYC</div></div>
+      <div><div class="params-label">Mes informations</div><div class="params-sub">Nom, Prénom, Téléphone, KYC</div></div>
       <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
     </button>
     <button class="params-item" onclick="openSh('change-pin')">
@@ -267,69 +388,74 @@ function setTab(t){
       <div><div class="params-label">Modifier le code secret</div><div class="params-sub">Changer votre PIN de connexion</div></div>
       <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
     </button>
-    
     <div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-top:18px;margin-bottom:10px">Services</div>
-    <button class="params-item" onclick="trouverAgents()">
-      <div class="params-icon" style="background:#fdf4ff">📍</div>
-      <div><div class="params-label">Trouver des agents</div><div class="params-sub">Agents AFRIM PAY pres de vous</div></div>
-      <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
-    </button>
     <button class="params-item" onclick="inviterAmi()">
       <div class="params-icon" style="background:#ecfdf5">🎁</div>
       <div><div class="params-label">Inviter un ami</div><div class="params-sub">Partager votre code parrainage</div></div>
       <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
     </button>
-    <div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-top:18px;margin-bottom:10px">Partenaires</div>
-    <div style="background:#fff;border-radius:14px;border:1px solid #f3f4f6;padding:16px;margin-bottom:8px">
-      <div style="font-size:13px;font-weight:600;color:#111827;margin-bottom:12px">Partenaires bancaires</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px">
-        <span style="padding:7px 12px;background:#f9fafb;border-radius:10px;font-size:12px;font-weight:700;color:#374151">BNI</span>
-        <span style="padding:7px 12px;background:#f9fafb;border-radius:10px;font-size:12px;font-weight:700;color:#374151">SIB</span>
-        <span style="padding:7px 12px;background:#f9fafb;border-radius:10px;font-size:12px;font-weight:700;color:#374151">SGBCI</span>
-        <span style="padding:7px 12px;background:#f9fafb;border-radius:10px;font-size:12px;font-weight:700;color:#374151">ECOBANK</span>
-        <span style="padding:7px 12px;background:#f9fafb;border-radius:10px;font-size:12px;font-weight:700;color:#374151">UBA</span>
-        <span style="padding:7px 12px;background:#f9fafb;border-radius:10px;font-size:12px;font-weight:700;color:#374151">MTN MoMo</span>
-        <span style="padding:7px 12px;background:#f9fafb;border-radius:10px;font-size:12px;font-weight:700;color:#374151">Orange Money</span>
-      </div>
-    </div>
-    <button class="params-item" style="background:#fef2f2;border:1px solid #fecaca;margin-top:8px" onclick="logout()">
-      <div class="params-icon" style="background:#fee2e2">🚪</div>
-      <div><div class="params-label" style="color:#ef4444">Deconnexion</div><div class="params-sub">Quitter l'application</div></div>
+    <button class="params-item" onclick="setTab('gains')">
+      <div class="params-icon" style="background:#fffbeb">💰</div>
+      <div><div class="params-label">Mes gains</div><div class="params-sub">Commissions et historique</div></div>
+      <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
     </button>
+    <div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-top:18px;margin-bottom:10px">Réseau</div>
+    <button class="params-item" onclick="openSh('reseau')">
+      <div class="params-icon" style="background:#f0f9ff">🌐</div>
+      <div><div class="params-label">Mon réseau</div><div class="params-sub">Clients inscrits via vous</div></div>
+      <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+    <div style="margin-top:24px">
+      <button class="btn btn-r" onclick="logout()">Se déconnecter</button>
+    </div>
   </div>
+  <nav class="bnav">
+    <button class="nb" id="nb-home" onclick="setTab('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Accueil</button>
+    <button class="nb" id="nb-history" onclick="setTab('history')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Historique</button>
+    <button class="nb" id="nb-gains" onclick="setTab('gains')"><svg viewBox="0 0 24 24" stroke-width="2" fill="none" stroke="currentColor"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Gains</button>
+    <button class="nb" id="nb-stats" onclick="setTab('stats')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Stats</button>
+    <button class="nb on" id="nb-profile" onclick="setTab('profile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profil</button>
+  </nav>
 </div>
 
 
-<!-- SHEET DÉPÔT -->
+<!-- SHEET DEPOT -->
 <div class="sh-ov" id="sh-depot">
   <div class="sh">
     <div class="sh-bar"></div>
-    <div class="sh-top"><div><div class="sh-title">Dépôt Client</div><div style="color:var(--m);font-size:12px">Commission 0,2% versée par AFRIM PAY</div></div><button class="sh-x" onclick="closeSh('depot');rstOp('dep')">✕</button></div>
-    <div class="info info-g">✅ Le dépôt est gratuit pour le client. Vous recevez 0,2% du montant versé par AFRIM PAY.</div>
+    <div class="sh-top"><div><div class="sh-title">Dépôt Client</div><div style="color:var(--m);font-size:12px">Commission 0,2% du montant</div></div><button class="sh-x" onclick="closeSh('depot');rstOp('dep')">✕</button></div>
+    <div id="dep-err1" class="info info-r" style="display:none"></div>
     <div id="dep-s1">
-      <div id="dep-err1" class="info info-r" style="display:none"></div>
-      <span class="lbl">Numéro du client</span>
+      <span class="lbl">Numéro client</span>
       <div style="display:flex;gap:8px;margin-bottom:14px">
-        <input class="inp" id="dep-tel" type="tel" placeholder="+225 07 XX XX XX" style="flex:1" oninput="document.getElementById('dep-ok').disabled=this.value.replace(/\D/g,'').length<8"/>
-        <button id="dep-ok" onclick="identClient('dep')" disabled style="padding:12px 18px;background:linear-gradient(135deg,#16a34a,#22c55e);border:none;border-radius:13px;color:#fff;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;opacity:.4">ID</button>
+        <input class="inp" id="dep-tel" type="tel" placeholder="+225 07 XX XX XX" style="flex:1" oninput="onTelInput('dep')"/>
+        <button id="dep-qr" onclick="scanPourOp('dep')" style="background:var(--s);border:1.5px solid var(--b);border-radius:13px;padding:0 14px;font-size:18px;cursor:pointer">📷</button>
+        <button id="dep-ok" onclick="identClient('dep')" disabled style="padding:12px 18px;background:linear-gradient(135deg,#16a34a,#22c55e);border:none;border-radius:13px;color:#fff;font-weight:700;cursor:pointer;font-family:inherit;opacity:.4">ID</button>
       </div>
     </div>
     <div id="dep-s2" style="display:none">
-      <div id="dep-client" class="card" style="margin-bottom:14px;display:flex;align-items:center;gap:12px;border-color:rgba(34,197,94,.2);background:#071a08"></div>
-      <div id="dep-err2" class="info info-r" style="display:none"></div>
-      <span class="lbl">Montant du dépôt (FCFA)</span>
-      <div style="position:relative;margin-bottom:8px"><input class="inp" id="dep-amt" type="number" placeholder="0" style="padding-right:55px" oninput="calcDep()"/><span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#22c55e;font-size:12px;font-weight:700">FCFA</span></div>
-      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-        <button onclick="setAmt('dep',5000)" style="padding:7px 12px;border-radius:99px;background:var(--s);border:1px solid var(--b);color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">5k</button>
-        <button onclick="setAmt('dep',10000)" style="padding:7px 12px;border-radius:99px;background:var(--s);border:1px solid var(--b);color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">10k</button>
-        <button onclick="setAmt('dep',25000)" style="padding:7px 12px;border-radius:99px;background:var(--s);border:1px solid var(--b);color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">25k</button>
-        <button onclick="setAmt('dep',50000)" style="padding:7px 12px;border-radius:99px;background:var(--s);border:1px solid var(--b);color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">50k</button>
-        <button onclick="setAmt('dep',100000)" style="padding:7px 12px;border-radius:99px;background:var(--s);border:1px solid var(--b);color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">100k</button>
+      <div id="dep-recap" style="display:none;background:var(--s);border:1px solid var(--b);border-radius:14px;padding:14px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="width:40px;height:40px;border-radius:50%;background:rgba(245,158,11,.15);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:var(--a)" id="dep-av">?</div>
+          <div><div style="font-weight:700" id="dep-cname">—</div><div style="color:var(--m);font-size:12px" id="dep-ctel">—</div></div>
+          <div style="margin-left:auto;font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;background:rgba(34,197,94,.1);color:#16a34a" id="dep-kyc">—</div>
+        </div>
       </div>
-      <div id="dep-recap" style="display:none;background:var(--bg);border:1px solid var(--b);border-radius:12px;padding:14px;margin-bottom:14px"></div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost" style="flex:1" onclick="rstOp('dep')">← Retour</button>
-        <button class="btn btn-g" id="dep-btn" style="flex:2;opacity:.4" disabled onclick="doDepot()">Valider le dépôt</button>
+      <div id="dep-err2" class="info info-r" style="display:none"></div>
+      <span class="lbl">Montant (FCFA)</span>
+      <div style="position:relative;margin-bottom:8px">
+        <input class="inp" id="dep-amt" type="number" placeholder="0" oninput="calcDep()" style="padding-right:55px"/>
+        <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--a);font-size:12px;font-weight:700">FCFA</span>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:14px">
+        <button class="chip" onclick="setAmt('dep',1000)">1K</button>
+        <button class="chip" onclick="setAmt('dep',2000)">2K</button>
+        <button class="chip" onclick="setAmt('dep',5000)">5K</button>
+        <button class="chip" onclick="setAmt('dep',10000)">10K</button>
+        <button class="chip" onclick="setAmt('dep',20000)">20K</button>
+      </div>
+      <div id="dep-calc" style="background:var(--s);border:1px solid var(--b);border-radius:12px;padding:12px;margin-bottom:14px;display:none">
+        <div class="srow"><span style="color:var(--m);font-size:13px">Commission agent</span><span style="color:var(--g);font-weight:800;font-size:14px" id="dep-comm">—</span></div>
       </div>
     </div>
     <div id="dep-loading" style="display:none;text-align:center;padding:32px 0"><div class="spin" style="width:36px;height:36px;border-width:3px;border-top-color:#22c55e"></div><div style="color:var(--m);font-size:13px;margin-top:12px">Traitement...</div></div>
@@ -341,6 +467,12 @@ function setTab(t){
       <div id="dep-succ-ref" style="color:var(--d);font-size:11px;font-family:monospace;margin-bottom:22px"></div>
       <div style="display:flex;gap:8px"><button class="btn btn-g" style="flex:1" onclick="rstOp('dep')">Nouveau</button><button class="btn btn-ghost" style="flex:1" onclick="closeSh('depot');rstOp('dep');rafraichir()">Fermer</button></div>
     </div>
+    <div id="dep-btn-valider" style="display:none">
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" style="flex:1" onclick="rstOp('dep')">← Retour</button>
+        <button class="btn btn-g" style="flex:2" onclick="doDepot()">Valider le dépôt</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -348,31 +480,42 @@ function setTab(t){
 <div class="sh-ov" id="sh-retrait">
   <div class="sh">
     <div class="sh-bar"></div>
-    <div class="sh-top"><div><div class="sh-title">Retrait Client</div><div style="color:var(--m);font-size:12px">Vous recevez 35% des frais</div></div><button class="sh-x" onclick="closeSh('retrait');rstOp('ret')">✕</button></div>
-    <div class="info info-a">💰 Taux dégressif : 0,9% ≤50k · 0,8% ≤200k · 0,7% >200k. Vous recevez 35% des frais.</div>
+    <div class="sh-top"><div><div class="sh-title">Retrait Client</div><div style="color:var(--m);font-size:12px">35% des frais de retrait</div></div><button class="sh-x" onclick="closeSh('retrait');rstOp('ret')">✕</button></div>
+    <div id="ret-err1" class="info info-r" style="display:none"></div>
     <div id="ret-s1">
-      <div id="ret-err1" class="info info-r" style="display:none"></div>
-      <span class="lbl">Numéro du client</span>
+      <span class="lbl">Numéro client</span>
       <div style="display:flex;gap:8px;margin-bottom:14px">
-        <input class="inp" id="ret-tel" type="tel" placeholder="+225 07 XX XX XX" style="flex:1" oninput="document.getElementById('ret-ok').disabled=this.value.replace(/\D/g,'').length<8"/>
-        <button id="ret-ok" onclick="identClient('ret')" disabled style="padding:12px 18px;background:linear-gradient(135deg,#c2410c,#f97316);border:none;border-radius:13px;color:#fff;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;opacity:.4">ID</button>
+        <input class="inp" id="ret-tel" type="tel" placeholder="+225 07 XX XX XX" style="flex:1" oninput="onTelInput('ret')"/>
+        <button onclick="scanPourOp('ret')" style="background:var(--s);border:1.5px solid var(--b);border-radius:13px;padding:0 14px;font-size:18px;cursor:pointer">📷</button>
+        <button id="ret-ok" onclick="identClient('ret')" disabled style="padding:12px 18px;background:linear-gradient(135deg,#c2410c,#f97316);border:none;border-radius:13px;color:#fff;font-weight:700;cursor:pointer;font-family:inherit;opacity:.4">ID</button>
       </div>
     </div>
     <div id="ret-s2" style="display:none">
-      <div id="ret-client" class="card" style="margin-bottom:14px;display:flex;align-items:center;gap:12px;border-color:rgba(249,115,22,.2);background:#180a00"></div>
-      <div id="ret-err2" class="info info-r" style="display:none"></div>
-      <span class="lbl">Montant du retrait (FCFA)</span>
-      <div style="position:relative;margin-bottom:8px"><input class="inp" id="ret-amt" type="number" placeholder="0" style="padding-right:55px" oninput="calcRet()"/><span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#f97316;font-size:12px;font-weight:700">FCFA</span></div>
-      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
-        <button onclick="setAmt('ret',5000)" style="padding:7px 12px;border-radius:99px;background:var(--s);border:1px solid var(--b);color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">5k</button>
-        <button onclick="setAmt('ret',10000)" style="padding:7px 12px;border-radius:99px;background:var(--s);border:1px solid var(--b);color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">10k</button>
-        <button onclick="setAmt('ret',25000)" style="padding:7px 12px;border-radius:99px;background:var(--s);border:1px solid var(--b);color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">25k</button>
-        <button onclick="setAmt('ret',50000)" style="padding:7px 12px;border-radius:99px;background:var(--s);border:1px solid var(--b);color:var(--m);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif">50k</button>
+      <div id="ret-recap" style="display:none;background:var(--s);border:1px solid var(--b);border-radius:14px;padding:14px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="width:40px;height:40px;border-radius:50%;background:rgba(249,115,22,.12);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#f97316" id="ret-av">?</div>
+          <div><div style="font-weight:700" id="ret-cname">—</div><div style="color:var(--m);font-size:12px" id="ret-ctel">—</div></div>
+          <div style="margin-left:auto;font-size:10px;font-weight:700;padding:3px 8px;border-radius:99px;background:rgba(249,115,22,.1);color:#ea580c" id="ret-kyc">—</div>
+        </div>
+        <div class="srow"><span style="color:var(--m);font-size:13px">Solde client</span><span style="color:var(--a);font-weight:700" id="ret-csolde">—</span></div>
       </div>
-      <div id="ret-recap" style="display:none;background:var(--bg);border:1px solid var(--b);border-radius:12px;padding:14px;margin-bottom:14px"></div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost" style="flex:1" onclick="rstOp('ret')">← Retour</button>
-        <button class="btn btn-o" id="ret-btn" style="flex:2;opacity:.4" disabled onclick="doRetrait()">Valider le retrait</button>
+      <div id="ret-err2" class="info info-r" style="display:none"></div>
+      <span class="lbl">Montant (FCFA)</span>
+      <div style="position:relative;margin-bottom:8px">
+        <input class="inp" id="ret-amt" type="number" placeholder="0" oninput="calcRet()" style="padding-right:55px"/>
+        <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--a);font-size:12px;font-weight:700">FCFA</span>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:14px">
+        <button class="chip" onclick="setAmt('ret',1000)">1K</button>
+        <button class="chip" onclick="setAmt('ret',2000)">2K</button>
+        <button class="chip" onclick="setAmt('ret',5000)">5K</button>
+        <button class="chip" onclick="setAmt('ret',10000)">10K</button>
+        <button class="chip" onclick="setAmt('ret',20000)">20K</button>
+      </div>
+      <div id="ret-calc" style="background:var(--s);border:1px solid var(--b);border-radius:12px;padding:12px;margin-bottom:14px;display:none">
+        <div class="srow"><span style="color:var(--m);font-size:13px">Frais de retrait</span><span style="font-weight:700;font-size:14px" id="ret-frais">—</span></div>
+        <div class="srow"><span style="color:var(--m);font-size:13px">Commission agent (35%)</span><span style="color:var(--g);font-weight:800;font-size:14px" id="ret-comm">—</span></div>
+        <div class="srow" style="border:none"><span style="color:var(--m);font-size:13px">Client recevra</span><span style="font-weight:800" id="ret-net">—</span></div>
       </div>
     </div>
     <div id="ret-loading" style="display:none;text-align:center;padding:32px 0"><div class="spin" style="width:36px;height:36px;border-width:3px;border-top-color:#f97316"></div><div style="color:var(--m);font-size:13px;margin-top:12px">Traitement...</div></div>
@@ -383,6 +526,12 @@ function setTab(t){
       <div id="ret-succ-gain" style="color:var(--a);font-size:14px;font-weight:700;margin-bottom:4px"></div>
       <div id="ret-succ-ref" style="color:var(--d);font-size:11px;font-family:monospace;margin-bottom:22px"></div>
       <div style="display:flex;gap:8px"><button class="btn btn-o" style="flex:1" onclick="rstOp('ret')">Nouveau</button><button class="btn btn-ghost" style="flex:1" onclick="closeSh('retrait');rstOp('ret');rafraichir()">Fermer</button></div>
+    </div>
+    <div id="ret-btn-valider" style="display:none">
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" style="flex:1" onclick="rstOp('ret')">← Retour</button>
+        <button class="btn btn-o" style="flex:2" onclick="doRetrait()">Valider le retrait</button>
+      </div>
     </div>
   </div>
 </div>
@@ -442,107 +591,135 @@ function setTab(t){
   </div>
 </div>
 
+<!-- SHEET RESEAU -->
+<div class="sh-ov" id="sh-reseau">
+  <div class="sh">
+    <div class="sh-bar"></div>
+    <div class="sh-top"><div><div class="sh-title">Mon Réseau</div><div style="color:var(--m);font-size:12px">Clients inscrits via vous</div></div><button class="sh-x" onclick="closeSh('reseau')">✕</button></div>
+    <div id="reseau-list"><div style="text-align:center;padding:24px"><div class="spin"></div></div></div>
+  </div>
+</div>
+
+<!-- SHEET CHANGER PIN -->
+<div class="sh-ov" id="sh-change-pin">
+  <div class="sh">
+    <div class="sh-bar"></div>
+    <div class="sh-top"><div><div class="sh-title">Changer mon PIN</div><div style="color:var(--m);font-size:12px">Modifier votre code secret</div></div><button class="sh-x" onclick="closeSh('change-pin');rstChangePin()">✕</button></div>
+    <div id="change-pin-err" style="display:none" class="info info-r"></div>
+    <div id="change-pin-form">
+      <span class="lbl">Ancien code PIN</span>
+      <input id="old-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" class="inp" style="text-align:center;letter-spacing:12px;font-size:24px;margin-bottom:12px"/>
+      <span class="lbl">Nouveau code PIN</span>
+      <input id="new-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" class="inp" style="text-align:center;letter-spacing:12px;font-size:24px;margin-bottom:12px"/>
+      <span class="lbl">Confirmer nouveau PIN</span>
+      <input id="new-pin2" type="password" inputmode="numeric" maxlength="4" placeholder="••••" class="inp" style="text-align:center;letter-spacing:12px;font-size:24px;margin-bottom:20px"/>
+      <button onclick="doChangePin()" class="btn btn-a">Confirmer</button>
+    </div>
+    <div id="change-pin-loading" style="display:none;text-align:center;padding:32px"><div class="spin" style="width:32px;height:32px;border-width:3px"></div></div>
+    <div id="change-pin-success" style="display:none;text-align:center;padding:24px">
+      <div style="font-size:48px;margin-bottom:12px">🔐</div>
+      <div style="font-size:20px;font-weight:800;margin-bottom:8px">PIN modifié !</div>
+      <div style="color:var(--m);font-size:14px;margin-bottom:20px">Vous allez être déconnecté.</div>
+      <button onclick="closeSh('change-pin');logout()" class="btn btn-a">Se reconnecter</button>
+    </div>
+  </div>
+</div>
+
+<!-- SHEET INFOS -->
+<div class="sh-ov" id="sh-infos">
+  <div class="sh">
+    <div class="sh-bar"></div>
+    <div class="sh-top"><div><div class="sh-title">Mes informations</div></div><button class="sh-x" onclick="closeSh('infos')">✕</button></div>
+    <div style="padding:0 0 40px" id="sh-infos-body"></div>
+  </div>
+</div>
+
+
 <script>
-// ══ CONFIG PHOTOS PAR TYPE ════════════════════════════════════════
-var PHOTOS_CFG = {
-  client_KYC1: [{id:'selfie_1',label:'Selfie face',req:true,selfie:true},{id:'selfie_2',label:'Selfie angle',req:true,selfie:true}],
-  client_KYC2: [{id:'selfie',label:'Selfie',req:true,selfie:true},{id:'cni_r',label:'CNI recto',req:true,selfie:false},{id:'cni_v',label:'CNI verso',req:true,selfie:false}],
-  client_KYC3: [{id:'selfie',label:'Selfie',req:true,selfie:true},{id:'cni_r',label:'CNI recto',req:true,selfie:false},{id:'cni_v',label:'CNI verso',req:true,selfie:false},{id:'naissance',label:'Extrait naissance',req:true,selfie:false},{id:'domicile',label:'Justif. domicile',req:false,selfie:false}],
-  business: [{id:'selfie_gerant',label:'Selfie gérant',req:true,selfie:true},{id:'cni_r',label:'CNI gérant recto',req:true,selfie:false},{id:'cni_v',label:'CNI gérant verso',req:true,selfie:false},{id:'rccm',label:'RCCM',req:true,selfie:false},{id:'fiscal',label:'Déclaration fiscale',req:false,selfie:false}],
-  agent: [{id:'selfie',label:'Selfie',req:true,selfie:true},{id:'cni_r',label:'CNI recto',req:true,selfie:false},{id:'cni_v',label:'CNI verso',req:true,selfie:false}],
+// ══ PHOTOS CONFIG ════════════════════════════════════════════════
+var PHOTOS_CFG={
+  client_KYC1:[{id:'selfie_1',label:'Selfie face',req:true,selfie:true},{id:'selfie_2',label:'Selfie angle',req:true,selfie:true}],
+  client_KYC2:[{id:'selfie',label:'Selfie',req:true,selfie:true},{id:'cni_r',label:'CNI recto',req:true,selfie:false},{id:'cni_v',label:'CNI verso',req:true,selfie:false}],
+  client_KYC3:[{id:'selfie',label:'Selfie',req:true,selfie:true},{id:'cni_r',label:'CNI recto',req:true,selfie:false},{id:'cni_v',label:'CNI verso',req:true,selfie:false},{id:'naissance',label:'Extrait naissance',req:true,selfie:false},{id:'domicile',label:'Justif. domicile',req:false,selfie:false}],
+  business:[{id:'selfie_gerant',label:'Selfie gérant',req:true,selfie:true},{id:'cni_r',label:'CNI gérant recto',req:true,selfie:false},{id:'cni_v',label:'CNI gérant verso',req:true,selfie:false},{id:'rccm',label:'RCCM',req:true,selfie:false},{id:'fiscal',label:'Déclaration fiscale',req:false,selfie:false}],
+  agent:[{id:'selfie',label:'Selfie',req:true,selfie:true},{id:'cni_r',label:'CNI recto',req:true,selfie:false},{id:'cni_v',label:'CNI verso',req:true,selfie:false}],
 };
+var insType=null,insKyc='KYC1',insPhotos={};
 
-var insType=null, insKyc='KYC1', insPhotos={};
-
-function setInsType(type) {
-  insType=type; insPhotos={};
-  if(!type){
-    document.getElementById('ins-type-sel').style.display='';
-    document.getElementById('ins-form').style.display='none';
-    return;
-  }
+function setInsType(type){
+  insType=type;insPhotos={};
+  if(!type){document.getElementById('ins-type-sel').style.display='';document.getElementById('ins-form').style.display='none';document.getElementById('ins-subtitle').textContent='Nouveau compte';return;}
   document.getElementById('ins-type-sel').style.display='none';
   document.getElementById('ins-form').style.display='';
-  document.getElementById('ins-subtitle').textContent='Nouveau compte '+type;
-  renderInsFields();
+  document.getElementById('ins-err').style.display='none';
+  document.getElementById('ins-subtitle').textContent={client:'Client',business:'Business',agent:'Agent'}[type]||type;
+  renderInsFields();renderInsPhotos();
 }
-
-function renderInsFields() {
-  var html='';
-  html+='<span class="lbl">Prénom *</span><div style="margin-bottom:13px"><input class="inp" id="ins-prenom" type="text" placeholder="Prénom"/></div>';
-  html+='<span class="lbl">Nom *</span><div style="margin-bottom:13px"><input class="inp" id="ins-nom" type="text" placeholder="Nom de famille"/></div>';
-  html+='<span class="lbl">Téléphone *</span><div style="margin-bottom:13px"><input class="inp" id="ins-tel" type="tel" placeholder="+225 07 XX XX XX"/></div>';
-  html+='<span class="lbl">Code PIN (4 chiffres) *</span><div style="margin-bottom:13px"><input class="inp" id="ins-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••"/></div>';
+function renderInsFields(){
+  var h='';
+  h+='<span class="lbl">Prénom *</span><div style="margin-bottom:13px"><input class="inp" id="ins-prenom" type="text" placeholder="Prénom"/></div>';
+  h+='<span class="lbl">Nom *</span><div style="margin-bottom:13px"><input class="inp" id="ins-nom" type="text" placeholder="Nom de famille"/></div>';
+  h+='<span class="lbl">Téléphone *</span><div style="margin-bottom:13px"><input class="inp" id="ins-tel" type="tel" placeholder="+225 07 XX XX XX"/></div>';
+  h+='<span class="lbl">Code PIN (4 chiffres) *</span><div style="margin-bottom:13px"><input class="inp" id="ins-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••"/></div>';
   if(insType==='client'){
-    html+='<span class="lbl">Niveau KYC</span><div style="display:flex;gap:8px;margin-bottom:14px">';
-    ['KYC1','KYC2','KYC3'].forEach(k=>{html+='<button onclick="setInsKyc(\''+k+'\')" id="kyc-btn-'+k+'" style="flex:1;padding:9px 4px;border-radius:11px;border:1.5px solid '+(k===insKyc?'var(--a)':'var(--b)')+';background:'+(k===insKyc?'rgba(245,158,11,.08)':'transparent')+';color:'+(k===insKyc?'var(--a)':'var(--m)')+';font-size:12px;font-weight:700;cursor:pointer;font-family:\'DM Sans\',sans-serif">'+k+'</button>';});
-    html+='</div>';
+    h+='<span class="lbl">Niveau KYC</span><div style="display:flex;gap:8px;margin-bottom:14px">';
+    ['KYC1','KYC2','KYC3'].forEach(function(k){h+='<button onclick="setInsKyc(\''+k+'\')" id="kyc-btn-'+k+'" style="flex:1;padding:9px 4px;border-radius:11px;border:1.5px solid '+(k===insKyc?'var(--a)':'var(--b)')+';background:'+(k===insKyc?'rgba(245,158,11,.08)':'transparent')+';color:'+(k===insKyc?'var(--a)':'var(--m)')+';font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">'+k+'</button>';});
+    h+='</div>';
   }
-  if(insType==='business'){
-    html+='<span class="lbl">Nom de l\'entreprise *</span><div style="margin-bottom:13px"><input class="inp" id="ins-biz" type="text" placeholder="Nom commercial"/></div>';
-  }
-  html+='<span class="lbl">Zone / Quartier</span><div style="margin-bottom:13px"><input class="inp" id="ins-zone" type="text" placeholder="Ex: Cocody, Adjamé..."/></div>';
-  document.getElementById('ins-fields').innerHTML=html;
-  renderInsPhotos();
+  if(insType==='business') h+='<span class="lbl">Nom de l\'entreprise *</span><div style="margin-bottom:13px"><input class="inp" id="ins-biz" type="text" placeholder="Nom commercial"/></div>';
+  h+='<span class="lbl">Zone / Quartier</span><div style="margin-bottom:13px"><input class="inp" id="ins-zone" type="text" placeholder="Ex: Cocody, Adjamé..."/></div>';
+  document.getElementById('ins-fields').innerHTML=h;
 }
-
-function setInsKyc(k){
-  insKyc=k; insPhotos={};
-  ['KYC1','KYC2','KYC3'].forEach(kk=>{var b=document.getElementById('kyc-btn-'+kk);if(b){b.style.borderColor=kk===k?'var(--a)':'var(--b)';b.style.background=kk===k?'rgba(245,158,11,.08)':'transparent';b.style.color=kk===k?'var(--a)':'var(--m)';}});
-  renderInsPhotos();
-}
-
-function renderInsPhotos() {
-  var key = insType==='client'?'client_'+insKyc:insType;
-  var photos = PHOTOS_CFG[key]||[];
-  if(!photos.length){document.getElementById('ins-photos').innerHTML='';return;}
-  var html='<span class="lbl">Documents identité</span><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px">';
+function setInsKyc(k){insKyc=k;renderInsFields();renderInsPhotos();}
+function renderInsPhotos(){
+  var key=insType==='client'?('client_'+insKyc):insType;
+  var photos=PHOTOS_CFG[key]||[];
+  var h='';
+  if(photos.length){h='<span class="lbl">Documents requis</span><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">';}
   photos.forEach(function(p){
     var done=!!insPhotos[p.id];
-    html+='<div class="photo-slot '+(done?'done':'')+'" onclick="document.getElementById(\'ph-ins-'+p.id+'\').click()">';
-    html+='<span class="'+(p.req?'badge-req':'badge-opt')+'">'+(p.req?'★ Recommandé':'Optionnel')+'</span>';
-    if(done)html+='<span class="photo-ok">✓</span>';
-    html+='<span style="font-size:'+(p.selfie?'24':'20')+'px">'+(p.selfie?'🤳':'📷')+'</span>';
-    html+='<span style="font-size:11px;font-weight:700;color:'+(done?'var(--a)':'var(--m)')+'">'+p.label+'</span>';
-    html+='<input type="file" id="ph-ins-'+p.id+'" accept="image/*" capture="'+(p.selfie?'user':'environment')+'" style="display:none" onchange="phIns(\''+p.id+'\',this)"/>';
-    html+='</div>';
+    h+='<div class="photo-slot'+(done?' done':'')+'" onclick="document.getElementById(\'ph-ins-'+p.id+'\').click()">';
+    h+='<div class="'+(p.req?'badge-req':'badge-opt')+'">'+(p.req?'Requis':'Optionnel')+'</div>';
+    if(done)h+='<div class="photo-ok">✓</div>';
+    h+='<div style="font-size:28px">'+(done?'✅':'📷')+'</div>';
+    h+='<div style="font-size:11px;font-weight:600;color:'+(done?'var(--a)':'var(--m)')+';text-align:center">'+p.label+'</div>';
+    h+='<input type="file" id="ph-ins-'+p.id+'" accept="image/*" capture="'+(p.selfie?'user':'environment')+'" style="display:none" onchange="phIns(\''+p.id+'\',this)"/></div>';
   });
-  html+='</div>';
-  document.getElementById('ins-photos').innerHTML=html;
+  if(photos.length)h+='</div>';
+  document.getElementById('ins-photos').innerHTML=h;
 }
-
 function phIns(id,input){if(input.files&&input.files[0]){insPhotos[id]=input.files[0];renderInsPhotos();T('✓ Photo enregistrée !');}}
-
-function rstIns(){
-  insType=null; insKyc='KYC1'; insPhotos={};
-  document.getElementById('ins-type-sel').style.display='';
-  document.getElementById('ins-form').style.display='none';
-  document.getElementById('ins-loading').style.display='none';
-  document.getElementById('ins-success').style.display='none';
-  document.getElementById('ins-err').style.display='none';
-}
+function rstIns(){insType=null;insPhotos={};insKyc='KYC1';document.getElementById('ins-type-sel').style.display='';document.getElementById('ins-form').style.display='none';document.getElementById('ins-loading').style.display='none';document.getElementById('ins-success').style.display='none';document.getElementById('ins-err').style.display='none';}
 
 async function doInscrire(){
-  var prenom=document.getElementById('ins-prenom')&&document.getElementById('ins-prenom').value.trim();
-  var nom=document.getElementById('ins-nom')&&document.getElementById('ins-nom').value.trim();
-  var tel=document.getElementById('ins-tel')&&document.getElementById('ins-tel').value.trim();
-  var pin=document.getElementById('ins-pin')&&document.getElementById('ins-pin').value.trim();
-  var zone=document.getElementById('ins-zone')&&document.getElementById('ins-zone').value.trim();
+  var prenom=document.getElementById('ins-prenom').value.trim();
+  var nom=document.getElementById('ins-nom').value.trim();
+  var telephone=document.getElementById('ins-tel').value.trim();
+  var pin=document.getElementById('ins-pin').value.trim();
+  var zone=(document.getElementById('ins-zone')&&document.getElementById('ins-zone').value.trim())||'';
+  var bizName=insType==='business'&&document.getElementById('ins-biz')?document.getElementById('ins-biz').value.trim():'';
   var errEl=document.getElementById('ins-err');
+  if(!prenom||!nom||!telephone||pin.length!==4){errEl.textContent='Tous les champs obligatoires doivent être remplis.';errEl.style.display='';return;}
+  var key=insType==='client'?('client_'+insKyc):insType;
+  var photos=PHOTOS_CFG[key]||[];
+  for(var i=0;i<photos.length;i++){if(photos[i].req&&!insPhotos[photos[i].id]){errEl.textContent='Photo requise : '+photos[i].label;errEl.style.display='';return;}}
   errEl.style.display='none';
-  if(!prenom||!nom){errEl.textContent='Prénom et nom requis';errEl.style.display='';return;}
-  if((tel||'').replace(/\D/g,'').length<8){errEl.textContent='Numéro invalide';errEl.style.display='';return;}
-  if(!/^\d{4}$/.test(pin||'')){errEl.textContent='PIN : 4 chiffres requis';errEl.style.display='';return;}
   document.getElementById('ins-form').style.display='none';
   document.getElementById('ins-loading').style.display='';
   try{
-    var body={prenom,nom,telephone:tel,pin,role:insType,zone:zone||undefined,parrainCode:G.user&&G.user.codeParrainage||undefined};
-    if(insType==='client')body.kycNiveau=insKyc;
-    var r=await post('/auth/register',body);
+    var kycLevel=insType==='client'?insKyc:'KYC1';
+    var fd=new FormData();
+    fd.append('prenom',prenom);fd.append('nom',nom);fd.append('telephone',telephone);fd.append('pin',pin);
+    fd.append('role',insType);fd.append('kycNiveau',kycLevel);
+    if(zone)fd.append('zone',zone);
+    if(bizName)fd.append('nomEntreprise',bizName);
+    Object.keys(insPhotos).forEach(function(k){fd.append(k,insPhotos[k]);});
+    var h={};if(G.token)h['Authorization']='Bearer '+G.token;
+    var r=await fetch(API+'/auth/register',{method:'POST',headers:h,body:fd});
+    var d=await r.json();if(!r.ok)throw new Error(d.message||'Erreur');
     document.getElementById('ins-loading').style.display='none';
     document.getElementById('ins-success').style.display='';
-    document.getElementById('ins-succ-txt').textContent='Code : '+(r.data.codeParrainage||'')+'  ·  PIN : '+pin;
-    T('✓ Compte '+insType+' créé !');
+    document.getElementById('ins-succ-txt').textContent='Compte '+insType+' créé pour '+(prenom+' '+nom)+'. Code : '+(d.data&&d.data.codeParrainage||'');
   }catch(e){
     document.getElementById('ins-loading').style.display='none';
     document.getElementById('ins-form').style.display='';
@@ -550,79 +727,132 @@ async function doInscrire(){
   }
 }
 
-// ══ OPÉRATIONS DEP / RET ══════════════════════════════════════════
+// ══ OPÉRATIONS DÉPÔT / RETRAIT ════════════════════════════════════
 var opClients={dep:null,ret:null};
 
-function identClient(op){
-  var tel=document.getElementById(op+'-tel').value;
-  opClients[op]={tel};
-  document.getElementById(op+'-s1').style.display='none';
-  document.getElementById(op+'-s2').style.display='';
-  var color=op==='dep'?'#22c55e':'#f97316';
-  var bg=op==='dep'?'#071a08':'#180a00';
-  document.getElementById(op+'-client').innerHTML='<div style="width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;color:'+color+';font-size:18px;font-weight:800;flex-shrink:0">'+tel.slice(-2)+'</div><div style="flex:1"><div style="font-size:14px;font-weight:700">Client identifié</div><div style="color:var(--m);font-size:11px">'+tel+'</div></div><button onclick="rstOp(\''+op+'\')" style="background:none;border:none;color:var(--a);font-size:12px;font-weight:600;cursor:pointer;font-family:\'DM Sans\',sans-serif">Changer</button>';
+function ouvrirDepot(){rstOp('dep');openSh('depot');}
+function ouvrirRetrait(){rstOp('ret');openSh('retrait');}
+
+function onTelInput(op){
+  var v=document.getElementById(op+'-tel').value.replace(/\D/g,'');
+  var btn=document.getElementById(op+'-ok');
+  btn.disabled=v.length<8;btn.style.opacity=v.length<8?'.4':'1';
+}
+
+function scanPourOp(op){
+  ouvrirPopupQR(function(tel){
+    closeSh(op==='dep'?'depot':'retrait');
+    setTimeout(function(){
+      openSh(op==='dep'?'depot':'retrait');
+      document.getElementById(op+'-tel').value=tel;
+      onTelInput(op);
+      identClient(op);
+    },300);
+  });
+}
+
+async function identClient(op){
+  var tel=document.getElementById(op+'-tel').value.trim();
+  if(!tel){T('Numéro requis',true);return;}
+  document.getElementById(op+'-ok').disabled=true;
+  try{
+    var r=await get('/users/find?telephone='+encodeURIComponent(tel));
+    var u=r.data;opClients[op]=u;
+    document.getElementById(op+'-s1').style.display='none';
+    document.getElementById(op+'-s2').style.display='';
+    document.getElementById(op+'-recap').style.display='';
+    document.getElementById(op+'-av').textContent=(u.prenom||'?')[0].toUpperCase();
+    document.getElementById(op+'-cname').textContent=(u.prenom||'')+' '+(u.nom||'');
+    document.getElementById(op+'-ctel').textContent=u.telephone||tel;
+    document.getElementById(op+'-kyc').textContent=u.kycNiveau||'KYC1';
+    if(op==='ret'&&u.comptes&&u.comptes[0]){
+      document.getElementById('ret-csolde').textContent=F(u.comptes[0].solde);
+    }
+    document.getElementById(op+'-btn-valider').style.display='';
+  }catch(e){
+    document.getElementById(op+'-err1').textContent=e.message;
+    document.getElementById(op+'-err1').style.display='';
+    document.getElementById(op+'-ok').disabled=false;
+  }
 }
 
 function setAmt(op,v){document.getElementById(op+'-amt').value=v;op==='dep'?calcDep():calcRet();}
 
 function calcDep(){
-  var v=Number(document.getElementById('dep-amt').value),ok=v>0;
-  var gain=Math.round(v*0.002);
-  document.getElementById('dep-recap').style.display=ok?'':'none';
-  if(ok)document.getElementById('dep-recap').innerHTML='<div class="srow"><span style="color:var(--m);font-size:13px">Dépôt client</span><span style="font-size:13px;font-weight:700">'+F(v)+'</span></div><div class="srow"><span style="color:var(--m);font-size:13px">Frais client</span><span style="color:#22c55e;font-size:13px;font-weight:700">Gratuit ✓</span></div><div style="display:flex;justify-content:space-between;padding:8px 0"><span style="font-size:13px">Votre commission</span><span style="color:var(--a);font-size:16px;font-weight:800;font-family:monospace">+'+F(gain)+'</span></div>';
-  document.getElementById('dep-btn').disabled=!ok;document.getElementById('dep-btn').style.opacity=ok?'1':'.4';
+  var amt=Number(document.getElementById('dep-amt').value)||0;
+  if(!amt){document.getElementById('dep-calc').style.display='none';return;}
+  var comm=Math.round(amt*0.002);
+  document.getElementById('dep-comm').textContent='+'+F(comm);
+  document.getElementById('dep-calc').style.display='';
 }
 
 function calcRet(){
-  var v=Number(document.getElementById('ret-amt').value),ok=v>0;
-  var taux=v<=50000?0.009:v<=200000?0.008:0.007;
-  var frais=Math.round(v*taux),gain=Math.round(frais*0.35);
-  document.getElementById('ret-recap').style.display=ok?'':'none';
-  if(ok)document.getElementById('ret-recap').innerHTML='<div class="srow"><span style="color:var(--m);font-size:13px">Retrait</span><span style="font-size:13px;font-weight:700">'+F(v)+'</span></div><div class="srow"><span style="color:var(--m);font-size:13px">Frais ('+Math.round(taux*100*10)/10+'%)</span><span style="font-size:13px;font-weight:700">'+F(frais)+'</span></div><div class="srow"><span style="color:var(--m);font-size:13px">Total débité client</span><span style="font-size:13px;font-weight:700">'+F(v+frais)+'</span></div><div style="display:flex;justify-content:space-between;padding:8px 0"><span style="font-size:13px">Votre commission</span><span style="color:var(--a);font-size:16px;font-weight:800;font-family:monospace">+'+F(gain)+'</span></div>';
-  document.getElementById('ret-btn').disabled=!ok;document.getElementById('ret-btn').style.opacity=ok?'1':'.4';
+  var amt=Number(document.getElementById('ret-amt').value)||0;
+  if(!amt){document.getElementById('ret-calc').style.display='none';return;}
+  var frais=Math.round(amt*0.01);
+  var comm=Math.round(frais*0.35);
+  document.getElementById('ret-frais').textContent=F(frais);
+  document.getElementById('ret-comm').textContent='+'+F(comm);
+  document.getElementById('ret-net').textContent=F(amt);
+  document.getElementById('ret-calc').style.display='';
 }
 
 async function doDepot(){
+  var client=opClients['dep'];if(!client){T('Identifiez le client d\'abord',true);return;}
   var amt=Number(document.getElementById('dep-amt').value);
-  document.getElementById('dep-s2').style.display='none';document.getElementById('dep-loading').style.display='';
+  if(!amt||amt<=0){T('Montant invalide',true);return;}
+  document.getElementById('dep-btn-valider').style.display='none';
+  document.getElementById('dep-loading').style.display='';
   try{
-    var r=await post('/transactions/deposit',{telephone:opClients.dep.tel,montant:amt});
-    var gain=Math.round(amt*0.002);
-    document.getElementById('dep-loading').style.display='none';document.getElementById('dep-success').style.display='';
-    document.getElementById('dep-succ-txt').textContent=F(amt)+' déposés pour '+opClients.dep.tel;
-    document.getElementById('dep-succ-gain').textContent='Commission : +'+F(gain);
-    document.getElementById('dep-succ-ref').textContent=r.data.reference;
+    var r=await post('/transactions/depot',{clientTelephone:client.telephone,montant:amt});
+    document.getElementById('dep-loading').style.display='none';
+    document.getElementById('dep-success').style.display='';
+    var d=r.data||{};
+    document.getElementById('dep-succ-txt').textContent='Dépôt de '+F(amt)+' pour '+(client.prenom||'')+' '+(client.nom||'');
+    document.getElementById('dep-succ-gain').textContent=d.commissionAgent?'Commission : +'+F(d.commissionAgent):'';
+    document.getElementById('dep-succ-ref').textContent=d.reference||'';
     rafraichir();
   }catch(e){
-    document.getElementById('dep-loading').style.display='none';document.getElementById('dep-s2').style.display='';
+    document.getElementById('dep-loading').style.display='none';
+    document.getElementById('dep-btn-valider').style.display='';
     document.getElementById('dep-err2').textContent=e.message;document.getElementById('dep-err2').style.display='';
   }
 }
 
 async function doRetrait(){
+  var client=opClients['ret'];if(!client){T('Identifiez le client d\'abord',true);return;}
   var amt=Number(document.getElementById('ret-amt').value);
-  document.getElementById('ret-s2').style.display='none';document.getElementById('ret-loading').style.display='';
+  if(!amt||amt<=0){T('Montant invalide',true);return;}
+  document.getElementById('ret-btn-valider').style.display='none';
+  document.getElementById('ret-loading').style.display='';
   try{
-    var r=await post('/transactions/withdraw',{telephone:opClients.ret.tel,montant:amt});
-    var taux=amt<=50000?0.009:amt<=200000?0.008:0.007;var frais=Math.round(amt*taux);var gain=Math.round(frais*0.35);
-    document.getElementById('ret-loading').style.display='none';document.getElementById('ret-success').style.display='';
-    document.getElementById('ret-succ-txt').textContent=F(amt)+' remis à '+opClients.ret.tel;
-    document.getElementById('ret-succ-gain').textContent='Commission : +'+F(gain);
-    document.getElementById('ret-succ-ref').textContent=r.data.reference;
+    var r=await post('/transactions/retrait',{clientTelephone:client.telephone,montant:amt});
+    document.getElementById('ret-loading').style.display='none';
+    document.getElementById('ret-success').style.display='';
+    var d=r.data||{};
+    document.getElementById('ret-succ-txt').textContent='Retrait de '+F(amt)+' pour '+(client.prenom||'')+' '+(client.nom||'');
+    document.getElementById('ret-succ-gain').textContent=d.commissionAgent?'Commission : +'+F(d.commissionAgent):'';
+    document.getElementById('ret-succ-ref').textContent=d.reference||'';
     rafraichir();
   }catch(e){
-    document.getElementById('ret-loading').style.display='none';document.getElementById('ret-s2').style.display='';
+    document.getElementById('ret-loading').style.display='none';
+    document.getElementById('ret-btn-valider').style.display='';
     document.getElementById('ret-err2').textContent=e.message;document.getElementById('ret-err2').style.display='';
   }
 }
 
 function rstOp(op){
   opClients[op]=null;
-  document.getElementById(op+'-tel').value='';document.getElementById(op+'-amt').value='';
-  document.getElementById(op+'-s1').style.display='';document.getElementById(op+'-s2').style.display='none';
-  document.getElementById(op+'-loading').style.display='none';document.getElementById(op+'-success').style.display='none';
+  document.getElementById(op+'-tel').value='';
+  if(document.getElementById(op+'-amt'))document.getElementById(op+'-amt').value='';
+  document.getElementById(op+'-s1').style.display='';
+  document.getElementById(op+'-s2').style.display='none';
+  document.getElementById(op+'-loading').style.display='none';
+  document.getElementById(op+'-success').style.display='none';
   document.getElementById(op+'-recap').style.display='none';
-  document.getElementById(op+'-err1').style.display='none';document.getElementById(op+'-err2').style.display='none';
+  document.getElementById(op+'-err1').style.display='none';
+  document.getElementById(op+'-err2').style.display='none';
+  document.getElementById(op+'-btn-valider').style.display='none';
   document.getElementById(op+'-ok').disabled=true;document.getElementById(op+'-ok').style.opacity='.4';
 }
 
@@ -656,7 +886,7 @@ async function doLogin(){
     var d=r.data;
     if(!['agent','mini_master','master','superviseur','admin'].includes(d.user.role))throw new Error('Cette app est réservée aux agents AFRIM PAY.');
     G.token=d.accessToken;G.refresh=d.refreshToken;G.user=d.user;G.compte=d.user.comptes&&d.user.comptes[0];
-    localStorage.setItem('afrim_token',G.token);localStorage.setItem('afrim_refresh',G.refresh);localStorage.setItem('afrim_user',JSON.stringify(G.user));
+    _ls.set('afrim_token',G.token);_ls.set('afrim_refresh',G.refresh);_ls.set('afrim_user',JSON.stringify(G.user));
     entrerApp();
   }catch(e){
     G.pin='';rDots();errEl.textContent=e.message;errEl.style.display='';
@@ -664,7 +894,12 @@ async function doLogin(){
   }
 }
 
-function entrerApp(){document.getElementById('pin-loading').style.display='none';document.getElementById('pin-keys').style.display='';S('s-home');chargerAccueil();}
+function entrerApp(){
+  document.getElementById('pin-loading').style.display='none';document.getElementById('pin-keys').style.display='';
+  S('s-home');chargerAccueil();
+  genererQR();
+  initAutoLock();
+}
 
 // ══ ACCUEIL ══════════════════════════════════════════════════════
 async function chargerAccueil(){
@@ -672,28 +907,30 @@ async function chargerAccueil(){
   document.getElementById('h-name').textContent=(u.prenom||'')+' '+(u.nom||'');
   document.getElementById('h-zone').textContent=(u.zone||'Zone non définie')+' · '+(u.codeParrainage||'');
   try{
-    var[cr,ur,sr]=await Promise.all([get('/accounts/me'),get('/users/me'),get('/stats/dashboard')]);
-    G.compte=cr.data;G.user=ur.data;localStorage.setItem('afrim_user',JSON.stringify(G.user));
+    var res=await Promise.all([get('/accounts/me'),get('/users/me'),get('/stats/dashboard')]);
+    var cr=res[0],ur=res[1],sr=res[2];
+    G.compte=cr.data;G.user=ur.data;_ls.set('afrim_user',JSON.stringify(G.user));
     document.getElementById('h-solde').textContent=F(cr.data.solde);
-    document.getElementById('h-dep').textContent=sr.data.depotsMois&&sr.data.depotsMois.count||'0';
+    document.getElementById('h-dep').textContent=(sr.data.depotsMois&&sr.data.depotsMois.count)||'0';
     document.getElementById('h-gains').textContent=F(sr.data.gainsMois||0);
-    document.getElementById('h-ret').textContent=sr.data.retraitsMois&&sr.data.retraitsMois.count||'0';
+    document.getElementById('h-ret').textContent=(sr.data.retraitsMois&&sr.data.retraitsMois.count)||'0';
+    document.getElementById('h-nb-ops').textContent=(sr.data.opsJour||sr.data.transactionsJour||0);
   }catch(e){document.getElementById('h-solde').textContent=G.compte?F(G.compte.solde):'—';}
   chargerTxns();
 }
-
 function rafraichir(){chargerAccueil();}
 
-var TX_CFG={depot:{c:'#22c55e',i:'↓',l:'Dépôt'},retrait:{c:'#f97316',i:'↑',l:'Retrait'},transfert:{c:'#3b82f6',i:'⇄',l:'Transfert'},paiement_marchand:{c:'#a855f7',i:'◈',l:'Paiement'},commission:{c:'#f59e0b',i:'★',l:'Commission'}};
+var TX_CFG={depot:{c:'#22c55e',i:'↓',l:'Dépôt'},retrait:{c:'#f97316',i:'↑',l:'Retrait'},transfert:{c:'#3b82f6',i:'⇄',l:'Transfert'},paiement_marchand:{c:'#a855f7',i:'◈',l:'Paiement'},commission:{c:'#f59e0b',i:'★',l:'Commission'},commission_depot:{c:'#f59e0b',i:'★',l:'Comm. dépôt'}};
+
 function txRow(tx){
   var cfg=TX_CFG[tx.type]||TX_CFG.transfert;
   var cid=G.compte?G.compte.id:'';
-  var isIn=tx.compteDestId===cid||['commission','depot'].includes(tx.type);
+  var isIn=tx.compteDestId===cid||['commission','commission_depot','depot'].includes(tx.type);
   var sign=isIn?'+':'−';
   return '<div class="tx" style="background:'+cfg.c+'0d;border:1px solid '+cfg.c+'22">'
     +'<div style="display:flex;align-items:center;gap:10px">'
     +'<div style="width:36px;height:36px;border-radius:10px;background:'+cfg.c+'18;color:'+cfg.c+';display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">'+cfg.i+'</div>'
-    +'<div><div style="font-size:13px;font-weight:600">'+cfg.l+'</div><div style="color:var(--m);font-size:11px">'+FD(tx.dateCreation)+'</div></div></div>'
+    +'<div><div style="font-size:13px;font-weight:600">'+cfg.l+'</div><div style="color:var(--m);font-size:11px">'+FD(tx.dateCreation||tx.date_creation)+'</div></div></div>'
     +'<div style="text-align:right"><div style="color:'+(isIn?cfg.c:'#ef4444')+';font-size:14px;font-weight:800;font-family:monospace">'+sign+F(tx.montant)+'</div>'
     +'<div style="color:var(--d);font-size:10px;font-family:monospace">'+(tx.reference||'')+'</div></div></div>';
 }
@@ -704,125 +941,224 @@ async function chargerTxns(){
   catch(e){el.innerHTML='<div class="info info-r">'+e.message+'</div>';}
 }
 
+// ══ HISTORIQUE ════════════════════════════════════════════════════
+var histFilter='all';
+function setHistFilter(f){
+  histFilter=f;
+  document.querySelectorAll('#hist-chips .chip').forEach(function(b){b.classList.remove('on');});
+  var idx={'all':0,'depot':1,'retrait':2,'transfert':3,'commission':4}[f]||0;
+  document.querySelectorAll('#hist-chips .chip')[idx].classList.add('on');
+  chargerHistorique();
+}
 async function chargerHistorique(){
-  S('s-history');
   var el=document.getElementById('hist-list');
   el.innerHTML='<div style="text-align:center;padding:20px"><div class="spin"></div></div>';
-  try{var r=await get('/transactions?limit=50');var list=r.data||[];el.innerHTML=list.length?list.map(txRow).join(''):'<div style="text-align:center;padding:20px;color:var(--m);font-size:13px">Aucune transaction</div>';}
+  var url='/transactions?limit=50'+(histFilter!=='all'?'&type='+histFilter:'');
+  try{var r=await get(url);var list=r.data||[];el.innerHTML=list.length?list.map(txRow).join(''):'<div style="text-align:center;padding:24px;color:var(--m);font-size:13px">Aucune transaction</div>';}
   catch(e){el.innerHTML='<div class="info info-r">'+e.message+'</div>';}
 }
 
-async function chargerReseau(){
-  S('s-network');
-  var el=document.getElementById('net-list');
-  el.innerHTML='<div style="text-align:center;padding:20px"><div class="spin"></div></div>';
+// ══ GAINS / COMMISSIONS ══════════════════════════════════════════
+async function chargerGains(){
+  var el=document.getElementById('gains-content');
+  el.innerHTML='<div style="text-align:center;padding:32px"><div class="spin"></div></div>';
   try{
-    var r=await get('/users/'+G.user.id+'/referrals');
-    var list=r.data.filleuls||[];
-    var html='<div class="card" style="margin-bottom:14px"><div class="srow"><span style="color:var(--m);font-size:13px">Filleuls total</span><span style="color:var(--a);font-size:16px;font-weight:800">'+list.length+'</span></div><div style="display:flex;justify-content:space-between;padding:8px 0"><span style="color:var(--m);font-size:13px">Gains parrainage</span><span style="color:var(--a);font-size:16px;font-weight:800;font-family:monospace">'+F(r.data.totalGains)+'</span></div></div>';
-    if(list.length) list.forEach(function(f){html+='<div class="tx" style="background:var(--s);border:1px solid var(--b)"><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center;color:var(--a);font-size:14px;font-weight:800">'+((f.prenom||'?')[0])+'</div><div><div style="font-size:13px;font-weight:600">'+(f.prenom||'')+' '+(f.nom||'')+'</div><div style="color:var(--m);font-size:11px">'+f.telephone+'</div></div></div><div style="color:var(--d);font-size:11px">'+FD(f.dateCreation)+'</div></div>';});
-    else html+='<div style="text-align:center;padding:24px;color:var(--m);font-size:13px">Aucun filleul pour l\'instant</div>';
-    el.innerHTML=html;
+    var res=await Promise.all([
+      get('/stats/dashboard'),
+      get('/transactions?type=commission&limit=100'),
+      get('/transactions?type=commission_depot&limit=100')
+    ]);
+    var sr=res[0].data||{};
+    var comms=(res[1].data||[]).concat(res[2].data||[]);
+    comms.sort(function(a,b){return new Date(b.dateCreation||b.date_creation)-new Date(a.dateCreation||a.date_creation);});
+    var now=new Date(),d1=new Date(now.getFullYear(),now.getMonth(),1);
+    var tMois=0,tPrec=0,tTotal=0,nbMois=0,commMois=[];
+    comms.forEach(function(c){
+      var d=new Date(c.dateCreation||c.date_creation||0);
+      var m=Number(c.montant||0);
+      tTotal+=m;
+      if(d>=d1){tMois+=m;nbMois++;commMois.push(c);}
+      else tPrec+=m;
+    });
+    var gainsMois=sr.gainsMois||tMois;
+    var h='';
+    // Carte résumé
+    h+='<div style="background:linear-gradient(135deg,var(--a2),var(--a));border-radius:20px;padding:20px;margin-bottom:16px;color:#030200">'
+      +'<div style="font-size:11px;font-weight:700;opacity:.6;text-transform:uppercase;margin-bottom:8px">CE MOIS-CI</div>'
+      +'<div style="font-size:38px;font-weight:900;margin-bottom:12px">'+F(gainsMois)+'</div>'
+      +'<div style="display:flex;gap:16px">'
+      +'<div><div style="font-size:17px;font-weight:800">'+nbMois+'</div><div style="font-size:10px;opacity:.6">opérations</div></div>'
+      +'<div style="width:1px;background:rgba(3,2,0,.15)"></div>'
+      +'<div><div style="font-size:17px;font-weight:800">'+F(tPrec)+'</div><div style="font-size:10px;opacity:.6">mois précédent</div></div>'
+      +'<div style="width:1px;background:rgba(3,2,0,.15)"></div>'
+      +'<div><div style="font-size:17px;font-weight:800">'+F(tTotal)+'</div><div style="font-size:10px;opacity:.6">total historique</div></div>'
+      +'</div></div>';
+    // Grille stats rapides
+    var nbDep=sr.depotsMois&&sr.depotsMois.count||0;
+    var nbRet=sr.retraitsMois&&sr.retraitsMois.count||0;
+    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'
+      +'<div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:900;color:#22c55e">'+nbDep+'</div><div style="font-size:11px;color:#6b7280">Dépôts ce mois</div></div>'
+      +'<div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:900;color:#f97316">'+nbRet+'</div><div style="font-size:11px;color:#6b7280">Retraits ce mois</div></div>'
+      +'</div>';
+    // Barème commissions
+    h+='<div style="background:#fffbeb;border:1px solid var(--b);border-radius:14px;padding:14px;margin-bottom:16px">'
+      +'<div style="font-size:12px;font-weight:800;color:#92400e;margin-bottom:8px">📋 Barème commissions</div>'
+      +'<div style="font-size:12px;color:#a16207;line-height:1.8">'
+      +'<div>Dépôt client → <b>0,2% du montant</b></div>'
+      +'<div>Retrait client → <b>35% des frais</b> (frais = 1%)</div>'
+      +'<div>Parrainage filleul → <b>10% des frais retrait/paiement</b></div>'
+      +'</div></div>';
+    // Détail commissions ce mois
+    h+='<div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Détail ce mois</div>';
+    if(!commMois.length){
+      h+='<div style="text-align:center;padding:20px;color:var(--m);font-size:13px">Aucune commission ce mois</div>';
+    } else {
+      commMois.forEach(function(c){
+        var tp=TX_CFG[c.type]||{c:'#f59e0b',i:'★',l:'Commission'};
+        h+='<div class="tx" style="background:'+tp.c+'0d;border:1px solid '+tp.c+'22">'
+          +'<div style="display:flex;align-items:center;gap:10px">'
+          +'<div style="width:36px;height:36px;border-radius:10px;background:'+tp.c+'18;color:'+tp.c+';display:flex;align-items:center;justify-content:center;font-size:15px">'+tp.i+'</div>'
+          +'<div><div style="font-size:13px;font-weight:600">'+tp.l+'</div><div style="color:var(--m);font-size:11px">'+FD(c.dateCreation||c.date_creation)+'</div></div></div>'
+          +'<div style="color:'+tp.c+';font-size:15px;font-weight:900;font-family:monospace">+'+F(c.montant)+'</div></div>';
+      });
+    }
+    el.innerHTML=h;
   }catch(e){el.innerHTML='<div class="info info-r">'+e.message+'</div>';}
 }
 
-function chargerProfil(){
-  S('s-profile');
-  var u=G.user;if(!u)return;
-  document.getElementById('prof-av').textContent=u.prenom?u.prenom[0]:'?';
-  document.getElementById('prof-name').textContent=(u.prenom||'')+' '+(u.nom||'');
-  document.getElementById('prof-tel').textContent=u.telephone;
-  var html='';
-  [['Téléphone',u.telephone,true],['Zone',u.zone||'Non définie',false],['Code parrainage',u.codeParrainage,true],['KYC',u.kycNiveau,false],['Statut',u.statut,false],['Liquidité',G.compte?F(G.compte.solde):'—',false]].forEach(function(r){html+='<div class="srow"><span style="color:var(--m);font-size:13px">'+r[0]+'</span><span style="color:'+(r[0]==='Liquidité'?'var(--a)':'var(--t)')+';font-size:'+(r[2]?'12':'13')+'px;font-weight:700;font-family:'+(r[2]?'monospace':'inherit')+'">'+r[1]+'</span></div>';});
-  document.getElementById('prof-info').innerHTML=html;
-}
-
-
-// MON QR CODE
-function ouvrirMonQR(){
-  var u=G.user;if(!u)return;
-  openSh('mon-qr');
-  document.getElementById('my-qr-name').textContent=(u.prenom||'')+' '+(u.nom||'');
-  document.getElementById('my-qr-tel').textContent=u.telephone;
-  document.getElementById('my-qr-role').textContent=u.role?u.role.replace('_',' ').toUpperCase():'';
-  dessinerMonQR(u.telephone+'|'+(u.codeParrainage||'')+'|'+(u.role||''));
-}
-function dessinerMonQR(data){
-  var c=document.getElementById('my-qr-canvas');if(!c)return;
-  var ctx=c.getContext('2d');var w=180,h=180;
-  ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);
-  var seed=0;for(var i=0;i<data.length;i++)seed+=data.charCodeAt(i);
-  var cell=4;var cols=Math.floor(w/cell);var rows=Math.floor(h/cell);
-  ctx.fillStyle='#111827';
-  for(var r=0;r<rows;r++){for(var col=0;col<cols;col++){var v=(seed*(r+1)*(col+1)*2654435761)&0xFFFFFFFF;if(v%3!==0)ctx.fillRect(col*cell,r*cell,cell-1,cell-1);}}
-  [[0,0],[w-44,0],[0,h-44]].forEach(function(p){
-    ctx.fillStyle='#111827';ctx.fillRect(p[0],p[1],40,40);
-    ctx.fillStyle='#fff';ctx.fillRect(p[0]+4,p[1]+4,32,32);
-    ctx.fillStyle='#111827';ctx.fillRect(p[0]+8,p[1]+8,24,24);
-    ctx.fillStyle='#fff';ctx.fillRect(p[0]+12,p[1]+12,16,16);
-    ctx.fillStyle='#111827';ctx.fillRect(p[0]+14,p[1]+14,12,12);
+// ══ STATISTIQUES ═════════════════════════════════════════════════
+var statPeriod='week';
+function setStatPeriod(p){
+  statPeriod=p;
+  ['week','month','year'].forEach(function(k){
+    var btn=document.getElementById('stp-'+k);
+    if(!btn)return;
+    var isOn=k===p;
+    btn.style.borderColor=isOn?'rgba(245,158,11,.4)':'rgba(255,255,255,.2)';
+    btn.style.color=isOn?'var(--a)':'rgba(255,255,255,.7)';
+    btn.style.background=isOn?'rgba(245,158,11,.08)':'transparent';
   });
+  chargerStats();
+}
+async function chargerStats(){
+  var el=document.getElementById('stats-content');
+  el.innerHTML='<div style="text-align:center;padding:32px"><div class="spin"></div></div>';
+  try{
+    var r=await get('/stats/detailed?role=agent&period='+statPeriod);
+    var d=r.data||{};
+    var txns=d.txns||d.transactions||[];
+    var totaux=d.totaux||{};
+    var courbe=d.courbe||[];
+    var h='';
+    // Cartes totaux
+    var tDep=totaux.depot||0,tRet=totaux.retrait||0,tComm=totaux.commission||0;
+    var nbDep=totaux.nbDepot||0,nbRet=totaux.nbRetrait||0;
+    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'
+      +'<div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px">'
+        +'<div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:4px">Volume dépôts</div>'
+        +'<div style="font-size:18px;font-weight:900;color:#22c55e">'+F(tDep)+'</div>'
+        +'<div style="font-size:11px;color:#6b7280;margin-top:2px">'+nbDep+' opérations</div>'
+      +'</div>'
+      +'<div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px">'
+        +'<div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:4px">Volume retraits</div>'
+        +'<div style="font-size:18px;font-weight:900;color:#f97316">'+F(tRet)+'</div>'
+        +'<div style="font-size:11px;color:#6b7280;margin-top:2px">'+nbRet+' opérations</div>'
+      +'</div>'
+      +'<div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px">'
+        +'<div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:4px">Commissions</div>'
+        +'<div style="font-size:18px;font-weight:900;color:var(--a)">'+F(tComm)+'</div>'
+      +'</div>'
+      +'<div style="background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:14px">'
+        +'<div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:4px">Total opérations</div>'
+        +'<div style="font-size:18px;font-weight:900;color:#374151">'+(nbDep+nbRet)+'</div>'
+      +'</div>'
+    +'</div>';
+    // Graphique barres
+    if(courbe.length>1){
+      var maxVal=Math.max.apply(null,courbe.map(function(c){return Number(c.depot||0)+Number(c.retrait||0);}));
+      if(maxVal>0){
+        h+='<div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:16px;margin-bottom:16px">'
+          +'<div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:12px">Volume des opérations</div>'
+          +'<div style="display:flex;align-items:flex-end;gap:4px;height:100px;padding:0 4px">';
+        courbe.forEach(function(c){
+          var v=(Number(c.depot||0)+Number(c.retrait||0));
+          var pct=maxVal>0?Math.max(4,Math.round((v/maxVal)*90)):4;
+          h+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">'
+            +'<div style="width:100%;border-radius:3px 3px 0 0;background:var(--a);height:'+pct+'px;min-height:4px"></div>'
+            +'<div style="font-size:8px;color:#9ca3af;text-align:center;white-space:nowrap;overflow:hidden;max-width:28px">'+(c.label||'')+'</div>'
+            +'</div>';
+        });
+        h+='</div></div>';
+      }
+    }
+    // Tableau recap par type
+    var types=[{k:'depot',l:'Dépôts',c:'#22c55e'},{k:'retrait',l:'Retraits',c:'#f97316'},{k:'commission',l:'Commissions',c:'#f59e0b'},{k:'transfert',l:'Transferts',c:'#3b82f6'}];
+    h+='<div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:16px;margin-bottom:16px">'
+      +'<div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:10px">Détail par type</div>';
+    types.forEach(function(t){
+      var nb=totaux['nb'+t.k.charAt(0).toUpperCase()+t.k.slice(1)]||totaux['nb_'+t.k]||0;
+      var vol=totaux[t.k]||0;
+      if(!nb&&!vol)return;
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f3f4f6">'
+        +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<div style="width:8px;height:8px;border-radius:50%;background:'+t.c+'"></div>'
+        +'<span style="font-size:13px;font-weight:600">'+t.l+'</span>'
+        +'</div>'
+        +'<div style="text-align:right"><div style="font-size:13px;font-weight:800">'+F(vol)+'</div>'
+        +(nb?'<div style="font-size:11px;color:#9ca3af">'+nb+' ops</div>':'')
+        +'</div></div>';
+    });
+    h+='</div>';
+    el.innerHTML=h;
+  }catch(e){el.innerHTML='<div class="info info-r">'+e.message+'</div>';}
 }
 
-// SCANNER QR
-var scannerStream=null;var scannerInterval=null;
-function ouvrirScannerQR(callback){
-  document.getElementById('scanner-result').style.display='none';
-  var video=document.getElementById('qr-video');
-  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
-    .then(function(stream){
-      scannerStream=stream;video.srcObject=stream;video.play();
-      scannerInterval=setInterval(function(){
-        var canvas=document.getElementById('qr-scan-canvas');
-        var ctx=canvas.getContext('2d');
-        canvas.width=video.videoWidth;canvas.height=video.videoHeight;
-        if(!canvas.width)return;
-        ctx.drawImage(video,0,0);
-        try{
-          if(window.jsQR){
-            var img=ctx.getImageData(0,0,canvas.width,canvas.height);
-            var code=jsQR(img.data,img.width,img.height);
-            if(code&&code.data){
-              var parts=code.data.split('|');
-              var tel=parts[0];var role=parts[2]||'';
-              document.getElementById('scanner-result').style.display='';
-              document.getElementById('scanner-result-text').textContent=tel+(role?' ('+role+')':'');
-              fermerScanner();
-              if(typeof scanCallback==='function')scanCallback(tel,parts);
-            }
-          }
-        }catch(e){}
-      },500);
-    })
-    .catch(function(err){T('Camera non disponible',true);fermerScanner();});
-}
-var scanCallback=null;
-function fermerScanner(){
-  if(scannerStream){scannerStream.getTracks().forEach(function(t){t.stop();});scannerStream=null;}
-  if(scannerInterval){clearInterval(scannerInterval);scannerInterval=null;}
-  closeSh('scanner');
+// ══ PROFIL ═══════════════════════════════════════════════════════
+function chargerProfil(){
+  var u=G.user;if(!u)return;
+  document.getElementById('prof-name-top').textContent=(u.prenom||'')+' '+(u.nom||'');
+  document.getElementById('prof-tel-top').textContent=u.telephone||'';
+  genererQR();
 }
 
-// CHANGER PIN
-function rstChangePin(){
-  ['old-pin','new-pin','new-pin2'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});
-  document.getElementById('change-pin-err').style.display='none';
-  document.getElementById('change-pin-form').style.display='';
-  document.getElementById('change-pin-loading').style.display='none';
-  document.getElementById('change-pin-success').style.display='none';
+function ouvrirInfos(){
+  var u=G.user;if(!u)return;
+  var rows=[
+    {l:'Prénom',v:u.prenom||'—'},{l:'Nom',v:u.nom||'—'},{l:'Téléphone',v:u.telephone||'—'},
+    {l:'Zone',v:u.zone||'—'},{l:'KYC',v:u.kycNiveau||'—'},{l:'Statut',v:u.statut||'—'},
+    {l:'Code parrainage',v:u.codeParrainage||'—'},{l:'Solde',v:G.compte?F(G.compte.solde):'—'}
+  ];
+  var h=rows.map(function(r){return '<div class="srow"><span style="color:var(--m);font-size:13px">'+r.l+'</span><span style="font-weight:700;font-size:13px">'+r.v+'</span></div>';}).join('');
+  document.getElementById('sh-infos-body').innerHTML=h;
+  openSh('infos');
 }
+
+async function chargerReseau(){
+  var el=document.getElementById('reseau-list');
+  el.innerHTML='<div style="text-align:center;padding:24px"><div class="spin"></div></div>';
+  try{
+    var r=await get('/users/'+G.user.id+'/referrals');
+    var list=r.data.filleuls||[];
+    var h='<div style="padding:0 0 12px"><div class="srow"><span style="color:var(--m);font-size:13px">Filleuls total</span><span style="color:var(--a);font-size:16px;font-weight:800">'+list.length+'</span></div><div class="srow" style="border:none"><span style="color:var(--m);font-size:13px">Gains parrainage</span><span style="color:var(--a);font-size:16px;font-weight:800;font-family:monospace">'+F(r.data.totalGains)+'</span></div></div>';
+    if(list.length){list.forEach(function(f){h+='<div class="tx" style="background:var(--s);border:1px solid var(--b)"><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center;color:var(--a);font-size:14px;font-weight:800">'+((f.prenom||'?')[0])+'</div><div><div style="font-size:13px;font-weight:600">'+(f.prenom||'')+' '+(f.nom||'')+'</div><div style="color:var(--m);font-size:11px">'+f.telephone+'</div></div></div><div style="color:var(--d);font-size:11px">'+FD(f.dateCreation)+'</div></div>';});}
+    else h+='<div style="text-align:center;padding:24px;color:var(--m);font-size:13px">Aucun filleul pour l\'instant</div>';
+    el.innerHTML=h;
+  }catch(e){el.innerHTML='<div class="info info-r">'+e.message+'</div>';}
+  openSh('reseau');
+}
+
 async function doChangePin(){
-  var ancienPin=document.getElementById('old-pin').value.trim();
-  var nouveauPin=document.getElementById('new-pin').value.trim();
-  var nouveauPin2=document.getElementById('new-pin2').value.trim();
-  var errEl=document.getElementById('change-pin-err');errEl.style.display='none';
-  if(!ancienPin||!nouveauPin||!nouveauPin2){errEl.textContent='Tous les champs sont obligatoires';errEl.style.display='';return;}
-  if(nouveauPin.length!==4||isNaN(nouveauPin)){errEl.textContent='Le nouveau PIN doit contenir 4 chiffres';errEl.style.display='';return;}
-  if(nouveauPin!==nouveauPin2){errEl.textContent='Les deux PIN ne correspondent pas';errEl.style.display='';return;}
+  var oldPin=document.getElementById('old-pin').value;
+  var newPin=document.getElementById('new-pin').value;
+  var newPin2=document.getElementById('new-pin2').value;
+  var errEl=document.getElementById('change-pin-err');
+  if(newPin.length!==4||oldPin.length!==4){errEl.textContent='Les codes PIN doivent avoir 4 chiffres.';errEl.style.display='';return;}
+  if(newPin!==newPin2){errEl.textContent='Les nouveaux PIN ne correspondent pas.';errEl.style.display='';return;}
+  errEl.style.display='none';
   document.getElementById('change-pin-form').style.display='none';
   document.getElementById('change-pin-loading').style.display='';
   try{
-    await post('/users/change-pin',{ancienPin:ancienPin,nouveauPin:nouveauPin});
+    await post('/auth/change-pin',{oldPin,newPin});
     document.getElementById('change-pin-loading').style.display='none';
     document.getElementById('change-pin-success').style.display='';
   }catch(e){
@@ -831,194 +1167,228 @@ async function doChangePin(){
     errEl.textContent=e.message;errEl.style.display='';
   }
 }
+function rstChangePin(){
+  ['old-pin','new-pin','new-pin2'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('change-pin-err').style.display='none';
+  document.getElementById('change-pin-form').style.display='';
+  document.getElementById('change-pin-loading').style.display='none';
+  document.getElementById('change-pin-success').style.display='none';
+}
 
-function dessinerQRHome(cid,data,color){
-  var c=document.getElementById(cid);if(!c)return;
-  var ctx=c.getContext('2d');var w=c.width,h=c.height;
-  ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);
-  var seed=0;for(var i=0;i<data.length;i++)seed+=data.charCodeAt(i);
-  var cell=Math.floor(w/36);var cols=Math.floor(w/cell);var rows=Math.floor(h/cell);
-  ctx.fillStyle=color||'#111827';
-  for(var r=0;r<rows;r++){for(var col2=0;col2<cols;col2++){var v=(seed*(r+1)*(col2+1)*2654435761)&0xFFFFFFFF;if(v%3!==0)ctx.fillRect(col2*cell,r*cell,cell-1,cell-1);}}
-  var fp=Math.floor(w*0.22);
-  [[0,0],[w-fp-4,0],[0,h-fp-4]].forEach(function(p){
-    ctx.fillStyle=color||'#111827';ctx.fillRect(p[0],p[1],fp,fp);
-    ctx.fillStyle='#fff';ctx.fillRect(p[0]+Math.floor(fp*.1),p[1]+Math.floor(fp*.1),Math.floor(fp*.8),Math.floor(fp*.8));
-    ctx.fillStyle=color||'#111827';ctx.fillRect(p[0]+Math.floor(fp*.2),p[1]+Math.floor(fp*.2),Math.floor(fp*.6),Math.floor(fp*.6));
-    ctx.fillStyle='#fff';ctx.fillRect(p[0]+Math.floor(fp*.3),p[1]+Math.floor(fp*.3),Math.floor(fp*.4),Math.floor(fp*.4));
-    ctx.fillStyle=color||'#111827';ctx.fillRect(p[0]+Math.floor(fp*.35),p[1]+Math.floor(fp*.35),Math.floor(fp*.3),Math.floor(fp*.3));
-  });
-}
-var scannerStream=null;var scannerInterval=null;var onScanResult=null;
-function ouvrirScanner(callback){
-  onScanResult=callback||null;
-  document.getElementById('qr-scan-overlay').classList.add('on');
-  document.getElementById('scan-result-box').style.display='none';
-  var video=document.getElementById('qr-video-main');
-  navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})
-    .then(function(stream){
-      scannerStream=stream;video.srcObject=stream;video.play();
-      scannerInterval=setInterval(function(){
-        var canvas=document.getElementById('qr-canvas-main');
-        var ctx=canvas.getContext('2d');
-        canvas.width=video.videoWidth;canvas.height=video.videoHeight;
-        if(!canvas.width)return;
-        ctx.drawImage(video,0,0);
-        try{if(window.jsQR){var img=ctx.getImageData(0,0,canvas.width,canvas.height);var code=jsQR(img.data,img.width,img.height);if(code&&code.data){var parts=code.data.split('|');document.getElementById('scan-result-box').style.display='';document.getElementById('scan-result-text').textContent=parts[0]+(parts[2]?' - '+parts[2].toUpperCase():'');fermerScanner();if(typeof onScanResult==='function')onScanResult(parts[0],parts);}}}catch(e){}
-      },400);
-    })
-    .catch(function(){T('Camera non disponible',true);fermerScanner();});
-}
-function fermerScanner(){
-  if(scannerStream){scannerStream.getTracks().forEach(function(t){t.stop();});scannerStream=null;}
-  if(scannerInterval){clearInterval(scannerInterval);scannerInterval=null;}
-  document.getElementById('qr-scan-overlay').classList.remove('on');
-}
-function rstChangePin(){['cp-old','cp-new','cp-new2'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});document.getElementById('cp-err').style.display='none';document.getElementById('cp-form').style.display='';document.getElementById('cp-loading').style.display='none';document.getElementById('cp-ok').style.display='none';}
-async function doChangePin(){
-  var a=document.getElementById('cp-old').value.trim();var n=document.getElementById('cp-new').value.trim();var n2=document.getElementById('cp-new2').value.trim();
-  var errEl=document.getElementById('cp-err');errEl.style.display='none';
-  if(!a||!n||!n2){errEl.textContent='Tous les champs sont obligatoires';errEl.style.display='';return;}
-  if(n.length!==4||isNaN(n)){errEl.textContent='Le nouveau PIN doit etre 4 chiffres';errEl.style.display='';return;}
-  if(n!==n2){errEl.textContent='Les PIN ne correspondent pas';errEl.style.display='';return;}
-  document.getElementById('cp-form').style.display='none';document.getElementById('cp-loading').style.display='';
-  try{await post('/users/change-pin',{ancienPin:a,nouveauPin:n});document.getElementById('cp-loading').style.display='none';document.getElementById('cp-ok').style.display='';}
-  catch(e){document.getElementById('cp-loading').style.display='none';document.getElementById('cp-form').style.display='';errEl.textContent=e.message;errEl.style.display='';}
-}
-function chargerProfil(){
-  var u=G.user;if(!u)return;
-  if(document.getElementById('prof-name-top'))document.getElementById('prof-name-top').textContent=(u.prenom||'')+' '+(u.nom||'');
-  if(document.getElementById('prof-tel-top'))document.getElementById('prof-tel-top').textContent=u.telephone;
-  if(document.getElementById('qr-profil-canvas'))dessinerQRHome('qr-profil-canvas',u.telephone+'|'+(u.codeParrainage||'')+'|'+(u.role||''),null);
-}
-function ouvrirInfos(){
-  var u=G.user;if(!u)return;openSh('infos');
-  document.getElementById('sh-infos-body').innerHTML=
-    '<div class="srow"><span style="color:var(--m);font-size:13px">Prenom</span><span style="font-weight:700">'+u.prenom+'</span></div>'+
-    '<div class="srow"><span style="color:var(--m);font-size:13px">Nom</span><span style="font-weight:700">'+u.nom+'</span></div>'+
-    '<div class="srow"><span style="color:var(--m);font-size:13px">Telephone</span><span style="font-weight:700;font-family:monospace">'+u.telephone+'</span></div>'+
-    '<div class="srow"><span style="color:var(--m);font-size:13px">Niveau KYC</span><span style="font-weight:700;color:var(--a)">'+u.kycNiveau+'</span></div>'+
-    '<div class="srow" style="border:none"><span style="color:var(--m);font-size:13px">Statut</span><span style="font-weight:700;color:'+(u.statut==='actif'?'#22c55e':'#f59e0b')+'">'+u.statut+'</span></div>'+
-    (u.codeParrainage?'<div style="margin-top:16px;background:var(--s);border:1px solid var(--b);border-radius:12px;padding:14px;text-align:center"><div style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;margin-bottom:4px">Code parrainage</div><div style="font-size:24px;font-weight:900;font-family:monospace;color:var(--a)">'+u.codeParrainage+'</div></div>':'');
-}
-function voirPlafond(){
-  var u=G.user;if(!u)return;openSh('plafond');
-  var plafonds={'KYC1':200000,'KYC2':1000000,'KYC3':5000000};
-  var p=plafonds[u.kycNiveau]||200000;
-  document.getElementById('sh-plafond-body').innerHTML=
-    '<div style="text-align:center;padding:20px 0"><div style="font-size:36px;font-weight:900;color:var(--a)">'+Number(p).toLocaleString('fr-FR')+' FCFA</div><div style="color:var(--m);font-size:14px;margin-top:4px">Plafond mensuel '+u.kycNiveau+'</div></div>'+
-    '<div class="srow"><span style="color:var(--m);font-size:13px">Depot mensuel max</span><span style="font-weight:700">'+Number(p).toLocaleString('fr-FR')+' FCFA</span></div>'+
-    '<div class="srow" style="border:none"><span style="color:var(--m);font-size:13px">Retrait mensuel max</span><span style="font-weight:700">'+Number(p).toLocaleString('fr-FR')+' FCFA</span></div>';
-}
-function trouverAgents(){T('Fonctionnalite bientot disponible');}
 function inviterAmi(){
   var u=G.user;if(!u)return;var code=u.codeParrainage||'';
   var msg='Rejoignez AFRIM PAY avec mon code '+code+' !';
   if(navigator.share)navigator.share({title:'AFRIM PAY',text:msg});
-  else if(navigator.clipboard){navigator.clipboard.writeText(msg);T('Message copie !');}
-  else T('Code: '+code);
+  else if(navigator.clipboard){navigator.clipboard.writeText(msg);T('Message copié !');}
+  else T('Code : '+code);
 }
 
 async function logout(){
   try{await post('/auth/logout',{refreshToken:G.refresh});}catch(e){}
   G.token=G.refresh=G.user=G.compte=null;
-  localStorage.removeItem('afrim_token');localStorage.removeItem('afrim_refresh');localStorage.removeItem('afrim_user');
+  _ls.del('afrim_token');_ls.del('afrim_refresh');_ls.del('afrim_user');
+  document.getElementById('s-lock').classList.remove('on');
   S('s-login');
 }
 
+// ══ QR CODE ══════════════════════════════════════════════════════
+var _qrCallback=null;
+var _qrGenInstances={};
+
+function genererQR(){
+  var u=G.user;if(!u||!u.telephone)return;
+  var data=u.telephone+'|'+(u.prenom||'')+' '+(u.nom||'');
+  ['qr-profil-canvas','wqr-carte-canvas'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(!el)return;
+    if(_qrGenInstances[id]){try{_qrGenInstances[id].clear();}catch(e){}}
+    el.innerHTML='';
+    try{
+      _qrGenInstances[id]=new QRCode(el,{text:data,width:id==='qr-profil-canvas'?130:200,height:id==='qr-profil-canvas'?130:200,colorDark:'#000',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M});
+    }catch(e){}
+  });
+  var nm=document.getElementById('wqr-carte-name');var tl=document.getElementById('wqr-carte-tel');
+  if(nm)nm.textContent=(u.prenom||'')+' '+(u.nom||'');
+  if(tl)tl.textContent=u.telephone||'';
+}
+
+function ouvrirPopupQR(callback){
+  _qrCallback=callback||null;
+  var popup=document.getElementById('wave-qr-popup');
+  popup.classList.add('on');
+  wqrTab('scan');
+  genererQR();
+}
+function fermerPopupQR(){
+  var popup=document.getElementById('wave-qr-popup');
+  popup.classList.remove('on');
+  var video=document.getElementById('wqr-video');
+  if(video&&video.srcObject){video.srcObject.getTracks().forEach(function(t){t.stop();});video.srcObject=null;}
+  if(window._scanAnimFrame){cancelAnimationFrame(window._scanAnimFrame);window._scanAnimFrame=null;}
+  _qrCallback=null;
+}
+
+function wqrTab(tab){
+  var scanner=document.getElementById('wqr-scanner');
+  var carte=document.getElementById('wqr-carte');
+  ['wtab-scan','wtab-scan2','wtab-carte','wtab-carte2'].forEach(function(id){
+    var b=document.getElementById(id);if(!b)return;
+    var isActive=(id.includes('scan')&&tab==='scan')||(id.includes('carte')&&tab==='carte');
+    b.classList.toggle('on',isActive);
+  });
+  if(scanner)scanner.style.display=tab==='scan'?'flex':'none';
+  if(carte)carte.style.display=tab==='carte'?'flex':'none';
+  if(tab==='scan')demarrerScan();
+  else{var video=document.getElementById('wqr-video');if(video&&video.srcObject){video.srcObject.getTracks().forEach(function(t){t.stop();});video.srcObject=null;}}
+}
+
+function demarrerScan(){
+  var video=document.getElementById('wqr-video');
+  var msg=document.getElementById('wqr-scan-msg');
+  if(!video)return;
+  if('BarcodeDetector' in window){
+    var bd=new BarcodeDetector({formats:['qr_code']});
+    navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false}).then(function(stream){
+      video.srcObject=stream;video.style.display='';
+      if(msg)msg.style.display='none';
+      function scanFrame(){
+        if(!video.srcObject){return;}
+        bd.detect(video).then(function(codes){
+          if(codes.length>0){
+            var raw=codes[0].rawValue;
+            var parts=raw.split('|');var tel=parts[0]||raw;
+            fermerPopupQR();
+            setTimeout(function(){
+              if(typeof _qrCallback==='function'){_qrCallback(tel,parts);_qrCallback=null;}
+              else T('Client identifié : '+tel);
+            },300);
+            return;
+          }
+          window._scanAnimFrame=requestAnimationFrame(scanFrame);
+        }).catch(function(){window._scanAnimFrame=requestAnimationFrame(scanFrame);});
+      }
+      video.onloadedmetadata=function(){video.play();window._scanAnimFrame=requestAnimationFrame(scanFrame);};
+    }).catch(function(){if(msg)msg.textContent='Caméra non disponible';});
+  } else {
+    navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false}).then(function(stream){
+      video.srcObject=stream;video.style.display='';
+      if(msg)msg.style.display='none';
+      var canvas=document.getElementById('wqr-canvas');var ctx=canvas.getContext('2d');
+      function tick(){
+        if(!video.srcObject)return;
+        if(video.readyState>=2&&window.jsQR){
+          canvas.width=video.videoWidth;canvas.height=video.videoHeight;
+          ctx.drawImage(video,0,0);
+          var d=ctx.getImageData(0,0,canvas.width,canvas.height);
+          var code=jsQR(d.data,d.width,d.height);
+          if(code&&code.data){
+            var raw=code.data;var parts=raw.split('|');var tel=parts[0]||raw;
+            fermerPopupQR();
+            setTimeout(function(){
+              if(typeof _qrCallback==='function'){_qrCallback(tel,parts);_qrCallback=null;}
+              else T('Client identifié : '+tel);
+            },300);
+            return;
+          }
+        }
+        window._scanAnimFrame=requestAnimationFrame(tick);
+      }
+      video.onloadedmetadata=function(){video.play();window._scanAnimFrame=requestAnimationFrame(tick);};
+    }).catch(function(){
+      if(msg)msg.textContent='Caméra non disponible — utilisez la galerie';
+    });
+  }
+}
+
+var _flashOn=false;
+function toggleFlash(){
+  var video=document.getElementById('wqr-video');
+  if(!video||!video.srcObject)return;
+  var track=video.srcObject.getVideoTracks()[0];
+  if(!track)return;
+  _flashOn=!_flashOn;
+  track.applyConstraints({advanced:[{torch:_flashOn}]}).catch(function(){T('Torche non disponible',true);_flashOn=!_flashOn;});
+  var btn=document.getElementById('wqr-flash-btn');
+  if(btn)btn.style.background=_flashOn?'rgba(245,158,11,.4)':'rgba(255,255,255,.15)';
+}
+
+// Galerie QR
+document.addEventListener('DOMContentLoaded',function(){
+  var ni=document.getElementById('wqr-native-input');
+  if(!ni)return;
+  ni.addEventListener('change',function(){
+    if(!this.files||!this.files[0])return;
+    var file=this.files[0];this.value='';
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      var img=new Image();
+      img.onload=function(){
+        var c=document.createElement('canvas');c.width=img.width;c.height=img.height;
+        var ctx=c.getContext('2d');ctx.drawImage(img,0,0);
+        if(window.jsQR){
+          var d=ctx.getImageData(0,0,img.width,img.height);
+          var code=jsQR(d.data,d.width,d.height);
+          if(code&&code.data){
+            var parts=code.data.split('|');var tel=parts[0]||code.data;
+            fermerPopupQR();
+            setTimeout(function(){
+              if(typeof _qrCallback==='function'){_qrCallback(tel,parts);_qrCallback=null;}
+            },300);
+            return;
+          }
+        }
+        T('QR non reconnu',true);
+      };
+      img.src=ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+});
+
+// ══ AUTO-LOCK (60s background) ════════════════════════════════════
+var _lockTimer=null;var _lockPin='';
+function initAutoLock(){
+  document.addEventListener('visibilitychange',function(){
+    if(document.hidden){
+      _lockTimer=setTimeout(function(){
+        if(G.user){
+          var lock=document.getElementById('s-lock');
+          document.getElementById('lock-name').textContent=(G.user.prenom||'')+' '+(G.user.nom||'');
+          lock.classList.add('on');
+          _lockPin='';rLockDots();
+        }
+      },60000);
+    } else {
+      if(_lockTimer){clearTimeout(_lockTimer);_lockTimer=null;}
+    }
+  });
+}
+function rLockDots(){for(var i=0;i<4;i++){var d=document.getElementById('ld'+i);if(d){d.textContent=_lockPin.length>i?'●':'';d.classList.toggle('on',_lockPin.length>i);}}}
+function lockPIN(n){if(_lockPin.length>=4)return;_lockPin+=String(n);rLockDots();if(_lockPin.length===4)setTimeout(verifierLock,300);}
+function lockDEL(){_lockPin=_lockPin.slice(0,-1);rLockDots();}
+async function verifierLock(){
+  var errEl=document.getElementById('lock-err');errEl.style.display='none';
+  try{
+    var r=await post('/auth/login',{telephone:G.user.telephone,pin:_lockPin});
+    document.getElementById('s-lock').classList.remove('on');
+    G.token=r.data.accessToken;_ls.set('afrim_token',G.token);
+  }catch(e){
+    _lockPin='';rLockDots();errEl.style.display='';
+  }
+}
+
+// ══ INIT ═════════════════════════════════════════════════════════
 document.querySelectorAll('.sh-ov').forEach(function(el){
   el.addEventListener('click',function(e){if(e.target===el){var id=el.id.replace('sh-','');closeSh(id);}});
 });
 
 (function init(){
-  if(G.token&&G.user&&['agent','mini_master','master','superviseur','admin'].includes(G.user.role)){S('s-home');chargerAccueil();return;}
+  if(G.token&&G.user&&['agent','mini_master','master','superviseur','admin'].includes(G.user.role)){
+    S('s-home');chargerAccueil();genererQR();initAutoLock();return;
+  }
   S('s-login');
 })();
 </script>
-</div>
-
-<!-- SHEET MON QR CODE -->
-<div class="sh-ov" id="sh-mon-qr">
-  <div class="sh">
-    <div class="sh-bar"></div>
-    <div class="sh-top"><div><div class="sh-title">Mon QR Code</div><div style="color:var(--m);font-size:12px">Faites scanner pour m'identifier</div></div><button class="sh-x" onclick="closeSh('mon-qr')">X</button></div>
-    <div class="sh-body" style="text-align:center">
-      <div style="background:linear-gradient(135deg,var(--a2),var(--a));border-radius:20px;padding:20px;display:inline-block;margin:0 auto 16px">
-        <div style="background:#fff;border-radius:12px;padding:12px">
-          <canvas id="my-qr-canvas" width="180" height="180" style="display:block;border-radius:8px"></canvas>
-        </div>
-      </div>
-      <div id="my-qr-name" style="font-size:18px;font-weight:800;margin-bottom:4px"></div>
-      <div id="my-qr-tel" style="color:var(--m);font-size:14px;font-family:monospace;margin-bottom:8px"></div>
-      <div id="my-qr-role" style="display:inline-block;padding:4px 12px;border-radius:99px;background:rgba(0,0,0,.06);font-size:12px;font-weight:700"></div>
-    </div>
-  </div>
-</div>
-
-<!-- SHEET SCANNER QR -->
-<div class="sh-ov" id="sh-scanner">
-  <div class="sh">
-    <div class="sh-bar"></div>
-    <div class="sh-top"><div><div class="sh-title">Scanner un QR</div><div style="color:var(--m);font-size:12px">Pointez la camera vers le QR code</div></div><button class="sh-x" onclick="fermerScanner()">X</button></div>
-    <div class="sh-body">
-      <div style="background:#000;border-radius:16px;overflow:hidden;position:relative;aspect-ratio:1;max-width:320px;margin:0 auto">
-        <video id="qr-video" style="width:100%;height:100%;object-fit:cover" playsinline autoplay muted></video>
-        <canvas id="qr-scan-canvas" style="display:none"></canvas>
-        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
-          <div style="width:180px;height:180px;border:3px solid var(--a);border-radius:16px;box-shadow:0 0 0 9999px rgba(0,0,0,.6)"></div>
-        </div>
-      </div>
-      <div id="scanner-result" style="display:none;margin-top:16px;background:#f0fdf4;border:1px solid #a7f3d0;border-radius:12px;padding:14px;text-align:center">
-        <div style="font-size:13px;font-weight:600;color:#059669;margin-bottom:4px">QR detecte</div>
-        <div id="scanner-result-text" style="font-size:14px;font-weight:800"></div>
-      </div>
-      <button onclick="fermerScanner()" style="width:100%;padding:13px;margin-top:14px;border-radius:12px;border:none;background:#f3f4f6;color:#374151;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Annuler</button>
-    </div>
-  </div>
-</div>
-
-<!-- SHEET CHANGER PIN -->
-<div class="sh-ov" id="sh-change-pin">
-  <div class="sh">
-    <div class="sh-bar"></div>
-    <div class="sh-top"><div><div class="sh-title">Changer mon PIN</div><div style="color:var(--m);font-size:12px">Modifier votre code secret</div></div><button class="sh-x" onclick="closeSh('change-pin');rstChangePin()">X</button></div>
-    <div class="sh-body">
-      <div id="change-pin-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#ef4444;padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:13px"></div>
-      <div id="change-pin-form">
-        <label style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:block">Ancien code PIN</label>
-        <input id="old-pin" type="password" inputmode="numeric" maxlength="4" placeholder="..." style="width:100%;background:#f3f4f6;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;font-size:24px;font-family:inherit;color:#111827;outline:none;text-align:center;letter-spacing:12px;margin-bottom:12px"/>
-        <label style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:block">Nouveau code PIN</label>
-        <input id="new-pin" type="password" inputmode="numeric" maxlength="4" placeholder="..." style="width:100%;background:#f3f4f6;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;font-size:24px;font-family:inherit;color:#111827;outline:none;text-align:center;letter-spacing:12px;margin-bottom:12px"/>
-        <label style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:block">Confirmer nouveau PIN</label>
-        <input id="new-pin2" type="password" inputmode="numeric" maxlength="4" placeholder="..." style="width:100%;background:#f3f4f6;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;font-size:24px;font-family:inherit;color:#111827;outline:none;text-align:center;letter-spacing:12px;margin-bottom:20px"/>
-        <button onclick="doChangePin()" style="width:100%;padding:15px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--a2),var(--a));color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Confirmer</button>
-      </div>
-      <div id="change-pin-loading" style="display:none;text-align:center;padding:32px">
-        <div style="width:24px;height:24px;border:3px solid #e5e7eb;border-top-color:var(--a);border-radius:50%;animation:sp .7s linear infinite;margin:0 auto"></div>
-      </div>
-      <div id="change-pin-success" style="display:none;text-align:center;padding:24px">
-        <div style="font-size:48px;margin-bottom:12px">OK</div>
-        <div style="font-size:20px;font-weight:800;margin-bottom:8px">PIN modifie !</div>
-        <div style="color:var(--m);font-size:14px;margin-bottom:20px">Vous allez etre deconnecte.</div>
-        <button onclick="closeSh('change-pin');logout()" style="width:100%;padding:15px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--a2),var(--a));color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Se reconnecter</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="sh-ov" id="sh-infos">
-  <div class="sh">
-    <div class="sh-bar"></div>
-    <div class="sh-top"><div><div class="sh-title">Mes informations</div></div><button class="sh-x" onclick="closeSh('infos')">x</button></div>
-    <div style="padding:0 22px 40px" id="sh-infos-body"></div>
-  </div>
-</div>
-<div class="sh-ov" id="sh-plafond">
-  <div class="sh">
-    <div class="sh-bar"></div>
-    <div class="sh-top"><div><div class="sh-title">Mon plafond</div></div><button class="sh-x" onclick="closeSh('plafond')">x</button></div>
-    <div style="padding:0 22px 40px" id="sh-plafond-body"></div>
-  </div>
 </div>
 </body>
 </html>

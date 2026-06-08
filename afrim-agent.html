@@ -809,12 +809,12 @@ async function doDepot(){
   document.getElementById('dep-btn-valider').style.display='none';
   document.getElementById('dep-loading').style.display='';
   try{
-    var r=await post('/transactions/depot',{clientTelephone:client.telephone,montant:amt});
+    var r=await post('/transactions/deposit',{telephone:client.telephone,montant:amt});
     document.getElementById('dep-loading').style.display='none';
     document.getElementById('dep-success').style.display='';
     var d=r.data||{};
     document.getElementById('dep-succ-txt').textContent='Dépôt de '+F(amt)+' pour '+(client.prenom||'')+' '+(client.nom||'');
-    document.getElementById('dep-succ-gain').textContent=d.commissionAgent?'Commission : +'+F(d.commissionAgent):'';
+    document.getElementById('dep-succ-gain').textContent=d.gainAgent?'Commission : +'+F(d.gainAgent):'';
     document.getElementById('dep-succ-ref').textContent=d.reference||'';
     rafraichir();
   }catch(e){
@@ -831,12 +831,12 @@ async function doRetrait(){
   document.getElementById('ret-btn-valider').style.display='none';
   document.getElementById('ret-loading').style.display='';
   try{
-    var r=await post('/transactions/retrait',{clientTelephone:client.telephone,montant:amt});
+    var r=await post('/transactions/withdraw',{telephone:client.telephone,montant:amt});
     document.getElementById('ret-loading').style.display='none';
     document.getElementById('ret-success').style.display='';
     var d=r.data||{};
     document.getElementById('ret-succ-txt').textContent='Retrait de '+F(amt)+' pour '+(client.prenom||'')+' '+(client.nom||'');
-    document.getElementById('ret-succ-gain').textContent=d.commissionAgent?'Commission : +'+F(d.commissionAgent):'';
+    document.getElementById('ret-succ-gain').textContent=d.gainAgent?'Commission : +'+F(d.gainAgent):'';
     document.getElementById('ret-succ-ref').textContent=d.reference||'';
     rafraichir();
   }catch(e){

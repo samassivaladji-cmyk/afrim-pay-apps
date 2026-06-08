@@ -741,13 +741,15 @@ function onTelInput(op){
 
 function scanPourOp(op){
   ouvrirPopupQR(function(tel){
-    closeSh(op==='dep'?'depot':'retrait');
-    setTimeout(function(){
-      openSh(op==='dep'?'depot':'retrait');
-      document.getElementById(op+'-tel').value=tel;
-      onTelInput(op);
-      identClient(op);
-    },300);
+    // Mettre le numéro et identifier directement
+    document.getElementById(op+'-tel').value=tel;
+    onTelInput(op);
+    // S'assurer que le bon sheet est ouvert
+    var shId=op==='dep'?'depot':'retrait';
+    if(!document.getElementById('sh-'+shId).classList.contains('on')){
+      openSh(shId);
+    }
+    setTimeout(function(){ identClient(op); },200);
   });
 }
 
@@ -1228,7 +1230,7 @@ function fermerPopupQR(){
   var video=document.getElementById('wqr-video');
   if(video&&video.srcObject){video.srcObject.getTracks().forEach(function(t){t.stop();});video.srcObject=null;}
   if(window._scanAnimFrame){cancelAnimationFrame(window._scanAnimFrame);window._scanAnimFrame=null;}
-  _qrCallback=null;
+  // NE PAS nullifier _qrCallback ici — il sera utilisé dans le setTimeout du scanner
 }
 
 function wqrTab(tab){
@@ -1260,9 +1262,10 @@ function demarrerScan(){
           if(codes.length>0){
             var raw=codes[0].rawValue;
             var parts=raw.split('|');var tel=parts[0]||raw;
+            var cb=_qrCallback;_qrCallback=null;
             fermerPopupQR();
             setTimeout(function(){
-              if(typeof _qrCallback==='function'){_qrCallback(tel,parts);_qrCallback=null;}
+              if(typeof cb==='function'){cb(tel,parts);}
               else T('Client identifié : '+tel);
             },300);
             return;
@@ -1286,9 +1289,10 @@ function demarrerScan(){
           var code=jsQR(d.data,d.width,d.height);
           if(code&&code.data){
             var raw=code.data;var parts=raw.split('|');var tel=parts[0]||raw;
+            var cb=_qrCallback;_qrCallback=null;
             fermerPopupQR();
             setTimeout(function(){
-              if(typeof _qrCallback==='function'){_qrCallback(tel,parts);_qrCallback=null;}
+              if(typeof cb==='function'){cb(tel,parts);}
               else T('Client identifié : '+tel);
             },300);
             return;
@@ -1333,9 +1337,10 @@ document.addEventListener('DOMContentLoaded',function(){
           var code=jsQR(d.data,d.width,d.height);
           if(code&&code.data){
             var parts=code.data.split('|');var tel=parts[0]||code.data;
+            var cb=_qrCallback;_qrCallback=null;
             fermerPopupQR();
             setTimeout(function(){
-              if(typeof _qrCallback==='function'){_qrCallback(tel,parts);_qrCallback=null;}
+              if(typeof cb==='function'){cb(tel,parts);}
             },300);
             return;
           }

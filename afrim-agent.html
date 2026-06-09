@@ -928,15 +928,39 @@ function rafraichir(){chargerAccueil();}
 var TX_CFG={depot:{c:'#22c55e',i:'↓',l:'Dépôt'},retrait:{c:'#f97316',i:'↑',l:'Retrait'},transfert:{c:'#3b82f6',i:'⇄',l:'Transfert'},paiement_marchand:{c:'#a855f7',i:'◈',l:'Paiement'},commission:{c:'#f59e0b',i:'★',l:'Commission'},commission_depot:{c:'#f59e0b',i:'★',l:'Comm. dépôt'}};
 
 function txRow(tx){
-  var cfg=TX_CFG[tx.type]||TX_CFG.transfert;
-  var cid=G.compte?G.compte.id:'';
-  var isIn=tx.compteDestId===cid||['commission','commission_depot','depot'].includes(tx.type);
-  var sign=isIn?'+':'−';
-  return '<div class="tx" style="background:'+cfg.c+'0d;border:1px solid '+cfg.c+'22">'
+  var cid=G.compte?String(G.compte.id):'';
+  var cSrc=String(tx.compteSourceId||tx.compte_source_id||'');
+  var cDst=String(tx.compteDestId||tx.compte_dest_id||'');
+  var type=tx.type||'';
+  // Pour l'agent : logique de signe et libellé selon le sens
+  var label, icon, color, sign, amtColor;
+  if(type==='depot'){
+    // Dépôt client = l'agent débourse de sa liquidité → SORTIE
+    label='Dépôt client'; icon='↓'; color='#22c55e';
+    sign='−'; amtColor='#ef4444';
+  } else if(type==='retrait'){
+    // Retrait client = l'agent reçoit de la liquidité → ENTRÉE
+    label='Retrait client'; icon='↑'; color='#f97316';
+    sign='+'; amtColor='#22c55e';
+  } else if(type==='transfert'){
+    var isSrc=cSrc===cid;
+    label=isSrc?'Transfert envoyé':'Transfert reçu';
+    icon=isSrc?'→':'←';
+    color='#3b82f6';
+    sign=isSrc?'−':'+';
+    amtColor=isSrc?'#ef4444':'#22c55e';
+  } else if(['commission','commission_depot','retrait_agent','depot_agent'].includes(type)){
+    label='Commission'; icon='★'; color='#f59e0b';
+    sign='+'; amtColor='#f59e0b';
+  } else {
+    label=type; icon='◈'; color='#6b7280';
+    sign=cDst===cid?'+':'−'; amtColor=cDst===cid?'#22c55e':'#ef4444';
+  }
+  return '<div class="tx" style="background:'+color+'0d;border:1px solid '+color+'22">'
     +'<div style="display:flex;align-items:center;gap:10px">'
-    +'<div style="width:36px;height:36px;border-radius:10px;background:'+cfg.c+'18;color:'+cfg.c+';display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">'+cfg.i+'</div>'
-    +'<div><div style="font-size:13px;font-weight:600">'+cfg.l+'</div><div style="color:var(--m);font-size:11px">'+FD(tx.dateCreation||tx.date_creation)+'</div></div></div>'
-    +'<div style="text-align:right"><div style="color:'+(isIn?cfg.c:'#ef4444')+';font-size:14px;font-weight:800;font-family:monospace">'+sign+F(tx.montant)+'</div>'
+    +'<div style="width:36px;height:36px;border-radius:10px;background:'+color+'18;color:'+color+';display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">'+icon+'</div>'
+    +'<div><div style="font-size:13px;font-weight:600">'+label+'</div><div style="color:var(--m);font-size:11px">'+FD(tx.dateCreation||tx.date_creation)+'</div></div></div>'
+    +'<div style="text-align:right"><div style="color:'+amtColor+';font-size:14px;font-weight:800;font-family:monospace">'+sign+F(tx.montant)+'</div>'
     +'<div style="color:var(--d);font-size:10px;font-family:monospace">'+(tx.reference||'')+'</div></div></div>';
 }
 

@@ -1266,7 +1266,7 @@ function demarrerScan(){
             fermerPopupQR();
             setTimeout(function(){
               if(typeof cb==='function'){cb(tel,parts);}
-              else T('Client identifié : '+tel);
+              else afficherChoixOp(tel,parts);
             },300);
             return;
           }
@@ -1293,7 +1293,7 @@ function demarrerScan(){
             fermerPopupQR();
             setTimeout(function(){
               if(typeof cb==='function'){cb(tel,parts);}
-              else T('Client identifié : '+tel);
+              else afficherChoixOp(tel,parts);
             },300);
             return;
           }
@@ -1341,6 +1341,7 @@ document.addEventListener('DOMContentLoaded',function(){
             fermerPopupQR();
             setTimeout(function(){
               if(typeof cb==='function'){cb(tel,parts);}
+            else afficherChoixOp(tel,parts);
             },300);
             return;
           }
@@ -1385,6 +1386,73 @@ async function verifierLock(){
   }
 }
 
+
+// ── Menu choix opération après scan accueil ──────────────────────
+var _scannedClient = null;
+function afficherChoixOp(tel, parts){
+  // Identifier le client puis afficher le choix
+  (async function(){
+    try{
+      var r = await get('/users?telephone='+encodeURIComponent(tel)+'&limit=1');
+      var arr = Array.isArray(r.data)?r.data:[r.data];
+      if(!arr.length||!arr[0]) throw new Error('Client introuvable');
+      var u = arr[0];
+      _scannedClient = u;
+      document.getElementById('choix-av').textContent = (u.prenom||'?')[0].toUpperCase();
+      document.getElementById('choix-name').textContent = (u.prenom||'')+' '+(u.nom||'');
+      document.getElementById('choix-tel').textContent = u.telephone||tel;
+      document.getElementById('choix-kyc').textContent = u.kycNiveau||'KYC1';
+      document.getElementById('choix-op-sub').textContent = 'Que souhaitez-vous faire ?';
+      openSh('choix-op');
+    }catch(e){ T(e.message, true); }
+  })();
+}
+
+function ouvrirDepotAvecClient(){
+  if(!_scannedClient) return;
+  closeSh('choix-op');
+  setTimeout(function(){
+    rstOp('dep');
+    openSh('depot');
+    document.getElementById('dep-tel').value = _scannedClient.telephone||'';
+    onTelInput('dep');
+    // Pré-remplir le recap directement
+    opClients['dep'] = _scannedClient;
+    var u = _scannedClient;
+    document.getElementById('dep-s1').style.display='none';
+    document.getElementById('dep-s2').style.display='';
+    document.getElementById('dep-recap').style.display='';
+    document.getElementById('dep-av').textContent=(u.prenom||'?')[0].toUpperCase();
+    document.getElementById('dep-cname').textContent=(u.prenom||'')+' '+(u.nom||'');
+    document.getElementById('dep-ctel').textContent=u.telephone||'';
+    document.getElementById('dep-kyc').textContent=u.kycNiveau||'KYC1';
+    document.getElementById('dep-btn-valider').style.display='';
+  },300);
+}
+
+function ouvrirRetraitAvecClient(){
+  if(!_scannedClient) return;
+  closeSh('choix-op');
+  setTimeout(function(){
+    rstOp('ret');
+    openSh('retrait');
+    document.getElementById('ret-tel').value = _scannedClient.telephone||'';
+    onTelInput('ret');
+    opClients['ret'] = _scannedClient;
+    var u = _scannedClient;
+    document.getElementById('ret-s1').style.display='none';
+    document.getElementById('ret-s2').style.display='';
+    document.getElementById('ret-recap').style.display='';
+    document.getElementById('ret-av').textContent=(u.prenom||'?')[0].toUpperCase();
+    document.getElementById('ret-cname').textContent=(u.prenom||'')+' '+(u.nom||'');
+    document.getElementById('ret-ctel').textContent=u.telephone||'';
+    document.getElementById('ret-kyc').textContent=u.kycNiveau||'KYC1';
+    var sol=u.comptes&&(Array.isArray(u.comptes)?u.comptes[0]:u.comptes);
+    if(sol)document.getElementById('ret-csolde').textContent=F(sol.solde);
+    document.getElementById('ret-btn-valider').style.display='';
+  },300);
+}
+
 // ══ INIT ═════════════════════════════════════════════════════════
 document.querySelectorAll('.sh-ov').forEach(function(el){
   el.addEventListener('click',function(e){if(e.target===el){var id=el.id.replace('sh-','');closeSh(id);}});
@@ -1397,6 +1465,42 @@ document.querySelectorAll('.sh-ov').forEach(function(el){
   S('s-login');
 })();
 </script>
+
+<!-- SHEET CHOIX OPÉRATION après scan QR accueil -->
+<div class="sh-ov" id="sh-choix-op">
+  <div class="sh" style="padding-bottom:60px">
+    <div class="sh-bar"></div>
+    <div class="sh-top">
+      <div>
+        <div class="sh-title">Client identifié</div>
+        <div style="color:var(--m);font-size:12px" id="choix-op-sub">Choisissez l'opération</div>
+      </div>
+      <button class="sh-x" onclick="closeSh('choix-op')">✕</button>
+    </div>
+    <!-- Recap client -->
+    <div style="background:var(--s);border:1px solid var(--b);border-radius:14px;padding:14px;margin-bottom:20px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:44px;height:44px;border-radius:50%;background:rgba(245,158,11,.15);display:flex;align-items:center;justify-content:center;color:var(--a);font-size:18px;font-weight:800" id="choix-av">?</div>
+        <div>
+          <div style="font-weight:700;font-size:15px" id="choix-name">—</div>
+          <div style="color:var(--m);font-size:12px" id="choix-tel">—</div>
+        </div>
+        <div style="margin-left:auto;font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:rgba(245,158,11,.1);color:var(--a)" id="choix-kyc">—</div>
+      </div>
+    </div>
+    <!-- Boutons opérations -->
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button onclick="ouvrirDepotAvecClient()" style="background:#f0fdf4;border:1.5px solid #a7f3d0;border-radius:16px;padding:16px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;font-family:inherit;text-align:left">
+        <div style="width:46px;height:46px;border-radius:13px;background:rgba(34,197,94,.12);display:flex;align-items:center;justify-content:center;color:#22c55e;font-size:24px;flex-shrink:0">↓</div>
+        <div><div style="font-size:14px;font-weight:700;color:#15803d">Effectuer un Dépôt</div><div style="font-size:11px;color:var(--m)">Commission 0,2% du montant</div></div>
+      </button>
+      <button onclick="ouvrirRetraitAvecClient()" style="background:#fff7ed;border:1.5px solid #fed7aa;border-radius:16px;padding:16px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;font-family:inherit;text-align:left">
+        <div style="width:46px;height:46px;border-radius:13px;background:rgba(249,115,22,.12);display:flex;align-items:center;justify-content:center;color:#f97316;font-size:24px;flex-shrink:0">↑</div>
+        <div><div style="font-size:14px;font-weight:700;color:#c2410c">Effectuer un Retrait</div><div style="font-size:11px;color:var(--m)">35% des frais de retrait</div></div>
+      </button>
+    </div>
+  </div>
+</div>
 </div>
 </body>
 </html>

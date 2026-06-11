@@ -1009,6 +1009,12 @@ function txRow(tx){
   } else if(['commission','commission_depot','retrait_agent','depot_agent'].includes(type)){
     label='Commission'; icon='★'; color='#f59e0b';
     sign='+'; amtColor='#f59e0b';
+  } else if(type==='virement_commission'){
+    label='Virement commissions'; icon='💳'; color='#d97706';
+    sign='+'; amtColor='#22c55e';
+  } else if(type==='virement_gains'){
+    label='Virement gains'; icon='🤝'; color='#8b5cf6';
+    sign='+'; amtColor='#22c55e';
   } else {
     label=type; icon='◈'; color='#6b7280';
     sign=cDst===cid?'+':'−'; amtColor=cDst===cid?'#22c55e':'#ef4444';
@@ -1068,63 +1074,110 @@ async function chargerCommissions(){
   el.innerHTML='<div style="text-align:center;padding:32px"><div class="spin"></div></div>';
   try{
     var now=new Date();
-    function debut(p){
+    function debutC(p){
       if(p==='day'){var d=new Date(now);d.setHours(0,0,0,0);return d;}
       if(p==='week'){var d=new Date(now);d.setDate(d.getDate()-d.getDay());d.setHours(0,0,0,0);return d;}
       if(p==='month')return new Date(now.getFullYear(),now.getMonth(),1);
       if(p==='year')return new Date(now.getFullYear(),0,1);
       return new Date(0);
     }
-    var d1=debut(commPeriod);
-    var r=await get('/commissions?limit=500');
-    var all=r.data||[];
-    var comms=all.filter(function(c){
-      return (c.type_commission==='depot_agent'||c.type_commission==='retrait_agent')&&new Date(c.date_calcul||0)>=d1;
-    });
+    var d1=debutC(commPeriod);
+    var results=await Promise.all([
+      get('/commissions?limit=1000'),
+      get('/transactions?limit=100&type=virement_commission')
+    ]);
+    var all=results[0].data||[];
+    var virements=results[1].data||[];
+
+    // Commissions actuelles = statut 'verse' (non encore virées)
+    var allDepRet=all.filter(function(c){return c.type_commission==='depot_agent'||c.type_commission==='retrait_agent';});
+    var disponible=allDepRet.filter(function(c){return c.statut==='verse';}).reduce(function(s,c){return s+Number(c.montant||0);},0);
+
+    // Commissions sur la période sélectionnée (toutes, peu importe statut)
+    var comms=allDepRet.filter(function(c){return new Date(c.date_calcul||0)>=d1;});
     var depC=comms.filter(function(c){return c.type_commission==='depot_agent';});
     var retC=comms.filter(function(c){return c.type_commission==='retrait_agent';});
     var tDep=depC.reduce(function(s,c){return s+Number(c.montant||0);},0);
     var tRet=retC.reduce(function(s,c){return s+Number(c.montant||0);},0);
     var tTotal=tDep+tRet;
+    var tTotalAll=allDepRet.reduce(function(s,c){return s+Number(c.montant||0);},0);
     var h='';
+
+    // ── Carte résumé ──
     h+='<div style="background:linear-gradient(135deg,#b45309,#d97706);border-radius:18px;padding:18px 20px;margin-bottom:14px;color:#fff">'
-      +'<div style="font-size:10px;font-weight:700;opacity:.7;text-transform:uppercase;margin-bottom:4px">TOTAL COMMISSIONS</div>'
-      +'<div style="font-size:34px;font-weight:900">'+F(tTotal)+' <span style="font-size:14px;opacity:.7">FCFA</span></div>'
-      +'<div style="display:flex;gap:8px;margin-top:8px">'
+      +'<div style="font-size:10px;font-weight:700;opacity:.7;text-transform:uppercase;margin-bottom:2px">COMMISSIONS — CETTE P&#201;RIODE</div>'
+      +'<div style="font-size:32px;font-weight:900;margin-bottom:8px">'+F(tTotal)+'</div>'
+      +'<div style="display:flex;gap:8px">'
       +'<div style="flex:1;background:rgba(0,0,0,.18);border-radius:10px;padding:10px;text-align:center">'
-      +'<div style="font-size:9px;opacity:.7;text-transform:uppercase;margin-bottom:4px">↓ D&#233;p&#244;ts</div>'
-      +'<div style="font-size:16px;font-weight:900">'+F(tDep)+'</div>'
-      +'<div style="font-size:9px;opacity:.6;margin-top:2px">'+depC.length+' ops</div>'
+      +'<div style="font-size:9px;opacity:.7;text-transform:uppercase;margin-bottom:3px">↓ D&#233;p&#244;ts</div>'
+      +'<div style="font-size:15px;font-weight:900">'+F(tDep)+'</div>'
+      +'<div style="font-size:8px;opacity:.6;margin-top:2px">'+depC.length+' ops</div>'
       +'</div>'
       +'<div style="flex:1;background:rgba(0,0,0,.18);border-radius:10px;padding:10px;text-align:center">'
-      +'<div style="font-size:9px;opacity:.7;text-transform:uppercase;margin-bottom:4px">↑ Retraits</div>'
-      +'<div style="font-size:16px;font-weight:900">'+F(tRet)+'</div>'
-      +'<div style="font-size:9px;opacity:.6;margin-top:2px">'+retC.length+' ops</div>'
-      +'</div></div></div>';
+      +'<div style="font-size:9px;opacity:.7;text-transform:uppercase;margin-bottom:3px">↑ Retraits</div>'
+      +'<div style="font-size:15px;font-weight:900">'+F(tRet)+'</div>'
+      +'<div style="font-size:8px;opacity:.6;margin-top:2px">'+retC.length+' ops</div>'
+      +'</div></div>'
+      +'<div style="margin-top:8px;padding:8px 10px;background:rgba(0,0,0,.2);border-radius:8px;display:flex;justify-content:space-between;align-items:center">'
+      +'<div style="font-size:10px;opacity:.8">Total depuis toujours</div>'
+      +'<div style="font-size:14px;font-weight:800">'+F(tTotalAll)+'</div>'
+      +'</div>'
+    +'</div>';
 
-    // ── Virer commissions ──
-    var tTotalComm=all.reduce(function(s,c){return s+Number(c.montant||0);},0);
-    h+='<div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:16px;padding:16px;margin-bottom:14px">'
-      +'<div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:4px">💸 Virer mes commissions</div>'
-      +'<div style="font-size:12px;color:#6b7280;margin-bottom:12px">Disponible : <strong style="color:var(--a)">'+F(tTotalComm)+'</strong></div>'
+    // ── Commissions actuelles (disponibles) ──
+    h+='<div style="background:#fff;border:2px solid #d97706;border-radius:16px;padding:14px 16px;margin-bottom:14px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center">'
+      +'<div>'
+      +'<div style="font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.05em">COMMISSIONS ACTUELLES</div>'
+      +'<div style="font-size:24px;font-weight:900;color:var(--a)">'+F(disponible)+'</div>'
+      +'<div style="font-size:11px;color:#6b7280;margin-top:2px">En attente de virement</div>'
+      +'</div>'
+      +'<div style="font-size:32px">💳</div>'
+      +'</div>'
+    +'</div>';
+
+    // ── Virer ──
+    h+='<div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:16px;padding:14px;margin-bottom:14px">'
+      +'<div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:4px">💸 Virer vers mon compte</div>'
+      +'<div style="font-size:12px;color:#6b7280;margin-bottom:10px">Disponible : <strong style="color:var(--a)">'+F(disponible)+'</strong></div>'
       +'<div style="display:flex;gap:8px;align-items:center">'
-        +'<input id="comm-vir-input" type="number" placeholder="Montant en FCFA" style="flex:1;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 12px;font-size:14px;outline:none;color:#111">'
-        +'<button onclick="virerCommissions()" style="background:var(--a);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:800;cursor:pointer">Virer</button>'
+      +'<input id="comm-vir-input" type="number" placeholder="Montant en FCFA" style="flex:1;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 12px;font-size:14px;outline:none;color:#111">'
+      +'<button onclick="virerCommissions()" style="background:var(--a);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:800;cursor:pointer">Virer</button>'
       +'</div>'
       +'<div id="comm-vir-msg" style="margin-top:8px;font-size:12px;display:none"></div>'
     +'</div>';
-    h+='<div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">D&#233;tail</div>';
-    if(!comms.length){h+='<div style="text-align:center;padding:20px;color:var(--m);font-size:13px">Aucune commission sur cette p&#233;riode</div>';}
-    else{
-      comms.slice(0,50).forEach(function(c){
+
+    // ── Historique virements ──
+    if(virements.length){
+      h+='<div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Historique virements</div>';
+      virements.slice(0,10).forEach(function(v){
+        var d=new Date(v.dateCreation||v.date_creation||0);
+        var ds=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})+' · '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+        h+='<div class="tx" style="background:#d977060d;border:1px solid #d9770622">'
+          +'<div style="display:flex;align-items:center;gap:10px">'
+          +'<div style="width:36px;height:36px;border-radius:10px;background:#d9770618;color:#d97706;display:flex;align-items:center;justify-content:center;font-size:16px">💳</div>'
+          +'<div><div style="font-size:13px;font-weight:700">Virement commissions</div><div style="color:var(--m);font-size:11px">'+ds+'</div>'
+          +'<div style="color:var(--d);font-size:10px">'+(v.reference||'')+'</div></div></div>'
+          +'<div style="color:#22c55e;font-size:14px;font-weight:900;font-family:monospace">+'+F(v.montant)+'</div></div>';
+      });
+    }
+
+    // ── D&#233;tail commissions ──
+    h+='<div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;margin:14px 0 8px">D&#233;tail commissions</div>';
+    if(!comms.length){
+      h+='<div style="text-align:center;padding:20px;color:var(--m);font-size:13px">Aucune commission sur cette p&#233;riode</div>';
+    } else {
+      comms.slice(0,30).forEach(function(c){
         var isD=c.type_commission==='depot_agent';
         var col=isD?'#22c55e':'#f97316';
         var d=new Date(c.date_calcul||0);
         var ds=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})+' · '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-        h+='<div class="tx" style="background:'+col+'0d;border:1px solid '+col+'22">'
+        var badge=c.statut==='vire'?'<span style="font-size:9px;color:#9ca3af;margin-left:4px">vir&#233;</span>':'';
+        h+='<div class="tx" style="background:'+col+'0d;border:1px solid '+col+'22'+(c.statut==='vire'?';opacity:.6':'"')+'">'
           +'<div style="display:flex;align-items:center;gap:10px">'
           +'<div style="width:36px;height:36px;border-radius:10px;background:'+col+'18;color:'+col+';display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700">'+(isD?'↓':'↑')+'</div>'
-          +'<div><div style="font-size:13px;font-weight:700">'+(isD?'Commission d&#233;p&#244;t':'Commission retrait')+'</div><div style="color:var(--m);font-size:11px">'+ds+'</div></div></div>'
+          +'<div><div style="font-size:13px;font-weight:700">'+(isD?'Commission d&#233;p&#244;t':'Commission retrait')+badge+'</div>'
+          +'<div style="color:var(--m);font-size:11px">'+ds+'</div></div></div>'
           +'<div style="color:'+col+';font-size:15px;font-weight:900;font-family:monospace">+'+F(c.montant)+'</div></div>';
       });
     }
@@ -1140,9 +1193,9 @@ async function virerCommissions(){
   if(!amt||amt<1){if(msg){msg.style.display='block';msg.style.color='#ef4444';msg.textContent='Montant invalide';}return;}
   btn.disabled=true;btn.textContent='...';
   try{
-    var r=await post('/accounts/transfer-gains',{montant:amt});
+    var r=await post('/accounts/transfer-commissions',{montant:amt});
     if(r.success){
-      if(msg){msg.style.display='block';msg.style.color='#16a34a';msg.textContent='✅ '+F(amt)+' FCFA vir&#233;s !';}
+      if(msg){msg.style.display='block';msg.style.color='#16a34a';msg.textContent='✅ '+F(amt)+' vir&#233;s vers votre compte !';}
       if(inp)inp.value='';
       setTimeout(function(){chargerCommissions();},1200);
     } else {
@@ -1176,14 +1229,18 @@ async function chargerGains(){
   try{
     var results=await Promise.all([
       get('/commissions?limit=1000'),
-      get('/users/me')
+      get('/users/me'),
+      get('/transactions?limit=100&type=virement_gains')
     ]);
     var comms=results[0].data||[];
     var me=results[1].data||{};
+    var virements=results[2].data||[];
     var now=new Date();
 
-    // GAINS = commissions_parrain UNIQUEMENT (pas depot_agent/retrait_agent)
+    // GAINS = commission_parrain UNIQUEMENT
     var gainsParr=comms.filter(function(c){return c.type_commission==='commission_parrain';});
+    // Gains actuels = statut 'verse' (non encore virés)
+    var disponible=gainsParr.filter(function(c){return c.statut==='verse';}).reduce(function(s,c){return s+Number(c.montant||0);},0);
 
     var dAuj=new Date(now.getFullYear(),now.getMonth(),now.getDate());
     var dSem=new Date(now);dSem.setDate(dSem.getDate()-dSem.getDay());dSem.setHours(0,0,0,0);
@@ -1199,58 +1256,70 @@ async function chargerGains(){
     var codeParrainage=(me.codeParrainage||'').replace(/\s+/g,'').replace(/-/g,'');
     var h='';
 
-    // ── Carte gains parrainage ──
+    // ── Carte résumé périodes ──
     h+='<div style="background:linear-gradient(135deg,var(--a2),var(--a));border-radius:20px;padding:20px 22px;margin-bottom:14px;color:#fff">'
-      +'<div style="font-size:11px;font-weight:700;opacity:.6;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">MES GAINS</div>'
+      +'<div style="font-size:11px;font-weight:700;opacity:.6;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">MES GAINS — PARRAINAGE</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
         +'<div style="background:rgba(0,0,0,.18);border-radius:12px;padding:10px">'
           +'<div style="font-size:9px;opacity:.7;text-transform:uppercase;margin-bottom:3px">Aujourd&#39;hui</div>'
-          +'<div style="font-size:18px;font-weight:900">'+F(tAuj)+' F</div>'
+          +'<div style="font-size:17px;font-weight:900">'+F(tAuj)+'</div>'
           +'<div style="font-size:8px;opacity:.6;margin-top:1px">'+nbG(dAuj)+' ops</div>'
         +'</div>'
         +'<div style="background:rgba(0,0,0,.18);border-radius:12px;padding:10px">'
           +'<div style="font-size:9px;opacity:.7;text-transform:uppercase;margin-bottom:3px">Semaine</div>'
-          +'<div style="font-size:18px;font-weight:900">'+F(tSem)+' F</div>'
+          +'<div style="font-size:17px;font-weight:900">'+F(tSem)+'</div>'
           +'<div style="font-size:8px;opacity:.6;margin-top:1px">'+nbG(dSem)+' ops</div>'
         +'</div>'
         +'<div style="background:rgba(0,0,0,.18);border-radius:12px;padding:10px">'
           +'<div style="font-size:9px;opacity:.7;text-transform:uppercase;margin-bottom:3px">Ce mois</div>'
-          +'<div style="font-size:18px;font-weight:900">'+F(tMois)+' F</div>'
+          +'<div style="font-size:17px;font-weight:900">'+F(tMois)+'</div>'
           +'<div style="font-size:8px;opacity:.6;margin-top:1px">'+nbG(dMois)+' ops</div>'
         +'</div>'
         +'<div style="background:rgba(0,0,0,.18);border-radius:12px;padding:10px">'
           +'<div style="font-size:9px;opacity:.7;text-transform:uppercase;margin-bottom:3px">Cette ann&#233;e</div>'
-          +'<div style="font-size:18px;font-weight:900">'+F(tAn)+' F</div>'
+          +'<div style="font-size:17px;font-weight:900">'+F(tAn)+'</div>'
           +'<div style="font-size:8px;opacity:.6;margin-top:1px">'+nbG(dAn)+' ops</div>'
         +'</div>'
       +'</div>'
-      +'<div style="margin-top:10px;padding:10px;background:rgba(255,255,255,.12);border-radius:10px;display:flex;justify-content:space-between;align-items:center">'
-        +'<div style="font-size:11px;opacity:.8">TOTAL DEPUIS TOUJOURS</div>'
-        +'<div style="font-size:20px;font-weight:900">'+F(tTotal)+' F</div>'
+      +'<div style="margin-top:8px;padding:8px 10px;background:rgba(0,0,0,.2);border-radius:8px;display:flex;justify-content:space-between;align-items:center">'
+        +'<div style="font-size:10px;opacity:.8">Total depuis toujours</div>'
+        +'<div style="font-size:14px;font-weight:800">'+F(tTotal)+'</div>'
       +'</div>'
     +'</div>';
 
-    // ── Virer mes gains ──
-    h+='<div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:16px;padding:16px;margin-bottom:14px">'
+    // ── Gains actuels (disponibles) ──
+    h+='<div style="background:#fff;border:2px solid var(--a);border-radius:16px;padding:14px 16px;margin-bottom:14px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center">'
+      +'<div>'
+      +'<div style="font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.05em">GAINS ACTUELS</div>'
+      +'<div style="font-size:24px;font-weight:900;color:var(--a)">'+F(disponible)+'</div>'
+      +'<div style="font-size:11px;color:#6b7280;margin-top:2px">En attente de virement</div>'
+      +'</div>'
+      +'<div style="font-size:32px">🤝</div>'
+      +'</div>'
+    +'</div>';
+
+    // ── Virer ──
+    h+='<div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:16px;padding:14px;margin-bottom:14px">'
       +'<div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:4px">💸 Virer mes gains</div>'
-      +'<div style="font-size:12px;color:#6b7280;margin-bottom:12px">Disponible : <strong style="color:var(--a)">'+F(tTotal)+'</strong></div>'
+      +'<div style="font-size:12px;color:#6b7280;margin-bottom:10px">Disponible : <strong style="color:var(--a)">'+F(disponible)+'</strong></div>'
       +'<div style="display:flex;gap:8px;align-items:center">'
-        +'<input id="gains-vir-input" type="number" placeholder="Montant en FCFA" style="flex:1;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 12px;font-size:14px;outline:none;color:#111">'
-        +'<button id="gains-vir-btn" onclick="virerGains()" style="background:var(--a);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:800;cursor:pointer">Virer</button>'
+      +'<input id="gains-vir-input" type="number" placeholder="Montant en FCFA" style="flex:1;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 12px;font-size:14px;outline:none;color:#111">'
+      +'<button id="gains-vir-btn" onclick="virerGains()" style="background:var(--a);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:800;cursor:pointer">Virer</button>'
       +'</div>'
       +'<div id="gains-vir-msg" style="margin-top:8px;font-size:12px;display:none"></div>'
     +'</div>';
 
     // ── Parrainage ──
-    h+='<div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:16px;margin-bottom:14px">'
-      +'<div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:12px">🤝 Parrainage (illimit&#233;)</div>'
-      +'<div style="display:flex;gap:8px;margin-bottom:12px">'
+    h+='<div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:14px;margin-bottom:14px">'
+      +'<div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:10px">🤝 Parrainage (illimit&#233;)</div>'
+      +'<div style="display:flex;gap:8px;margin-bottom:10px">'
         +'<div style="flex:1;background:#f0fdf4;border-radius:12px;padding:12px;text-align:center">'
-          +'<div style="font-size:24px;font-weight:900;color:#16a34a" id="gains-nb-parraines">—</div>'
+          +'<div style="font-size:22px;font-weight:900;color:#16a34a" id="gains-nb-parraines">—</div>'
           +'<div style="font-size:10px;color:#6b7280;margin-top:2px">Parrain&#233;s</div>'
         +'</div>'
         +'<div style="flex:1;background:#fffbeb;border-radius:12px;padding:12px;text-align:center">'
-          +'<div style="font-size:24px;font-weight:900;color:var(--a)" id="gains-nb-rattaches">—</div>'
+          +'<div style="font-size:22px;font-weight:900;color:var(--a)" id="gains-nb-rattaches">—</div>'
           +'<div style="font-size:10px;color:#6b7280;margin-top:2px">Rattach&#233;s <span style="font-size:9px;opacity:.6">(illimit&#233;)</span></div>'
         +'</div>'
       +'</div>'
@@ -1260,23 +1329,38 @@ async function chargerGains(){
       +'</div>'
     +'</div>';
 
+    // ── Historique virements gains ──
+    if(virements.length){
+      h+='<div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Historique virements</div>';
+      virements.slice(0,10).forEach(function(v){
+        var d=new Date(v.dateCreation||v.date_creation||0);
+        var ds=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})+' · '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+        h+='<div class="tx" style="background:#d977060d;border:1px solid #d9770622">'
+          +'<div style="display:flex;align-items:center;gap:10px">'
+          +'<div style="width:36px;height:36px;border-radius:10px;background:#d9770618;color:#d97706;display:flex;align-items:center;justify-content:center;font-size:16px">🤝</div>'
+          +'<div><div style="font-size:13px;font-weight:700">Virement gains</div><div style="color:var(--m);font-size:11px">'+ds+'</div>'
+          +'<div style="color:var(--d);font-size:10px">'+(v.reference||'')+'</div></div></div>'
+          +'<div style="color:#22c55e;font-size:14px;font-weight:900;font-family:monospace">+'+F(v.montant)+'</div></div>';
+      });
+    }
+
     // ── Comment gagner ──
-    h+='<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:14px;margin-bottom:14px;font-size:12px;color:#166534">'
-      +'<div style="font-weight:800;margin-bottom:6px">💡 Comment gagner ?</div>'
-      +'<div style="margin-bottom:4px">Parrainez des contacts. Ils font un <strong>d&#233;p&#244;t ou transfert ≥500 FCFA</strong> = rattach&#233;s &#224; vie.</div>'
-      +'<div>&#192; chaque <strong>retrait ou paiement</strong> de votre filleul → <strong>10% des frais</strong> pour vous.</div>'
+    h+='<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:12px;margin-bottom:14px;font-size:12px;color:#166534">'
+      +'<div style="font-weight:800;margin-bottom:4px">💡 Comment gagner ?</div>'
+      +'<div>Parrainez des contacts. D&#233;p&#244;t ou transfert ≥500 FCFA = rattach&#233;s &#224; vie. Vous recevez <strong>10% des frais</strong> de leurs retraits/paiements.</div>'
     +'</div>';
 
-    // Historique gains parrainage seulement
+    // ── Historique gains parrainage ──
     if(gainsParr.length){
-      h+='<div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Historique gains</div>';
+      h+='<div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Gains parrainage</div>';
       gainsParr.slice(0,15).forEach(function(c){
         var d=new Date(c.date_calcul||0);
         var ds=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})+' · '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-        h+='<div class="tx" style="background:#8b5cf60d;border:1px solid #8b5cf622">'
+        var badge=c.statut==='vire'?'<span style="font-size:9px;color:#9ca3af;margin-left:4px">vir&#233;</span>':'';
+        h+='<div class="tx" style="background:#8b5cf60d;border:1px solid #8b5cf622'+(c.statut==='vire'?';opacity:.55':'')+'">'
           +'<div style="display:flex;align-items:center;gap:10px">'
           +'<div style="width:36px;height:36px;border-radius:10px;background:#8b5cf618;color:#8b5cf6;display:flex;align-items:center;justify-content:center;font-size:15px">🤝</div>'
-          +'<div><div style="font-size:13px;font-weight:700">Gain parrainage</div><div style="color:var(--m);font-size:11px">'+ds+'</div></div></div>'
+          +'<div><div style="font-size:13px;font-weight:700">Gain parrainage'+badge+'</div><div style="color:var(--m);font-size:11px">'+ds+'</div></div></div>'
           +'<div style="color:#8b5cf6;font-size:15px;font-weight:900;font-family:monospace">+'+F(c.montant)+'</div></div>';
       });
     }
@@ -1305,23 +1389,20 @@ async function virerGains(){
   var inp=document.getElementById('gains-vir-input');
   var msg=document.getElementById('gains-vir-msg');
   var btn=document.getElementById('gains-vir-btn');
-  var amt=Number(inp.value);
-  if(!amt||amt<1){msg.style.display='block';msg.style.color='#ef4444';msg.textContent='Montant invalide';return;}
+  var amt=Number(inp&&inp.value);
+  if(!amt||amt<1){if(msg){msg.style.display='block';msg.style.color='#ef4444';msg.textContent='Montant invalide';}return;}
   btn.disabled=true;btn.textContent='...';
   try{
     var r=await post('/accounts/transfer-gains',{montant:amt});
     if(r.success){
-      msg.style.display='block';msg.style.color='#16a34a';
-      msg.textContent='✅ '+F(amt)+' F vir&#233;s vers votre compte !';
-      inp.value='';
+      if(msg){msg.style.display='block';msg.style.color='#16a34a';msg.textContent='✅ '+F(amt)+' vir&#233;s vers votre compte !';}
+      if(inp)inp.value='';
       setTimeout(function(){chargerGains();},1200);
     } else {
-      msg.style.display='block';msg.style.color='#ef4444';
-      msg.textContent=r.error||'Erreur';
+      if(msg){msg.style.display='block';msg.style.color='#ef4444';msg.textContent=r.error||'Erreur';}
     }
   }catch(e){
-    msg.style.display='block';msg.style.color='#ef4444';
-    msg.textContent=e.message;
+    if(msg){msg.style.display='block';msg.style.color='#ef4444';msg.textContent=e.message;}
   }
   btn.disabled=false;btn.textContent='Virer';
 }

@@ -244,6 +244,12 @@ function setTab(t){
 <div class="scr" id="s-home">
   <!-- HEADER : nom + solde sur même ligne -->
   <div style="padding:52px 22px 0;background:#fff;">
+    <!-- Logo bande -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <img src="https://samassivaladji-cmyk.github.io/afrim-pay-apps/logo.png" style="width:32px;height:32px;border-radius:8px;object-fit:contain" alt="AFRIM PAY"/>
+      <div style="font-size:14px;font-weight:900;color:var(--a);letter-spacing:.02em">AFRIM PAY</div>
+      <div style="margin-left:auto;font-size:10px;font-weight:600;color:var(--m);background:#fffbeb;border:1px solid var(--b);border-radius:99px;padding:2px 8px">Agent</div>
+    </div>
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
       <!-- Gauche : identité -->
       <div>
@@ -576,12 +582,17 @@ function setTab(t){
       </div>
     </div>
     <div id="ret-loading" style="display:none;text-align:center;padding:32px 0"><div class="spin" style="width:36px;height:36px;border-width:3px;border-top-color:#f97316"></div><div style="color:var(--m);font-size:13px;margin-top:12px">Traitement...</div></div>
-    <div id="ret-success" style="display:none;text-align:center;padding:28px 0">
-      <div style="width:72px;height:72px;border-radius:50%;background:#f97316;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:34px;color:#fff">✓</div>
-      <div style="font-size:22px;font-weight:800;margin-bottom:6px">Retrait validé !</div>
-      <div id="ret-succ-txt" style="color:var(--m);font-size:13px;margin-bottom:4px"></div>
-      <div id="ret-succ-gain" style="color:var(--a);font-size:14px;font-weight:700;margin-bottom:4px"></div>
-      <div id="ret-succ-ref" style="color:var(--d);font-size:11px;font-family:monospace;margin-bottom:22px"></div>
+    <div id="ret-success" style="display:none;text-align:center;padding:20px 0">
+      <div style="width:60px;height:60px;border-radius:50%;background:#f97316;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:28px;color:#fff">✓</div>
+      <div style="font-size:20px;font-weight:800;margin-bottom:10px">Retrait valid&#233; !</div>
+      <div id="ret-succ-txt" style="color:var(--m);font-size:13px;margin-bottom:8px"></div>
+      <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:12px;margin:0 auto 10px;text-align:left;max-width:280px">
+        <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span style="color:var(--m)">Montant retir&#233;</span><span id="ret-succ-montant" style="font-weight:700"></span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;border-top:1px solid #fed7aa"><span style="color:var(--m)">Frais</span><span id="ret-succ-frais" style="font-weight:700;color:#dc2626"></span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;border-top:1px solid #fed7aa;font-weight:800"><span>Total d&#233;bit&#233;</span><span id="ret-succ-total" style="color:#dc2626"></span></div>
+      </div>
+      <div id="ret-succ-gain" style="color:var(--a);font-size:13px;font-weight:700;margin-bottom:4px"></div>
+      <div id="ret-succ-ref" style="color:var(--d);font-size:11px;font-family:monospace;margin-bottom:18px"></div>
       <div style="display:flex;gap:8px"><button class="btn btn-o" style="flex:1" onclick="rstOp('ret')">Nouveau</button><button class="btn btn-ghost" style="flex:1" onclick="closeSh('retrait');rstOp('ret');rafraichir()">Fermer</button></div>
     </div>
     <div id="ret-btn-valider" style="display:none">
@@ -871,9 +882,14 @@ async function doDepot(){
     document.getElementById('dep-success').style.display='';
     var d=r.data||{};
     document.getElementById('dep-succ-txt').textContent='D&#233;p&#244;t de '+F(amt)+' pour '+(client.prenom||'')+' '+(client.nom||'');
-    document.getElementById('dep-succ-gain').textContent=d.gainAgent?'Commission : +'+F(d.gainAgent):'';
+    document.getElementById('dep-succ-gain').textContent=d.gainAgent?'Commission agent : +'+F(d.gainAgent):'';
     document.getElementById('dep-succ-ref').textContent=d.reference||'';
+    // Mise à jour immédiate du solde agent (le serveur a déjà mis à jour)
     rafraichir();
+    // Notifier aussi le client (son solde sera à jour dès qu'il rafraîchira)
+    if(d.clientSolde!==null&&d.clientSolde!==undefined){
+      console.log('[DEP] Nouveau solde client:',d.clientSolde);
+    }
   }catch(e){
     document.getElementById('dep-loading').style.display='none';
     document.getElementById('dep-btn-valider').style.display='';
@@ -892,8 +908,12 @@ async function doRetrait(){
     document.getElementById('ret-loading').style.display='none';
     document.getElementById('ret-success').style.display='';
     var d=r.data||{};
-    document.getElementById('ret-succ-txt').textContent='Retrait de '+F(amt)+' pour '+(client.prenom||'')+' '+(client.nom||'');
-    document.getElementById('ret-succ-gain').textContent=d.gainAgent?'Commission : +'+F(d.gainAgent):'';
+    var fraisR=Number(d.frais||0);var totalR=Number(d.total||amt+fraisR);
+    document.getElementById('ret-succ-txt').textContent='Retrait pour '+(client.prenom||'')+' '+(client.nom||'');
+    document.getElementById('ret-succ-montant').textContent=F(amt);
+    document.getElementById('ret-succ-frais').textContent=F(fraisR);
+    document.getElementById('ret-succ-total').textContent=F(totalR);
+    document.getElementById('ret-succ-gain').textContent=d.gainAgent?'Commission agent : +'+F(d.gainAgent):'';
     document.getElementById('ret-succ-ref').textContent=d.reference||'';
     rafraichir();
   }catch(e){
@@ -1019,7 +1039,8 @@ function txRow(tx){
     label=type; icon='◈'; color='#6b7280';
     sign=cDst===cid?'+':'−'; amtColor=cDst===cid?'#22c55e':'#ef4444';
   }
-  return '<div class="tx" style="background:'+color+'0d;border:1px solid '+color+'22">'
+  var txId2=tx.id||'';
+  return '<div class="tx" style="background:'+color+'0d;border:1px solid '+color+'22;cursor:pointer" onclick="showTxDetail(\''+txId2+'\')">'
     +'<div style="display:flex;align-items:center;gap:10px">'
     +'<div style="width:36px;height:36px;border-radius:10px;background:'+color+'18;color:'+color+';display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">'+icon+'</div>'
     +'<div><div style="font-size:13px;font-weight:600">'+label+'</div><div style="color:var(--m);font-size:11px">'+FD(tx.dateCreation||tx.date_creation)+'</div></div></div>'
@@ -1406,6 +1427,98 @@ async function virerGains(){
   }
   btn.disabled=false;btn.textContent='Virer';
 }
+// ══ DÉTAIL TRANSACTION ══════════════════════════════════════════
+var _txCache={};
+async function showTxDetail(txId, el){
+  if(!txId)return;
+  // Extraire les données depuis l'élément cliqué si disponibles
+  var tx=_txCache[txId]||null;
+  var el2=document.getElementById('tx-detail-content');
+  document.getElementById('sh-tx-detail').classList.add('on');
+  el2.innerHTML='<div style="text-align:center;padding:32px"><div class="spin"></div></div>';
+
+  try{
+    var r=await get('/transactions/'+txId);
+    tx=r.data||tx;
+    if(tx)_txCache[txId]=tx;
+  }catch(e){
+    // Fallback: use cached data or parse from DOM
+    if(!tx){el2.innerHTML='<div class="info info-r">'+e.message+'</div>';return;}
+  }
+  if(!tx){el2.innerHTML='<div class="info info-r">Transaction introuvable</div>';return;}
+
+  var type=tx.type||'';
+  var typeCfg={
+    depot:{label:'D&#233;p&#244;t client',color:'#22c55e',icon:'↓'},
+    retrait:{label:'Retrait client',color:'#f97316',icon:'↑'},
+    transfert:{label:'Transfert',color:'#3b82f6',icon:'⇄'},
+    paiement_marchand:{label:'Paiement marchand',color:'#a855f7',icon:'◈'},
+    virement_commission:{label:'Virement commissions',color:'#d97706',icon:'💳'},
+    virement_gains:{label:'Virement gains',color:'#8b5cf6',icon:'🤝'},
+  }[type]||{label:type,color:'#6b7280',icon:'◈'};
+
+  var d=new Date(tx.dateCreation||tx.date_creation||0);
+  var dateStr=d.toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  var heureStr=d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  var frais=Number(tx.frais||0);
+  var montant=Number(tx.montant||0);
+  var total=type==='retrait'?montant+frais:montant;
+
+  // Client info (src ou dest selon type)
+  var nomClient='',telClient='',sensClient='';
+  if(type==='depot'){
+    nomClient=(tx.destPrenom||tx.destNom)?(tx.destPrenom||'')+' '+(tx.destNom||''):'—';
+    telClient=tx.destTel||'—';
+    sensClient='Client d&#233;pos&#233;';
+  } else if(type==='retrait'){
+    nomClient=(tx.srcPrenom||tx.srcNom)?(tx.srcPrenom||'')+' '+(tx.srcNom||''):'—';
+    telClient=tx.srcTel||'—';
+    sensClient='Client retrait';
+  } else if(type==='transfert'){
+    var cid=G.compte?String(G.compte.id):'';
+    var isSrc=String(tx.compteSourceId||tx.compte_source_id||'')===cid;
+    nomClient=isSrc?((tx.destPrenom||'')+' '+(tx.destNom||'')):((tx.srcPrenom||'')+' '+(tx.srcNom||''));
+    telClient=isSrc?(tx.destTel||'—'):(tx.srcTel||'—');
+    sensClient=isSrc?'Envoy&#233; &#224;':'Re&#231;u de';
+  }
+
+  var h='';
+  // En-tête type + montant
+  h+='<div style="background:'+typeCfg.color+'12;border:1.5px solid '+typeCfg.color+'30;border-radius:16px;padding:16px;margin-bottom:14px;text-align:center">'
+    +'<div style="width:52px;height:52px;border-radius:50%;background:'+typeCfg.color+';display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;margin:0 auto 10px">'+typeCfg.icon+'</div>'
+    +'<div style="font-size:12px;font-weight:700;color:'+typeCfg.color+';text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">'+typeCfg.label+'</div>'
+    +'<div style="font-size:28px;font-weight:900;color:var(--a)">'+F(montant)+'</div>'
+    +(frais?'<div style="font-size:12px;color:#dc2626;margin-top:2px">Frais : +'+F(frais)+'</div>':'')
+    +(frais?'<div style="font-size:13px;font-weight:800;color:#374151;margin-top:2px">Total d&#233;bit&#233; : '+F(total)+'</div>':'')
+  +'</div>';
+
+  // Infos client
+  if(nomClient&&nomClient.trim()&&nomClient!=='—'){
+    h+='<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:14px;padding:14px;margin-bottom:12px">'
+      +'<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:8px">'+sensClient+'</div>'
+      +'<div style="display:flex;align-items:center;gap:10px">'
+      +'<div style="width:40px;height:40px;border-radius:50%;background:var(--a);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0">'+(nomClient.trim()[0]||'?')+'</div>'
+      +'<div><div style="font-size:14px;font-weight:700">'+nomClient+'</div><div style="color:var(--m);font-size:12px">'+telClient+'</div></div>'
+      +'</div>'
+    +'</div>';
+  }
+
+  // D&#233;tail
+  h+='<div style="border:1px solid #e5e7eb;border-radius:14px;overflow:hidden;margin-bottom:12px">';
+  function row(label,val,bold){return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #f3f4f6"><span style="color:var(--m);font-size:13px">'+label+'</span><span style="font-size:13px;font-weight:'+(bold?'800':'600')+';text-align:right;max-width:55%">'+val+'</span></div>';}
+  h+=row('Type',typeCfg.label);
+  h+=row('Montant',F(montant),true);
+  if(frais)h+=row('Frais',F(frais));
+  if(frais)h+=row('Total d&#233;bit&#233;',F(total),true);
+  h+=row('Date',dateStr);
+  h+=row('Heure',heureStr);
+  h+=row('Statut',(tx.statut||'—').charAt(0).toUpperCase()+(tx.statut||'—').slice(1));
+  if(tx.reference)h+=row('R&#233;f&#233;rence','<span style="font-family:monospace;font-size:11px">'+tx.reference+'</span>');
+  h+='</div>';
+
+  el2.innerHTML=h;
+}
+
 // ══ STATISTIQUES ═════════════════════════════════════════════════
 var statPeriod='month';
 var statTab='depot';
@@ -2100,5 +2213,19 @@ document.querySelectorAll('.sh-ov').forEach(function(el){
   </div>
 </div>
 </div>
+<!-- SHEET DÉTAIL TRANSACTION -->
+<div class="sh-ov" id="sh-tx-detail" onclick="if(event.target===this)closeSh('tx-detail')">
+  <div class="sh" style="max-height:85vh;overflow-y:auto">
+    <div class="sh-bar"></div>
+    <div class="sh-top">
+      <div><div class="sh-title">D&#233;tail transaction</div></div>
+      <button class="sh-x" onclick="closeSh('tx-detail')">✕</button>
+    </div>
+    <div id="tx-detail-content" style="padding-bottom:24px">
+      <div style="text-align:center;padding:32px"><div class="spin"></div></div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

@@ -242,18 +242,17 @@ function setTab(t){
 
 <!-- HOME -->
 <div class="scr" id="s-home">
-  <!-- HEADER : nom + solde sur même ligne -->
+  <!-- HEADER -->
   <div style="padding:52px 22px 0;background:#fff;">
-    <!-- Logo bande -->
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-      <img src="https://samassivaladji-cmyk.github.io/afrim-pay-apps/logo.png" style="width:32px;height:32px;border-radius:8px;object-fit:contain" alt="AFRIM PAY"/>
-      <div style="font-size:14px;font-weight:900;color:var(--a);letter-spacing:.02em">AFRIM PAY</div>
-      <div style="margin-left:auto;font-size:10px;font-weight:600;color:var(--m);background:#fffbeb;border:1px solid var(--b);border-radius:99px;padding:2px 8px">Agent</div>
+    <!-- Logo centré grand -->
+    <div style="text-align:center;margin-bottom:16px;padding:12px 0 8px">
+      <img src="https://samassivaladji-cmyk.github.io/afrim-pay-apps/logo.png" style="width:72px;height:72px;border-radius:18px;object-fit:contain;box-shadow:0 4px 16px rgba(217,119,6,.2);margin-bottom:6px" alt="AFRIM PAY"/>
+      <div style="font-size:20px;font-weight:900;color:var(--a);letter-spacing:.02em;margin-bottom:2px">AFRIM PAY</div>
+      <div style="font-size:10px;color:var(--m);font-weight:600;letter-spacing:.04em">Africa Connected to the World</div>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
       <!-- Gauche : identité -->
       <div>
-        <div style="color:var(--m);font-size:12px;margin-bottom:2px">Agent AFRIM PAY</div>
         <div style="font-size:24px;font-weight:900;color:var(--a)" id="h-name">—</div>
         <div style="color:var(--d);font-size:11px;margin-top:1px" id="h-zone">—</div>
       </div>
@@ -332,6 +331,7 @@ function setTab(t){
       <button class="chip" onclick="setHistFilter('depot')">D&#233;p&#244;ts</button>
       <button class="chip" onclick="setHistFilter('retrait')">Retraits</button>
       <button class="chip" onclick="setHistFilter('transfert')">Transferts</button>
+      <button class="chip" onclick="setHistFilter('virement')">Virements</button>
     </div>
   </div>
   <div class="sc"><div id="hist-list"><div style="text-align:center;padding:20px"><div class="spin"></div></div></div></div>
@@ -1002,6 +1002,19 @@ async function chargerAccueil(){
 }
 function rafraichir(){chargerAccueil();}
 
+// Auto-refresh solde toutes les 15s quand app est au premier plan
+async function refreshSolde(){
+  if(!G.token||!G.user||G.locked)return;
+  try{
+    var cr=await get('/accounts/me');
+    G.compte=cr.data;
+    setSoldeVal(FN(cr.data.solde));
+  }catch(e){}
+}
+setInterval(function(){
+  if(G.token&&G.user&&!G.locked&&G.tab==='home'){refreshSolde();}
+},15000);
+
 var TX_CFG={depot:{c:'#22c55e',i:'↓',l:'D&#233;p&#244;t'},retrait:{c:'#f97316',i:'↑',l:'Retrait'},transfert:{c:'#3b82f6',i:'⇄',l:'Transfert'},paiement_marchand:{c:'#a855f7',i:'◈',l:'Paiement'},commission:{c:'#f59e0b',i:'★',l:'Commission'},commission_depot:{c:'#f59e0b',i:'★',l:'Comm. dépôt'}};
 
 function txRow(tx){
@@ -1050,8 +1063,11 @@ function txRow(tx){
 
 async function chargerTxns(){
   var el=document.getElementById('h-txns');
-  try{var r=await get('/transactions?limit=5');var list=r.data||[];el.innerHTML=list.length?list.map(txRow).join(''):'<div style="text-align:center;padding:20px;color:var(--m);font-size:13px">Aucune transaction</div>';}
-  catch(e){el.innerHTML='<div class="info info-r">'+e.message+'</div>';}
+  try{
+    var r=await get('/transactions?limit=5');var list=r.data||[];
+    list.forEach(function(t){if(t.id)_txCache[t.id]=t;});
+    el.innerHTML=list.length?list.map(txRow).join(''):'<div style="text-align:center;padding:20px;color:var(--m);font-size:13px">Aucune transaction</div>';
+  }catch(e){el.innerHTML='<div class="info info-r">'+e.message+'</div>';}
 }
 
 // ══ HISTORIQUE ════════════════════════════════════════════════════
@@ -1067,9 +1083,18 @@ async function chargerHistorique(){
   var el=document.getElementById('hist-list');
   el.innerHTML='<div style="text-align:center;padding:20px"><div class="spin"></div></div>';
   try{
-    var url='/transactions?limit=50'+(histFilter!=='all'?'&type='+histFilter:'');
+    var urlFilter=histFilter;
+    if(histFilter==='virement')urlFilter='virement_commission';// gets both via LIKE in backend
+    var url='/transactions?limit=50'+(histFilter!=='all'?'&type='+urlFilter:'');
+    // For virement: fetch both types
+    var extraList=[];
+    if(histFilter==='virement'){
+      try{var r2=await get('/transactions?limit=50&type=virement_gains');extraList=r2.data||[];}catch(e2){}
+    }
     var r=await get(url);
     var list=r.data||[];
+    if(extraList.length){list=list.concat(extraList).sort(function(a,b){return new Date(b.dateCreation||b.date_creation||0)-new Date(a.dateCreation||a.date_creation||0);});}
+    list.forEach(function(t){if(t.id)_txCache[t.id]=t;});
     el.innerHTML=list.length?list.map(txRow).join(''):'<div style="text-align:center;padding:24px;color:var(--m);font-size:13px">Aucune transaction</div>';
   }catch(e){el.innerHTML='<div class="info info-r">'+e.message+'</div>';}
 }
@@ -1429,21 +1454,19 @@ async function virerGains(){
 }
 // ══ DÉTAIL TRANSACTION ══════════════════════════════════════════
 var _txCache={};
-async function showTxDetail(txId, el){
+async function showTxDetail(txId){
   if(!txId)return;
-  // Extraire les données depuis l'élément cliqué si disponibles
   var tx=_txCache[txId]||null;
   var el2=document.getElementById('tx-detail-content');
   document.getElementById('sh-tx-detail').classList.add('on');
-  el2.innerHTML='<div style="text-align:center;padding:32px"><div class="spin"></div></div>';
 
-  try{
-    var r=await get('/transactions/'+txId);
-    tx=r.data||tx;
-    if(tx)_txCache[txId]=tx;
-  }catch(e){
-    // Fallback: use cached data or parse from DOM
-    if(!tx){el2.innerHTML='<div class="info info-r">'+e.message+'</div>';return;}
+  if(!tx){
+    el2.innerHTML='<div style="text-align:center;padding:32px"><div class="spin"></div></div>';
+    try{
+      var r=await get('/transactions/'+txId);
+      tx=r.data;
+      if(tx)_txCache[txId]=tx;
+    }catch(e){}
   }
   if(!tx){el2.innerHTML='<div class="info info-r">Transaction introuvable</div>';return;}
 

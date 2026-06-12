@@ -771,19 +771,47 @@ function copierCode(){var c=G.user&&G.user.codeParrainage;if(c&&navigator.clipbo
 // ── NOTIFICATIONS ─────────────────────────────────────────────────────
 var _notifCount=0;
 
+// ── Son de notification (Web Audio API — aucun fichier externe) ──
+function jouerSonNotif(){
+  try{
+    var ctx=new(window.AudioContext||window.webkitAudioContext)();
+    // Note 1 : bip aigu court
+    var osc1=ctx.createOscillator();
+    var gain1=ctx.createGain();
+    osc1.connect(gain1);gain1.connect(ctx.destination);
+    osc1.type='sine';osc1.frequency.setValueAtTime(880,ctx.currentTime);
+    gain1.gain.setValueAtTime(0.35,ctx.currentTime);
+    gain1.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.18);
+    osc1.start(ctx.currentTime);osc1.stop(ctx.currentTime+0.18);
+    // Note 2 : bip légèrement plus haut, décalé
+    var osc2=ctx.createOscillator();
+    var gain2=ctx.createGain();
+    osc2.connect(gain2);gain2.connect(ctx.destination);
+    osc2.type='sine';osc2.frequency.setValueAtTime(1100,ctx.currentTime+0.15);
+    gain2.gain.setValueAtTime(0.28,ctx.currentTime+0.15);
+    gain2.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.35);
+    osc2.start(ctx.currentTime+0.15);osc2.stop(ctx.currentTime+0.35);
+    setTimeout(function(){try{ctx.close();}catch(e){}},600);
+  }catch(e){}
+}
+
 async function chargerBadgeNotifs(){
   if(!G.token)return;
   try{
     var tel=G.user&&G.user.telephone?'&tel='+encodeURIComponent(G.user.telephone):'';
     var r=await get('/notifications?limit=1'+tel);
-    _notifCount=Number((r.data&&r.data.nonLues!=null?r.data.nonLues:r.nonLues)||0);
+    var nouvelleValeur=Number((r.data&&r.data.nonLues!=null?r.data.nonLues:r.nonLues)||0);
+    // Jouer le son si le nombre de non-lues a augmenté
+    if(typeof _notifCount!=='undefined'&&nouvelleValeur>_notifCount){
+      jouerSonNotif();
+    }
+    _notifCount=nouvelleValeur;
     var badge=document.getElementById('notif-badge');
     if(badge){
       badge.style.display=_notifCount>0?'flex':'none';
       badge.textContent=_notifCount>9?'9+':(_notifCount>0?String(_notifCount):'');
     }
   }catch(e){
-    // Table pas encore créée ou erreur réseau — silencieux
     console.warn('notif badge:',e.message);
   }
 }
@@ -912,10 +940,10 @@ async function toutLireNotifs(){
 
 function rafraichir(){chargerAccueil();chargerBadgeNotifs();}
 
-// Polling notifications toutes les 60 secondes
+// Polling notifications toutes les 20 secondes
 setInterval(function(){
   if(G.token&&G.user&&!G.locked){chargerBadgeNotifs();}
-},60000);
+},20000);
 
 setInterval(function(){
   if(!G.token||!G.user||G.locked)return;

@@ -879,6 +879,22 @@ setInterval(function(){
   if(G.token&&G.user&&!G.locked){chargerBadgeNotifs();}
 },60000);
 
+setInterval(function(){
+  if(!G.token||!G.user||G.locked)return;
+  get('/accounts/me').then(function(r){
+    if(r&&r.data&&typeof r.data.solde!=='undefined'){
+      var ns=Number(r.data.solde);
+      var os=G.compte?Number(G.compte.solde):null;
+      G.compte=r.data;
+      if(os!==null&&ns!==os){
+        afficherSolde();
+        var el=document.getElementById('h-solde');
+        if(el){el.style.transition='color .3s';el.style.color='#059669';setTimeout(function(){el.style.color='';},1200);}
+      }
+    }
+  }).catch(function(){});
+},10000);
+
 var TX_CFG={
   depot:{c:'#059669',bg:'#ecfdf5',i:'📥',l:'Dépôt'},
   retrait:{c:'#f97316',bg:'#fff7ed',i:'📤',l:'Retrait'},
@@ -964,23 +980,32 @@ function voirDetailTx(id) {
   var ds=d.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
   var el=document.getElementById('tx-detail-content');
   if(!el)return;
+  var frais=Number(tx.frais||0);
+  var montant=Number(tx.montant||0);
+  var totalDebite=tx.type==='retrait'?montant+frais:montant;
+  var tauxFrais=montant>0&&frais>0?((frais/montant)*100).toFixed(2)+'%':'';
+  var montantRecu=tx.type==='paiement_marchand'?montant-frais:montant;
+  var fraisLabel=tauxFrais?' ('+tauxFrais+')':'';
+  var bigAmt=tx.type==='retrait'&&frais>0?totalDebite:montant;
+
   el.innerHTML=
-    '<div style="text-align:center;padding:28px 20px 16px">'
-      +'<div style="width:64px;height:64px;border-radius:50%;background:#e0e7ff;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:28px">👤</div>'
-      +'<div style="font-size:36px;font-weight:900;color:'+col+'">'+sign+F(tx.type==='retrait'&&Number(tx.frais||0)>0?Number(tx.montant||0)+Number(tx.frais||0):tx.montant)+'</div>'
-      +(tx.type==='retrait'&&Number(tx.frais||0)>0?'<div style="font-size:13px;color:#6b7280;margin-top:4px">Dont '+F(tx.frais)+' de frais</div>':'')
-      +(contre?'<div style="font-size:15px;color:#374151;margin-top:8px;font-weight:600">'+(isIn?'De ':'À ')+contre+'</div>':'')
-      +(contreTel?'<div style="font-size:13px;color:#9ca3af;margin-top:2px">'+contreTel+'</div>':'')
+    '<div style="text-align:center;padding:24px 20px 14px">'
+      +'<div style="width:56px;height:56px;border-radius:50%;background:'+col+'20;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:24px">'+((TX_CFG[tx.type]||{i:'◈'}).i)+'</div>'
+      +'<div style="font-size:34px;font-weight:900;color:'+col+'">'+sign+F(bigAmt)+'</div>'
+      +(frais>0&&tx.type==='retrait'?'<div style="font-size:12px;color:#6b7280;margin-top:3px">dont '+F(frais)+' de frais</div>':'')
+      +(contre?'<div style="font-size:14px;color:#374151;margin-top:8px;font-weight:600">'+(isIn?'De ':'À ')+contre+'</div>':'')
+      +(contreTel?'<div style="font-size:12px;color:#9ca3af;margin-top:2px">'+contreTel+'</div>':'')
     +'</div>'
-    +'<div style="margin:0 16px;background:#fff;border-radius:16px;padding:4px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)">'
-      +'<div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #f3f4f6"><span style="color:#6b7280;font-size:14px">Montant '+(isIn?'reçu':'envoyé')+'</span><span style="font-weight:700;font-size:14px">'+F(tx.montant)+'</span></div>'
-      +'<div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #f3f4f6"><span style="color:#6b7280;font-size:14px">Statut</span><span style="font-weight:700;font-size:14px">✅ Effectué</span></div>'
-      +(Number(tx.frais||0)>0?'<div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #f3f4f6"><span style="color:#6b7280;font-size:14px">Frais</span><span style="font-weight:700;font-size:14px;color:#dc2626">'+F(tx.frais||0)+'</span></div>':'')
-      +(tx.type==='retrait'&&Number(tx.frais||0)>0?'<div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #f3f4f6"><span style="color:#374151;font-size:14px;font-weight:700">Total d&#233;bit&#233;</span><span style="font-weight:900;font-size:14px;color:#dc2626">'+F(Number(tx.montant||0)+Number(tx.frais||0))+'</span></div>':'')
-      +'<div style="display:flex;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #f3f4f6"><span style="color:#6b7280;font-size:14px">Date et heure</span><span style="font-weight:700;font-size:14px;text-align:right;max-width:55%">'+ds+'</span></div>'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px"><span style="color:#6b7280;font-size:14px">Référence</span><span style="font-weight:600;font-size:12px;font-family:monospace;color:#374151">'+(tx.reference||tx.id||'')+'</span></div>'
+    +'<div style="margin:0 16px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)">'
+      +'<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6"><span style="color:#6b7280;font-size:13px">Montant '+(isIn?'reçu':'demand&#233;')+'</span><span style="font-weight:700;font-size:13px">'+F(montant)+'</span></div>'
+      +(frais>0?'<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6;background:#fff7f7"><span style="color:#6b7280;font-size:13px">Frais'+fraisLabel+'</span><span style="font-weight:700;font-size:13px;color:#dc2626">'+F(frais)+'</span></div>':'')
+      +(tx.type==='retrait'&&frais>0?'<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6;background:#fef2f2"><span style="color:#374151;font-size:13px;font-weight:700">Total d&#233;bit&#233;</span><span style="font-weight:900;font-size:14px;color:#dc2626">'+F(totalDebite)+'</span></div>':'')
+      +(tx.type==='paiement_marchand'&&frais>0?'<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6"><span style="color:#6b7280;font-size:13px">Montant re&#231;u marchand</span><span style="font-weight:700;font-size:13px;color:#059669">'+F(montantRecu)+'</span></div>':'')
+      +'<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6"><span style="color:#6b7280;font-size:13px">Statut</span><span style="font-weight:700;font-size:13px">&#10003; Effectu&#233;</span></div>'
+      +'<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6"><span style="color:#6b7280;font-size:13px">Date et heure</span><span style="font-weight:700;font-size:12px;text-align:right;max-width:55%">'+ds+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;padding:13px 16px"><span style="color:#6b7280;font-size:13px">R&#233;f&#233;rence</span><span style="font-weight:600;font-size:11px;font-family:monospace;color:#374151">'+(tx.reference||tx.id||'')+'</span></div>'
     +'</div>'
-    +'<div style="text-align:center;color:#9ca3af;font-size:12px;padding:20px">AFRIM PAY</div>';
+    +'<div style="text-align:center;color:#9ca3af;font-size:11px;padding:16px">AFRIM PAY</div>';
   setTab('tx-detail');
 }
 

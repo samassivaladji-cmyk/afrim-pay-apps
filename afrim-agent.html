@@ -245,10 +245,8 @@ function setTab(t){
   <!-- HEADER -->
   <div style="padding:52px 22px 0;background:#fff;">
     <!-- Logo centré grand -->
-    <div style="text-align:center;margin-bottom:16px;padding:12px 0 8px">
-      <img src="https://samassivaladji-cmyk.github.io/afrim-pay-apps/logo.png" style="width:72px;height:72px;border-radius:18px;object-fit:contain;box-shadow:0 4px 16px rgba(217,119,6,.2);margin-bottom:6px" alt="AFRIM PAY"/>
-      <div style="font-size:20px;font-weight:900;color:var(--a);letter-spacing:.02em;margin-bottom:2px">AFRIM PAY</div>
-      <div style="font-size:10px;color:var(--m);font-weight:600;letter-spacing:.04em">Africa Connected to the World</div>
+    <div style="text-align:center;margin-bottom:16px;padding:10px 0 4px">
+      <img src="https://samassivaladji-cmyk.github.io/afrim-pay-apps/logo.png" style="width:100px;height:100px;border-radius:24px;object-fit:contain;box-shadow:0 6px 24px rgba(217,119,6,.18)" alt="AFRIM PAY"/>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
       <!-- Gauche : identité -->
@@ -1531,8 +1529,12 @@ async function showTxDetail(txId){
   function row(label,val,bold){return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid #f3f4f6"><span style="color:var(--m);font-size:13px">'+label+'</span><span style="font-size:13px;font-weight:'+(bold?'800':'600')+';text-align:right;max-width:55%">'+val+'</span></div>';}
   h+=row('Type',typeCfg.label);
   h+=row('Montant',F(montant),true);
-  if(frais)h+=row('Frais',F(frais));
-  if(frais)h+=row('Total d&#233;bit&#233;',F(total),true);
+  if(frais){
+    var tauxStr='';
+    if(montant>0){var t2=(frais/montant*100);tauxStr=' ('+(t2<1?t2.toFixed(2):t2.toFixed(1))+'%)';}
+    h+=row('Frais'+tauxStr,'<span style="color:#dc2626">'+F(frais)+'</span>');
+    h+=row('Total d&#233;bit&#233;','<span style="color:#dc2626;font-weight:900">'+F(total)+'</span>',true);
+  }
   h+=row('Date',dateStr);
   h+=row('Heure',heureStr);
   h+=row('Statut',(tx.statut||'—').charAt(0).toUpperCase()+(tx.statut||'—').slice(1));

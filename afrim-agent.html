@@ -2280,26 +2280,79 @@ async function ouvrirNotifs(){
       var bg=n.lu?"#fff":"#fffbeb";
       var fw=n.lu?"600":"800";
       var badge=n.lu?"":"<div style=\"width:8px;height:8px;border-radius:50%;background:#f59e0b;margin-top:4px;flex-shrink:0\"></div>";
-      return "<div style=\"padding:14px 16px;border-bottom:1px solid #f3f4f6;background:"+bg+";display:flex;gap:10px;align-items:flex-start\" onclick=\"marquerLuAgent('"+n.id+"')\">"+
+      return "<div data-notif=\""+n.id+"\" style=\"padding:14px 16px;border-bottom:1px solid #f3f4f6;background:"+bg+";display:flex;gap:10px;align-items:flex-start;cursor:pointer\" onclick=\"marquerLuAgent('"+n.id+"')\">"+
         "<div style=\"font-size:22px;margin-top:2px\">"+icone+"</div>"+
-        "<div style=\"flex:1\"><div style=\"font-size:13px;font-weight:"+fw+";color:#111\">"+(n.titre||"")+"</div>"+
+        "<div style=\"flex:1\"><div class=\"notif-title\" style=\"font-size:13px;font-weight:"+fw+";color:#111\">"+(n.titre||"")+"</div>"+
         "<div style=\"font-size:12px;color:#6b7280;margin-top:2px\">"+(n.message||"")+"</div>"+
         "<div style=\"font-size:10px;color:#9ca3af;margin-top:4px\">"+ds+"</div></div>"+
-        badge+
-      "</div>";
+        (n.lu?"":"<div class=\"notif-dot\" style=\"width:8px;height:8px;border-radius:50%;background:#f59e0b;margin-top:4px;flex-shrink:0\"></div>")+
+      "</div>";;
     }).join('');
-    // Marquer tout comme lu après affichage
+    // Mettre à jour le compteur en temps réel
+    _agentNotifCount=nonLues;
+    _majBadgeAgent(nonLues);
+    // Marquer tout comme lu après 1.5s (laisse le temps de voir)
     if(nonLues>0){
-      get('/notifications/tout-lire').catch(function(){});
-      _agentNotifCount=0;
-      var badge=document.getElementById('h-notif-badge');
-      if(badge){badge.style.display='none';}
+      setTimeout(function(){
+        patch('/notifications/tout-lire',{}).then(function(){
+          _agentNotifCount=0;
+          _majBadgeAgent(0);
+          // Re-render avec tout marqué lu
+          var items=document.querySelectorAll('#sh-notifs-list [data-notif]');
+          items.forEach(function(item){
+            item.style.background='#fff';
+            item.style.fontWeight='600';
+            var dot=item.querySelector('.notif-dot');
+            if(dot)dot.style.display='none';
+          });
+        }).catch(function(){});
+      },1500);
     }
   }catch(e){el.innerHTML='<div class="info info-r">'+e.message+'</div>';}
 }
 
+function _majBadgeAgent(count){
+  var badge=document.getElementById('h-notif-badge');
+  if(badge){
+    badge.style.display=count>0?'flex':'none';
+    badge.textContent=count>9?'9+':(count>0?String(count):'');
+  }
+}
+
 async function marquerLuAgent(id){
-  try{await get('/notifications/'+id+'/lu');}catch(e){}
+  try{
+    await patch('/notifications/'+id+'/lu',{});
+    // Mettre à jour l'élément visuellement
+    var el=document.querySelector('[data-notif="'+id+'"]');
+    if(el){
+      el.style.background='#fff';
+      var dot=el.querySelector('.notif-dot');
+      if(dot)dot.remove();
+      var title=el.querySelector('.notif-title');
+      if(title)title.style.fontWeight='600';
+    }
+    // Décrémenter le compteur
+    if(_agentNotifCount>0){
+      _agentNotifCount--;
+      _majBadgeAgent(_agentNotifCount);
+    }
+  }catch(e){}
+}
+
+async function marquerToutLuAgent(){
+  try{
+    await patch('/notifications/tout-lire',{});
+    _agentNotifCount=0;
+    _majBadgeAgent(0);
+    // Mettre à jour visuel
+    document.querySelectorAll('#sh-notifs-list [data-notif]').forEach(function(el){
+      el.style.background='#fff';
+      var dot=el.querySelector('.notif-dot');
+      if(dot)dot.remove();
+      var t=el.querySelector('.notif-title');
+      if(t)t.style.fontWeight='600';
+    });
+  }catch(e){}
 }
 
 // ══ INIT ═════════════════════════════════════════════════════════
@@ -2376,6 +2429,7 @@ document.querySelectorAll('.sh-ov').forEach(function(el){
     <div class="sh-top">
       <div><div class="sh-title">Notifications</div></div>
       <button class="sh-x" onclick="document.getElementById('sh-notifs').classList.remove('on')">✕</button>
+      <button onclick="marquerToutLuAgent()" style="background:none;border:none;color:var(--a);font-size:12px;font-weight:700;cursor:pointer;padding:4px 8px">Tout lire</button>
     </div>
     <div id="sh-notifs-list" style="overflow-y:auto;flex:1;padding-bottom:20px">
       <div style="text-align:center;padding:32px"><div class="spin"></div></div>

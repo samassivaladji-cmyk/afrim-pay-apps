@@ -1070,15 +1070,20 @@ setInterval(function(){
 
 // Polling notifications agent toutes les 20s + son
 var _agentNotifCount=0;
-setInterval(function(){
+
+function pollNotificationsAgent(){
   if(!G.token||!G.user||G.locked)return;
   get('/notifications?limit=1'+(G.user&&G.user.telephone?'&tel='+encodeURIComponent(G.user.telephone):'')).then(function(r){
     var count=Number(r.data&&r.data.nonLues!=null?r.data.nonLues:r.nonLues)||0;
-    if(count>_agentNotifCount){jouerSonNotifAgent();}
+    if(count>_agentNotifCount)jouerSonNotifAgent();
     _agentNotifCount=count;
     var badge=document.getElementById('h-notif-badge');
     if(badge){badge.style.display=count>0?'flex':'none';badge.textContent=count>9?'9+':(count>0?String(count):'');}
   }).catch(function(){});
+}
+setInterval(function(){
+  if(!G.token||!G.user||G.locked)return;
+  pollNotificationsAgent();
 },20000);
 
 var TX_CFG={depot:{c:'#22c55e',i:'↓',l:'D&#233;p&#244;t'},retrait:{c:'#f97316',i:'↑',l:'Retrait'},transfert:{c:'#3b82f6',i:'⇄',l:'Transfert'},paiement_marchand:{c:'#a855f7',i:'◈',l:'Paiement'},commission:{c:'#f59e0b',i:'★',l:'Commission'},commission_depot:{c:'#f59e0b',i:'★',l:'Comm. dépôt'}};
@@ -2272,22 +2277,33 @@ async function ouvrirNotifs(){
       el.innerHTML='<div style="text-align:center;padding:40px;color:var(--m)"><div style="font-size:42px;margin-bottom:12px">🔔</div><div style="font-size:15px;font-weight:700">Aucune notification</div></div>';
       return;
     }
-    el.innerHTML=list.map(function(n){
+    // Séparer lues / non lues
+    var nlu=list.filter(function(n){return !n.lu;});
+    var lu=list.filter(function(n){return n.lu;});
+    var sorted=nlu.concat(lu);
+    var html='';
+    if(nlu.length>0){
+      html+='<div style="padding:8px 16px 6px;font-size:11px;font-weight:800;color:#d97706;text-transform:uppercase;letter-spacing:.06em;background:#fffbeb;border-bottom:1px solid #fde68a">&#128276; NON LUES ('+nlu.length+')</div>';
+    }
+    var luSepDone=false;
+    html+=sorted.map(function(n,idx){
       var d=new Date(n.createdAt||n.created_at||0);
       var ds=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
       var icones={"transaction":"💳","alerte":"🚨","kyc":"📋","systeme":"📢"};
       var icone=icones[n.type]||"🔔";
       var bg=n.lu?"#fff":"#fffbeb";
       var fw=n.lu?"600":"800";
-      var badge=n.lu?"":"<div style=\"width:8px;height:8px;border-radius:50%;background:#f59e0b;margin-top:4px;flex-shrink:0\"></div>";
-      return "<div data-notif=\""+n.id+"\" style=\"padding:14px 16px;border-bottom:1px solid #f3f4f6;background:"+bg+";display:flex;gap:10px;align-items:flex-start;cursor:pointer\" onclick=\"marquerLuAgent('"+n.id+"')\">"+
-        "<div style=\"font-size:22px;margin-top:2px\">"+icone+"</div>"+
-        "<div style=\"flex:1\"><div class=\"notif-title\" style=\"font-size:13px;font-weight:"+fw+";color:#111\">"+(n.titre||"")+"</div>"+
-        "<div style=\"font-size:12px;color:#6b7280;margin-top:2px\">"+(n.message||"")+"</div>"+
-        "<div style=\"font-size:10px;color:#9ca3af;margin-top:4px\">"+ds+"</div></div>"+
-        (n.lu?"":"<div class=\"notif-dot\" style=\"width:8px;height:8px;border-radius:50%;background:#f59e0b;margin-top:4px;flex-shrink:0\"></div>")+
-      "</div>";;
+      var dot=n.lu?"":'<div class="notif-dot" style="width:8px;height:8px;border-radius:50%;background:#f59e0b;margin-top:6px;flex-shrink:0"></div>';
+      var sep='';
+      if(n.lu&&!luSepDone&&lu.length>0&&nlu.length>0){luSepDone=true;sep='<div style="padding:7px 16px 5px;font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;background:#f9fafb;border-bottom:1px solid #e5e7eb">Lues</div>';}
+      return sep+'<div data-notif="'+n.id+'" style="padding:14px 16px;border-bottom:1px solid #f3f4f6;background:'+bg+';display:flex;gap:10px;align-items:flex-start;cursor:pointer" onclick="marquerLuAgent(\''+n.id+'\')">'+
+        '<div style="font-size:20px;margin-top:2px">'+icone+'</div>'+
+        '<div style="flex:1"><div class="notif-title" style="font-size:13px;font-weight:'+fw+';color:#111">'+(n.titre||'')+'</div>'+
+        '<div style="font-size:12px;color:#6b7280;margin-top:2px">'+(n.message||'')+'</div>'+
+        '<div style="font-size:10px;color:#9ca3af;margin-top:4px">'+ds+'</div></div>'+
+        dot+'</div>';
     }).join('');
+    el.innerHTML=html;;
     // Mettre à jour le compteur en temps réel
     _agentNotifCount=nonLues;
     _majBadgeAgent(nonLues);
@@ -2362,7 +2378,7 @@ document.querySelectorAll('.sh-ov').forEach(function(el){
 
 (function init(){
   if(G.token&&G.user&&['agent','mini_master','master','superviseur','admin'].includes(G.user.role)){
-    S('s-home');chargerAccueil();genererQR();initAutoLock();return;
+    S('s-home');chargerAccueil();genererQR();initAutoLock();setTimeout(pollNotificationsAgent,2000);return;
   }
   S('s-login');
 })();

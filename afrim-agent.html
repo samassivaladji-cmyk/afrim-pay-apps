@@ -2281,29 +2281,41 @@ async function ouvrirNotifs(){
     var nlu=list.filter(function(n){return !n.lu;});
     var lu=list.filter(function(n){return n.lu;});
     var sorted=nlu.concat(lu);
-    var html='';
-    if(nlu.length>0){
-      html+='<div style="padding:8px 16px 6px;font-size:11px;font-weight:800;color:#d97706;text-transform:uppercase;letter-spacing:.06em;background:#fffbeb;border-bottom:1px solid #fde68a">&#128276; NON LUES ('+nlu.length+')</div>';
-    }
     var luSepDone=false;
-    html+=sorted.map(function(n,idx){
+    var html=sorted.map(function(n){
       var d=new Date(n.createdAt||n.created_at||0);
       var ds=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
       var icones={"transaction":"💳","alerte":"🚨","kyc":"📋","systeme":"📢"};
       var icone=icones[n.type]||"🔔";
-      var bg=n.lu?"#fff":"#fffbeb";
-      var fw=n.lu?"600":"800";
-      var dot=n.lu?"":'<div class="notif-dot" style="width:8px;height:8px;border-radius:50%;background:#f59e0b;margin-top:6px;flex-shrink:0"></div>';
+      // Barre bleue gauche pour non lues (comme la photo), fond légèrement bleuté
+      var barreGauche=n.lu?'':'<div class="notif-bar" style="width:4px;background:#1E90FF;border-radius:2px;flex-shrink:0;align-self:stretch"></div>';
+      var bg=n.lu?'#fff':'#f0f7ff';
+      var fw=n.lu?'500':'700';
+      // Petit point rouge en haut à droite pour non lues
+      var badge=n.lu?'':'<div class="notif-dot" style="width:8px;height:8px;border-radius:50%;background:#ef4444;flex-shrink:0;margin-top:3px"></div>';
+      // Séparateur "LUES"
       var sep='';
-      if(n.lu&&!luSepDone&&lu.length>0&&nlu.length>0){luSepDone=true;sep='<div style="padding:7px 16px 5px;font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;background:#f9fafb;border-bottom:1px solid #e5e7eb">Lues</div>';}
-      return sep+'<div data-notif="'+n.id+'" style="padding:14px 16px;border-bottom:1px solid #f3f4f6;background:'+bg+';display:flex;gap:10px;align-items:flex-start;cursor:pointer" onclick="marquerLuAgent(\''+n.id+'\')">'+
-        '<div style="font-size:20px;margin-top:2px">'+icone+'</div>'+
-        '<div style="flex:1"><div class="notif-title" style="font-size:13px;font-weight:'+fw+';color:#111">'+(n.titre||'')+'</div>'+
-        '<div style="font-size:12px;color:#6b7280;margin-top:2px">'+(n.message||'')+'</div>'+
-        '<div style="font-size:10px;color:#9ca3af;margin-top:4px">'+ds+'</div></div>'+
-        dot+'</div>';
+      if(n.lu&&!luSepDone&&lu.length>0&&nlu.length>0){
+        luSepDone=true;
+        sep='<div style="padding:8px 16px 6px;font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;background:#f9fafb;border-top:1px solid #e5e7eb;border-bottom:1px solid #e5e7eb">Lues</div>';
+      }
+      return sep+
+        '<div data-notif="'+n.id+'" style="display:flex;align-items:stretch;border-bottom:1px solid #f3f4f6;background:'+bg+';cursor:pointer;position:relative" onclick="marquerLuAgent(\''+n.id+'\')">'+
+          barreGauche+
+          '<div style="display:flex;gap:10px;align-items:flex-start;padding:13px 14px 13px 12px;flex:1">'+
+            '<div style="width:36px;height:36px;border-radius:10px;background:'+(n.lu?'#f3f4f6':'#dbeafe')+';display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">'+icone+'</div>'+
+            '<div style="flex:1">'+
+              '<div class="notif-title" style="font-size:13px;font-weight:'+fw+';color:#111;margin-bottom:2px">'+(n.titre||'')+'</div>'+
+              '<div style="font-size:12px;color:#6b7280;line-height:1.4">'+(n.message||'')+'</div>'+
+              '<div style="font-size:10px;color:#9ca3af;margin-top:5px">'+ds+'</div>'+
+            '</div>'+
+            badge+
+          '</div>'+
+        '</div>';
     }).join('');
-    el.innerHTML=html;;
+    // En-tête compteur non lues
+    var header=nlu.length>0?'<div style="padding:10px 16px 8px;font-size:12px;font-weight:700;color:#1E90FF;background:#f0f7ff;border-bottom:2px solid #1E90FF20">'+nlu.length+' notification'+(nlu.length>1?'s':'')+' non lue'+(nlu.length>1?'s':'')+'</div>':'';
+    el.innerHTML=header+html;;
     // Mettre à jour le compteur en temps réel
     _agentNotifCount=nonLues;
     _majBadgeAgent(nonLues);
@@ -2339,13 +2351,21 @@ async function marquerLuAgent(id){
   try{
     await patch('/notifications/'+id+'/lu',{});
     // Mettre à jour l'élément visuellement
-    var el=document.querySelector('[data-notif="'+id+'"]');
-    if(el){
-      el.style.background='#fff';
-      var dot=el.querySelector('.notif-dot');
+    var elN=document.querySelector('[data-notif="'+id+'"]');
+    if(elN){
+      elN.style.background='#fff';
+      // Supprimer barre bleue
+      var bar=elN.querySelector('.notif-bar');
+      if(bar)bar.remove();
+      // Supprimer point rouge
+      var dot=elN.querySelector('.notif-dot');
       if(dot)dot.remove();
-      var title=el.querySelector('.notif-title');
-      if(title)title.style.fontWeight='600';
+      // Alléger le titre
+      var title=elN.querySelector('.notif-title');
+      if(title)title.style.fontWeight='500';
+      // Remettre l'icône background en gris
+      var iconBox=elN.querySelector('[style*="dbeafe"]');
+      if(iconBox)iconBox.style.background='#f3f4f6';
     }
     // Décrémenter le compteur
     if(_agentNotifCount>0){
@@ -2363,11 +2383,14 @@ async function marquerToutLuAgent(){
     // Mettre à jour visuel
     document.querySelectorAll('#sh-notifs-list [data-notif]').forEach(function(el){
       el.style.background='#fff';
-      var dot=el.querySelector('.notif-dot');
-      if(dot)dot.remove();
-      var t=el.querySelector('.notif-title');
-      if(t)t.style.fontWeight='600';
+      var bar=el.querySelector('.notif-bar');if(bar)bar.remove();
+      var dot=el.querySelector('.notif-dot');if(dot)dot.remove();
+      var t=el.querySelector('.notif-title');if(t)t.style.fontWeight='500';
+      var iconBox=el.querySelector('[style*="dbeafe"]');if(iconBox)iconBox.style.background='#f3f4f6';
     });
+    // Masquer le header compteur
+    var hdr=document.querySelector('#sh-notifs-list > div[style*="1E90FF"]');
+    if(hdr)hdr.style.display='none';
   }catch(e){}
 }
 

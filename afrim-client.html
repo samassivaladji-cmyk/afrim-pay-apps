@@ -2289,6 +2289,93 @@ document.querySelectorAll('.sh-ov').forEach(function(el){el.addEventListener('cl
   }
   S('s-login');
 })();
+
+
+// ══ Firebase Push Notifications ══
+(function(){
+  var firebaseConfig={
+    apiKey:"AIzaSyCtWT_Z6VznIIgM5mOp_Ikt-aTyrm5JGyY",
+    authDomain:"afrim-pay.firebaseapp.com",
+    projectId:"afrim-pay",
+    storageBucket:"afrim-pay.firebasestorage.app",
+    messagingSenderId:"20456105449",
+    appId:"1:20456105449:web:7cd703cf77924420621778"
+  };
+
+  function loadScript(src,cb){
+    var s=document.createElement('script');
+    s.src=src;s.onload=cb;document.head.appendChild(s);
+  }
+
+  function initFCM(rolePrefix){
+    loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',function(){
+      loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js',function(){
+        try{
+          if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+          var messaging=firebase.messaging();
+          // Enregistrer le service worker
+          if('serviceWorker' in navigator){
+            navigator.serviceWorker.register('https://samassivaladji-cmyk.github.io/afrim-pay-apps/firebase-messaging-sw.js')
+            .then(function(reg){
+              // Demander permission
+              Notification.requestPermission().then(function(perm){
+                if(perm==='granted'){
+                  messaging.getToken({
+                    vapidKey:"BJOYt_uiZf43hCiVHCu8Sn65x4hoOz_2t7p7UC96sxOKia6iFoVHqdB5wlBE7ySO13mwu1EVKP85EP_rddsc1OI",
+                    serviceWorkerRegistration:reg
+                  }).then(function(token){
+                    if(token){
+                      console.log('[FCM] Token obtenu');
+                      // Sauvegarder le token sur le serveur
+                      if(typeof G!=='undefined'&&G.token){
+                        fetch('/api/v1/users/fcm-token',{
+                          method:'POST',
+                          headers:{'Content-Type':'application/json','Authorization':'Bearer '+G.token},
+                          body:JSON.stringify({token:token})
+                        }).catch(function(){});
+                      }
+                      // Stocker pour retry après login
+                      window._fcmToken=token;
+                    }
+                  }).catch(function(e){console.warn('[FCM] Token error:',e);});
+                }
+              });
+            }).catch(function(e){console.warn('[FCM] SW error:',e);});
+          }
+          // Notification reçue en premier plan → afficher toast
+          messaging.onMessage(function(payload){
+            var n=payload.notification||{};
+            if(typeof T==='function')T((n.title?n.title+' — ':'')+n.body,'notif');
+            // Jouer le son
+            if(typeof jouerSonNotif==='function')jouerSonNotif();
+            else if(typeof jouerSonNotifAgent==='function')jouerSonNotifAgent();
+          });
+        }catch(e){console.warn('[FCM] Init error:',e);}
+      });
+    });
+  }
+
+  // Initialiser après le login (quand G.token est disponible)
+  window.initFCMAfterLogin=function(){
+    initFCM();
+    // Sauvegarder le token si déjà obtenu
+    if(window._fcmToken&&typeof G!=='undefined'&&G.token){
+      fetch('/api/v1/users/fcm-token',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+G.token},
+        body:JSON.stringify({token:window._fcmToken})
+      }).catch(function(){});
+    }
+  };
+
+  // Pré-charger Firebase dès le chargement de la page
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',function(){initFCM();});
+  } else {
+    initFCM();
+  }
+})();
+
 </script>
 </div>
 <div class="sh-ov" id="sh-change-pin">

@@ -479,7 +479,16 @@ function setTab(t){
       <div><div class="params-label">Inviter un ami</div><div class="params-sub">Partager votre code parrainage</div></div>
       <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
     </button>
-
+    <button class="params-item" onclick="contacterSupport()" style="margin-top:8px">
+      <div class="params-icon" style="background:#eff6ff">📞</div>
+      <div><div class="params-label">Contacter le service client</div><div class="params-sub">WhatsApp — 24h/7j</div></div>
+      <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+    <button class="params-item" onclick="voirPaliers()" style="margin-top:8px">
+      <div class="params-icon" style="background:#f0fdf4">📊</div>
+      <div><div class="params-label">Paliers &amp; frais clients</div><div class="params-sub">Frais de retrait par tranche</div></div>
+      <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
 
     <div style="margin-top:24px">
       <button class="btn btn-r" onclick="logout()">Se déconnecter</button>
@@ -1882,7 +1891,7 @@ function voirPaliers(){
 
 function contacterSupport(){
   var msg='Bonjour, je suis agent AFRIM PAY '+(G.user?'('+((G.user.prenom||'')+' '+(G.user.nom||'')).trim()+' - '+(G.user.telephone||'')+')':"")+" et j'ai besoin d'assistance.";
-  var url='https://wa.me/+2250000000000?text='+encodeURIComponent(msg);
+  var url='https://wa.me/002250789132645?text='+encodeURIComponent(msg);
   window.open(url,'_blank');
 }
 
@@ -2385,10 +2394,97 @@ document.querySelectorAll('.sh-ov').forEach(function(el){
 
 (function init(){
   if(G.token&&G.user&&['agent','mini_master','master','superviseur','admin'].includes(G.user.role)){
-    S('s-home');chargerAccueil();genererQR();initAutoLock();setTimeout(pollNotificationsAgent,2000);return;
+    S('s-home');chargerAccueil();genererQR();initAutoLock();setTimeout(pollNotificationsAgent,2000);if(typeof initFCMAfterLogin==='function')initFCMAfterLogin();return;
   }
   S('s-login');
 })();
+
+
+// ══ Firebase Push Notifications ══
+(function(){
+  var firebaseConfig={
+    apiKey:"AIzaSyCtWT_Z6VznIIgM5mOp_Ikt-aTyrm5JGyY",
+    authDomain:"afrim-pay.firebaseapp.com",
+    projectId:"afrim-pay",
+    storageBucket:"afrim-pay.firebasestorage.app",
+    messagingSenderId:"20456105449",
+    appId:"1:20456105449:web:7cd703cf77924420621778"
+  };
+
+  function loadScript(src,cb){
+    var s=document.createElement('script');
+    s.src=src;s.onload=cb;document.head.appendChild(s);
+  }
+
+  function initFCM(rolePrefix){
+    loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',function(){
+      loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js',function(){
+        try{
+          if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+          var messaging=firebase.messaging();
+          // Enregistrer le service worker
+          if('serviceWorker' in navigator){
+            navigator.serviceWorker.register('https://samassivaladji-cmyk.github.io/afrim-pay-apps/firebase-messaging-sw.js')
+            .then(function(reg){
+              // Demander permission
+              Notification.requestPermission().then(function(perm){
+                if(perm==='granted'){
+                  messaging.getToken({
+                    vapidKey:"BJOYt_uiZf43hCiVHCu8Sn65x4hoOz_2t7p7UC96sxOKia6iFoVHqdB5wlBE7ySO13mwu1EVKP85EP_rddsc1OI",
+                    serviceWorkerRegistration:reg
+                  }).then(function(token){
+                    if(token){
+                      console.log('[FCM] Token obtenu');
+                      // Sauvegarder le token sur le serveur
+                      if(typeof G!=='undefined'&&G.token){
+                        fetch('/api/v1/users/fcm-token',{
+                          method:'POST',
+                          headers:{'Content-Type':'application/json','Authorization':'Bearer '+G.token},
+                          body:JSON.stringify({token:token})
+                        }).catch(function(){});
+                      }
+                      // Stocker pour retry après login
+                      window._fcmToken=token;
+                    }
+                  }).catch(function(e){console.warn('[FCM] Token error:',e);});
+                }
+              });
+            }).catch(function(e){console.warn('[FCM] SW error:',e);});
+          }
+          // Notification reçue en premier plan → afficher toast
+          messaging.onMessage(function(payload){
+            var n=payload.notification||{};
+            if(typeof T==='function')T((n.title?n.title+' — ':'')+n.body,'notif');
+            // Jouer le son
+            if(typeof jouerSonNotif==='function')jouerSonNotif();
+            else if(typeof jouerSonNotifAgent==='function')jouerSonNotifAgent();
+          });
+        }catch(e){console.warn('[FCM] Init error:',e);}
+      });
+    });
+  }
+
+  // Initialiser après le login (quand G.token est disponible)
+  window.initFCMAfterLogin=function(){
+    initFCM();
+    // Sauvegarder le token si déjà obtenu
+    if(window._fcmToken&&typeof G!=='undefined'&&G.token){
+      fetch('/api/v1/users/fcm-token',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+G.token},
+        body:JSON.stringify({token:window._fcmToken})
+      }).catch(function(){});
+    }
+  };
+
+  // Pré-charger Firebase dès le chargement de la page
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',function(){initFCM();});
+  } else {
+    initFCM();
+  }
+})();
+
 </script>
 
 <!-- SHEET CHOIX OPÉRATION après scan QR accueil -->
@@ -3921,7 +4017,7 @@ function voirPaliers(){
 
 function contacterSupport(){
   var msg='Bonjour, je suis agent AFRIM PAY '+(G.user?'('+((G.user.prenom||'')+' '+(G.user.nom||'')).trim()+' - '+(G.user.telephone||'')+')':"")+" et j'ai besoin d'assistance.";
-  var url='https://wa.me/+2250000000000?text='+encodeURIComponent(msg);
+  var url='https://wa.me/002250789132645?text='+encodeURIComponent(msg);
   window.open(url,'_blank');
 }
 

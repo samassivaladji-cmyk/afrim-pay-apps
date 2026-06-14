@@ -616,8 +616,8 @@ function setTab(t){
         <input id="ret-otp-input" type="number" inputmode="numeric" placeholder="&#9679; &#9679; &#9679; &#9679;" style="width:100%;border:2px solid #fbbf24;border-radius:10px;padding:14px;font-size:28px;font-weight:900;text-align:center;outline:none;color:#111;box-sizing:border-box;letter-spacing:.3em"/>
         <div id="ret-otp-err" style="display:none;color:#dc2626;font-size:12px;margin-top:6px;text-align:center"></div>
         <div style="display:flex;gap:8px;margin-top:14px">
-          <button class="btn btn-ghost" style="flex:1" onclick="rstOp('ret')">Annuler</button>
-          <button id="ret-otp-btn" class="btn btn-o" style="flex:2" onclick="confirmerRetraitOTP()">Confirmer</button>
+          <button class="btn btn-ghost" style="flex:1" onclick="rstOpOTP(this)">Annuler</button>
+          <button id="ret-otp-btn" class="btn btn-o" style="flex:2" onclick="confirmerRetraitOTP(this)">Confirmer</button>
         </div>
       </div>
     </div>
@@ -959,16 +959,19 @@ async function doRetrait(){
   }
 }
 
-async function confirmerRetraitOTP(){
+async function confirmerRetraitOTP(btnEl){
   var client=opClients['ret'];if(!client)return;
-  // Cibler la section OTP visible (2 sheets identiques dans le DOM)
-  var otpSecs=document.querySelectorAll('#ret-otp-section');
-  var otpSec=null;
-  for(var i=0;i<otpSecs.length;i++){if(otpSecs[i].style.display!=='none'){otpSec=otpSecs[i];break;}}
-  if(!otpSec){return;}
-  var otpInp=otpSec.querySelector('#ret-otp-input,input');
-  var btn=otpSec.querySelector('#ret-otp-btn,button:last-child');
-  var otpErr=otpSec.querySelector('#ret-otp-err');
+  // btnEl = le bouton cliqué → remonter à la section OTP parente
+  var otpSec=btnEl?btnEl.closest('[id="ret-otp-section"]')||btnEl.parentElement.parentElement:null;
+  if(!otpSec){
+    // Fallback: trouver la section visible
+    var secs=document.querySelectorAll('[id="ret-otp-section"]');
+    for(var i=0;i<secs.length;i++){if(secs[i].style.display!=='none'){otpSec=secs[i];break;}}
+  }
+  if(!otpSec)return;
+  var otpInp=otpSec.querySelector('input[type="number"]');
+  var btn=btnEl||otpSec.querySelector('button.btn-o');
+  var otpErr=otpSec.querySelector('[id="ret-otp-err"]');
   var otp=(otpInp?otpInp.value:'').trim();
   if(otp.length!==4||isNaN(otp)){T('Code OTP à 4 chiffres requis',true);return;}
   var amt=Number(document.getElementById('ret-amt').value||0);
@@ -996,6 +999,22 @@ async function confirmerRetraitOTP(){
     if(btn){btn.disabled=false;btn.textContent='Confirmer';}
     if(otpInp){otpInp.value='';setTimeout(function(){otpInp.focus();},50);}
   }
+}
+
+function rstOpOTP(el){
+  // Trouver la section OTP parente et reset
+  var sec=el?el.closest('[id^="ret-otp-section"]')||el.parentElement.parentElement:null;
+  if(sec)sec.style.display='none';
+  // Reset input et bouton
+  var inp=sec?sec.querySelector('input'):document.getElementById('ret-otp-input');
+  if(inp)inp.value='';
+  var btn=sec?sec.querySelector('button.btn-o'):document.getElementById('ret-otp-btn');
+  if(btn){btn.disabled=false;btn.textContent='Confirmer';}
+  var err=sec?sec.querySelector('[id="ret-otp-err"]'):document.getElementById('ret-otp-err');
+  if(err){err.style.display='none';err.textContent='';}
+  // Remettre le bouton valider
+  var btnVal=document.getElementById('ret-btn-valider');
+  if(btnVal)btnVal.style.display='';
 }
 
 function rstOp(op){
@@ -2799,8 +2818,8 @@ document.querySelectorAll('.sh-ov').forEach(function(el){
         <input id="ret-otp-input" type="number" inputmode="numeric" placeholder="&#9679; &#9679; &#9679; &#9679;" style="width:100%;border:2px solid #fbbf24;border-radius:10px;padding:14px;font-size:28px;font-weight:900;text-align:center;outline:none;color:#111;box-sizing:border-box;letter-spacing:.3em"/>
         <div id="ret-otp-err" style="display:none;color:#dc2626;font-size:12px;margin-top:6px;text-align:center"></div>
         <div style="display:flex;gap:8px;margin-top:14px">
-          <button class="btn btn-ghost" style="flex:1" onclick="rstOp('ret')">Annuler</button>
-          <button id="ret-otp-btn" class="btn btn-o" style="flex:2" onclick="confirmerRetraitOTP()">Confirmer</button>
+          <button class="btn btn-ghost" style="flex:1" onclick="rstOpOTP(this)">Annuler</button>
+          <button id="ret-otp-btn" class="btn btn-o" style="flex:2" onclick="confirmerRetraitOTP(this)">Confirmer</button>
         </div>
       </div>
     </div>

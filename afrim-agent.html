@@ -529,9 +529,9 @@ function setTab(t){
       </div>
       <div id="dep-err2" class="info info-r" style="display:none"></div>
       <span class="lbl">Montant (FCFA)</span>
-      <div style="position:relative;margin-bottom:8px">
-        <input class="inp" id="dep-amt" type="number" placeholder="0" oninput="calcDep()" style="padding-right:55px"/>
-        <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--a);font-size:12px;font-weight:700">FCFA</span>
+      <div style="position:relative;margin-bottom:8px;overflow:hidden;border-radius:12px">
+        <input class="inp" id="dep-amt" type="number" placeholder="0" oninput="calcDep()" style="padding-right:60px"/>
+        <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--a);font-size:12px;font-weight:700;pointer-events:none">FCFA</span>
       </div>
       <div style="display:flex;gap:6px;margin-bottom:14px">
         <button class="chip" onclick="setAmt('dep',1000)">1K</button>
@@ -587,9 +587,9 @@ function setTab(t){
       </div>
       <div id="ret-err2" class="info info-r" style="display:none"></div>
       <span class="lbl">Montant (FCFA)</span>
-      <div style="position:relative;margin-bottom:8px">
-        <input class="inp" id="ret-amt" type="number" placeholder="0" oninput="calcRet()" style="padding-right:55px"/>
-        <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--a);font-size:12px;font-weight:700">FCFA</span>
+      <div style="position:relative;margin-bottom:8px;overflow:hidden;border-radius:12px">
+        <input class="inp" id="ret-amt" type="number" placeholder="0" oninput="calcRet()" style="padding-right:60px"/>
+        <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--a);font-size:12px;font-weight:700;pointer-events:none">FCFA</span>
       </div>
       <div style="display:flex;gap:6px;margin-bottom:14px">
         <button class="chip" onclick="setAmt('ret',1000)">1K</button>
@@ -920,7 +920,7 @@ async function doDepot(){
     var r=await post('/transactions/deposit',{telephone:client.telephone,montant:amt});
     document.getElementById('dep-loading').style.display='none';
     document.getElementById('dep-success').style.display='';
-    closeSh('choix-op');
+    var shChoix=document.getElementById('sh-choix-op');if(shChoix)shChoix.classList.remove('on');
     var d=r.data||{};
     document.getElementById('dep-succ-txt').textContent='Dépôt de '+F(amt)+' pour '+(client.prenom||'')+' '+(client.nom||'');
     document.getElementById('dep-succ-gain').textContent=d.gainAgent?'Commission agent : +'+F(d.gainAgent):'';
@@ -981,7 +981,7 @@ async function confirmerRetraitOTP(btnEl){
   try{
     var r=await post('/transactions/withdraw/confirm',{telephone:client.telephone,otp:otp});
     otpSec.style.display='none';
-    closeSh('choix-op');
+    var shChoix2=document.getElementById('sh-choix-op');if(shChoix2)shChoix2.classList.remove('on');
     // Trouver le ret-success dans le même parent
     var par=otpSec.parentElement;
     var succ=par?par.querySelector('#ret-success,[id="ret-success"]'):document.getElementById('ret-success');
@@ -2616,7 +2616,6 @@ document.querySelectorAll('.sh-ov').forEach(function(el){
       </button>
     </div>
   </div>
-</div>
 </div>
 <!-- SHEET DÉTAIL TRANSACTION -->
 <div class="sh-ov" id="sh-tx-detail" onclick="if(event.target===this)closeSh('tx-detail')">

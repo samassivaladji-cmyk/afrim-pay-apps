@@ -1080,16 +1080,19 @@ async function chargerAccueil(){
   var u=G.user;if(!u)return;
   document.getElementById('h-name').textContent=(u.prenom||'')+' '+(u.nom||'');
   document.getElementById('h-zone').textContent=(u.zone||'Zone non d&#233;finie')+' · '+(u.codeParrainage||'');
+  // Charger solde et profil
   try{
-    var res=await Promise.all([get('/accounts/me'),get('/users/me'),get('/stats/dashboard')]);
-    var cr=res[0],ur=res[1],sr=res[2];
-    G.compte=cr.data;G.user=ur.data;_ls.set('afrim_user',JSON.stringify(G.user));
-    setSoldeVal(FN(cr.data.solde));
-    var elDep=document.getElementById('h-dep');if(elDep)elDep.textContent=(sr.data.depotsMois&&sr.data.depotsMois.count)||'0';
-    var elG=document.getElementById('h-gains');if(elG)elG.textContent=F(sr.data.gainsMois||0);
-    var elRet=document.getElementById('h-ret');if(elRet)elRet.textContent=(sr.data.retraitsMois&&sr.data.retraitsMois.count)||'0';
-    var elNb=document.getElementById('h-nb-ops');if(elNb)elNb.textContent=(sr.data.opsJour||sr.data.transactionsJour||0);
-  }catch(e){setSoldeVal(G.compte?FN(G.compte.solde):'—');}
+    var crP=await get('/accounts/me');
+    G.compte=crP.data;
+    setSoldeVal(FN(crP.data.solde));
+  }catch(e){
+    setSoldeVal(G.compte?FN(G.compte.solde):'—');
+  }
+  try{
+    var urP=await get('/users/me');
+    G.user=urP.data;
+    _ls.set('afrim_user',JSON.stringify(G.user));
+  }catch(e){}
   chargerTxns();
 }
 function rafraichir(){chargerAccueil();}

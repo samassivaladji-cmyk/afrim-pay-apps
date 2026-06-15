@@ -1079,8 +1079,8 @@ function entrerApp(){
 async function chargerAccueil(){
   var u=G.user;if(!u)return;
   document.getElementById('h-name').textContent=(u.prenom||'')+' '+(u.nom||'');
-  document.getElementById('h-zone').textContent=(u.zone||'Zone non d&#233;finie')+' · '+(u.codeParrainage||'');
-  // Charger solde et profil
+  document.getElementById('h-zone').textContent=(u.zone||'Zone non définie')+' · '+(u.codeParrainage||'');
+  // Charger solde
   try{
     var crP=await get('/accounts/me');
     G.compte=crP.data;
@@ -1088,11 +1088,13 @@ async function chargerAccueil(){
   }catch(e){
     setSoldeVal(G.compte?FN(G.compte.solde):'—');
   }
+  // Charger profil en parallèle
   try{
     var urP=await get('/users/me');
     G.user=urP.data;
     _ls.set('afrim_user',JSON.stringify(G.user));
   }catch(e){}
+  // Charger txns APRÈS que G.compte est défini
   chargerTxns();
 }
 function rafraichir(){chargerAccueil();}
@@ -1211,8 +1213,15 @@ function txRow(tx){
 async function chargerTxns(){
   var el=document.getElementById('h-txns');
   try{
-    var r=await get('/transactions?limit=5');var list=r.data||[];
-    list.forEach(function(t){if(t.id)_txCache[t.id]=t;});
+    var r=await get('/transactions?limit=5');
+    var list=r.data||[];
+    // Forcer string sur tous les IDs (sécurité anti-Buffer)
+    list.forEach(function(t){
+      t.id=String(t.id||'');
+      t.compte_source_id=String(t.compte_source_id||'');
+      t.compte_dest_id=String(t.compte_dest_id||'');
+      if(t.id)_txCache[t.id]=t;
+    });
     el.innerHTML=list.length?list.map(txRow).join(''):'<div style="text-align:center;padding:20px;color:var(--m);font-size:13px">Aucune transaction</div>';
   }catch(e){el.innerHTML='<div class="info info-r">'+e.message+'</div>';}
 }

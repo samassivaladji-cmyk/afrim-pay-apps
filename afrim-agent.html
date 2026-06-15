@@ -902,22 +902,26 @@ function calcRet(){
 }
 
 async function doDepot(){
-  var client=opClients['dep'];if(!client){T('Identifié le client d\'abord',true);return;}
+  var client=opClients['dep'];if(!client){T('Identifiez le client d\'abord',true);return;}
   var amt=Number(document.getElementById('dep-amt').value);
   if(!amt||amt<=0){T('Montant invalide',true);return;}
   document.getElementById('dep-btn-valider').style.display='none';
   document.getElementById('dep-loading').style.display='';
   try{
     var r=await post('/transactions/deposit',{telephone:client.telephone,montant:amt});
+    document.getElementById('dep-loading').style.display='none';
+    document.getElementById('dep-success').style.display='';
+    var shChoix=document.getElementById('sh-choix-op');if(shChoix)shChoix.classList.remove('on');
     var d=r.data||{};
-    // Fermer le sheet et afficher l'écran succès plein écran
-    closeSh('depot');
-    document.getElementById('sop-dep-ok-txt').textContent='Dépôt de '+F(amt)+' FCFA pour '+(client.prenom||'')+' '+(client.nom||'');
-    document.getElementById('sop-dep-ok-gain').textContent=d.gainAgent?'Commission : +'+F(d.gainAgent)+' FCFA':'';
-    document.getElementById('sop-dep-ok-ref').textContent=d.reference||'';
-    _sopClient.dep=client;
-    S('s-op-depot-ok');
+    document.getElementById('dep-succ-txt').textContent='Dépôt de '+F(amt)+' pour '+(client.prenom||'')+' '+(client.nom||'');
+    document.getElementById('dep-succ-gain').textContent=d.gainAgent?'Commission agent : +'+F(d.gainAgent):'';
+    document.getElementById('dep-succ-ref').textContent=d.reference||'';
+    // Mise à jour immédiate du solde agent (le serveur a déjà mis à jour)
     rafraichir();
+    // Notifier aussi le client (son solde sera à jour dès qu'il rafraîchira)
+    if(d.clientSolde!==null&&d.clientSolde!==undefined){
+      console.log('[DEP] Nouveau solde client:',d.clientSolde);
+    }
   }catch(e){
     document.getElementById('dep-loading').style.display='none';
     document.getElementById('dep-btn-valider').style.display='';

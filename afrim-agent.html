@@ -870,18 +870,9 @@ async function identClient(op){
     var arr=Array.isArray(r.data)?r.data:[r.data];
     if(!arr.length||!arr[0]){throw new Error('Client introuvable');}
     var u=arr[0];opClients[op]=u;
-    document.getElementById(op+'-s1').style.display='none';
-    document.getElementById(op+'-s2').style.display='';
-    document.getElementById(op+'-recap').style.display='';
-    document.getElementById(op+'-av').textContent=(u.prenom||'?')[0].toUpperCase();
-    document.getElementById(op+'-cname').textContent=(u.prenom||'')+' '+(u.nom||'');
-    document.getElementById(op+'-ctel').textContent=u.telephone||tel;
-    document.getElementById(op+'-kyc').textContent=u.kycNiveau||'KYC1';
-    if(op==='ret'){
-      var sol=u.comptes&&(Array.isArray(u.comptes)?u.comptes[0]:u.comptes);
-      if(sol)document.getElementById('ret-csolde').textContent=F(sol.solde);
-    }
-    document.getElementById(op+'-btn-valider').style.display='';
+    // Fermer le sheet et ouvrir le screen plein écran
+    if(op==='dep'){closeSh('depot');ouvrirScreenDepot(u);}
+    else if(op==='ret'){closeSh('retrait');ouvrirScreenRetrait(u);}
   }catch(e){
     document.getElementById(op+'-err1').textContent=e.message;
     document.getElementById(op+'-err1').style.display='';
@@ -911,26 +902,22 @@ function calcRet(){
 }
 
 async function doDepot(){
-  var client=opClients['dep'];if(!client){T('Identifiez le client d\'abord',true);return;}
+  var client=opClients['dep'];if(!client){T('Identifié le client d\'abord',true);return;}
   var amt=Number(document.getElementById('dep-amt').value);
   if(!amt||amt<=0){T('Montant invalide',true);return;}
   document.getElementById('dep-btn-valider').style.display='none';
   document.getElementById('dep-loading').style.display='';
   try{
     var r=await post('/transactions/deposit',{telephone:client.telephone,montant:amt});
-    document.getElementById('dep-loading').style.display='none';
-    document.getElementById('dep-success').style.display='';
-    var shChoix=document.getElementById('sh-choix-op');if(shChoix)shChoix.classList.remove('on');
     var d=r.data||{};
-    document.getElementById('dep-succ-txt').textContent='Dépôt de '+F(amt)+' pour '+(client.prenom||'')+' '+(client.nom||'');
-    document.getElementById('dep-succ-gain').textContent=d.gainAgent?'Commission agent : +'+F(d.gainAgent):'';
-    document.getElementById('dep-succ-ref').textContent=d.reference||'';
-    // Mise à jour immédiate du solde agent (le serveur a déjà mis à jour)
+    // Fermer le sheet et afficher l'écran succès plein écran
+    closeSh('depot');
+    document.getElementById('sop-dep-ok-txt').textContent='Dépôt de '+F(amt)+' FCFA pour '+(client.prenom||'')+' '+(client.nom||'');
+    document.getElementById('sop-dep-ok-gain').textContent=d.gainAgent?'Commission : +'+F(d.gainAgent)+' FCFA':'';
+    document.getElementById('sop-dep-ok-ref').textContent=d.reference||'';
+    _sopClient.dep=client;
+    S('s-op-depot-ok');
     rafraichir();
-    // Notifier aussi le client (son solde sera à jour dès qu'il rafraîchira)
-    if(d.clientSolde!==null&&d.clientSolde!==undefined){
-      console.log('[DEP] Nouveau solde client:',d.clientSolde);
-    }
   }catch(e){
     document.getElementById('dep-loading').style.display='none';
     document.getElementById('dep-btn-valider').style.display='';
@@ -2263,25 +2250,8 @@ function afficherChoixOp(tel, parts){
 }
 
 function ouvrirDepotAvecClient(){
-  if(!_scannedClient) return;
-  closeSh('choix-op');
-  setTimeout(function(){
-    rstOp('dep');
-    openSh('depot');
-    document.getElementById('dep-tel').value = _scannedClient.telephone||'';
-    onTelInput('dep');
-    // Pré-remplir le recap directement
-    opClients['dep'] = _scannedClient;
-    var u = _scannedClient;
-    document.getElementById('dep-s1').style.display='none';
-    document.getElementById('dep-s2').style.display='';
-    document.getElementById('dep-recap').style.display='';
-    document.getElementById('dep-av').textContent=(u.prenom||'?')[0].toUpperCase();
-    document.getElementById('dep-cname').textContent=(u.prenom||'')+' '+(u.nom||'');
-    document.getElementById('dep-ctel').textContent=u.telephone||'';
-    document.getElementById('dep-kyc').textContent=u.kycNiveau||'KYC1';
-    document.getElementById('dep-btn-valider').style.display='';
-  },300);
+  var client=opClients['scan']||opClients['choix'];if(!client)return;
+  closeSh('choix-op');ouvrirScreenDepot(client);
 }
 
 function ouvrirTransfertAvecClient(){
@@ -2305,31 +2275,10 @@ function ouvrirTransfertAvecClient(){
 }
 
 function ouvrirRetraitAvecClient(){
-  if(!_scannedClient) return;
-  closeSh('choix-op');
-  setTimeout(function(){
-    rstOp('ret');
-    openSh('retrait');
-    document.getElementById('ret-tel').value = _scannedClient.telephone||'';
-    onTelInput('ret');
-    opClients['ret'] = _scannedClient;
-    var u = _scannedClient;
-    document.getElementById('ret-s1').style.display='none';
-    document.getElementById('ret-s2').style.display='';
-    document.getElementById('ret-recap').style.display='';
-    document.getElementById('ret-av').textContent=(u.prenom||'?')[0].toUpperCase();
-    document.getElementById('ret-cname').textContent=(u.prenom||'')+' '+(u.nom||'');
-    document.getElementById('ret-ctel').textContent=u.telephone||'';
-    document.getElementById('ret-kyc').textContent=u.kycNiveau||'KYC1';
-    var sol=u.comptes&&(Array.isArray(u.comptes)?u.comptes[0]:u.comptes);
-    if(sol)document.getElementById('ret-csolde').textContent=F(sol.solde);
-    document.getElementById('ret-btn-valider').style.display='';
-  },300);
+  var client=opClients['scan']||opClients['choix'];if(!client)return;
+  closeSh('choix-op');ouvrirScreenRetrait(client);
 }
 
-// ── Toggle solde ────────────────────────────────────────────────
-var _soldeVisible = true;
-var _soldeVal = '—';
 function toggleSolde(){
   _soldeVisible = !_soldeVisible;
   var el = document.getElementById('h-solde');
@@ -2576,6 +2525,147 @@ document.querySelectorAll('.sh-ov').forEach(function(el){
   }
 })();
 
+
+// ══════════ NOUVEAUX SCREENS DÉPÔT / RETRAIT ══════════
+var _sopClient={};
+
+function setSopAmt(op,v){
+  document.getElementById('sop-'+op+'-amt').value=v;
+  op==='dep'?calcSopDep():calcSopRet();
+}
+function retourAccueil(op){S('s-home');rafraichir();}
+
+function ouvrirScreenDepot(client){
+  _sopClient.dep=client;
+  document.getElementById('sop-dep-av').textContent=(client.prenom||'?')[0].toUpperCase();
+  document.getElementById('sop-dep-name').textContent=(client.prenom||'')+' '+(client.nom||'');
+  document.getElementById('sop-dep-tel').textContent=client.telephone||'';
+  document.getElementById('sop-dep-kyc').textContent=client.kycNiveau?'KYC'+client.kycNiveau:'—';
+  document.getElementById('sop-dep-amt').value='';
+  document.getElementById('sop-dep-calc').style.display='none';
+  document.getElementById('sop-dep-err').style.display='none';
+  document.getElementById('sop-dep-loading').style.display='none';
+  document.getElementById('sop-dep-btn').disabled=true;document.getElementById('sop-dep-btn').style.opacity='.4';
+  S('s-op-depot');
+  setTimeout(function(){document.getElementById('sop-dep-amt').focus();},200);
+}
+function calcSopDep(){
+  var amt=Number(document.getElementById('sop-dep-amt').value)||0;
+  var btn=document.getElementById('sop-dep-btn');
+  if(amt>0){
+    var comm=Math.round(amt*0.002);
+    document.getElementById('sop-dep-comm').textContent='+'+F(comm)+' FCFA';
+    document.getElementById('sop-dep-calc').style.display='';
+    btn.disabled=false;btn.style.opacity='1';
+  }else{document.getElementById('sop-dep-calc').style.display='none';btn.disabled=true;btn.style.opacity='.4';}
+}
+async function doSopDepot(){
+  var client=_sopClient.dep;if(!client)return;
+  var amt=Number(document.getElementById('sop-dep-amt').value);
+  if(!amt||amt<=0){T('Montant invalide',true);return;}
+  var btn=document.getElementById('sop-dep-btn');
+  var loading=document.getElementById('sop-dep-loading');
+  var err=document.getElementById('sop-dep-err');
+  btn.disabled=true;btn.style.opacity='.4';loading.style.display='';err.style.display='none';
+  try{
+    var r=await post('/transactions/deposit',{telephone:client.telephone,montant:amt});
+    loading.style.display='none';
+    var d=r.data||{};
+    document.getElementById('sop-dep-ok-txt').textContent='Dépôt de '+F(amt)+' FCFA pour '+(client.prenom||'')+' '+(client.nom||'');
+    document.getElementById('sop-dep-ok-gain').textContent=d.gainAgent?'Commission : +'+F(d.gainAgent)+' FCFA':'';
+    document.getElementById('sop-dep-ok-ref').textContent=d.reference||'';
+    S('s-op-depot-ok');rafraichir();
+  }catch(e){
+    loading.style.display='none';btn.disabled=false;btn.style.opacity='1';
+    err.textContent=e.message;err.style.display='';
+  }
+}
+function nouveauSopDep(){if(_sopClient.dep)ouvrirScreenDepot(_sopClient.dep);else S('s-home');}
+
+function ouvrirScreenRetrait(client){
+  _sopClient.ret=client;
+  document.getElementById('sop-ret-av').textContent=(client.prenom||'?')[0].toUpperCase();
+  document.getElementById('sop-ret-name').textContent=(client.prenom||'')+' '+(client.nom||'');
+  document.getElementById('sop-ret-tel').textContent=client.telephone||'';
+  document.getElementById('sop-ret-kyc').textContent=client.kycNiveau?'KYC'+client.kycNiveau:'—';
+  document.getElementById('sop-ret-amt').value='';
+  document.getElementById('sop-ret-calc').style.display='none';
+  document.getElementById('sop-ret-err1').style.display='none';
+  document.getElementById('sop-ret-loading1').style.display='none';
+  document.getElementById('sop-ret-phase1').style.display='';
+  document.getElementById('sop-ret-phase2').style.display='none';
+  document.getElementById('sop-ret-btn1').disabled=true;document.getElementById('sop-ret-btn1').style.opacity='.4';
+  S('s-op-retrait');
+  setTimeout(function(){document.getElementById('sop-ret-amt').focus();},200);
+}
+function calcSopRet(){
+  var amt=Number(document.getElementById('sop-ret-amt').value)||0;
+  var btn=document.getElementById('sop-ret-btn1');
+  if(amt>0){
+    var taux=amt<=50000?0.009:amt<=200000?0.008:0.007;
+    var frais=Math.round(amt*taux);var comm=Math.round(frais*0.35);var total=amt+frais;
+    document.getElementById('sop-ret-frais').textContent=F(frais)+' FCFA';
+    document.getElementById('sop-ret-comm').textContent='+'+F(comm)+' FCFA';
+    document.getElementById('sop-ret-total').textContent=F(total)+' FCFA';
+    document.getElementById('sop-ret-calc').style.display='';
+    btn.disabled=false;btn.style.opacity='1';
+  }else{document.getElementById('sop-ret-calc').style.display='none';btn.disabled=true;btn.style.opacity='.4';}
+}
+async function demanderOTPSop(){
+  var client=_sopClient.ret;if(!client)return;
+  var amt=Number(document.getElementById('sop-ret-amt').value);
+  if(!amt||amt<=0){T('Montant invalide',true);return;}
+  var btn=document.getElementById('sop-ret-btn1');
+  var loading=document.getElementById('sop-ret-loading1');
+  var err=document.getElementById('sop-ret-err1');
+  btn.disabled=true;btn.style.opacity='.4';loading.style.display='';err.style.display='none';
+  try{
+    var r=await post('/transactions/withdraw/request',{telephone:client.telephone,montant:amt});
+    loading.style.display='none';
+    var d=r.data||{};
+    document.getElementById('sop-ret-otp-info').textContent='Code envoyé à '+(client.prenom||'')+' '+(client.nom||'')+'. Demandez-lui le code.';
+    document.getElementById('sop-ret-otp-recap').textContent=F(d.montant||amt)+' + '+F(d.frais||0)+' frais = '+F(d.total||amt)+' FCFA total';
+    document.getElementById('sop-ret-otp-err').style.display='none';
+    document.getElementById('sop-ret-phase1').style.display='none';
+    document.getElementById('sop-ret-phase2').style.display='';
+    document.getElementById('sop-ret-otp-input').value='';
+    setTimeout(function(){document.getElementById('sop-ret-otp-input').focus();},100);
+  }catch(e){
+    loading.style.display='none';btn.disabled=false;btn.style.opacity='1';
+    err.textContent=e.message;err.style.display='';
+  }
+}
+function annulerOTPSop(){
+  document.getElementById('sop-ret-phase2').style.display='none';
+  document.getElementById('sop-ret-phase1').style.display='';
+  var btn=document.getElementById('sop-ret-btn1');btn.disabled=false;btn.style.opacity='1';
+  document.getElementById('sop-ret-otp-input').value='';
+}
+async function confirmerOTPSop(){
+  var client=_sopClient.ret;if(!client)return;
+  var otp=document.getElementById('sop-ret-otp-input').value.trim();
+  if(otp.length!==4||isNaN(otp)){T('Code OTP à 4 chiffres requis',true);return;}
+  var btn=document.getElementById('sop-ret-btn2');
+  var loading=document.getElementById('sop-ret-loading2');
+  var err=document.getElementById('sop-ret-otp-err');
+  btn.disabled=true;btn.textContent='...';loading.style.display='';err.style.display='none';
+  try{
+    var r=await post('/transactions/withdraw/confirm',{telephone:client.telephone,otp:otp});
+    loading.style.display='none';
+    var d=r.data||{};
+    document.getElementById('sop-ret-ok-txt').textContent='Retrait de '+F(d.montant||0)+' FCFA pour '+(client.prenom||'')+' '+(client.nom||'');
+    document.getElementById('sop-ret-ok-gain').textContent=d.gainAgent?'Commission : +'+F(d.gainAgent)+' FCFA':'';
+    document.getElementById('sop-ret-ok-ref').textContent=d.reference||'';
+    S('s-op-retrait-ok');rafraichir();
+  }catch(e){
+    loading.style.display='none';btn.disabled=false;btn.textContent='Confirmer';
+    err.textContent=e.message;err.style.display='';
+    document.getElementById('sop-ret-otp-input').value='';
+    setTimeout(function(){document.getElementById('sop-ret-otp-input').focus();},50);
+  }
+}
+function nouveauSopRet(){if(_sopClient.ret)ouvrirScreenRetrait(_sopClient.ret);else S('s-home');}
+
 </script>
 
 <!-- SHEET CHOIX OPÉRATION après scan QR accueil -->
@@ -2689,6 +2779,179 @@ document.querySelectorAll('.sh-ov').forEach(function(el){
     </div>
     <div id="sh-notifs-list" style="overflow-y:auto;flex:1;padding-bottom:20px">
       <div style="text-align:center;padding:32px"><div class="spin"></div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ SCREEN DÉPÔT — Étape 2 (montant) ══ -->
+<div class="scr" id="s-op-depot" style="background:#f9fafb">
+  <div style="position:sticky;top:0;background:#fff;z-index:10;padding:52px 20px 14px;border-bottom:1px solid #f3f4f6">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button onclick="retourAccueil('depot')" style="background:#f3f4f6;border:none;border-radius:10px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center">
+        <svg width="18" height="18" fill="none" stroke="#374151" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      </button>
+      <div>
+        <div style="font-size:18px;font-weight:800;color:#111">D&#233;p&#244;t Client</div>
+        <div style="font-size:12px;color:#6b7280">Commission 0,2% du montant</div>
+      </div>
+    </div>
+  </div>
+  <div style="padding:20px">
+    <!-- Recap client -->
+    <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:16px;padding:16px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+      <div style="width:46px;height:46px;border-radius:50%;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:var(--a);flex-shrink:0" id="sop-dep-av">?</div>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:15px;color:#111" id="sop-dep-name">—</div>
+        <div style="color:#6b7280;font-size:12px" id="sop-dep-tel">—</div>
+      </div>
+      <div style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:#dcfce7;color:#16a34a" id="sop-dep-kyc">—</div>
+    </div>
+
+    <!-- Montant -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Montant (FCFA)</div>
+      <div style="position:relative">
+        <input class="inp" id="sop-dep-amt" type="number" inputmode="decimal" placeholder="0" oninput="calcSopDep()" style="font-size:28px;font-weight:800;padding:16px 70px 16px 16px;border-radius:14px"/>
+        <span style="position:absolute;right:16px;top:50%;transform:translateY(-50%);color:var(--a);font-size:13px;font-weight:700;pointer-events:none">FCFA</span>
+      </div>
+    </div>
+
+    <!-- Raccourcis montant -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+      <button class="chip" onclick="setSopAmt('dep',1000)">1K</button>
+      <button class="chip" onclick="setSopAmt('dep',2000)">2K</button>
+      <button class="chip" onclick="setSopAmt('dep',5000)">5K</button>
+      <button class="chip" onclick="setSopAmt('dep',10000)">10K</button>
+      <button class="chip" onclick="setSopAmt('dep',20000)">20K</button>
+      <button class="chip" onclick="setSopAmt('dep',50000)">50K</button>
+    </div>
+
+    <!-- Calcul commission -->
+    <div id="sop-dep-calc" style="display:none;background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;padding:16px;margin-bottom:24px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="color:#6b7280;font-size:13px">Commission agent (0,2%)</span>
+        <span style="color:#16a34a;font-weight:800;font-size:15px" id="sop-dep-comm">—</span>
+      </div>
+    </div>
+
+    <div id="sop-dep-err" style="display:none;color:#dc2626;font-size:13px;text-align:center;margin-bottom:16px"></div>
+    <div id="sop-dep-loading" style="display:none;text-align:center;padding:20px"><div class="spin" style="width:32px;height:32px;border-width:3px;border-top-color:#22c55e"></div></div>
+
+    <button id="sop-dep-btn" onclick="doSopDepot()" style="width:100%;background:linear-gradient(135deg,#16a34a,#22c55e);border:none;border-radius:16px;padding:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;opacity:.4" disabled>
+      Valider le d&#233;p&#244;t
+    </button>
+  </div>
+</div>
+
+<!-- ══ SCREEN DÉPÔT — Étape 3 (succès) ══ -->
+<div class="scr" id="s-op-depot-ok" style="background:#f9fafb;justify-content:center;align-items:center">
+  <div style="padding:40px 24px;text-align:center;width:100%">
+    <div style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#16a34a,#22c55e);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 32px rgba(34,197,94,.35)">
+      <svg width="44" height="44" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div style="font-size:26px;font-weight:900;color:#111;margin-bottom:8px">D&#233;p&#244;t valid&#233; !</div>
+    <div id="sop-dep-ok-txt" style="color:#6b7280;font-size:14px;margin-bottom:6px"></div>
+    <div id="sop-dep-ok-gain" style="color:#16a34a;font-size:16px;font-weight:800;margin-bottom:6px"></div>
+    <div id="sop-dep-ok-ref" style="color:#9ca3af;font-size:11px;font-family:monospace;margin-bottom:40px"></div>
+    <div style="display:flex;gap:12px">
+      <button onclick="nouveauSopDep()" style="flex:1;background:linear-gradient(135deg,#16a34a,#22c55e);border:none;border-radius:14px;padding:16px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
+        + Nouveau d&#233;p&#244;t
+      </button>
+      <button onclick="S('s-home');chargerAccueil()" style="flex:1;background:#f3f4f6;border:none;border-radius:14px;padding:16px;color:#374151;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
+        Accueil
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN RETRAIT — Étape 2 (OTP) ══ -->
+<div class="scr" id="s-op-retrait" style="background:#f9fafb">
+  <div style="position:sticky;top:0;background:#fff;z-index:10;padding:52px 20px 14px;border-bottom:1px solid #f3f4f6">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button onclick="retourAccueil('retrait')" style="background:#f3f4f6;border:none;border-radius:10px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center">
+        <svg width="18" height="18" fill="none" stroke="#374151" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      </button>
+      <div>
+        <div style="font-size:18px;font-weight:800;color:#111">Retrait Client</div>
+        <div style="font-size:12px;color:#6b7280">35% des frais de retrait</div>
+      </div>
+    </div>
+  </div>
+  <div style="padding:20px">
+    <!-- Recap client -->
+    <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:16px;padding:16px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+      <div style="width:46px;height:46px;border-radius:50%;background:rgba(249,115,22,.12);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#f97316;flex-shrink:0" id="sop-ret-av">?</div>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:15px;color:#111" id="sop-ret-name">—</div>
+        <div style="color:#6b7280;font-size:12px" id="sop-ret-tel">—</div>
+      </div>
+      <div style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:#fff7ed;color:#f97316" id="sop-ret-kyc">—</div>
+    </div>
+
+    <!-- Montant -->
+    <div id="sop-ret-phase1">
+      <div style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Montant (FCFA)</div>
+      <div style="position:relative;margin-bottom:12px">
+        <input class="inp" id="sop-ret-amt" type="number" inputmode="decimal" placeholder="0" oninput="calcSopRet()" style="font-size:28px;font-weight:800;padding:16px 70px 16px 16px;border-radius:14px"/>
+        <span style="position:absolute;right:16px;top:50%;transform:translateY(-50%);color:#f97316;font-size:13px;font-weight:700;pointer-events:none">FCFA</span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+        <button class="chip" onclick="setSopAmt('ret',1000)">1K</button>
+        <button class="chip" onclick="setSopAmt('ret',2000)">2K</button>
+        <button class="chip" onclick="setSopAmt('ret',5000)">5K</button>
+        <button class="chip" onclick="setSopAmt('ret',10000)">10K</button>
+        <button class="chip" onclick="setSopAmt('ret',20000)">20K</button>
+        <button class="chip" onclick="setSopAmt('ret',50000)">50K</button>
+      </div>
+      <div id="sop-ret-calc" style="display:none;background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;padding:14px;margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:#6b7280;font-size:13px">Frais de retrait</span><span style="font-weight:700;font-size:13px" id="sop-ret-frais">—</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:#6b7280;font-size:13px">Commission agent (35%)</span><span style="color:#16a34a;font-weight:800;font-size:13px" id="sop-ret-comm">—</span></div>
+        <div style="display:flex;justify-content:space-between;border-top:1px solid #f3f4f6;padding-top:8px"><span style="font-weight:700;font-size:13px">Total d&#233;bit&#233;</span><span style="font-weight:800;font-size:14px;color:#dc2626" id="sop-ret-total">—</span></div>
+      </div>
+      <div id="sop-ret-err1" style="display:none;color:#dc2626;font-size:13px;text-align:center;margin-bottom:14px"></div>
+      <div id="sop-ret-loading1" style="display:none;text-align:center;padding:16px"><div class="spin" style="width:28px;height:28px;border-width:3px;border-top-color:#f97316"></div></div>
+      <button id="sop-ret-btn1" onclick="demanderOTPSop()" style="width:100%;background:linear-gradient(135deg,#c2410c,#f97316);border:none;border-radius:16px;padding:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;opacity:.4" disabled>
+        Demander l&#39;autorisation
+      </button>
+    </div>
+
+    <!-- Phase 2 : Saisie OTP -->
+    <div id="sop-ret-phase2" style="display:none">
+      <div style="background:#fffbeb;border:1.5px solid #fbbf24;border-radius:14px;padding:16px;margin-bottom:20px">
+        <div style="font-size:15px;font-weight:800;color:#92400e;margin-bottom:6px;text-align:center">&#128274; Autorisation requise</div>
+        <div id="sop-ret-otp-info" style="font-size:12px;color:#92400e;text-align:center;margin-bottom:10px"></div>
+        <div id="sop-ret-otp-recap" style="font-size:13px;font-weight:700;color:#374151;text-align:center;background:rgba(0,0,0,.05);border-radius:8px;padding:8px;margin-bottom:14px"></div>
+        <div style="font-size:12px;color:#6b7280;text-align:center;margin-bottom:10px">Code OTP du client :</div>
+        <input id="sop-ret-otp-input" type="number" inputmode="numeric" placeholder="&#9679;&#9679;&#9679;&#9679;" style="width:100%;border:2px solid #fbbf24;border-radius:12px;padding:14px;font-size:30px;font-weight:900;text-align:center;outline:none;color:#111;box-sizing:border-box;letter-spacing:.3em"/>
+        <div id="sop-ret-otp-err" style="display:none;color:#dc2626;font-size:12px;margin-top:8px;text-align:center"></div>
+      </div>
+      <div id="sop-ret-loading2" style="display:none;text-align:center;padding:16px"><div class="spin" style="width:28px;height:28px;border-width:3px;border-top-color:#f97316"></div></div>
+      <div style="display:flex;gap:10px">
+        <button onclick="annulerOTPSop()" style="flex:1;background:#f3f4f6;border:none;border-radius:14px;padding:16px;color:#374151;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Annuler</button>
+        <button id="sop-ret-btn2" onclick="confirmerOTPSop()" style="flex:2;background:linear-gradient(135deg,#c2410c,#f97316);border:none;border-radius:14px;padding:16px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Confirmer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN RETRAIT — Étape 3 (succès) ══ -->
+<div class="scr" id="s-op-retrait-ok" style="background:#f9fafb;justify-content:center;align-items:center">
+  <div style="padding:40px 24px;text-align:center;width:100%">
+    <div style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#c2410c,#f97316);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 32px rgba(249,115,22,.35)">
+      <svg width="44" height="44" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div style="font-size:26px;font-weight:900;color:#111;margin-bottom:8px">Retrait valid&#233; !</div>
+    <div id="sop-ret-ok-txt" style="color:#6b7280;font-size:14px;margin-bottom:6px"></div>
+    <div id="sop-ret-ok-gain" style="color:#16a34a;font-size:16px;font-weight:800;margin-bottom:6px"></div>
+    <div id="sop-ret-ok-ref" style="color:#9ca3af;font-size:11px;font-family:monospace;margin-bottom:40px"></div>
+    <div style="display:flex;gap:12px">
+      <button onclick="nouveauSopRet()" style="flex:1;background:linear-gradient(135deg,#c2410c,#f97316);border:none;border-radius:14px;padding:16px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
+        + Nouveau retrait
+      </button>
+      <button onclick="S('s-home');chargerAccueil()" style="flex:1;background:#f3f4f6;border:none;border-radius:14px;padding:16px;color:#374151;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
+        Accueil
+      </button>
     </div>
   </div>
 </div>

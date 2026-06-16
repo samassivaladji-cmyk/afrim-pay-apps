@@ -684,8 +684,6 @@ function setTab(t){
       <span class="lbl">Type de compte à créer</span>
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
         <button onclick="setInsType('client')" style="padding:14px 18px;border-radius:14px;border:1.5px solid var(--a);background:rgba(245,158,11,.08);color:var(--a);font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;display:flex;align-items:center;gap:12px"><span style="font-size:22px">👤</span><div><div>Client</div><div style="font-size:11px;font-weight:400;opacity:.7">Compte personnel</div></div></button>
-        <button onclick="setInsType('business')" style="padding:14px 18px;border-radius:14px;border:1.5px solid var(--b);background:transparent;color:var(--m);font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;display:flex;align-items:center;gap:12px"><span style="font-size:22px">🏪</span><div><div>Business</div><div style="font-size:11px;font-weight:400;opacity:.7">Commerce / Entreprise</div></div></button>
-        <button onclick="setInsType('agent')" style="padding:14px 18px;border-radius:14px;border:1.5px solid var(--b);background:transparent;color:var(--m);font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;display:flex;align-items:center;gap:12px"><span style="font-size:22px">🔶</span><div><div>Agent</div><div style="font-size:11px;font-weight:400;opacity:.7">Sous votre supervision</div></div></button>
       </div>
     </div>
     <div id="ins-form" style="display:none">
@@ -787,15 +785,12 @@ function renderInsFields(){
   document.getElementById('ins-fields').innerHTML=h;
 }
 function setInsKyc(k){
-  // Sauvegarder les valeurs saisies avant de re-render
   var sv={prenom:(document.getElementById('ins-prenom')||{}).value||'',
           nom:(document.getElementById('ins-nom')||{}).value||'',
           tel:(document.getElementById('ins-tel')||{}).value||'',
           pin:(document.getElementById('ins-pin')||{}).value||'',
           zone:(document.getElementById('ins-zone')||{}).value||''};
-  insKyc=k;
-  renderInsFields();
-  // Restaurer les valeurs
+  insKyc=k;renderInsFields();
   if(document.getElementById('ins-prenom'))document.getElementById('ins-prenom').value=sv.prenom;
   if(document.getElementById('ins-nom'))document.getElementById('ins-nom').value=sv.nom;
   if(document.getElementById('ins-tel'))document.getElementById('ins-tel').value=sv.tel;
@@ -829,29 +824,35 @@ async function doInscrire(){
   var telephone=document.getElementById('ins-tel').value.trim();
   var pin=document.getElementById('ins-pin').value.trim();
   var zone=(document.getElementById('ins-zone')&&document.getElementById('ins-zone').value.trim())||'';
-  var bizName=insType==='business'&&document.getElementById('ins-biz')?document.getElementById('ins-biz').value.trim():'';
   var errEl=document.getElementById('ins-err');
   if(!prenom||!nom||!telephone||pin.length!==4){errEl.textContent='Tous les champs obligatoires doivent être remplis.';errEl.style.display='';return;}
-  var key=insType==='client'?('client_'+insKyc):insType;
+  var key='client_'+insKyc;
   var photos=PHOTOS_CFG[key]||[];
   for(var i=0;i<photos.length;i++){if(photos[i].req&&!insPhotos[photos[i].id]){errEl.textContent='Photo requise : '+photos[i].label;errEl.style.display='';return;}}
   errEl.style.display='none';
   document.getElementById('ins-form').style.display='none';
   document.getElementById('ins-loading').style.display='';
   try{
-    var kycLevel=insType==='client'?insKyc:'KYC1';
-    var fd=new FormData();
-    fd.append('prenom',prenom);fd.append('nom',nom);fd.append('telephone',telephone);fd.append('pin',pin);
-    fd.append('typeCompte',insType);fd.append('kycNiveau',kycLevel);
-    if(zone)fd.append('zone',zone);
-    if(bizName)fd.append('nomEntreprise',bizName);
-    Object.keys(insPhotos).forEach(function(k){fd.append(k,insPhotos[k]);});
-    var h={};if(G.token)h['Authorization']='Bearer '+G.token;
-    var r=await fetch(API+'/auth/register',{method:'POST',headers:h,body:fd});
-    var d=await r.json();if(!r.ok)throw new Error(d.message||'Erreur');
+    var h={'Content-Type':'application/json'};if(G.token)h['Authorization']='Bearer '+G.token;
+    var r=await fetch(API+'/auth/register',{method:'POST',headers:h,body:JSON.stringify({
+      prenom:prenom,nom:nom,telephone:telephone,pin:pin,
+      role:'client',kycNiveau:insKyc,zone:zone||undefined
+    })});
+    var d=await r.json();if(!r.ok)throw new Error(d.message||'Erreur inscription');
+    var newUserId=d.data&&d.data.id;
+    if(newUserId&&Object.keys(insPhotos).length){
+      var fh={'Authorization':'Bearer '+(G.token||'')};
+      for(var pid in insPhotos){
+        try{
+          var fd2=new FormData();fd2.append('file',insPhotos[pid]);
+          fd2.append('typeDocument',pid);fd2.append('userId',newUserId);
+          await fetch(API+'/kyc/upload',{method:'POST',headers:fh,body:fd2});
+        }catch(pe){console.warn('Photo '+pid,pe);}
+      }
+    }
     document.getElementById('ins-loading').style.display='none';
     document.getElementById('ins-success').style.display='';
-    document.getElementById('ins-succ-txt').textContent='Compte '+insType+' cr&#233;&#233; pour '+(prenom+' '+nom)+'. Code : '+(d.data&&d.data.codeParrainage||'');
+    document.getElementById('ins-succ-txt').textContent='Client créé : '+(prenom+' '+nom)+' — Code : '+(d.data&&d.data.codeParrainage||'');
   }catch(e){
     document.getElementById('ins-loading').style.display='none';
     document.getElementById('ins-form').style.display='';

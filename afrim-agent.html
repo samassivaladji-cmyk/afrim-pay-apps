@@ -336,7 +336,7 @@ function setTab(t){
       </button>
       <button onclick="openSh('inscription')" style="background:var(--s);border:1px solid rgba(245,158,11,.15);border-radius:16px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer">
         <div style="width:46px;height:46px;border-radius:13px;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center;color:var(--a);font-size:24px">👤</div>
-        <div style="text-align:center"><div style="font-size:13px;font-weight:700;color:var(--a)">Inscrire</div><div style="font-size:10px;color:var(--m);margin-top:2px">Client · Business · Agent</div></div>
+        <div style="text-align:center"><div style="font-size:13px;font-weight:700;color:var(--a)">Inscrire</div><div style="font-size:10px;color:var(--m);margin-top:2px">Client</div></div>
       </button>
       <button onclick="openSh('transfert')" style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:16px;padding:18px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer">
         <div style="width:46px;height:46px;border-radius:13px;background:rgba(59,130,246,.12);display:flex;align-items:center;justify-content:center;color:#3b82f6;font-size:24px">⇄</div>
@@ -684,8 +684,6 @@ function setTab(t){
       <span class="lbl">Type de compte à créer</span>
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
         <button onclick="setInsType('client')" style="padding:14px 18px;border-radius:14px;border:1.5px solid var(--a);background:rgba(245,158,11,.08);color:var(--a);font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;display:flex;align-items:center;gap:12px"><span style="font-size:22px">👤</span><div><div>Client</div><div style="font-size:11px;font-weight:400;opacity:.7">Compte personnel</div></div></button>
-        <button onclick="setInsType('business')" style="padding:14px 18px;border-radius:14px;border:1.5px solid var(--b);background:transparent;color:var(--m);font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;display:flex;align-items:center;gap:12px"><span style="font-size:22px">🏪</span><div><div>Business</div><div style="font-size:11px;font-weight:400;opacity:.7">Commerce / Entreprise</div></div></button>
-        <button onclick="setInsType('agent')" style="padding:14px 18px;border-radius:14px;border:1.5px solid var(--b);background:transparent;color:var(--m);font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;display:flex;align-items:center;gap:12px"><span style="font-size:22px">🔶</span><div><div>Agent</div><div style="font-size:11px;font-weight:400;opacity:.7">Sous votre supervision</div></div></button>
       </div>
     </div>
     <div id="ins-form" style="display:none">
@@ -786,7 +784,16 @@ function renderInsFields(){
   h+='<span class="lbl">Zone / Quartier</span><div style="margin-bottom:13px"><input class="inp" id="ins-zone" type="text" placeholder="Ex: Cocody, Adjamé..."/></div>';
   document.getElementById('ins-fields').innerHTML=h;
 }
-function setInsKyc(k){insKyc=k;renderInsFields();renderInsPhotos();}
+function setInsKyc(k){
+  var sv={prenom:(document.getElementById('ins-prenom')||{}).value||'',nom:(document.getElementById('ins-nom')||{}).value||'',tel:(document.getElementById('ins-tel')||{}).value||'',pin:(document.getElementById('ins-pin')||{}).value||'',zone:(document.getElementById('ins-zone')||{}).value||''};
+  insKyc=k;renderInsFields();
+  if(document.getElementById('ins-prenom'))document.getElementById('ins-prenom').value=sv.prenom;
+  if(document.getElementById('ins-nom'))document.getElementById('ins-nom').value=sv.nom;
+  if(document.getElementById('ins-tel'))document.getElementById('ins-tel').value=sv.tel;
+  if(document.getElementById('ins-pin'))document.getElementById('ins-pin').value=sv.pin;
+  if(document.getElementById('ins-zone'))document.getElementById('ins-zone').value=sv.zone;
+  renderInsPhotos();
+}
 function renderInsPhotos(){
   var key=insType==='client'?('client_'+insKyc):insType;
   var photos=PHOTOS_CFG[key]||[];
@@ -1449,7 +1456,7 @@ async function chargerGains(){
     var now=new Date();
 
     // GAINS = commission_parrain UNIQUEMENT
-    var gainsParr=comms.filter(function(c){return c.type_commission==='commission_parrain';});
+    var gainsParr=comms.filter(function(c){return c.type_commission==='parrainage'||c.type_commission==='commission_parrain';});
     // Gains actuels = statut 'verse' (non encore virés)
     var disponible=gainsParr.filter(function(c){return c.statut==='verse';}).reduce(function(s,c){return s+Number(c.montant||0);},0);
 
@@ -1704,7 +1711,8 @@ async function showTxDetail(txId){
   }
   h+=row('Date',dateStr);
   h+=row('Heure',heureStr);
-  h+=row('Statut',(tx.statut||'—').charAt(0).toUpperCase()+(tx.statut||'—').slice(1));
+  var _sMap={'complete':'Effectué','pending':'En attente','failed':'Échoué','cancelled':'Annulé','en_attente':'En attente'};
+  h+=row('Statut',_sMap[(tx.statut||'').toLowerCase()]||(tx.statut||'—'));
   if(tx.reference)h+=row('R&#233;f&#233;rence','<span style="font-family:monospace;font-size:11px">'+tx.reference+'</span>');
   h+='</div>';
 
@@ -2278,8 +2286,17 @@ function afficherChoixOp(tel, parts){
 
 function ouvrirDepotAvecClient(){
   var client=_scannedClient||opClients['scan']||opClients['choix'];if(!client)return;
+  closeSh('choix-op');setTimeout(function(){ouvrirScreenDepot(client);},300);
+}
+
+function ouvrirTransfertAvecClient(){
+  if(!_scannedClient) return;
   closeSh('choix-op');
-  setTimeout(function(){ouvrirScreenDepot(client);},300);
+  setTimeout(function(){
+    rstTrf();
+    openSh('transfert');
+    document.getElementById('trf-tel').value = _scannedClient.telephone||'';
+  },300);
 }
 
 function ouvrirTransfertAvecClient(){
@@ -2294,8 +2311,7 @@ function ouvrirTransfertAvecClient(){
 
 function ouvrirRetraitAvecClient(){
   var client=_scannedClient||opClients['scan']||opClients['choix'];if(!client)return;
-  closeSh('choix-op');
-  setTimeout(function(){ouvrirScreenRetrait(client);},300);
+  closeSh('choix-op');setTimeout(function(){ouvrirScreenRetrait(client);},300);
 }
 
 function toggleSolde(){

@@ -754,9 +754,9 @@ function setTab(t){
 <script>
 // ══ PHOTOS CONFIG ════════════════════════════════════════════════
 var PHOTOS_CFG={
-  client_KYC1:[{id:'selfie',label:'Selfie',req:true,selfie:true}],
+  client_KYC1:[{id:'selfie_1',label:'Selfie face',req:true,selfie:true},{id:'selfie_2',label:'Selfie angle',req:true,selfie:true}],
   client_KYC2:[{id:'selfie',label:'Selfie',req:true,selfie:true},{id:'cni_r',label:'CNI recto',req:true,selfie:false},{id:'cni_v',label:'CNI verso',req:true,selfie:false}],
-  client_KYC3:[{id:'selfie',label:'Selfie',req:true,selfie:true},{id:'cni_r',label:'CNI recto',req:true,selfie:false},{id:'cni_v',label:'CNI verso',req:true,selfie:false},{id:'naissance',label:'Extrait naissance',req:true,selfie:false},{id:'domicile',label:'Justif. domicile',req:true,selfie:false}],
+  client_KYC3:[{id:'selfie',label:'Selfie',req:true,selfie:true},{id:'cni_r',label:'CNI recto',req:true,selfie:false},{id:'cni_v',label:'CNI verso',req:true,selfie:false},{id:'naissance',label:'Extrait naissance',req:true,selfie:false},{id:'domicile',label:'Justif. domicile',req:false,selfie:false}],
   business:[{id:'selfie_gerant',label:'Selfie gérant',req:true,selfie:true},{id:'cni_r',label:'CNI gérant recto',req:true,selfie:false},{id:'cni_v',label:'CNI gérant verso',req:true,selfie:false},{id:'rccm',label:'RCCM',req:true,selfie:false},{id:'fiscal',label:'Déclaration fiscale',req:false,selfie:false}],
   agent:[{id:'selfie',label:'Selfie',req:true,selfie:true},{id:'cni_r',label:'CNI recto',req:true,selfie:false},{id:'cni_v',label:'CNI verso',req:true,selfie:false}],
 };
@@ -822,29 +822,38 @@ async function doInscrire(){
   var telephone=document.getElementById('ins-tel').value.trim();
   var pin=document.getElementById('ins-pin').value.trim();
   var zone=(document.getElementById('ins-zone')&&document.getElementById('ins-zone').value.trim())||'';
-  var bizName=insType==='business'&&document.getElementById('ins-biz')?document.getElementById('ins-biz').value.trim():'';
   var errEl=document.getElementById('ins-err');
   if(!prenom||!nom||!telephone||pin.length!==4){errEl.textContent='Tous les champs obligatoires doivent être remplis.';errEl.style.display='';return;}
-  var key=insType==='client'?('client_'+insKyc):insType;
+  var key='client_'+insKyc;
   var photos=PHOTOS_CFG[key]||[];
   for(var i=0;i<photos.length;i++){if(photos[i].req&&!insPhotos[photos[i].id]){errEl.textContent='Photo requise : '+photos[i].label;errEl.style.display='';return;}}
   errEl.style.display='none';
   document.getElementById('ins-form').style.display='none';
   document.getElementById('ins-loading').style.display='';
   try{
-    var kycLevel=insType==='client'?insKyc:'KYC1';
-    var fd=new FormData();
-    fd.append('prenom',prenom);fd.append('nom',nom);fd.append('telephone',telephone);fd.append('pin',pin);
-    fd.append('role',insType);fd.append('kycNiveau',kycLevel);
-    if(zone)fd.append('zone',zone);
-    if(bizName)fd.append('nomEntreprise',bizName);
-    Object.keys(insPhotos).forEach(function(k){fd.append(k,insPhotos[k]);});
-    var h={};if(G.token)h['Authorization']='Bearer '+G.token;
-    var r=await fetch(API+'/auth/register',{method:'POST',headers:h,body:fd});
-    var d=await r.json();if(!r.ok)throw new Error(d.message||'Erreur');
+    // Envoyer en JSON (express.json() parse correctement)
+    var parrainCode=G.user&&G.user.codeParrainage?G.user.codeParrainage:undefined;
+    var h={'Content-Type':'application/json'};if(G.token)h['Authorization']='Bearer '+G.token;
+    var r=await fetch(API+'/auth/register',{method:'POST',headers:h,body:JSON.stringify({
+      prenom:prenom,nom:nom,telephone:telephone,pin:pin,
+      role:'client',kycNiveau:insKyc,zone:zone||undefined,parrainCode:parrainCode
+    })});
+    var d=await r.json();if(!r.ok)throw new Error(d.message||'Erreur inscription');
+    var newUserId=d.data&&d.data.id;
+    // Uploader les photos KYC séparément
+    if(newUserId&&Object.keys(insPhotos).length){
+      var fh={'Authorization':'Bearer '+(G.token||'')};
+      for(var pid in insPhotos){
+        try{
+          var fd2=new FormData();fd2.append('file',insPhotos[pid]);
+          fd2.append('typeDocument',pid);fd2.append('userId',newUserId);
+          await fetch(API+'/kyc/upload',{method:'POST',headers:fh,body:fd2});
+        }catch(pe){console.warn('Photo',pid,pe);}
+      }
+    }
     document.getElementById('ins-loading').style.display='none';
     document.getElementById('ins-success').style.display='';
-    document.getElementById('ins-succ-txt').textContent='Compte '+insType+' cr&#233;&#233; pour '+(prenom+' '+nom)+'. Code : '+(d.data&&d.data.codeParrainage||'');
+    document.getElementById('ins-succ-txt').textContent='Client créé : '+(prenom+' '+nom)+' — Code : '+(d.data&&d.data.codeParrainage||'');
   }catch(e){
     document.getElementById('ins-loading').style.display='none';
     document.getElementById('ins-form').style.display='';

@@ -1016,10 +1016,58 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
 </div>
 
 
+<!-- ECRAN RATTACHEMENTS -->
+<div class="scr" id="s-rattachements">
+  <div style="background:#fff;padding:52px 20px 12px;border-bottom:1px solid #f3f4f6;position:sticky;top:0;z-index:10">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div>
+        <div style="font-size:22px;font-weight:800">🔗 Rattachements</div>
+        <div style="color:var(--m);font-size:12px;margin-top:2px">Liens parrain ↔ filleuls</div>
+      </div>
+      <button onclick="ouvrirRattacherManuel()" id="rt-btn-add" style="display:none;background:var(--y);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">+ Rattacher</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;background:#f3f4f6;border-radius:12px;padding:10px 14px;margin-bottom:8px">
+      <svg width="16" height="16" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input id="rt-search" type="text" placeholder="Rechercher par nom ou téléphone..." style="border:none;background:none;font-size:14px;font-family:inherit;color:var(--t);outline:none;flex:1" oninput="filtrerRattachements(this.value)"/>
+    </div>
+    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px" id="rt-chips"></div>
+  </div>
+  <div style="padding:12px 16px 100px">
+    <div id="rt-list"><div style="padding:40px;text-align:center"><div class="spin"></div></div></div>
+  </div>
+</div>
+
+<!-- SHEET DETAIL RATTACHEMENT (parrain + filleul, action détacher) -->
+<div class="sh-ov" id="sh-rattach-detail">
+  <div class="sh">
+    <div class="sh-bar"></div>
+    <div class="sh-top"><div><div class="sh-title">Détail rattachement</div><div style="color:var(--m);font-size:12px">Lien parrain ↔ filleul</div></div><button class="sh-x" onclick="closeSh('rattach-detail')">✕</button></div>
+    <div class="sh-body" id="sh-rt-body"></div>
+  </div>
+</div>
+
+<!-- SHEET RATTACHER MANUELLEMENT -->
+<div class="sh-ov" id="sh-rattacher-manuel">
+  <div class="sh">
+    <div class="sh-bar"></div>
+    <div class="sh-top"><div><div class="sh-title">Rattacher manuellement</div><div style="color:var(--m);font-size:12px">Choisir filleul et parrain</div></div><button class="sh-x" onclick="closeSh('rattacher-manuel')">✕</button></div>
+    <div class="sh-body">
+      <div id="rtm-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:13px"></div>
+      <label style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.05em">Téléphone du filleul (client)</label>
+      <input class="inp" id="rtm-filleul-tel" type="tel" placeholder="07XXXXXXXX" style="margin:6px 0 14px"/>
+      <label style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.05em">Téléphone du parrain (agent/business/master)</label>
+      <input class="inp" id="rtm-parrain-tel" type="tel" placeholder="07XXXXXXXX" style="margin:6px 0 14px"/>
+      <button onclick="confirmerRattacherManuel()" style="width:100%;background:var(--y);color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Confirmer le rattachement</button>
+    </div>
+  </div>
+</div>
+
+
 <!-- ECRAN STATISTIQUES -->
 <div class="scr" id="s-stats">
   <div style="background:var(--y3);padding:52px 20px 16px;border-bottom:2px solid var(--y);position:sticky;top:0;z-index:10">
     <div style="font-size:22px;font-weight:900;color:var(--y2)" id="stats-title">Statistiques</div>
+
     <div style="color:var(--y2);font-size:13px;margin-top:3px;opacity:.8" id="stats-subtitle">Cumuls et courbes des opérations</div>
   </div>
   <!-- Stats Superviseur -->
@@ -3085,15 +3133,15 @@ try{G.token=localStorage.getItem('afrim_token');G.refresh=localStorage.getItem('
 
 var PERMS={
   // Super Back-office (0505414751) + Admin : tout sans exception
-  admin:         {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:1,rembourser:1,kyc:1,gels:1,logs:1},
+  admin:         {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:1,rembourser:1,kyc:1,gels:1,logs:1,rattachements:1,rattach_action:0},
   // Back-office : tout voir + supprimer contenu (notifs/tickets/alertes), PAS les comptes
-  backoffice:    {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:1,logs:1,admin_gestionnaire:1},
+  backoffice:    {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:1,logs:1,admin_gestionnaire:1,rattachements:1,rattach_action:1},
   // Superviseur : sa zone uniquement
-  superviseur:   {home:1,users:1,txns:0,monitoring:1,stats:1,support:0,tech:0,creer:0,soldes:1,supprimer:0,rembourser:0,kyc:0,gels:0,logs:0,superviseur_zone:1},
+  superviseur:   {home:1,users:1,txns:0,monitoring:1,stats:1,support:0,tech:0,creer:0,soldes:1,supprimer:0,rembourser:0,kyc:0,gels:0,logs:0,superviseur_zone:1,rattachements:0,rattach_action:0},
   // Support Client : recherche client, remboursement, tickets
-  support_client:{home:0,users:0,txns:0,monitoring:0,support:1,tech:0,creer:0,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:0,logs:0},
+  support_client:{home:0,users:0,txns:0,monitoring:0,support:1,tech:0,creer:0,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:0,logs:0,rattachements:0,rattach_action:0},
   // Support Tech : logs, transactions, alertes systeme
-  support_tech:  {home:0,users:0,txns:0,monitoring:0,stats:0,support:0,tech:1,creer:0,soldes:0,supprimer:0,rembourser:0,kyc:0,gels:0,logs:1}
+  support_tech:  {home:0,users:0,txns:0,monitoring:0,stats:0,support:0,tech:1,creer:0,soldes:0,supprimer:0,rembourser:0,kyc:0,gels:0,logs:1,rattachements:0,rattach_action:0}
 };
 function perm(k){var u=G.user;if(!u)return 0;var p=PERMS[u.role];return p?p[k]||0:0;}
 
@@ -3187,6 +3235,7 @@ function buildNavGrid(){
     {id:'users',    icon:'👥', label:'Comptes',  fn:"setTab('users')",   need:'users'},
     {id:'txns',     icon:'💳', label:'Flux',     fn:"setTab('txns')",    need:'txns'},
     {id:'monitoring',icon:'📊',label:'Suivi',   fn:"setTab('monitoring')",need:'monitoring'},
+    {id:'rattachements',icon:'🔗',label:'Rattachements',fn:"setTab('rattachements')",need:'rattachements'},
     {id:'support',  icon:'💬', label:'Support',  fn:"setTab('support')", need:'support'},
     {id:'tech',     icon:'🛠', label:'Technique',fn:"setTab('tech')",    need:'tech'},
     {id:'inscr',    icon:'➕', label:'Creer',   fn:"ouvrirInscription()",need:'creer'},
@@ -3250,6 +3299,7 @@ function setTab(t){
   }
   else if(t==='support'){showScr('s-support');chargerSupport();}
   else if(t==='tech'){showScr('s-tech');chargerTech();}
+  else if(t==='rattachements'){showScr('s-rattachements');chargerRattachements();}
   else if(t==='stats'){
     showScr('s-stats');
     buildNavs('stats');
@@ -3495,6 +3545,126 @@ function renderU(list){
     div.addEventListener('click',function(){voirU(u.id);});
     el.appendChild(div);
   });
+}
+
+// ═══ RATTACHEMENTS ═══
+var rattachData=[];var rtFilter='all';
+async function chargerRattachements(){
+  var btnAdd=document.getElementById('rt-btn-add');
+  if(btnAdd) btnAdd.style.display=perm('rattach_action')?'block':'none';
+  var chipsEl=document.getElementById('rt-chips');
+  if(chipsEl){
+    chipsEl.innerHTML='';
+    [['all','Tous'],['valide','Rattachés'],['en_cours','En cours']].forEach(function(c){
+      var on=rtFilter===c[0];
+      var btn=document.createElement('button');
+      btn.style.cssText='padding:6px 14px;border-radius:99px;border:1.5px solid '+(on?'#ca8a04':'#e5e7eb')+';background:'+(on?'#fef3c7':'#fff')+';color:'+(on?'#a16207':'#6b7280')+';font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;flex-shrink:0';
+      btn.textContent=c[1];
+      btn.addEventListener('click',function(){rtFilter=c[0];chargerRattachements();});
+      chipsEl.appendChild(btn);
+    });
+  }
+  var el=document.getElementById('rt-list');
+  el.innerHTML='<div style="padding:40px;text-align:center"><div class="spin"></div></div>';
+  try{
+    var p='/admin/rattachements';
+    if(rtFilter!=='all') p+='?statut='+rtFilter;
+    var r=await apiGet(p);
+    rattachData=r.data.rattachements||[];
+    renderRt(rattachData);
+  }catch(e){el.innerHTML='<div style="color:var(--r);padding:12px;font-size:13px">'+e.message+'</div>';}
+}
+function filtrerRattachements(q){
+  if(!q){renderRt(rattachData);return;}
+  var ql=q.toLowerCase();
+  var f=rattachData.filter(function(x){
+    return (x.parrainPrenom+' '+x.parrainNom).toLowerCase().indexOf(ql)>=0
+      || (x.filleulPrenom+' '+x.filleulNom).toLowerCase().indexOf(ql)>=0
+      || (x.parrainTelephone||'').indexOf(q)>=0
+      || (x.filleulTelephone||'').indexOf(q)>=0;
+  });
+  renderRt(f);
+}
+function renderRt(list){
+  var el=document.getElementById('rt-list');
+  if(!list.length){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--m);font-size:13px">Aucun rattachement</div>';return;}
+  el.innerHTML='';
+  list.forEach(function(x){
+    var cP=ROLE_C[x.parrainRole]||'#888';
+    var statutColor=x.statut==='valide'?'#22c55e':'#f59e0b';
+    var div=document.createElement('div');
+    div.style.cssText='background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px 16px;margin-bottom:8px;cursor:pointer';
+    div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+      +'<span style="padding:2px 8px;border-radius:99px;font-size:9px;font-weight:700;background:'+statutColor+'22;color:'+statutColor+'">'+(x.statut==='valide'?'Rattaché':'En cours')+'</span>'
+      +'<span style="font-size:10px;color:#9ca3af">'+FD(x.dateEntree)+'</span></div>'
+      +'<div style="display:flex;align-items:center;gap:8px">'
+      +'<div style="flex:1;min-width:0"><div style="font-size:9px;color:#9ca3af;font-weight:700;text-transform:uppercase">Parrain</div>'
+      +'<div style="font-size:13px;font-weight:700">'+(x.parrainPrenom||'')+' '+(x.parrainNom||'')+' <span style="font-size:9px;padding:1px 6px;border-radius:99px;background:'+cP+'22;color:'+cP+'">'+x.parrainRole+'</span></div>'
+      +'<div style="font-size:11px;color:#6b7280">'+x.parrainTelephone+'</div></div>'
+      +'<div style="color:#d1d5db;font-size:18px">→</div>'
+      +'<div style="flex:1;min-width:0;text-align:right"><div style="font-size:9px;color:#9ca3af;font-weight:700;text-transform:uppercase">Filleul</div>'
+      +'<div style="font-size:13px;font-weight:700">'+(x.filleulPrenom||'')+' '+(x.filleulNom||'')+'</div>'
+      +'<div style="font-size:11px;color:#6b7280">'+x.filleulTelephone+'</div></div>'
+      +'</div>';
+    div.addEventListener('click',function(){voirRattachDetail(x);});
+    el.appendChild(div);
+  });
+}
+function voirRattachDetail(x){
+  var body=document.getElementById('sh-rt-body');
+  var statutColor=x.statut==='valide'?'#22c55e':'#f59e0b';
+  var actionBtn=perm('rattach_action')
+    ?'<button onclick="confirmerDetacher(\''+x.filleulId+'\',\''+(x.filleulPrenom+' '+x.filleulNom).replace(/'/g,"&#39;")+'\')" style="width:100%;background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca;border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px">Détacher ce filleul</button>'
+    :'';
+  body.innerHTML='<div style="background:#f9fafb;border-radius:14px;padding:16px;margin-bottom:14px">'
+    +'<div style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;margin-bottom:6px">Parrain</div>'
+    +'<div style="font-size:15px;font-weight:700;margin-bottom:2px">'+(x.parrainPrenom||'')+' '+(x.parrainNom||'')+'</div>'
+    +'<div style="font-size:12px;color:#6b7280">'+x.parrainTelephone+' · '+x.parrainRole+'</div>'
+    +'</div>'
+    +'<div style="background:#f9fafb;border-radius:14px;padding:16px;margin-bottom:14px">'
+    +'<div style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;margin-bottom:6px">Filleul</div>'
+    +'<div style="font-size:15px;font-weight:700;margin-bottom:2px">'+(x.filleulPrenom||'')+' '+(x.filleulNom||'')+'</div>'
+    +'<div style="font-size:12px;color:#6b7280">'+x.filleulTelephone+' · KYC '+(x.filleulKyc||'--')+'</div>'
+    +'</div>'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700;background:'+statutColor+'22;color:'+statutColor+'">'+(x.statut==='valide'?'Rattaché à vie':'En cours')+'</span></div>'
+    +'<div style="font-size:11px;color:#9ca3af;margin-bottom:4px">Entrée le '+FD(x.dateEntree)+'</div>'
+    +actionBtn;
+  openSh('rattach-detail');
+}
+function confirmerDetacher(filleulId,nom){
+  if(!confirm('Détacher '+nom+' de son parrain ? Cette action peut être annulée en rattachant manuellement.'))return;
+  detacherRattachement(filleulId);
+}
+async function detacherRattachement(filleulId){
+  try{
+    await apiPost('/admin/rattachements/detacher',{filleulId:filleulId});
+    toast('Filleul détaché avec succès');
+    closeSh('rattach-detail');
+    chargerRattachements();
+  }catch(e){toast(e.message,true);}
+}
+function ouvrirRattacherManuel(){
+  document.getElementById('rtm-filleul-tel').value='';
+  document.getElementById('rtm-parrain-tel').value='';
+  document.getElementById('rtm-err').style.display='none';
+  openSh('rattacher-manuel');
+}
+async function confirmerRattacherManuel(){
+  var errEl=document.getElementById('rtm-err');errEl.style.display='none';
+  var telFilleul=document.getElementById('rtm-filleul-tel').value.trim();
+  var telParrain=document.getElementById('rtm-parrain-tel').value.trim();
+  if(!telFilleul||!telParrain){errEl.textContent='Renseignez les deux numéros';errEl.style.display='';return;}
+  try{
+    var rf=await apiGet('/users?telephone='+encodeURIComponent(telFilleul));
+    var rp=await apiGet('/users?telephone='+encodeURIComponent(telParrain));
+    var filleul=(rf.data||[])[0];var parrainU=(rp.data||[])[0];
+    if(!filleul){errEl.textContent='Filleul introuvable avec ce numéro';errEl.style.display='';return;}
+    if(!parrainU){errEl.textContent='Parrain introuvable avec ce numéro';errEl.style.display='';return;}
+    await apiPost('/admin/rattachements/rattacher',{filleulId:filleul.id,parrainId:parrainU.id});
+    toast('Rattachement effectué avec succès');
+    closeSh('rattacher-manuel');
+    chargerRattachements();
+  }catch(e){errEl.textContent=e.message;errEl.style.display='';}
 }
 
 function voirU(id){

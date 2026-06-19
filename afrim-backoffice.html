@@ -1039,7 +1039,6 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
       <svg width="16" height="16" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
       <input id="rt-search" type="text" placeholder="Rechercher par nom ou téléphone..." style="border:none;background:none;font-size:14px;font-family:inherit;color:var(--t);outline:none;flex:1" oninput="filtrerRattachements(this.value)"/>
     </div>
-    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px" id="rt-chips"></div>
     <div id="rt-list"><div style="padding:40px;text-align:center"><div class="spin"></div></div></div>
   </div>
 
@@ -3577,28 +3576,14 @@ function renderU(list){
 }
 
 // ═══ RATTACHEMENTS ═══
-var rattachData=[];var rtFilter='all';
+var rattachData=[];
 async function chargerRattachements(){
   var btnAdd=document.getElementById('rt-btn-add');
   if(btnAdd) btnAdd.style.display=(perm('rattach_action')||isSuperAdmin())?'block':'none';
-  var chipsEl=document.getElementById('rt-chips');
-  if(chipsEl){
-    chipsEl.innerHTML='';
-    [['all','Tous'],['valide','Rattachés'],['en_cours','En cours']].forEach(function(c){
-      var on=rtFilter===c[0];
-      var btn=document.createElement('button');
-      btn.style.cssText='padding:6px 14px;border-radius:99px;border:1.5px solid '+(on?'#ca8a04':'#e5e7eb')+';background:'+(on?'#fef3c7':'#fff')+';color:'+(on?'#a16207':'#6b7280')+';font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;flex-shrink:0';
-      btn.textContent=c[1];
-      btn.addEventListener('click',function(){rtFilter=c[0];chargerRattachements();});
-      chipsEl.appendChild(btn);
-    });
-  }
   var el=document.getElementById('rt-list');
   el.innerHTML='<div style="padding:40px;text-align:center"><div class="spin"></div></div>';
   try{
-    var p='/admin/rattachements';
-    if(rtFilter!=='all') p+='?statut='+rtFilter;
-    var r=await apiGet(p);
+    var r=await apiGet('/admin/rattachements');
     rattachData=r.data.rattachements||[];
     renderRt(rattachData);
   }catch(e){el.innerHTML='<div style="color:var(--r);padding:12px;font-size:13px">'+e.message+'</div>';}
@@ -3724,8 +3709,9 @@ async function rechercherParParrain(){
   resEl.innerHTML='<div style="padding:40px;text-align:center"><div class="spin"></div></div>';
   try{
     var r=await apiGet('/admin/rattachements/par-telephone?telephone='+encodeURIComponent(tel));
-    var d=r.data;
-    var p=d.parrain;
+    var d=r?r.data:null;
+    var p=d?d.parrain:null;
+    if(!p){resEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--r);font-size:13px">Aucun utilisateur trouvé avec ce numéro</div>';return;}
     var c=ROLE_C[p.role]||'#888';
     var html='<div style="background:#fff;border:1.5px solid '+c+'33;border-radius:16px;padding:16px;margin-bottom:14px">'
       +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'

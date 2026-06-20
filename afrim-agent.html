@@ -845,6 +845,8 @@ async function doInscrire(){
     var kycLevel=insType==='client'?insKyc:'KYC1';
     // Étape 1 : créer le compte en JSON (texte uniquement, pas de fichiers)
     var body={prenom:prenom,nom:nom,telephone:telephone,pin:pin,role:insType,kycNiveau:kycLevel};
+    // L'agent qui inscrit devient automatiquement le parrain (rattachement après 1er dépôt ≥500 FCFA)
+    if(G.user&&G.user.codeParrainage)body.parrainCode=G.user.codeParrainage;
     if(zone)body.zone=zone;
     if(bizName)body.nomEntreprise=bizName;
     var h={'Content-Type':'application/json'};if(G.token)h['Authorization']='Bearer '+G.token;

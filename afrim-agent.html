@@ -816,6 +816,16 @@ function renderInsPhotos(){
 function phIns(id,input){if(input.files&&input.files[0]){insPhotos[id]=input.files[0];renderInsPhotos();T('✓ Photo enregistrée !');}}
 function rstIns(){insType=null;insPhotos={};insKyc='KYC1';document.getElementById('ins-type-sel').style.display='none';document.getElementById('ins-form').style.display='none';document.getElementById('ins-loading').style.display='none';document.getElementById('ins-success').style.display='none';document.getElementById('ins-err').style.display='none';}
 
+// Convertit un objet File en base64 (data URL) pour l'envoyer en JSON
+function fileToBase64(file){
+  return new Promise(function(resolve,reject){
+    var reader=new FileReader();
+    reader.onload=function(){resolve(reader.result);};
+    reader.onerror=function(){reject(new Error('Erreur lecture fichier'));};
+    reader.readAsDataURL(file);
+  });
+}
+
 async function doInscrire(){
   var prenom=document.getElementById('ins-prenom').value.trim();
   var nom=document.getElementById('ins-nom').value.trim();
@@ -833,15 +843,25 @@ async function doInscrire(){
   document.getElementById('ins-loading').style.display='';
   try{
     var kycLevel=insType==='client'?insKyc:'KYC1';
-    var fd=new FormData();
-    fd.append('prenom',prenom);fd.append('nom',nom);fd.append('telephone',telephone);fd.append('pin',pin);
-    fd.append('role',insType);fd.append('kycNiveau',kycLevel);
-    if(zone)fd.append('zone',zone);
-    if(bizName)fd.append('nomEntreprise',bizName);
-    Object.keys(insPhotos).forEach(function(k){fd.append(k,insPhotos[k]);});
-    var h={};if(G.token)h['Authorization']='Bearer '+G.token;
-    var r=await fetch(API+'/auth/register',{method:'POST',headers:h,body:fd});
+    // Étape 1 : créer le compte en JSON (texte uniquement, pas de fichiers)
+    var body={prenom:prenom,nom:nom,telephone:telephone,pin:pin,role:insType,kycNiveau:kycLevel};
+    if(zone)body.zone=zone;
+    if(bizName)body.nomEntreprise=bizName;
+    var h={'Content-Type':'application/json'};if(G.token)h['Authorization']='Bearer '+G.token;
+    var r=await fetch(API+'/auth/register',{method:'POST',headers:h,body:JSON.stringify(body)});
     var d=await r.json();if(!r.ok)throw new Error(d.message||'Erreur');
+    var newUserId=d.data&&d.data.id;
+    // Étape 2 : envoyer chaque photo séparément en base64 vers /kyc/documents
+    if(newUserId){
+      var photoKeys=Object.keys(insPhotos);
+      for(var pk=0;pk<photoKeys.length;pk++){
+        var photoId=photoKeys[pk];
+        var base64=await fileToBase64(insPhotos[photoId]);
+        await fetch(API+'/kyc/documents',{method:'POST',headers:h,body:JSON.stringify({
+          userId:newUserId,typeDocument:photoId,urlFichier:base64
+        })}).catch(function(){/* on continue même si une photo échoue, le compte est déjà créé */});
+      }
+    }
     document.getElementById('ins-loading').style.display='none';
     document.getElementById('ins-success').style.display='';
     document.getElementById('ins-succ-txt').textContent='Compte '+insType+' cr&#233;&#233; pour '+(prenom+' '+nom)+'. Code : '+(d.data&&d.data.codeParrainage||'');

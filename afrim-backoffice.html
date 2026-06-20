@@ -3726,14 +3726,24 @@ async function chargerSansFilleul(){
   var el=document.getElementById('rt-sans-list');
   el.innerHTML='<div style="padding:40px;text-align:center"><div class="spin"></div></div>';
   try{
-    var p='/admin/rattachements/sans-filleul';
-    if(sfRoleFilter!=='all') p+='?role='+sfRoleFilter;
-    var r=await apiGet(p);
-    alert('DEBUG SANS-FILLEUL: r='+JSON.stringify(r));
-    if(r===null){el.innerHTML='<div style="text-align:center;padding:30px;color:var(--r);font-size:13px">Session expirée ou problème d\'authentification. Reconnecte-toi.</div>';return;}
-    sansFilleulData=r.data.utilisateurs||[];
+    // S'assurer que rattachData (liste des rattachements) est chargé pour savoir qui est déjà parrain
+    if(!rattachData||!rattachData.length){
+      var rr=await apiGet('/admin/rattachements');
+      if(rr) rattachData=rr.data.rattachements||[];
+    }
+    var parrainsActifsSet={};
+    rattachData.forEach(function(x){if(x.parrainTelephone) parrainsActifsSet[x.parrainTelephone]=true;});
+    // Charger les utilisateurs par rôle (pattern déjà utilisé et fonctionnel ailleurs dans le backoffice)
+    var rolesAChercher=sfRoleFilter==='all'?['agent','business','mini_master','master','client','superviseur']:[sfRoleFilter];
+    var allUsers=[];
+    for(var i=0;i<rolesAChercher.length;i++){
+      var ru=await apiGet('/users?role='+rolesAChercher[i]+'&limit=500');
+      if(ru&&ru.data) allUsers=allUsers.concat(ru.data);
+    }
+    var rows=allUsers.filter(function(u){return !parrainsActifsSet[u.telephone];});
+    sansFilleulData=rows;
     renderSansFilleul(sansFilleulData);
-  }catch(e){alert('DEBUG SANS-FILLEUL ERREUR: '+e.message);el.innerHTML='<div style="color:var(--r);padding:12px;font-size:13px">'+e.message+'</div>';}
+  }catch(e){el.innerHTML='<div style="color:var(--r);padding:12px;font-size:13px">'+e.message+'</div>';}
 }
 function filtrerSansFilleul(q){
   if(!q){renderSansFilleul(sansFilleulData);return;}

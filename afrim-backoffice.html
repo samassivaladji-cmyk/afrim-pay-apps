@@ -1786,7 +1786,11 @@ async function callAPI(path,opts){
   opts=opts||{};
   var h={'Content-Type':'application/json'};
   if(G.token)h['Authorization']='Bearer '+G.token;
-  var r=await fetch(API+path,Object.assign({headers:h},opts));
+  var controller=new AbortController();
+  var timer=setTimeout(function(){controller.abort();},15000);
+  var r;
+  try{r=await fetch(API+path,Object.assign({headers:h,signal:controller.signal},opts));}
+  finally{clearTimeout(timer);}
   var d=await r.json();
   if(!r.ok){
     if(r.status===401){
@@ -3400,7 +3404,11 @@ async function callAPI(path,opts){
   opts=opts||{};
   var h={'Content-Type':'application/json'};
   if(G.token)h['Authorization']='Bearer '+G.token;
-  var r=await fetch(API+path,Object.assign({headers:h},opts));
+  var controller=new AbortController();
+  var timer=setTimeout(function(){controller.abort();},15000);
+  var r;
+  try{r=await fetch(API+path,Object.assign({headers:h,signal:controller.signal},opts));}
+  finally{clearTimeout(timer);}
   var d=await r.json();
   if(!r.ok){
     if(r.status===401){
@@ -9253,7 +9261,7 @@ async function chargerGainsSysteme(){
     }, 80);
 
   }catch(e){
-    wrap.innerHTML='<div style="color:var(--r);padding:12px;font-size:12px">Erreur: '+e.message+'</div>';
+    if(wrap)wrap.innerHTML='<div style="color:var(--r);padding:12px;font-size:12px;text-align:center"><div style="font-size:20px;margin-bottom:8px">&#9888;</div><div>'+e.message+'</div></div>';
   }
 }
 

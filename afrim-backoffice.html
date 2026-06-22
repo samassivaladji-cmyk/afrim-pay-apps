@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <meta name="theme-color" content="#ca8a04"/>
-<title>AFRIM PAY — Back-office</title>
+<title>AFRIM PAY — Back-office v4.32</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--y:#ca8a04;--y2:#a16207;--y3:#fef3c7;--t:#111827;--m:#6b7280;--d:#9ca3af;--r:#ef4444;--g:#22c55e;--b:#3b82f6}
@@ -9109,71 +9109,173 @@ async function chargerMonCompte(){
 async function chargerGainsSysteme(){
   var wrap=document.getElementById('mc-gains-systeme-wrap');
   if(!wrap)return;
+  wrap.innerHTML='<div style="padding:20px;text-align:center"><div class="spin"></div></div>';
   try{
     var r=await apiGet('/admin/gains-systeme');
     var d=(r&&r.data)||{};
     var ap=d.afrimPay||{};
     var util=d.utilisateurs||{};
+    var apP=ap.periodes||{};
+    var uP=util.periodes||{};
+    var roleCol={agent:'#f59e0b',client:'#22c55e',master:'#a78bfa',mini_master:'#60a5fa',business:'#f97316',superviseur:'#6b7280',backoffice:'#1e293b'};
+
+    // Onglet actif par defaut
+    var tabAP='mc-tab-ap', tabUtil='mc-tab-util';
+
     var h='';
-    // ── Solde AFRIM PAY
+    // ── Onglets navigation
+    h+='<div style="display:flex;border-radius:14px;background:#f3f4f6;padding:4px;gap:4px;margin-bottom:16px">';
+    h+='<button id="mc-tab-ap" onclick="mcShowTab(\'ap\')" style="flex:1;border:none;border-radius:11px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;background:#7c3aed;color:#fff">&#128200; Gains AFRIM PAY</button>';
+    h+='<button id="mc-tab-util" onclick="mcShowTab(\'util\')" style="flex:1;border:none;border-radius:11px;padding:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;background:transparent;color:#6b7280">&#128101; Gains Utilisateurs</button>';
+    h+='</div>';
+
+    // ══════════ PAGE AFRIM PAY ══════════
+    h+='<div id="mc-page-ap">';
+    // Solde principal
     h+='<div style="background:linear-gradient(135deg,#7c3aed,#a78bfa);border-radius:20px;padding:20px;margin-bottom:14px;color:#fff">';
-    h+='<div style="font-size:11px;font-weight:700;opacity:.8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Compte AFRIM PAY (Plateforme)</div>';
-    h+='<div style="font-size:30px;font-weight:800;margin-bottom:4px">'+F(ap.solde||0)+'</div>';
-    h+='<div style="font-size:11px;opacity:.7">Gains accumules sur toutes les operations</div>';
-    h+='<div style="margin-top:14px;display:flex;gap:8px">';
-    h+='<button id="mc-btn-virer-afrim" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:10px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;flex:1">&#128184; Virer ces fonds</button>';
+    h+='<div style="font-size:11px;font-weight:700;opacity:.7;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Solde compte AFRIM PAY</div>';
+    h+='<div style="font-size:32px;font-weight:800;margin-bottom:4px">'+F(ap.solde||0)+'</div>';
+    h+='<div style="font-size:11px;opacity:.7">Fonds accumulés sur toutes les opérations</div>';
+    h+='<button id="mc-btn-virer-afrim" style="margin-top:14px;width:100%;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:12px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">&#128184; Virer ces fonds</button>';
+    h+='</div>';
+    // Gains par période
+    h+='<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:16px;margin-bottom:14px">';
+    h+='<div style="font-size:13px;font-weight:800;margin-bottom:14px">&#128197; Gains AFRIM PAY par période</div>';
+    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">';
+    h+=mcPeriodCard("Aujourd'hui", apP.aujourdhui);
+    h+=mcPeriodCard('Cette semaine', apP.semaine);
+    h+=mcPeriodCard('Ce mois', apP.mois);
+    h+=mcPeriodCard('Cette année', apP.annee);
+    h+='</div>';
+    h+='<div style="background:#f5f3ff;border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center">';
+    h+='<div style="font-size:12px;font-weight:700;color:#7c3aed">Total depuis toujours</div>';
+    h+='<div style="font-size:16px;font-weight:800;color:#7c3aed">'+F((apP.total||{}).total||0)+'</div>';
     h+='</div></div>';
-    // ── Detail gains AFRIM PAY par type
-    if(ap.gains&&ap.gains.length){
+    // Gains par type
+    if(ap.parType&&ap.parType.length){
       h+='<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:16px;margin-bottom:14px">';
-      h+='<div style="font-size:13px;font-weight:800;margin-bottom:12px">&#128200; Detail gains plateforme</div>';
-      ap.gains.forEach(function(g){
+      h+='<div style="font-size:13px;font-weight:800;margin-bottom:12px">&#128202; Détail par type d\'opération</div>';
+      ap.parType.forEach(function(g){
         var label=(g.type_commission||'').replace(/gain_plateforme_/g,'').replace(/_/g,' ');
-        h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f9fafb">';
+        h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f9fafb">';
         h+='<div><div style="font-size:12px;font-weight:700;text-transform:capitalize">'+label+'</div>';
-        h+='<div style="font-size:10px;color:var(--m)">'+g.nb+' operation(s)</div></div>';
-        h+='<div style="font-size:13px;font-weight:800;color:#7c3aed">+'+F(g.total||0)+'</div></div>';
+        h+='<div style="font-size:10px;color:var(--m)">'+g.nb+' opération(s)</div></div>';
+        h+='<div style="font-size:14px;font-weight:800;color:#7c3aed">+'+F(g.total||0)+'</div></div>';
       });
       h+='</div>';
     }
-    // ── Gains utilisateurs par role
+    // Historique virements
+    if(ap.virements&&ap.virements.length){
+      h+='<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:16px;margin-bottom:14px">';
+      h+='<div style="font-size:13px;font-weight:800;margin-bottom:12px">&#128196; Historique virements</div>';
+      ap.virements.forEach(function(v){
+        var d=v.date_creation?new Date(v.date_creation).toLocaleDateString('fr-FR'):'';
+        h+='<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f9fafb">';
+        h+='<div><div style="font-size:12px;font-weight:700">'+(v.description||v.reference||'Virement')+'</div>';
+        h+='<div style="font-size:10px;color:var(--m)">'+d+' &middot; '+v.reference+'</div></div>';
+        h+='<div style="font-size:13px;font-weight:800;color:var(--r)">-'+F(v.montant||0)+'</div></div>';
+      });
+      h+='</div>';
+    }
+    h+='</div>'; // fin page ap
+
+    // ══════════ PAGE UTILISATEURS ══════════
+    h+='<div id="mc-page-util" style="display:none">';
+    // Total global
+    h+='<div style="background:linear-gradient(135deg,#1e293b,#334155);border-radius:20px;padding:20px;margin-bottom:14px;color:#fff">';
+    h+='<div style="font-size:11px;font-weight:700;opacity:.7;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Total gains tous utilisateurs</div>';
+    h+='<div style="font-size:32px;font-weight:800">'+F((uP.total||{}).total||0)+'</div>';
+    h+='</div>';
+    // Périodes utilisateurs
     h+='<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:16px;margin-bottom:14px">';
-    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
-    h+='<div style="font-size:13px;font-weight:800">&#128101; Gains utilisateurs</div>';
-    h+='<div style="font-size:13px;font-weight:800;color:var(--y2)">'+F(util.total||0)+'</div></div>';
-    var roleCol={agent:'#f59e0b',client:'#22c55e',master:'#a78bfa',mini_master:'#60a5fa',business:'#f97316',superviseur:'#6b7280',backoffice:'#1e293b'};
+    h+='<div style="font-size:13px;font-weight:800;margin-bottom:14px">&#128197; Gains versés aux utilisateurs</div>';
+    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">';
+    h+=mcPeriodCard("Aujourd'hui", uP.aujourdhui);
+    h+=mcPeriodCard('Cette semaine', uP.semaine);
+    h+=mcPeriodCard('Ce mois', uP.mois);
+    h+=mcPeriodCard('Cette année', uP.annee);
+    h+='</div></div>';
+    // Par rôle
     if(util.parRole&&util.parRole.length){
+      h+='<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:16px;margin-bottom:14px">';
+      h+='<div style="font-size:13px;font-weight:800;margin-bottom:12px">&#128101; Par rôle</div>';
       util.parRole.forEach(function(r2){
         var col=roleCol[r2.role]||'#9ca3af';
-        h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f9fafb">';
+        h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f9fafb">';
         h+='<div style="display:flex;align-items:center;gap:8px">';
         h+='<span style="padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700;background:'+col+'22;color:'+col+'">'+r2.role+'</span>';
-        h+='<span style="font-size:11px;color:var(--m)">'+r2.nb_beneficiaires+' pers.</span></div>';
+        h+='<div><div style="font-size:11px;color:var(--m)">'+r2.nb_beneficiaires+' pers. &middot; '+r2.nb_commissions+' ops</div></div></div>';
         h+='<div style="font-size:13px;font-weight:800;color:'+col+'">'+F(r2.total||0)+'</div></div>';
-      });
-    }else{
-      h+='<div style="text-align:center;padding:16px;color:var(--m);font-size:12px">Aucun gain encore</div>';
-    }
-    h+='</div>';
-    // ── Top 10 gagnants
-    if(util.top10&&util.top10.length){
-      h+='<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:16px;margin-bottom:14px">';
-      h+='<div style="font-size:13px;font-weight:800;margin-bottom:12px">&#127942; Top gagnants</div>';
-      util.top10.forEach(function(u,i){
-        var col=roleCol[u.role]||'#9ca3af';
-        h+='<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f9fafb">';
-        h+='<div style="width:24px;height:24px;border-radius:50%;background:#f3f4f6;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#6b7280">'+(i+1)+'</div>';
-        h+='<div style="flex:1"><div style="font-size:12px;font-weight:700">'+(u.prenom||'')+' '+(u.nom||'')+'</div>';
-        h+='<div style="font-size:10px;color:var(--m)">'+(u.telephone||'')+' &middot; <span style="color:'+col+'">'+u.role+'</span></div></div>';
-        h+='<div style="font-size:12px;font-weight:800;color:var(--y2)">'+F(u.total_gains||0)+'</div></div>';
       });
       h+='</div>';
     }
+    // Par type de commission
+    if(util.parType&&util.parType.length){
+      h+='<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:16px;margin-bottom:14px">';
+      h+='<div style="font-size:13px;font-weight:800;margin-bottom:12px">&#128202; Par type de commission</div>';
+      util.parType.forEach(function(t2){
+        var label=(t2.type_commission||'').replace(/_/g,' ');
+        h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f9fafb">';
+        h+='<div><div style="font-size:12px;font-weight:700;text-transform:capitalize">'+label+'</div>';
+        h+='<div style="font-size:10px;color:var(--m)">'+t2.nb+' opération(s)</div></div>';
+        h+='<div style="font-size:13px;font-weight:800;color:var(--y2)">'+F(t2.total||0)+'</div></div>';
+      });
+      h+='</div>';
+    }
+    // Top 10
+    if(util.top10&&util.top10.length){
+      h+='<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:16px;margin-bottom:14px">';
+      h+='<div style="font-size:13px;font-weight:800;margin-bottom:12px">&#127942; Top 10 gagnants</div>';
+      util.top10.forEach(function(u2,i){
+        var col=roleCol[u2.role]||'#9ca3af';
+        h+='<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f9fafb">';
+        h+='<div style="width:28px;height:28px;border-radius:50%;background:'+(i<3?'#fbbf24':'#f3f4f6')+';display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:'+(i<3?'#92400e':'#6b7280')+'">'+(i+1)+'</div>';
+        h+='<div style="flex:1"><div style="font-size:13px;font-weight:700">'+(u2.prenom||'')+' '+(u2.nom||'')+'</div>';
+        h+='<div style="font-size:10px;color:var(--m)">'+(u2.telephone||'')+' &middot; <span style="color:'+col+'">'+u2.role+'</span> &middot; '+u2.nb_commissions+' ops</div></div>';
+        h+='<div style="font-size:13px;font-weight:800;color:var(--y2)">'+F(u2.total_gains||0)+'</div></div>';
+      });
+      h+='</div>';
+    }
+    // Dernières commissions
+    if(util.dernieres&&util.dernieres.length){
+      h+='<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:16px;margin-bottom:14px">';
+      h+='<div style="font-size:13px;font-weight:800;margin-bottom:12px">&#128338; Dernières commissions versées</div>';
+      util.dernieres.forEach(function(c2){
+        var col=roleCol[c2.role]||'#9ca3af';
+        var d=c2.date_calcul?new Date(c2.date_calcul).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})+' '+new Date(c2.date_calcul).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
+        var label=(c2.type_commission||'').replace(/_/g,' ');
+        h+='<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f9fafb">';
+        h+='<div style="flex:1"><div style="font-size:12px;font-weight:700">'+(c2.prenom||'')+' '+(c2.nom||'')+'</div>';
+        h+='<div style="font-size:10px;color:var(--m)">'+d+' &middot; <span style="text-transform:capitalize">'+label+'</span></div></div>';
+        h+='<div style="font-size:12px;font-weight:800;color:'+col+'">+'+F(c2.montant||0)+'</div></div>';
+      });
+      h+='</div>';
+    }
+    h+='</div>'; // fin page util
+
     wrap.innerHTML=h;
     document.getElementById('mc-btn-virer-afrim').onclick=function(){ouvrirVirerAfrimPay(ap.solde||0);};
   }catch(e){
-    wrap.innerHTML='<div style="color:var(--r);padding:12px;font-size:12px">Erreur gains: '+e.message+'</div>';
+    wrap.innerHTML='<div style="color:var(--r);padding:12px;font-size:12px">Erreur: '+e.message+'</div>';
   }
+}
+
+function mcPeriodCard(label, data){
+  var d=data||{};
+  return '<div style="background:#f9fafb;border-radius:12px;padding:14px">'
+    +'<div style="font-size:10px;color:var(--m);font-weight:700;text-transform:uppercase;margin-bottom:4px">'+label+'</div>'
+    +'<div style="font-size:18px;font-weight:800">'+F(d.total||0)+'</div>'
+    +'<div style="font-size:10px;color:#9ca3af;margin-top:2px">'+(d.nb||0)+' op.</div>'
+    +'</div>';
+}
+
+function mcShowTab(tab){
+  document.getElementById('mc-page-ap').style.display = tab==='ap'?'':'none';
+  document.getElementById('mc-page-util').style.display = tab==='util'?'':'none';
+  document.getElementById('mc-tab-ap').style.background = tab==='ap'?'#7c3aed':'transparent';
+  document.getElementById('mc-tab-ap').style.color = tab==='ap'?'#fff':'#6b7280';
+  document.getElementById('mc-tab-util').style.background = tab==='util'?'#1e293b':'transparent';
+  document.getElementById('mc-tab-util').style.color = tab==='util'?'#fff':'#6b7280';
 }
 
 // Sheet virer AFRIM PAY (injection dynamique)

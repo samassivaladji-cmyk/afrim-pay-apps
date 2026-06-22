@@ -1695,15 +1695,15 @@ function canResetPin(target){
 
 var PERMS={
   // Super Back-office (0505414751) + Admin : tout sans exception
-  admin:         {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:1,rembourser:1,kyc:1,gels:1,logs:1},
+  admin:         {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:1,rembourser:1,kyc:1,gels:1,logs:1,rattachements:1,rattach_action:0,moncompte:1},
   // Back-office : tout voir + supprimer contenu (notifs/tickets/alertes), PAS les comptes
-  backoffice:    {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:1,logs:1,admin_gestionnaire:1},
+  backoffice:    {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:1,logs:1,admin_gestionnaire:1,rattachements:1,rattach_action:1,moncompte:1},
   // Superviseur : sa zone uniquement
-  superviseur:   {home:1,users:1,txns:0,monitoring:1,stats:1,support:0,tech:0,creer:0,soldes:1,supprimer:0,rembourser:0,kyc:0,gels:0,logs:0,superviseur_zone:1},
+  superviseur:   {home:1,users:1,txns:0,monitoring:1,stats:1,support:0,tech:0,creer:0,soldes:1,supprimer:0,rembourser:0,kyc:0,gels:0,logs:0,superviseur_zone:1,rattachements:0,rattach_action:0,moncompte:0},
   // Support Client : recherche client, remboursement, tickets
-  support_client:{home:0,users:0,txns:0,monitoring:0,support:1,tech:0,creer:0,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:0,logs:0},
+  support_client:{home:0,users:0,txns:0,monitoring:0,support:1,tech:0,creer:0,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:0,logs:0,rattachements:0,rattach_action:0,moncompte:0},
   // Support Tech : logs, transactions, alertes systeme
-  support_tech:  {home:0,users:0,txns:0,monitoring:0,stats:0,support:0,tech:1,creer:0,soldes:0,supprimer:0,rembourser:0,kyc:0,gels:0,logs:1}
+  support_tech:  {home:0,users:0,txns:0,monitoring:0,stats:0,support:0,tech:1,creer:0,soldes:0,supprimer:0,rembourser:0,kyc:0,gels:0,logs:1,rattachements:0,rattach_action:0,moncompte:0}
 };
 function perm(k){var u=G.user;if(!u)return 0;var p=PERMS[u.role];return p?p[k]||0:0;}
 
@@ -3337,7 +3337,7 @@ try{G.token=localStorage.getItem('afrim_token');G.refresh=localStorage.getItem('
 
 var PERMS={
   // Super Back-office (0505414751) + Admin : tout sans exception
-  admin:         {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:1,rembourser:1,kyc:1,gels:1,logs:1,rattachements:1,rattach_action:0,moncompte:0},
+  admin:         {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:1,rembourser:1,kyc:1,gels:1,logs:1,rattachements:1,rattach_action:0,moncompte:1},
   // Back-office : tout voir + supprimer contenu (notifs/tickets/alertes), PAS les comptes
   backoffice:    {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:1,logs:1,admin_gestionnaire:1,rattachements:1,rattach_action:1,moncompte:1},
   // Superviseur : sa zone uniquement

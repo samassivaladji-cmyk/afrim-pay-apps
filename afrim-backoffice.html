@@ -9116,6 +9116,31 @@ async function chargerGainsSysteme(){
     h+='<div style="font-size:11px;opacity:.7">Fonds accumulés — toutes opérations</div>';
     h+='<button id="mc-btn-virer-afrim" style="margin-top:14px;width:100%;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:12px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">&#128184; Virer ces fonds</button>';
     h+='</div>';
+    // ── Tableau P&L détaillé
+    var pnl=ap.pnl||{};
+    var gainsB=(pnl.gains_retrait||0)+(pnl.gains_paiement||0);
+    var deductions=(pnl.bonus_depot_agent||0)+(pnl.commissions_parrain||0);
+    h+='<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:16px;margin-bottom:14px">';
+    h+='<div style="font-size:13px;font-weight:800;margin-bottom:14px">&#128200; Détail du calcul</div>';
+    // Produits
+    h+='<div style="font-size:10px;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">+ Produits (gains)</div>';
+    h+=pnlLigne('Frais retraits (65%)',pnl.gains_retrait||0,pnl.gains_retrait_nb||0,'#7c3aed','+');
+    h+=pnlLigne('Frais paiements marchands (90%)',pnl.gains_paiement||0,pnl.gains_paiement_nb||0,'#7c3aed','+');
+    h+='<div style="display:flex;justify-content:space-between;padding:8px 0;margin-bottom:10px;border-top:2px solid #7c3aed22">';
+    h+='<div style="font-size:12px;font-weight:800;color:#7c3aed">Sous-total gains</div>';
+    h+='<div style="font-size:13px;font-weight:800;color:#7c3aed">+'+F(gainsB)+'</div></div>';
+    // Déductions
+    h+='<div style="font-size:10px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">- Charges (versements)</div>';
+    h+=pnlLigne('Bonus dépôts agents (0,2%)',pnl.bonus_depot_agent||0,pnl.bonus_depot_nb||0,'#ef4444','-');
+    h+=pnlLigne('Commissions parrainage',pnl.commissions_parrain||0,pnl.commissions_parrain_nb||0,'#ef4444','-');
+    h+='<div style="display:flex;justify-content:space-between;padding:8px 0;margin-bottom:10px;border-top:2px solid #ef444422">';
+    h+='<div style="font-size:12px;font-weight:800;color:#ef4444">Sous-total charges</div>';
+    h+='<div style="font-size:13px;font-weight:800;color:#ef4444">-'+F(deductions)+'</div></div>';
+    // Résultat net
+    h+='<div style="background:#f5f3ff;border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center">';
+    h+='<div style="font-size:13px;font-weight:800;color:#7c3aed">Résultat net AFRIM PAY</div>';
+    h+='<div style="font-size:16px;font-weight:800;color:#7c3aed">'+F(ap.solde||0)+'</div></div>';
+    h+='</div>';
     h+='<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:16px;margin-bottom:14px">';
     h+='<div style="font-size:13px;font-weight:800;margin-bottom:14px">&#128197; Gains AFRIM PAY par période</div>';
     h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">';
@@ -9410,6 +9435,13 @@ function mcUpdateChart(type, val){
   }
 }
 
+function pnlLigne(label, montant, nb, col, signe){
+  return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f9fafb">'
+    +'<div><div style="font-size:12px;font-weight:600;color:#374151">'+label+'</div>'
+    +'<div style="font-size:10px;color:#9ca3af">'+nb+' opération(s)</div></div>'
+    +'<div style="font-size:13px;font-weight:800;color:'+col+'">'+signe+F(montant)+'</div>'
+    +'</div>';
+}
 function mcPeriodCardV2(label, data, col){
   var d=data||{};
   var vs=d.vs;

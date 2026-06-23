@@ -9089,13 +9089,15 @@ async function chargerGainsSysteme(){
   wrap.innerHTML='<div style="padding:20px;text-align:center"><div class="spin"></div></div>';
   try{
     var r=await apiGet('/admin/gains-systeme');
+    if(!r){if(wrap)wrap.innerHTML='<div style="color:var(--r);padding:16px">Erreur: pas de réponse du serveur</div>';return;}
     var d=(r&&r.data)||{};
     var ap=d.afrimPay||{};
     var util=d.utilisateurs||{};
     var apP=ap.periodes||{};
     var uP=util.periodes||{};
-    // Stocker les données pour le graphique interactif
     window._mcUtilData=util;
+    // Test: afficher ce qu'on a reçu
+
     var roleCol={agent:'#f59e0b',client:'#22c55e',master:'#a78bfa',mini_master:'#60a5fa',business:'#f97316',superviseur:'#6b7280',backoffice:'#1e293b'};
     var roleLabel={agent:'Agent',client:'Client',master:'Master',mini_master:'Mini-M.',business:'Business',superviseur:'Superv.'};
 
@@ -9254,7 +9256,11 @@ async function chargerGainsSysteme(){
     h+='</div>';
     h+='<canvas id="mc-chart-util" height="200"></canvas>';
     h+='<div id="mc-chart-legende" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px"></div>';
+    h+='<div id="mc-chart-chiffres" style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>';
     h+='</div>';
+
+    wrap.innerHTML=h;
+    document.getElementById('mc-btn-virer-afrim').onclick=function(){ouvrirVirerAfrimPay(ap.solde||0);};
 
     setTimeout(function(){
       mcUpdateChart('init','init');
@@ -9379,6 +9385,27 @@ function mcUpdateChart(type, val){
   if(leg){
     leg.innerHTML=datasets.map(function(ds){
       return '<div style="display:flex;align-items:center;gap:4px"><div style="width:14px;height:4px;border-radius:2px;background:'+ds.borderColor+'"></div><span style="font-size:11px;color:#374151;font-weight:600">'+ds.label+'</span></div>';
+    }).join('');
+  }
+
+  // Chiffres résumés : total par rôle sur la période sélectionnée
+  var chiffresEl=document.getElementById('mc-chart-chiffres');
+  if(chiffresEl){
+    var typeLabels={'tous':'Toutes ops','depot_agent':'Dépôt','retrait_agent':'Retrait','parrainage':'Parrainage','transfert':'Transfert'};
+    var typeLabel=typeLabels[_mcSelType]||_mcSelType;
+    var periodeLabel=_mcSelJours===7?'7 jours':_mcSelJours===30?'Ce mois':_mcSelJours===90?'3 mois':'Cette année';
+    chiffresEl.innerHTML=datasets.map(function(ds){
+      var col=ds.borderColor;
+      var total=ds.data.reduce(function(s,v){return s+v;},0);
+      var nb=ds.data.filter(function(v){return v>0;}).length;
+      return '<div style="background:#f9fafb;border-radius:12px;padding:12px">'
+        +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">'
+        +'<div style="width:10px;height:10px;border-radius:50%;background:'+col+'"></div>'
+        +'<span style="font-size:11px;font-weight:700;color:'+col+'">'+ds.label+'</span></div>'
+        +'<div style="font-size:17px;font-weight:800;color:#111">'+F(total)+'</div>'
+        +'<div style="font-size:10px;color:#9ca3af;margin-top:3px">'+periodeLabel+' &middot; '+typeLabel+'</div>'
+        +'<div style="font-size:10px;color:#9ca3af">'+nb+' jour(s) actif(s)</div>'
+        +'</div>';
     }).join('');
   }
 }

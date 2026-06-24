@@ -9641,12 +9641,20 @@ function mcUpdateChart(type, val){
     }
 
     var dataMap={};
-    rows.forEach(function(row){dataMap[String(row.jour).substring(0,10)]=row.total;});
+    rows.forEach(function(row){
+      // Normaliser la clé : prendre les 10 premiers chars (YYYY-MM-DD)
+      var j=String(row.jour||'').substring(0,10);
+      dataMap[j]=row.total;
+    });
 
     var vals=[];
     for(var i=0;i<_mcSelJours;i++){
       var d=new Date(debut); d.setDate(d.getDate()+i);
-      var key=d.toISOString().substring(0,10);
+      // Utiliser date locale (pas UTC) pour éviter le décalage timezone
+      var yy=d.getFullYear();
+      var mm=String(d.getMonth()+1).padStart(2,'0');
+      var dd=String(d.getDate()).padStart(2,'0');
+      var key=yy+'-'+mm+'-'+dd;
       vals.push(dataMap[key]||0);
     }
     return {

@@ -1242,9 +1242,12 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
 
   <!-- PANNEAU 1 : LISTE COMPLETE -->
   <div id="rt-panel-liste" style="padding:12px 16px 100px">
-    <div style="display:flex;align-items:center;gap:8px;background:#f3f4f6;border-radius:12px;padding:10px 14px;margin-bottom:8px">
-      <svg width="16" height="16" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-      <input id="rt-search" type="text" placeholder="Rechercher par nom ou téléphone..." style="border:none;background:none;font-size:14px;font-family:inherit;color:var(--t);outline:none;flex:1" oninput="filtrerRattachements(this.value)"/>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:8px;background:#f3f4f6;border-radius:12px;padding:10px 14px;flex:1">
+        <svg width="16" height="16" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input id="rt-search" type="text" placeholder="Rechercher par nom ou téléphone..." style="border:none;background:none;font-size:14px;font-family:inherit;color:var(--t);outline:none;flex:1" oninput="filtrerRattachements(this.value)"/>
+      </div>
+      <button onclick="ouvrirNotifRattachements('liste')" style="background:#7c3aed;color:#fff;border:none;border-radius:12px;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">📣 Notifier</button>
     </div>
     <div id="rt-banner"></div>
     <div id="rt-list"><div style="padding:40px;text-align:center"><div class="spin"></div></div></div>
@@ -1252,7 +1255,10 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
 
   <!-- PANNEAU 3 : SANS FILLEUL -->
   <div id="rt-panel-sans" style="display:none;padding:12px 16px 100px">
-    <div style="font-size:12px;color:var(--m);margin-bottom:8px">Comptes n'ayant rattaché aucun filleul — à relancer commercialement.</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="font-size:12px;color:var(--m)">Comptes n'ayant rattaché aucun filleul — à relancer commercialement.</div>
+      <button onclick="ouvrirNotifRattachements('sans')" style="flex-shrink:0;margin-left:8px;background:#7c3aed;color:#fff;border:none;border-radius:10px;padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">📣 Notifier</button>
+    </div>
     <div style="display:flex;align-items:center;gap:8px;background:#f3f4f6;border-radius:12px;padding:10px 14px;margin-bottom:8px">
       <svg width="16" height="16" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
       <input id="rt-sans-search" type="text" placeholder="Rechercher par nom ou téléphone..." style="border:none;background:none;font-size:14px;font-family:inherit;color:var(--t);outline:none;flex:1" oninput="filtrerSansFilleul(this.value)"/>
@@ -1263,10 +1269,36 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
 
   <!-- PANNEAU 4 : NON RATTACHÉS (parrainé mais sans rattachement actif) -->
   <div id="rt-panel-nonratt" style="display:none;padding:12px 16px 100px">
-    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#991b1b">
-      ⚠️ Ces utilisateurs ont un parrain mais n'ont pas encore effectué de dépôt ou transfert ≥500 FCFA. Aucune commission parrainage ne sera versée tant qu'ils ne sont pas rattachés.
+    <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:12px">
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:10px 14px;font-size:12px;color:#991b1b;flex:1">
+        ⚠️ Ces utilisateurs ont un parrain mais n'ont pas encore effectué de dépôt ou transfert ≥500 FCFA. Aucune commission parrainage ne sera versée tant qu'ils ne sont pas rattachés.
+      </div>
+      <button onclick="ouvrirNotifRattachements('nonratt')" style="flex-shrink:0;background:#7c3aed;color:#fff;border:none;border-radius:10px;padding:10px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">📣 Notifier</button>
     </div>
     <div id="rt-nonratt-list"><div style="padding:40px;text-align:center"><div class="spin"></div></div></div>
+  </div>
+</div>
+
+<!-- SHEET NOTIFICATION RATTACHEMENTS -->
+<div class="sh-ov" id="sh-rt-notif">
+  <div class="sh">
+    <div class="sh-bar"></div>
+    <div class="sh-top">
+      <div>
+        <div class="sh-title">📣 Envoyer une notification</div>
+        <div style="color:var(--m);font-size:12px" id="rt-notif-sub">0 destinataire(s)</div>
+      </div>
+      <button class="sh-x" onclick="closeSh('rt-notif')">✕</button>
+    </div>
+    <div class="sh-body">
+      <div id="rt-notif-cible-info" style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12px;font-weight:700;color:#15803d"></div>
+      <label style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.05em">Titre</label>
+      <input class="inp" id="rt-notif-titre" type="text" placeholder="Ex: Activez votre compte !" style="margin:6px 0 14px"/>
+      <label style="font-size:11px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.05em">Message</label>
+      <textarea class="inp" id="rt-notif-message" rows="4" placeholder="Votre message..." style="margin:6px 0 14px;resize:vertical"></textarea>
+      <div id="rt-notif-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:13px"></div>
+      <button onclick="envoyerNotifRattachements()" style="width:100%;background:#7c3aed;color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Envoyer →</button>
+    </div>
   </div>
 </div>
 
@@ -3938,7 +3970,56 @@ function refreshRtActiveTab(){
   else if(_rtActiveTab==='nonratt') chargerNonRattaches();
 }
 
-// ── Non rattachés (parrainés sans rattachement actif) ──
+// ── Notifications depuis onglets rattachements ──
+var _rtNotifCible = 'liste';
+function ouvrirNotifRattachements(cible) {
+  _rtNotifCible = cible;
+  var labels = {
+    'liste': { label: 'Tous les parrains (liste complète)', data: rattachData },
+    'sans': { label: 'Comptes sans filleul', data: sansFilleulData },
+    'nonratt': { label: 'Parrainés non rattachés', data: nonRattachesData }
+  };
+  var info = labels[cible] || { label: '?', data: [] };
+  // Extraire les IDs uniques selon la cible
+  var ids = [];
+  if (cible === 'liste') {
+    // Notifier les parrains ET les filleuls
+    var seen = {};
+    rattachData.forEach(function(x) {
+      if (x.parrainId && !seen[x.parrainId]) { seen[x.parrainId]=true; ids.push(x.parrainId); }
+      if (x.filleulId && !seen[x.filleulId]) { seen[x.filleulId]=true; ids.push(x.filleulId); }
+    });
+  } else {
+    var seen = {};
+    info.data.forEach(function(u) {
+      if (u.id && !seen[u.id]) { seen[u.id]=true; ids.push(u.id); }
+    });
+  }
+  document.getElementById('rt-notif-sub').textContent = ids.length + ' destinataire(s)';
+  document.getElementById('rt-notif-cible-info').textContent = '📋 Cible : ' + info.label + ' — ' + ids.length + ' compte(s)';
+  document.getElementById('rt-notif-titre').value = '';
+  document.getElementById('rt-notif-message').value = '';
+  document.getElementById('rt-notif-err').style.display = 'none';
+  // Stocker les IDs pour l'envoi
+  window._rtNotifIds = ids;
+  openSh('rt-notif');
+}
+async function envoyerNotifRattachements() {
+  var errEl = document.getElementById('rt-notif-err');
+  errEl.style.display = 'none';
+  var titre = document.getElementById('rt-notif-titre').value.trim();
+  var message = document.getElementById('rt-notif-message').value.trim();
+  if (!titre || !message) { errEl.textContent = 'Titre et message requis'; errEl.style.display = ''; return; }
+  var ids = window._rtNotifIds || [];
+  if (!ids.length) { errEl.textContent = 'Aucun destinataire'; errEl.style.display = ''; return; }
+  try {
+    await apiPost('/notifications/multi', { userIds: ids, titre: titre, message: message, type: 'systeme' });
+    toast('✅ ' + ids.length + ' notification(s) envoyée(s)');
+    closeSh('rt-notif');
+  } catch(e) { errEl.textContent = e.message; errEl.style.display = ''; }
+}
+
+// ── Notifications depuis onglets rattachements ──
 var nonRattachesData=[];
 async function chargerNonRattaches(){
   var el=document.getElementById('rt-nonratt-list');

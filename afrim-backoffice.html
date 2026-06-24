@@ -1234,9 +1234,12 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
       <button onclick="ouvrirRattacherManuel()" id="rt-btn-add" style="display:none;background:var(--y);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">+ Rattacher</button>
     </div>
     <div style="display:flex;gap:0;overflow-x:auto;margin-top:6px">
-      <button id="rt-tab-liste" onclick="setRtTab('liste')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:var(--y2);border-bottom:2px solid var(--y);white-space:nowrap">📋 Liste complète</button>
-      <button id="rt-tab-sans" onclick="setRtTab('sans')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">📣 Sans filleul</button>
-      <button id="rt-tab-nonratt" onclick="setRtTab('nonratt')" style="padding:9px 14px;font-size:11px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">⏳ Non rattachés <span id="rt-nonratt-badge" style="display:none;background:#dc2626;color:#fff;border-radius:99px;font-size:9px;padding:1px 6px;margin-left:3px"></span></button>
+      <button id="rt-tab-liste"    onclick="setRtTab('liste')"    style="padding:9px 12px;font-size:10px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:var(--y2);border-bottom:2px solid var(--y);white-space:nowrap">📋 Tous</button>
+      <button id="rt-tab-parrains" onclick="setRtTab('parrains')" style="padding:9px 12px;font-size:10px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">👑 Parrains</button>
+      <button id="rt-tab-factifs"  onclick="setRtTab('factifs')"  style="padding:9px 12px;font-size:10px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">🔗 Filleuls actifs</button>
+      <button id="rt-tab-fsimples" onclick="setRtTab('fsimples')" style="padding:9px 12px;font-size:10px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">👤 Filleuls simples</button>
+      <button id="rt-tab-sans"     onclick="setRtTab('sans')"     style="padding:9px 12px;font-size:10px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">🔕 Sans lien</button>
+      <button id="rt-tab-nonratt"  onclick="setRtTab('nonratt')"  style="padding:9px 12px;font-size:10px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">⏳ Non rattachés <span id="rt-nonratt-badge" style="display:none;background:#dc2626;color:#fff;border-radius:99px;font-size:9px;padding:1px 6px;margin-left:2px"></span></button>
     </div>
   </div>
 
@@ -1247,16 +1250,43 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
         <svg width="16" height="16" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
         <input id="rt-search" type="text" placeholder="Rechercher par nom ou téléphone..." style="border:none;background:none;font-size:14px;font-family:inherit;color:var(--t);outline:none;flex:1" oninput="filtrerRattachements(this.value)"/>
       </div>
-      <button onclick="ouvrirNotifRattachements('liste')" style="background:#7c3aed;color:#fff;border:none;border-radius:12px;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">📣 Notifier</button>
+      <button onclick="ouvrirNotifRattachements('liste')" style="background:#7c3aed;color:#fff;border:none;border-radius:12px;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">📣</button>
     </div>
     <div id="rt-banner"></div>
     <div id="rt-list"><div style="padding:40px;text-align:center"><div class="spin"></div></div></div>
   </div>
 
-  <!-- PANNEAU 3 : SANS FILLEUL -->
+  <!-- PANNEAU 2 : PARRAINS -->
+  <div id="rt-panel-parrains" style="display:none;padding:12px 16px 100px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-size:12px;color:var(--m)">Comptes ayant au moins 1 filleul rattaché.</div>
+      <button onclick="ouvrirNotifRattachements('parrains')" style="flex-shrink:0;margin-left:8px;background:#7c3aed;color:#fff;border:none;border-radius:10px;padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">📣 Notifier</button>
+    </div>
+    <div id="rt-parrains-list"><div style="padding:40px;text-align:center"><div class="spin"></div></div></div>
+  </div>
+
+  <!-- PANNEAU 3 : FILLEULS ACTIFS (rattachés ET ont eux-mêmes des filleuls) -->
+  <div id="rt-panel-factifs" style="display:none;padding:12px 16px 100px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-size:12px;color:var(--m)">Filleuls rattachés qui sont également parrains.</div>
+      <button onclick="ouvrirNotifRattachements('factifs')" style="flex-shrink:0;margin-left:8px;background:#7c3aed;color:#fff;border:none;border-radius:10px;padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">📣 Notifier</button>
+    </div>
+    <div id="rt-factifs-list"><div style="padding:40px;text-align:center"><div class="spin"></div></div></div>
+  </div>
+
+  <!-- PANNEAU 4 : FILLEULS SIMPLES (rattachés SANS filleuls à eux) -->
+  <div id="rt-panel-fsimples" style="display:none;padding:12px 16px 100px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-size:12px;color:var(--m)">Filleuls rattachés n'ayant encore aucun filleul.</div>
+      <button onclick="ouvrirNotifRattachements('fsimples')" style="flex-shrink:0;margin-left:8px;background:#7c3aed;color:#fff;border:none;border-radius:10px;padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">📣 Notifier</button>
+    </div>
+    <div id="rt-fsimples-list"><div style="padding:40px;text-align:center"><div class="spin"></div></div></div>
+  </div>
+
+  <!-- PANNEAU 5 : SANS LIEN (ni parrain ni filleul) -->
   <div id="rt-panel-sans" style="display:none;padding:12px 16px 100px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-      <div style="font-size:12px;color:var(--m)">Comptes n'ayant rattaché aucun filleul — à relancer commercialement.</div>
+      <div style="font-size:12px;color:var(--m)">Comptes sans parrain et sans filleul — à relancer.</div>
       <button onclick="ouvrirNotifRattachements('sans')" style="flex-shrink:0;margin-left:8px;background:#7c3aed;color:#fff;border:none;border-radius:10px;padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">📣 Notifier</button>
     </div>
     <div style="display:flex;align-items:center;gap:8px;background:#f3f4f6;border-radius:12px;padding:10px 14px;margin-bottom:8px">
@@ -1267,7 +1297,7 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
     <div id="rt-sans-list"><div style="padding:40px;text-align:center"><div class="spin"></div></div></div>
   </div>
 
-  <!-- PANNEAU 4 : NON RATTACHÉS (parrainé mais sans rattachement actif) -->
+  <!-- PANNEAU 6 : NON RATTACHÉS -->
   <div id="rt-panel-nonratt" style="display:none;padding:12px 16px 100px">
     <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:12px">
       <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:10px 14px;font-size:12px;color:#991b1b;flex:1">
@@ -3956,67 +3986,166 @@ async function confirmerRattacherManuel(){
 var _rtActiveTab='liste';
 function setRtTab(tab){
   _rtActiveTab=tab;
-  ['liste','sans','nonratt'].forEach(function(t){
+  ['liste','parrains','factifs','fsimples','sans','nonratt'].forEach(function(t){
     var btn=document.getElementById('rt-tab-'+t),panel=document.getElementById('rt-panel-'+t),a=t===tab;
     if(btn){btn.style.color=a?'var(--y2)':'#6b7280';btn.style.borderBottomColor=a?'var(--y)':'transparent';}
     if(panel)panel.style.display=a?'':'none';
   });
   if(tab==='sans') chargerSansFilleul();
   else if(tab==='nonratt') chargerNonRattaches();
+  else if(tab==='parrains') chargerParrains();
+  else if(tab==='factifs') chargerFilleulsActifs();
+  else if(tab==='fsimples') chargerFilleulsSimples();
 }
 function refreshRtActiveTab(){
   if(_rtActiveTab==='liste') chargerRattachements();
   else if(_rtActiveTab==='sans') chargerSansFilleul();
   else if(_rtActiveTab==='nonratt') chargerNonRattaches();
+  else if(_rtActiveTab==='parrains') chargerParrains();
+  else if(_rtActiveTab==='factifs') chargerFilleulsActifs();
+  else if(_rtActiveTab==='fsimples') chargerFilleulsSimples();
 }
 
 // ── Notifications depuis onglets rattachements ──
-var _rtNotifCible = 'liste';
-function ouvrirNotifRattachements(cible) {
-  _rtNotifCible = cible;
-  var labels = {
-    'liste': { label: 'Tous les parrains (liste complète)', data: rattachData },
-    'sans': { label: 'Comptes sans filleul', data: sansFilleulData },
-    'nonratt': { label: 'Parrainés non rattachés', data: nonRattachesData }
-  };
-  var info = labels[cible] || { label: '?', data: [] };
-  // Extraire les IDs uniques selon la cible
-  var ids = [];
-  if (cible === 'liste') {
-    // Notifier les parrains ET les filleuls
-    var seen = {};
-    rattachData.forEach(function(x) {
-      if (x.parrainId && !seen[x.parrainId]) { seen[x.parrainId]=true; ids.push(x.parrainId); }
-      if (x.filleulId && !seen[x.filleulId]) { seen[x.filleulId]=true; ids.push(x.filleulId); }
+var _rtNotifCible='liste';
+var parrainData=[],fillActifsData=[],fillSimplesData=[];
+
+function ouvrirNotifRattachements(cible){
+  _rtNotifCible=cible;
+  var ids=[],label='';
+  if(cible==='liste'){
+    var seen={};
+    rattachData.forEach(function(x){
+      if(x.parrainId&&!seen[x.parrainId]){seen[x.parrainId]=true;ids.push(x.parrainId);}
+      if(x.filleulId&&!seen[x.filleulId]){seen[x.filleulId]=true;ids.push(x.filleulId);}
     });
-  } else {
-    var seen = {};
-    info.data.forEach(function(u) {
-      if (u.id && !seen[u.id]) { seen[u.id]=true; ids.push(u.id); }
-    });
+    label='Tous (parrains + filleuls)';
+  }else if(cible==='parrains'){
+    parrainData.forEach(function(u){if(u.id)ids.push(u.id);});
+    label='Parrains actifs';
+  }else if(cible==='factifs'){
+    fillActifsData.forEach(function(u){if(u.id)ids.push(u.id);});
+    label='Filleuls actifs (aussi parrains)';
+  }else if(cible==='fsimples'){
+    fillSimplesData.forEach(function(u){if(u.id)ids.push(u.id);});
+    label='Filleuls simples (sans filleul)';
+  }else if(cible==='sans'){
+    sansFilleulData.forEach(function(u){if(u.id)ids.push(u.id);});
+    label='Sans lien (ni parrain ni filleul)';
+  }else if(cible==='nonratt'){
+    nonRattachesData.forEach(function(u){if(u.id)ids.push(u.id);});
+    label='Parrainés non rattachés';
   }
-  document.getElementById('rt-notif-sub').textContent = ids.length + ' destinataire(s)';
-  document.getElementById('rt-notif-cible-info').textContent = '📋 Cible : ' + info.label + ' — ' + ids.length + ' compte(s)';
-  document.getElementById('rt-notif-titre').value = '';
-  document.getElementById('rt-notif-message').value = '';
-  document.getElementById('rt-notif-err').style.display = 'none';
-  // Stocker les IDs pour l'envoi
-  window._rtNotifIds = ids;
+  document.getElementById('rt-notif-sub').textContent=ids.length+' destinataire(s)';
+  document.getElementById('rt-notif-cible-info').textContent='📋 Cible : '+label+' — '+ids.length+' compte(s)';
+  document.getElementById('rt-notif-titre').value='';
+  document.getElementById('rt-notif-message').value='';
+  document.getElementById('rt-notif-err').style.display='none';
+  window._rtNotifIds=ids;
   openSh('rt-notif');
 }
-async function envoyerNotifRattachements() {
-  var errEl = document.getElementById('rt-notif-err');
-  errEl.style.display = 'none';
-  var titre = document.getElementById('rt-notif-titre').value.trim();
-  var message = document.getElementById('rt-notif-message').value.trim();
-  if (!titre || !message) { errEl.textContent = 'Titre et message requis'; errEl.style.display = ''; return; }
-  var ids = window._rtNotifIds || [];
-  if (!ids.length) { errEl.textContent = 'Aucun destinataire'; errEl.style.display = ''; return; }
-  try {
-    await apiPost('/notifications/multi', { userIds: ids, titre: titre, message: message, type: 'systeme' });
-    toast('✅ ' + ids.length + ' notification(s) envoyée(s)');
+async function envoyerNotifRattachements(){
+  var errEl=document.getElementById('rt-notif-err');errEl.style.display='none';
+  var titre=document.getElementById('rt-notif-titre').value.trim();
+  var message=document.getElementById('rt-notif-message').value.trim();
+  if(!titre||!message){errEl.textContent='Titre et message requis';errEl.style.display='';return;}
+  var ids=window._rtNotifIds||[];
+  if(!ids.length){errEl.textContent='Aucun destinataire';errEl.style.display='';return;}
+  try{
+    await apiPost('/notifications/multi',{userIds:ids,titre:titre,message:message,type:'systeme'});
+    toast('✅ '+ids.length+' notification(s) envoyée(s)');
     closeSh('rt-notif');
-  } catch(e) { errEl.textContent = e.message; errEl.style.display = ''; }
+  }catch(e){errEl.textContent=e.message;errEl.style.display='';}
+}
+
+// ── Parrains (ont au moins 1 filleul rattaché) ──
+function chargerParrains(){
+  if(!rattachData||!rattachData.length){
+    chargerRattachements().then(function(){_renderParrains();});
+  }else{_renderParrains();}
+}
+function _renderParrains(){
+  var seen={};parrainData=[];
+  rattachData.forEach(function(x){
+    if(x.parrainId&&!seen[x.parrainId]){
+      seen[x.parrainId]=true;
+      var nb=rattachData.filter(function(r){return r.parrainId===x.parrainId;}).length;
+      parrainData.push({id:x.parrainId,prenom:x.parrainPrenom,nom:x.parrainNom,telephone:x.parrainTelephone,role:x.parrainRole,nbFilleuls:nb});
+    }
+  });
+  parrainData.sort(function(a,b){return b.nbFilleuls-a.nbFilleuls;});
+  var el=document.getElementById('rt-parrains-list');
+  if(!parrainData.length){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--m);font-size:13px">Aucun parrain</div>';return;}
+  el.innerHTML='';
+  parrainData.forEach(function(u){
+    var c=ROLE_C[u.role]||'#888';
+    var div=document.createElement('div');
+    div.style.cssText='background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px';
+    div.innerHTML='<div style="width:42px;height:42px;border-radius:12px;background:'+c+'22;color:'+c+';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0">'+(u.prenom||'?')[0].toUpperCase()+'</div>'
+      +'<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:6px"><span style="font-size:14px;font-weight:700">'+(u.prenom||'')+' '+(u.nom||'')+'</span><span style="padding:2px 8px;border-radius:99px;font-size:9px;font-weight:700;background:'+c+'22;color:'+c+'">'+u.role+'</span></div>'
+      +'<div style="color:#6b7280;font-size:11px;margin-top:2px">'+u.telephone+'</div></div>'
+      +'<div style="text-align:right;flex-shrink:0"><div style="font-size:20px;font-weight:900;color:var(--y2)">'+u.nbFilleuls+'</div><div style="font-size:9px;color:var(--m)">filleul'+(u.nbFilleuls>1?'s':'')+'</div></div>';
+    el.appendChild(div);
+  });
+}
+
+// ── Filleuls actifs (rattachés ET ont eux-mêmes des filleuls) ──
+function chargerFilleulsActifs(){
+  if(!rattachData||!rattachData.length){
+    chargerRattachements().then(function(){_renderFilleulsActifs();});
+  }else{_renderFilleulsActifs();}
+}
+function _renderFilleulsActifs(){
+  var parrainIds=new Set(rattachData.map(function(x){return x.parrainId;}));
+  var seen={};fillActifsData=[];
+  rattachData.forEach(function(x){
+    if(x.filleulId&&parrainIds.has(x.filleulId)&&!seen[x.filleulId]){
+      seen[x.filleulId]=true;
+      var nb=rattachData.filter(function(r){return r.parrainId===x.filleulId;}).length;
+      fillActifsData.push({id:x.filleulId,prenom:x.filleulPrenom,nom:x.filleulNom,telephone:x.filleulTelephone,nbFilleuls:nb});
+    }
+  });
+  var el=document.getElementById('rt-factifs-list');
+  if(!fillActifsData.length){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--m);font-size:13px">Aucun filleul actif</div>';return;}
+  el.innerHTML='';
+  fillActifsData.forEach(function(u){
+    var div=document.createElement('div');
+    div.style.cssText='background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px';
+    div.innerHTML='<div style="width:42px;height:42px;border-radius:12px;background:#dcfce7;color:#16a34a;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0">'+(u.prenom||'?')[0].toUpperCase()+'</div>'
+      +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">'+(u.prenom||'')+' '+(u.nom||'')+'</div>'
+      +'<div style="color:#6b7280;font-size:11px;margin-top:2px">'+u.telephone+'</div></div>'
+      +'<div style="text-align:right;flex-shrink:0"><div style="font-size:20px;font-weight:900;color:#16a34a">'+u.nbFilleuls+'</div><div style="font-size:9px;color:var(--m)">filleul'+(u.nbFilleuls>1?'s':'')+'</div></div>';
+    el.appendChild(div);
+  });
+}
+
+// ── Filleuls simples (rattachés SANS filleul à eux) ──
+function chargerFilleulsSimples(){
+  if(!rattachData||!rattachData.length){
+    chargerRattachements().then(function(){_renderFilleulsSimples();});
+  }else{_renderFilleulsSimples();}
+}
+function _renderFilleulsSimples(){
+  var parrainIds=new Set(rattachData.map(function(x){return x.parrainId;}));
+  var seen={};fillSimplesData=[];
+  rattachData.forEach(function(x){
+    if(x.filleulId&&!parrainIds.has(x.filleulId)&&!seen[x.filleulId]){
+      seen[x.filleulId]=true;
+      fillSimplesData.push({id:x.filleulId,prenom:x.filleulPrenom,nom:x.filleulNom,telephone:x.filleulTelephone});
+    }
+  });
+  var el=document.getElementById('rt-fsimples-list');
+  if(!fillSimplesData.length){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--m);font-size:13px">Aucun filleul simple</div>';return;}
+  el.innerHTML='';
+  fillSimplesData.forEach(function(u){
+    var div=document.createElement('div');
+    div.style.cssText='background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px';
+    div.innerHTML='<div style="width:42px;height:42px;border-radius:12px;background:#e0f2fe;color:#0284c7;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0">'+(u.prenom||'?')[0].toUpperCase()+'</div>'
+      +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">'+(u.prenom||'')+' '+(u.nom||'')+'</div>'
+      +'<div style="color:#6b7280;font-size:11px;margin-top:2px">'+u.telephone+'</div></div>'
+      +'<div style="font-size:10px;color:#9ca3af;padding:3px 8px;border-radius:99px;border:1px solid #e5e7eb">Filleul</div>';
+    el.appendChild(div);
+  });
 }
 
 // ── Notifications depuis onglets rattachements ──

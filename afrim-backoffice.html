@@ -9388,17 +9388,19 @@ async function chargerGainsSysteme(){
     h+='</div>';
 
     // ══ PAGE AFRIM PAY ══
-    h+='<div id="mc-page-ap">';
-    h+='<div style="background:linear-gradient(135deg,#7c3aed,#a78bfa);border-radius:20px;padding:20px;margin-bottom:14px;color:#fff">';
-    h+='<div style="font-size:11px;font-weight:700;opacity:.7;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Solde AFRIM PAY</div>';
-    h+='<div style="font-size:32px;font-weight:800;margin-bottom:4px">'+F(ap.solde||0)+'</div>';
-    h+='<div style="font-size:11px;opacity:.7">Fonds accumulés — toutes opérations</div>';
-    h+='<button id="mc-btn-virer-afrim" style="margin-top:14px;width:100%;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:12px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">&#128184; Virer ces fonds</button>';
-    h+='</div>';
-    // ── Tableau P&L détaillé
     var pnl=ap.pnl||{};
     var gainsB=(pnl.gains_retrait||0)+(pnl.gains_paiement||0);
     var deductions=(pnl.bonus_depot_agent||0)+(pnl.commissions_parrain||0);
+    var netAfrim=Math.max(0, gainsB - deductions);
+
+    h+='<div id="mc-page-ap">';
+    h+='<div style="background:linear-gradient(135deg,#7c3aed,#a78bfa);border-radius:20px;padding:20px;margin-bottom:14px;color:#fff">';
+    h+='<div style="font-size:11px;font-weight:700;opacity:.7;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Résultat net AFRIM PAY</div>';
+    h+='<div style="font-size:32px;font-weight:800;margin-bottom:4px">'+F(netAfrim)+'</div>';
+    h+='<div style="font-size:11px;opacity:.7">Gains − charges — toutes opérations</div>';
+    h+='<button id="mc-btn-virer-afrim" style="margin-top:14px;width:100%;background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:12px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">&#128184; Virer ces fonds</button>';
+    h+='</div>';
+    // ── Tableau P&L détaillé
     h+='<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:16px;margin-bottom:14px">';
     h+='<div style="font-size:13px;font-weight:800;margin-bottom:14px">&#128200; Détail du calcul</div>';
     // Produits
@@ -9418,7 +9420,7 @@ async function chargerGainsSysteme(){
     // Résultat net
     h+='<div style="background:#f5f3ff;border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center">';
     h+='<div style="font-size:13px;font-weight:800;color:#7c3aed">Résultat net AFRIM PAY</div>';
-    h+='<div style="font-size:16px;font-weight:800;color:#7c3aed">'+F(ap.solde||0)+'</div></div>';
+    h+='<div style="font-size:16px;font-weight:800;color:#7c3aed">'+F(netAfrim)+'</div></div>';
     h+='</div>';
     h+='<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:16px;margin-bottom:14px">';
     h+='<div style="font-size:13px;font-weight:800;margin-bottom:14px">&#128197; Gains AFRIM PAY par période</div>';
@@ -9431,11 +9433,27 @@ async function chargerGainsSysteme(){
     h+='<div style="background:#f5f3ff;border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center">';
     h+='<div style="font-size:12px;font-weight:700;color:#7c3aed">Total depuis toujours</div>';
     h+='<div style="font-size:16px;font-weight:800;color:#7c3aed">'+F((apP.total||{}).total||0)+'</div></div></div>';
-    if(ap.courbe&&ap.courbe.length){
-      h+='<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:16px;margin-bottom:14px">';
-      h+='<div style="font-size:13px;font-weight:800;margin-bottom:12px">&#128202; Évolution ce mois</div>';
-      h+='<canvas id="mc-chart-ap" height="180"></canvas></div>';
-    }
+
+    // ── Courbe interactive avec filtres période + type
+    h+='<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:16px;margin-bottom:14px">';
+    h+='<div style="font-size:13px;font-weight:800;margin-bottom:12px">&#128202; Évolution des gains</div>';
+    // Filtres période
+    h+='<div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:6px">Période</div>';
+    h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">';
+    [{k:'7',l:'7 jours'},{k:'30',l:'Ce mois'},{k:'90',l:'3 mois'},{k:'365',l:'Année'}].forEach(function(p,i){
+      h+='<button onclick="mcApChartFilter(\'periode\',\''+p.k+'\')" id="mc-ap-p-'+p.k+'" style="padding:5px 12px;border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid '+(i===0?'#7c3aed':'#e5e7eb')+';background:'+(i===0?'#7c3aed':'#fff')+';color:'+(i===0?'#fff':'#374151')+'">'+p.l+'</button>';
+    });
+    h+='</div>';
+    // Filtres type
+    h+='<div style="font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:6px">Type</div>';
+    h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">';
+    [{k:'tous',l:'Tous'},{k:'retrait',l:'Retrait'},{k:'paiement',l:'Paiement marchand'}].forEach(function(t,i){
+      h+='<button onclick="mcApChartFilter(\'type\',\''+t.k+'\')" id="mc-ap-t-'+t.k+'" style="padding:5px 12px;border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid '+(i===0?'#7c3aed':'#e5e7eb')+';background:'+(i===0?'#7c3aed':'#fff')+';color:'+(i===0?'#fff':'#374151')+'">'+t.l+'</button>';
+    });
+    h+='</div>';
+    h+='<canvas id="mc-chart-ap" height="180"></canvas>';
+    h+='</div>';
+
     if(ap.parType&&ap.parType.length){
       var apTotType=(apP.total||{}).total||1;
       h+='<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:16px;margin-bottom:14px">';
@@ -9564,9 +9582,13 @@ async function chargerGainsSysteme(){
     h+='</div>';
 
     wrap.innerHTML=h;
-    document.getElementById('mc-btn-virer-afrim').onclick=function(){ouvrirVirerAfrimPay(ap.solde||0);};
+    document.getElementById('mc-btn-virer-afrim').onclick=function(){ouvrirVirerAfrimPay(netAfrim);};
+
+    // Sauvegarder les données pour la courbe interactive
+    window._mcApData=d;
 
     setTimeout(function(){
+      mcDrawApChart();
       mcUpdateChart('init','init');
     }, 80);
 
@@ -9806,6 +9828,55 @@ function mcShowTab(tab){
 }
 
 // Sheet virer AFRIM PAY (injection dynamique)
+// ── Courbe interactive gains AFRIM PAY ──
+var _mcApPeriode='7', _mcApType='tous';
+function mcApChartFilter(dim, val){
+  if(dim==='periode') _mcApPeriode=val;
+  else _mcApType=val;
+  ['7','30','90','365'].forEach(function(k){
+    var b=document.getElementById('mc-ap-p-'+k);
+    if(b){b.style.background=k===_mcApPeriode?'#7c3aed':'#fff';b.style.color=k===_mcApPeriode?'#fff':'#374151';b.style.borderColor=k===_mcApPeriode?'#7c3aed':'#e5e7eb';}
+  });
+  ['tous','retrait','paiement'].forEach(function(k){
+    var b=document.getElementById('mc-ap-t-'+k);
+    if(b){b.style.background=k===_mcApType?'#7c3aed':'#fff';b.style.color=k===_mcApType?'#fff':'#374151';b.style.borderColor=k===_mcApType?'#7c3aed':'#e5e7eb';}
+  });
+  mcDrawApChart();
+}
+function mcDrawApChart(){
+  var d=window._mcApData||{};
+  var ap=d.afrimPay||{};
+  var courbe=ap.courbe||[];
+  var jours=Number(_mcApPeriode)||7;
+  var now=new Date();
+  var debut=new Date(now); debut.setDate(debut.getDate()-(jours-1)); debut.setHours(0,0,0,0);
+  var labels=[],retVals=[],payVals=[];
+  for(var i=0;i<jours;i++){
+    var dd=new Date(debut); dd.setDate(dd.getDate()+i);
+    var yy=dd.getFullYear(),mm=String(dd.getMonth()+1).padStart(2,'0'),dj=String(dd.getDate()).padStart(2,'0');
+    var key=yy+'-'+mm+'-'+dj;
+    if(jours<=30) labels.push(dd.getDate()+'');
+    else if(jours<=90) labels.push(dd.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}));
+    else labels.push(dd.toLocaleDateString('fr-FR',{month:'short'}));
+    var retV=0,payV=0;
+    courbe.forEach(function(r){
+      if(String(r.jour).substring(0,10)===key){
+        var t=(r.type_commission||r.type||'');
+        if(t.indexOf('retrait')>-1) retV+=Number(r.total||0);
+        else if(t.indexOf('paiement')>-1) payV+=Number(r.total||0);
+      }
+    });
+    retVals.push(retV); payVals.push(payV);
+  }
+  var canvas=document.getElementById('mc-chart-ap');
+  if(!canvas||typeof Chart==='undefined') return;
+  if(canvas._chartInst){canvas._chartInst.destroy();canvas._chartInst=null;}
+  var datasets=[];
+  if(_mcApType==='tous'||_mcApType==='retrait') datasets.push({label:'Retrait',data:retVals,borderColor:'#7c3aed',backgroundColor:'#7c3aed22',borderWidth:2.5,tension:.3,pointRadius:3,fill:false});
+  if(_mcApType==='tous'||_mcApType==='paiement') datasets.push({label:'Paiement marchand',data:payVals,borderColor:'#f59e0b',backgroundColor:'#f59e0b22',borderWidth:2.5,tension:.3,pointRadius:3,fill:false});
+  canvas._chartInst=new Chart(canvas,{type:'line',data:{labels:labels,datasets:datasets},options:{responsive:true,plugins:{legend:{display:datasets.length>1,position:'bottom',labels:{font:{size:11},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{font:{size:10},maxTicksLimit:10}},y:{grid:{color:'#f3f4f6'},ticks:{font:{size:10},callback:function(v){return v>=1000?(v/1000).toFixed(1)+'k':v;}}}}}});
+}
+
 function ouvrirVirerAfrimPay(soldDisp){
   _mcData.soldeAfrimPay=soldDisp;
   document.getElementById('mc-virer-afrim-solde').textContent=F(soldDisp);

@@ -9403,7 +9403,7 @@ async function chargerGainsSysteme(){
     h+='<div style="font-size:13px;font-weight:800;margin-bottom:14px">&#128200; Détail du calcul</div>';
     // Produits
     h+='<div style="font-size:10px;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">+ Produits (gains)</div>';
-    h+=pnlLigne('Frais retraits (65% après agents)',pnl.gains_retrait||0,pnl.gains_retrait_nb||0,'#7c3aed','+');
+    h+=pnlLigne('Frais retraits (100% − réseau)',pnl.gains_retrait||0,pnl.gains_retrait_nb||0,'#7c3aed','+');
     h+=pnlLigne('Frais paiements marchands (100% − réseau)',pnl.gains_paiement||0,pnl.gains_paiement_nb||0,'#7c3aed','+');
     h+='<div style="display:flex;justify-content:space-between;padding:8px 0;margin-bottom:10px;border-top:2px solid #7c3aed22">';
     h+='<div style="font-size:12px;font-weight:800;color:#7c3aed">Sous-total gains</div>';

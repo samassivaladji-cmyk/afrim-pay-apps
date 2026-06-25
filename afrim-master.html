@@ -146,7 +146,7 @@ body{min-height:100vh;background:var(--bg);font-family:-apple-system,BlinkMacSys
         <button onclick="openSh('retrait')" style="background:#fff7ed;border:1px solid #fed7aa;border-radius:14px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;border:none">
           <div style="width:44px;height:44px;border-radius:12px;background:#ffedd5;display:flex;align-items:center;justify-content:center;font-size:22px">↑</div>
           <div style="font-size:12px;font-weight:700;color:#c2410c">Retrait Client</div>
-          <div style="font-size:10px;color:var(--m)">35% des frais</div>
+          <div style="font-size:10px;color:var(--m)">Commission journalière</div>
         </button>
         <button onclick="openSh('inscription')" style="background:var(--a3);border:1px solid #fde68a;border-radius:14px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;border:none">
           <div style="width:44px;height:44px;border-radius:12px;background:#fef9c3;display:flex;align-items:center;justify-content:center;font-size:22px">👤</div>
@@ -227,6 +227,11 @@ body{min-height:100vh;background:var(--bg);font-family:-apple-system,BlinkMacSys
   <div style="padding:16px 16px 100px">
     <div style="font-size:12px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Mon compte</div>
     <div id="prof-info" class="card" style="margin-bottom:16px;padding:4px 0"></div>
+    <button onclick="document.getElementById('sh-grille-comm').classList.add('on')" style="width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;background:#fff;border-radius:14px;border:1px solid #f3f4f6;cursor:pointer;font-family:inherit;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+      <div style="width:42px;height:42px;border-radius:12px;background:#f5f3ff;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📊</div>
+      <div style="text-align:left"><div style="font-size:14px;font-weight:700">Grille commissions</div><div style="font-size:12px;color:var(--m)">Paliers journaliers & taux réseau</div></div>
+      <svg style="margin-left:auto" width="18" height="18" fill="none" stroke="#d1d5db" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
     <button onclick="openSh('change-pin')" style="width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;background:#fff;border-radius:14px;border:1px solid #f3f4f6;cursor:pointer;font-family:inherit;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
       <div style="width:42px;height:42px;border-radius:12px;background:#fef3c7;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🔐</div>
       <div style="text-align:left"><div style="font-size:14px;font-weight:700">Modifier le PIN</div><div style="font-size:12px;color:var(--m)">Changer votre code secret</div></div>
@@ -293,9 +298,9 @@ body{min-height:100vh;background:var(--bg);font-family:-apple-system,BlinkMacSys
 <!-- SHEET RETRAIT -->
 <div class="sh-ov" id="sh-retrait">
   <div class="sh"><div class="sh-bar"></div>
-    <div class="sh-top"><div><div class="sh-title">Retrait Client</div><div style="color:var(--m);font-size:12px">Vous recevez 35% des frais</div></div><button class="sh-x" onclick="closeSh('retrait');rstOp('ret')">✕</button></div>
+    <div class="sh-top"><div><div class="sh-title">Retrait Client</div><div style="color:var(--m);font-size:12px">Vous recevez Commission journalière</div></div><button class="sh-x" onclick="closeSh('retrait');rstOp('ret')">✕</button></div>
     <div class="sh-body">
-      <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#92400e;font-weight:500">Frais de retrait : 1% fixe. Vous recevez 35% des frais.</div>
+      <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#92400e;font-weight:500">Frais de retrait : 1% fixe. Vous recevez Commission journalière.</div>
       <div id="ret-s1">
         <div id="ret-err1" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:13px"></div>
         <label class="lbl">Numero du client</label>
@@ -872,7 +877,7 @@ function calcDep(){
 function calcRet(){
   var v=Number(document.getElementById('ret-amt').value),ok=v>0;
   var taux=0.01;
-  var frais=Math.round(v*taux),gain=Math.round(frais*0.35);
+  var frais=Math.round(v*taux),gain=0;
   var recap=document.getElementById('ret-recap');recap.style.display=ok?'':'none';
   if(ok)recap.innerHTML='<div class="srow"><span style="color:var(--m);font-size:13px">Retrait</span><span style="font-weight:700">'+F(v)+'</span></div>'
     +'<div class="srow"><span style="color:var(--m);font-size:13px">Frais ('+Math.round(taux*1000)/10+'%)</span><span style="font-weight:700">'+F(frais)+'</span></div>'
@@ -903,7 +908,7 @@ async function doRetrait(){
   document.getElementById('ret-s2').style.display='none';document.getElementById('ret-loading').style.display='';
   try{
     var r=await apiPost('/transactions/withdraw',{telephone:opClients.ret.tel,montant:amt});
-    var taux=0.01;var frais=Math.round(amt*taux);var gain=Math.round(frais*0.35);
+    var taux=0.01;var frais=Math.round(amt*taux);var gain=0;
     document.getElementById('ret-loading').style.display='none';document.getElementById('ret-success').style.display='';
     document.getElementById('ret-succ-txt').textContent=F(amt)+' remis a '+opClients.ret.tel;
     document.getElementById('ret-succ-gain').textContent='Commission : +'+F(gain);
@@ -1052,5 +1057,35 @@ document.querySelectorAll('.sh-ov').forEach(function(el){el.addEventListener('cl
   showScr('s-login');
 })();
 </script>
+
+<!-- SHEET GRILLE COMMISSIONS JOURNALIÈRES -->
+<div class="sh-ov" id="sh-grille-comm" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="sh" style="max-height:88vh;overflow-y:auto">
+    <div class="sh-bar"></div>
+    <div class="sh-top">
+      <div><div class="sh-title">Grille commissions</div><div style="color:var(--m);font-size:12px">Volume journalier dépôts + retraits</div></div>
+      <button class="sh-x" onclick="document.getElementById('sh-grille-comm').classList.remove('on')">✕</button>
+    </div>
+    <div style="padding:0 16px 24px">
+      <div style="font-size:12px;color:#6b7280;margin-bottom:14px">Votre commission est calculée une fois par jour selon votre volume total (dépôts + retraits effectués). Elle est disponible à virer manuellement vers votre compte.</div>
+      <div style="border-radius:14px;overflow:hidden;border:1px solid #e5e7eb;margin-bottom:14px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;background:#f9fafb;padding:9px 14px;font-size:10px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #e5e7eb">
+          <div>Volume journalier</div><div style="text-align:right">Commission</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">1 – 9 999</div><div style="text-align:right;color:#16a34a;font-weight:700">75 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">10 000 – 99 999</div><div style="text-align:right;color:#16a34a;font-weight:700">300 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">100 000 – 249 999</div><div style="text-align:right;color:#16a34a;font-weight:700">700 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">250 000 – 499 999</div><div style="text-align:right;color:#16a34a;font-weight:700">1 200 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">500 000 – 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">2 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">1 000 000 – 1 499 999</div><div style="text-align:right;color:#16a34a;font-weight:700">3 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">1 500 000 – 1 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">3 800 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">2 000 000 – 2 499 999</div><div style="text-align:right;color:#16a34a;font-weight:700">4 500 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">2 500 000 – 2 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">5 200 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">3 000 000 – 3 499 999</div><div style="text-align:right;color:#16a34a;font-weight:700">5 900 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">3 500 000 – 3 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">6 600 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">4 000 000 – 4 499 999</div><div style="text-align:right;color:#16a34a;font-weight:700">7 400 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">4 500 000 – 4 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">8 200 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">5 000 000 – 5 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">9 500 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">6 000 000 – 6 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">11 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">7 000 000 – 7 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">12 500 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">8 000 000 – 8 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">14 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">9 000 000 – 9 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">15 500 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">10 000 000 – 14 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">20 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">15 000 000 – 19 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">26 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">20 000 000 – 24 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">33 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">25 000 000 – 29 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">40 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">≥ 30 000 000</div><div style="text-align:right;color:#16a34a;font-weight:700">50 000 F</div></div>
+      </div>
+      <div style="background:#f5f3ff;border:1px solid #e9d5ff;border-radius:12px;padding:12px 14px;font-size:12px;color:#6d28d9">
+        <div style="font-weight:800;margin-bottom:6px">📊 Commissions réseau (sur frais retraits du réseau)</div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Mini-Master</span><span style="font-weight:700">1% des frais</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Master</span><span style="font-weight:700">2% des frais</span></div>
+        <div style="margin-top:8px;font-weight:800;margin-bottom:6px">🛒 Paiement marchand (frais réseau)</div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Mini-Master</span><span style="font-weight:700">1% des frais</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Master</span><span style="font-weight:700">1% des frais</span></div>
+        <div style="margin-top:8px;font-weight:800;margin-bottom:6px">🤝 Parrainage (frais retraits filleuls)</div>
+        <div style="display:flex;justify-content:space-between"><span>Tous rôles</span><span style="font-weight:700">5% des frais</span></div>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>

@@ -1332,7 +1332,23 @@ async function chargerCommissions(){
     var virements=results[1].data||[];
 
     // Commissions actuelles = statut 'verse' (non encore virées)
-    var allDepRet=all.filter(function(c){return c.type_commission==='commission_journaliere'||c.type_commission==='parrainage';});
+    // Les commission_journaliere sont visibles seulement à partir de J+1 midi (12h00)
+    var maintenant=new Date();
+    var hier=new Date(maintenant); hier.setDate(hier.getDate()-1); hier.setHours(0,0,0,0);
+    var seuilVisibilite=new Date(maintenant); seuilVisibilite.setDate(seuilVisibilite.getDate()-1); seuilVisibilite.setHours(12,0,0,0);
+    var estApresSeuilJ1=maintenant>=seuilVisibilite;
+
+    var allDepRet=all.filter(function(c){
+      if(c.type_commission==='commission_journaliere'){
+        // Visible seulement si la commission date d'hier ou avant, ET si on est après midi aujourd'hui
+        var dateComm=new Date(c.date_calcul||0);
+        var dateJ=new Date(dateComm); dateJ.setHours(0,0,0,0);
+        var today=new Date(maintenant); today.setHours(0,0,0,0);
+        if(dateJ>=today) return false; // commission d'aujourd'hui : pas encore visible
+        return true;
+      }
+      return c.type_commission==='parrainage';
+    });
     var disponible=allDepRet.filter(function(c){return c.statut==='verse';}).reduce(function(s,c){return s+Number(c.montant||0);},0);
 
     // Commissions sur la période sélectionnée (toutes, peu importe statut)
@@ -2631,12 +2647,8 @@ function ouvrirScreenDepot(client){
 function calcSopDep(){
   var amt=Number(document.getElementById('sop-dep-amt').value)||0;
   var btn=document.getElementById('sop-dep-btn');
-  if(amt>0){
-    var comm=0; // Commission journalière, pas par transaction
-    document.getElementById('sop-dep-comm').textContent='+'+F(comm)+' FCFA';
-    document.getElementById('sop-dep-calc').style.display='';
-    btn.disabled=false;btn.style.opacity='1';
-  }else{document.getElementById('sop-dep-calc').style.display='none';btn.disabled=true;btn.style.opacity='.4';}
+  if(amt>0){btn.disabled=false;btn.style.opacity='1';}
+  else{btn.disabled=true;btn.style.opacity='.4';}
 }
 async function doSopDepot(){
   var client=_sopClient.dep;if(!client)return;
@@ -2686,10 +2698,9 @@ function calcSopRet(){
   var btn=document.getElementById('sop-ret-btn1');
   if(amt>0){
     var taux=0.01;
-    var frais=Math.round(amt*taux);var comm=Math.round(frais*0.35);var total=amt+frais;
-    document.getElementById('sop-ret-frais').textContent=F(frais);
-    document.getElementById('sop-ret-comm').textContent='+'+F(comm);
-    document.getElementById('sop-ret-total').textContent=F(total);
+    var frais=Math.round(amt*taux);var total=amt+frais;
+    document.getElementById('sop-ret-frais').textContent=F(frais)+' FCFA';
+    document.getElementById('sop-ret-total').textContent=F(total)+' FCFA';
     document.getElementById('sop-ret-calc').style.display='';
     btn.disabled=false;btn.style.opacity='1';
   }else{document.getElementById('sop-ret-calc').style.display='none';btn.disabled=true;btn.style.opacity='.4';}
@@ -2833,19 +2844,7 @@ function nouveauSopRet(){if(_sopClient.ret)ouvrirScreenRetrait(_sopClient.ret);e
         <div style="display:grid;grid-template-columns:1fr 1fr;background:#f9fafb;padding:9px 14px;font-size:10px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #e5e7eb">
           <div>Volume journalier</div><div style="text-align:right">Commission</div>
         </div>
-        ${[
-          ['1 – 9 999','75 F'],['10 000 – 99 999','300 F'],['100 000 – 249 999','700 F'],
-          ['250 000 – 499 999','1 200 F'],['500 000 – 999 999','2 000 F'],
-          ['1 000 000 – 1 499 999','3 000 F'],['1 500 000 – 1 999 999','3 800 F'],
-          ['2 000 000 – 2 499 999','4 500 F'],['2 500 000 – 2 999 999','5 200 F'],
-          ['3 000 000 – 3 499 999','5 900 F'],['3 500 000 – 3 999 999','6 600 F'],
-          ['4 000 000 – 4 499 999','7 400 F'],['4 500 000 – 4 999 999','8 200 F'],
-          ['5 000 000 – 5 999 999','9 500 F'],['6 000 000 – 6 999 999','11 000 F'],
-          ['7 000 000 – 7 999 999','12 500 F'],['8 000 000 – 8 999 999','14 000 F'],
-          ['9 000 000 – 9 999 999','15 500 F'],['10 000 000 – 14 999 999','20 000 F'],
-          ['15 000 000 – 19 999 999','26 000 F'],['20 000 000 – 24 999 999','33 000 F'],
-          ['25 000 000 – 29 999 999','40 000 F'],['≥ 30 000 000','50 000 F']
-        ].map(function(r,i){return '<div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:'+(i%2===0?'#fff':'#f9fafb')+';border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">'+r[0]+'</div><div style="text-align:right;color:#16a34a;font-weight:700">'+r[1]+'</div></div>';}).join('')}
+        <div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">1 – 9 999</div><div style="text-align:right;color:#16a34a;font-weight:700">75 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">10 000 – 99 999</div><div style="text-align:right;color:#16a34a;font-weight:700">300 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">100 000 – 249 999</div><div style="text-align:right;color:#16a34a;font-weight:700">700 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">250 000 – 499 999</div><div style="text-align:right;color:#16a34a;font-weight:700">1 200 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">500 000 – 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">2 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">1 000 000 – 1 499 999</div><div style="text-align:right;color:#16a34a;font-weight:700">3 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">1 500 000 – 1 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">3 800 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">2 000 000 – 2 499 999</div><div style="text-align:right;color:#16a34a;font-weight:700">4 500 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">2 500 000 – 2 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">5 200 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">3 000 000 – 3 499 999</div><div style="text-align:right;color:#16a34a;font-weight:700">5 900 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">3 500 000 – 3 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">6 600 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">4 000 000 – 4 499 999</div><div style="text-align:right;color:#16a34a;font-weight:700">7 400 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">4 500 000 – 4 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">8 200 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">5 000 000 – 5 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">9 500 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">6 000 000 – 6 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">11 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">7 000 000 – 7 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">12 500 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">8 000 000 – 8 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">14 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">9 000 000 – 9 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">15 500 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">10 000 000 – 14 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">20 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">15 000 000 – 19 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">26 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">20 000 000 – 24 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">33 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">25 000 000 – 29 999 999</div><div style="text-align:right;color:#16a34a;font-weight:700">40 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1fr;padding:9px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">≥ 30 000 000</div><div style="text-align:right;color:#16a34a;font-weight:700">50 000 F</div></div>
       </div>
 
       <!-- Rappel plafonds KYC -->
@@ -2918,13 +2917,7 @@ function nouveauSopRet(){if(_sopClient.ret)ouvrirScreenRetrait(_sopClient.ret);e
       <button class="chip" onclick="setSopAmt('dep',50000)">50K</button>
     </div>
 
-    <!-- Calcul commission -->
-    <div id="sop-dep-calc" style="display:none;background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;padding:16px;margin-bottom:24px">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="color:#6b7280;font-size:13px">Commission dépôt</span>
-        <span style="color:#16a34a;font-weight:800;font-size:15px" id="sop-dep-comm">—</span>
-      </div>
-    </div>
+    <!-- Calcul commission supprimé — commission journalière -->
 
     <div id="sop-dep-err" style="display:none;color:#dc2626;font-size:13px;text-align:center;margin-bottom:16px"></div>
     <div id="sop-dep-loading" style="display:none;text-align:center;padding:20px"><div class="spin" style="width:32px;height:32px;border-width:3px;border-top-color:#22c55e"></div></div>
@@ -2996,8 +2989,7 @@ function nouveauSopRet(){if(_sopClient.ret)ouvrirScreenRetrait(_sopClient.ret);e
         <button class="chip" onclick="setSopAmt('ret',50000)">50K</button>
       </div>
       <div id="sop-ret-calc" style="display:none;background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;padding:14px;margin-bottom:20px">
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:#6b7280;font-size:13px">Frais de retrait</span><span style="font-weight:700;font-size:13px" id="sop-ret-frais">—</span></div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:#6b7280;font-size:13px">Commission agent (35%)</span><span style="color:#16a34a;font-weight:800;font-size:13px" id="sop-ret-comm">—</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:#6b7280;font-size:13px">Frais de retrait (1%)</span><span style="font-weight:700;font-size:13px" id="sop-ret-frais">—</span></div>
         <div style="display:flex;justify-content:space-between;border-top:1px solid #f3f4f6;padding-top:8px"><span style="font-weight:700;font-size:13px">Total d&#233;bit&#233;</span><span style="font-weight:800;font-size:14px;color:#dc2626" id="sop-ret-total">—</span></div>
       </div>
       <div id="sop-ret-err1" style="display:none;color:#dc2626;font-size:13px;text-align:center;margin-bottom:14px"></div>

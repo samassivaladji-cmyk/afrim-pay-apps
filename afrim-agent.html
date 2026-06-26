@@ -877,8 +877,32 @@ async function doInscrire(){
 // ══ OPÉRATIONS DÉPÔT / RETRAIT ════════════════════════════════════
 var opClients={dep:null,ret:null};
 
-function ouvrirDepot(){closeSh('choix-op');rstOp('dep');openSh('depot');}
-function ouvrirRetrait(){closeSh('choix-op');rstOp('ret');openSh('retrait');}
+function ouvrirDepot(){
+  closeSh('choix-op');
+  ouvrirPopupQR(function(tel){
+    (async function(){
+      try{
+        var r=await get('/users?telephone='+encodeURIComponent(tel)+'&limit=1');
+        var arr=Array.isArray(r.data)?r.data:[r.data];
+        if(!arr.length||!arr[0])throw new Error('Client introuvable');
+        ouvrirScreenDepot(arr[0]);
+      }catch(e){T(e.message,true);}
+    })();
+  });
+}
+function ouvrirRetrait(){
+  closeSh('choix-op');
+  ouvrirPopupQR(function(tel){
+    (async function(){
+      try{
+        var r=await get('/users?telephone='+encodeURIComponent(tel)+'&limit=1');
+        var arr=Array.isArray(r.data)?r.data:[r.data];
+        if(!arr.length||!arr[0])throw new Error('Client introuvable');
+        ouvrirScreenRetrait(arr[0]);
+      }catch(e){T(e.message,true);}
+    })();
+  });
+}
 
 function onTelInput(op){
   var v=document.getElementById(op+'-tel').value.replace(/\D/g,'');
@@ -1137,7 +1161,7 @@ async function chargerAccueil(){
   // Charger txns APRÈS que G.compte est défini
   chargerTxns();
 }
-function rafraichir(){chargerAccueil();}
+async function rafraichir(){await chargerAccueil();}
 
 // ── Son de notification ──
 var _audioCtxA=null;
@@ -2360,15 +2384,7 @@ function ouvrirTransfertAvecClient(){
   },300);
 }
 
-function ouvrirTransfertAvecClient(){
-  if(!_scannedClient) return;
-  closeSh('choix-op');
-  setTimeout(function(){
-    rstTrf();
-    openSh('transfert');
-    document.getElementById('trf-tel').value = _scannedClient.telephone||'';
-  },300);
-}
+
 
 function ouvrirRetraitAvecClient(){
   var client=_scannedClient||opClients['scan']||opClients['choix'];if(!client)return;
@@ -2666,7 +2682,7 @@ async function doSopDepot(){
     document.getElementById('sop-dep-ok-txt').textContent='Dépôt de '+F(amt)+' FCFA pour '+(client.prenom||'')+' '+(client.nom||'');
     document.getElementById('sop-dep-ok-gain').textContent=d.gainAgent?'Commission : +'+F(d.gainAgent)+' FCFA':'';
     document.getElementById('sop-dep-ok-ref').textContent=d.reference||'';
-    S('s-op-depot-ok');rafraichir();
+    rafraichir();S('s-op-depot-ok');
   }catch(e){
     loading.style.display='none';btn.disabled=false;btn.style.opacity='1';
     err.textContent=e.message;err.style.display='';
@@ -2751,7 +2767,7 @@ async function confirmerOTPSop(){
     document.getElementById('sop-ret-ok-txt').textContent='Retrait de '+F(d.montant||0)+' FCFA pour '+(client.prenom||'')+' '+(client.nom||'');
     document.getElementById('sop-ret-ok-gain').textContent=d.gainAgent?'Commission : +'+F(d.gainAgent)+' FCFA':'';
     document.getElementById('sop-ret-ok-ref').textContent=d.reference||'';
-    S('s-op-retrait-ok');rafraichir();
+    rafraichir();S('s-op-retrait-ok');
   }catch(e){
     loading.style.display='none';btn.disabled=false;btn.textContent='Confirmer';
     err.textContent=e.message;err.style.display='';

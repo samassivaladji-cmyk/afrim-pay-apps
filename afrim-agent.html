@@ -1338,13 +1338,22 @@ async function chargerCommissions(){
     var seuilVisibilite=new Date(maintenant); seuilVisibilite.setDate(seuilVisibilite.getDate()-1); seuilVisibilite.setHours(12,0,0,0);
     var estApresSeuilJ1=maintenant>=seuilVisibilite;
 
+    // Commission en_attente du jour (visible en temps réel, non retirable)
+    var today0=new Date(maintenant); today0.setHours(0,0,0,0);
+    var commJour=all.filter(function(c){
+      if(c.type_commission!=='commission_journaliere'||c.statut!=='en_attente') return false;
+      var d=new Date(c.date_calcul||0); d.setHours(0,0,0,0);
+      return d.getTime()===today0.getTime();
+    });
+    var montantJour=commJour.reduce(function(s,c){return s+Number(c.montant||0);},0);
+    // Volume du jour (pour afficher le palier)
+    var volumeJour=0;
+    try{ var vr=await get('/commissions/volume-jour'); volumeJour=vr.data||0; }catch(ev){}
+
+    // Commissions virables (verse, J-1 et avant)
     var allDepRet=all.filter(function(c){
       if(c.type_commission==='commission_journaliere'){
-        // Visible seulement si la commission date d'hier ou avant, ET si on est après midi aujourd'hui
-        var dateComm=new Date(c.date_calcul||0);
-        var dateJ=new Date(dateComm); dateJ.setHours(0,0,0,0);
-        var today=new Date(maintenant); today.setHours(0,0,0,0);
-        if(dateJ>=today) return false; // commission d'aujourd'hui : pas encore visible
+        if(c.statut==='en_attente') return false; // pas encore retirable
         return true;
       }
       return c.type_commission==='parrainage';
@@ -1360,6 +1369,53 @@ async function chargerCommissions(){
     var tTotal=tDep+tRet;
     var tTotalAll=allDepRet.reduce(function(s,c){return s+Number(c.montant||0);},0);
     var h='';
+
+    // ── Commission du jour en cours ──
+    (function(){
+      var paliers=[
+        {min:500,max:9999,comm:20},{min:10000,max:19999,comm:55},{min:20000,max:49999,comm:125},
+        {min:50000,max:74999,comm:220},{min:75000,max:99999,comm:300},{min:100000,max:199999,comm:800},
+        {min:200000,max:299999,comm:1200},{min:300000,max:399999,comm:2100},{min:400000,max:599999,comm:2200},
+        {min:600000,max:799999,comm:2800},{min:800000,max:999999,comm:2950},{min:1000000,max:1499999,comm:3750},
+        {min:1500000,max:1999999,comm:4500},{min:2000000,max:2499999,comm:5500},{min:2500000,max:2999999,comm:5850},
+        {min:3000000,max:3499999,comm:6800},{min:3500000,max:3999999,comm:7200},{min:4000000,max:4499999,comm:7650},
+        {min:4500000,max:4999999,comm:8550},{min:5000000,max:5999999,comm:9600},{min:6000000,max:6999999,comm:11000},
+        {min:7000000,max:7999999,comm:12500},{min:8000000,max:9999999,comm:14000},{min:10000000,max:14999999,comm:22000},
+        {min:15000000,max:19999999,comm:28000},{min:20000000,max:24999999,comm:33000},{min:25000000,max:Infinity,comm:42000}
+      ];
+      var palierActuel=paliers.find(function(p){return volumeJour>=p.min&&volumeJour<=p.max;});
+      var palierSuivant=palierActuel?paliers[paliers.indexOf(palierActuel)+1]:null;
+      var resteProchain=palierSuivant?Math.max(0,palierSuivant.min-volumeJour):0;
+      var progPct=0;
+      if(palierActuel&&palierSuivant){
+        progPct=Math.round((volumeJour-palierActuel.min)/(palierSuivant.min-palierActuel.min)*100);
+        progPct=Math.min(100,Math.max(0,progPct));
+      } else if(palierActuel&&!palierSuivant) progPct=100;
+
+      var retirableAMinuit='<span style="font-size:10px;color:#92400e;background:#fef3c7;border-radius:6px;padding:2px 7px;font-weight:700">🔒 Retirable à minuit</span>';
+      h+='<div style="background:linear-gradient(135deg,#fef3c7,#fde68a);border:2px solid #f59e0b;border-radius:18px;padding:16px 18px;margin-bottom:14px">'
+        +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">'
+        +'<div>'
+        +'<div style="font-size:10px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.05em">COMMISSION DU JOUR</div>'
+        +'<div style="font-size:28px;font-weight:900;color:#b45309;line-height:1.1">'+(montantJour>0?'+'+F(montantJour)+' FCFA':'0 FCFA')+'</div>'
+        +'<div style="margin-top:4px">'+retirableAMinuit+'</div>'
+        +'</div>'
+        +'<div style="text-align:right">'
+        +'<div style="font-size:9px;color:#92400e;opacity:.7">Volume du jour</div>'
+        +'<div style="font-size:14px;font-weight:800;color:#92400e">'+F(volumeJour)+'</div>'
+        +'</div>'
+        +'</div>'
+        // Barre de progression vers palier suivant
+        +(palierActuel
+          ?'<div style="background:rgba(0,0,0,.1);border-radius:99px;height:7px;margin-bottom:6px"><div style="background:#d97706;border-radius:99px;height:7px;width:'+progPct+'%;transition:width .4s"></div></div>'
+           +'<div style="display:flex;justify-content:space-between;font-size:10px;color:#92400e">'
+           +'<span>Palier actuel : +'+F(palierActuel.comm)+' FCFA</span>'
+           +(palierSuivant?'<span>Prochain : +'+F(palierSuivant.comm)+' FCFA (-'+F(resteProchain)+' restants)</span>':'<span>✅ Palier max atteint</span>')
+           +'</div>'
+          :'<div style="font-size:11px;color:#92400e;opacity:.7">Aucune opération ce jour — premier palier à partir de 500 FCFA de volume</div>'
+        )
+        +'</div>';
+    })();
 
     // ── Carte résumé ──
     h+='<div style="background:linear-gradient(135deg,#b45309,#d97706);border-radius:18px;padding:18px 20px;margin-bottom:14px;color:#fff">'

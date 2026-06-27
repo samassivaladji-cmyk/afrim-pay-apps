@@ -1360,14 +1360,34 @@ async function chargerCommissions(){
     });
     var disponible=allDepRet.filter(function(c){return c.statut==='verse';}).reduce(function(s,c){return s+Number(c.montant||0);},0);
 
-    // Commissions sur la période sélectionnée (toutes, peu importe statut)
-    var comms=allDepRet.filter(function(c){return new Date(c.date_calcul||0)>=d1;});
-    var depC=comms.filter(function(c){return c.type_commission==='commission_journaliere';});
-    var retC=comms.filter(function(c){return false;});
-    var tDep=depC.reduce(function(s,c){return s+Number(c.montant||0);},0);
-    var tRet=retC.reduce(function(s,c){return s+Number(c.montant||0);},0);
-    var tTotal=tDep+tRet;
+    // Calculs par période pour les 4 cases
+    var now2=new Date();
+    function debutPeriode(p){
+      var d=new Date(now2);
+      if(p==='hier'){d.setDate(d.getDate()-1);d.setHours(0,0,0,0);return d;}
+      if(p==='semaine'){d.setDate(d.getDate()-d.getDay());d.setHours(0,0,0,0);return d;}
+      if(p==='mois')return new Date(now2.getFullYear(),now2.getMonth(),1);
+      if(p==='annee')return new Date(now2.getFullYear(),0,1);
+      return new Date(0);
+    }
+    function finPeriode(p){
+      if(p==='hier'){var d=new Date(now2);d.setDate(d.getDate()-1);d.setHours(23,59,59,999);return d;}
+      return new Date(now2);
+    }
+    function sumPeriode(p){
+      var d1=debutPeriode(p), d2=finPeriode(p);
+      return allDepRet.filter(function(c){
+        var d=new Date(c.date_calcul||0);
+        return d>=d1&&d<=d2;
+      }).reduce(function(s,c){return s+Number(c.montant||0);},0);
+    }
+    var tHier=sumPeriode('hier');
+    var tSemaine=sumPeriode('semaine');
+    var tMois=sumPeriode('mois');
+    var tAnnee=sumPeriode('annee');
     var tTotalAll=allDepRet.reduce(function(s,c){return s+Number(c.montant||0);},0);
+    // Pour le détail on garde la période sélectionnée
+    var comms=allDepRet.filter(function(c){return new Date(c.date_calcul||0)>=debutPeriode(commPeriod==='day'?'hier':commPeriod);});
     var h='';
 
     // ── Commission du jour en cours ──
@@ -1417,24 +1437,25 @@ async function chargerCommissions(){
         +'</div>';
     })();
 
-    // ── Carte résumé ──
-    h+='<div style="background:linear-gradient(135deg,#b45309,#d97706);border-radius:18px;padding:18px 20px;margin-bottom:14px;color:#fff">'
-      +'<div style="font-size:10px;font-weight:700;opacity:.7;text-transform:uppercase;margin-bottom:2px">COMMISSIONS — CETTE P&#201;RIODE</div>'
-      +'<div style="font-size:32px;font-weight:900;margin-bottom:8px">'+F(tTotal)+'</div>'
-      +'<div style="display:flex;gap:8px">'
-      +'<div style="flex:1;background:rgba(0,0,0,.18);border-radius:10px;padding:10px;text-align:center">'
-      +'<div style="font-size:9px;opacity:.7;text-transform:uppercase;margin-bottom:3px">↓ D&#233;p&#244;ts</div>'
-      +'<div style="font-size:15px;font-weight:900">'+F(tDep)+'</div>'
-      +'<div style="font-size:8px;opacity:.6;margin-top:2px">'+depC.length+' ops</div>'
+    // ── 4 cases Hier / Semaine / Mois / Année ──
+    function caseComm(label, val){
+      return '<div style="flex:1;min-width:calc(50% - 5px);background:rgba(0,0,0,.18);border-radius:12px;padding:12px 10px;text-align:center">'
+        +'<div style="font-size:9px;opacity:.7;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">'+label+'</div>'
+        +'<div style="font-size:16px;font-weight:900">'+F(val)+'</div>'
+        +'<div style="font-size:8px;opacity:.5;margin-top:1px">FCFA</div>'
+        +'</div>';
+    }
+    h+='<div style="background:linear-gradient(135deg,#b45309,#d97706);border-radius:18px;padding:16px 18px;margin-bottom:14px;color:#fff">'
+      +'<div style="font-size:10px;font-weight:700;opacity:.7;text-transform:uppercase;margin-bottom:10px;letter-spacing:.05em">MES COMMISSIONS</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">'
+      +caseComm('HIER',tHier)
+      +caseComm('CETTE SEMAINE',tSemaine)
+      +caseComm('CE MOIS',tMois)
+      +caseComm('CETTE ANN&#201;E',tAnnee)
       +'</div>'
-      +'<div style="flex:1;background:rgba(0,0,0,.18);border-radius:10px;padding:10px;text-align:center">'
-      +'<div style="font-size:9px;opacity:.7;text-transform:uppercase;margin-bottom:3px">↑ Retraits</div>'
-      +'<div style="font-size:15px;font-weight:900">'+F(tRet)+'</div>'
-      +'<div style="font-size:8px;opacity:.6;margin-top:2px">'+retC.length+' ops</div>'
-      +'</div></div>'
-      +'<div style="margin-top:8px;padding:8px 10px;background:rgba(0,0,0,.2);border-radius:8px;display:flex;justify-content:space-between;align-items:center">'
+      +'<div style="padding:8px 10px;background:rgba(0,0,0,.2);border-radius:8px;display:flex;justify-content:space-between;align-items:center">'
       +'<div style="font-size:10px;opacity:.8">Total depuis toujours</div>'
-      +'<div style="font-size:14px;font-weight:800">'+F(tTotalAll)+'</div>'
+      +'<div style="font-size:14px;font-weight:800">'+F(tTotalAll)+' FCFA</div>'
       +'</div>'
     +'</div>';
 

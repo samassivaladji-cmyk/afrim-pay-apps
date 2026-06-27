@@ -1350,15 +1350,11 @@ async function chargerCommissions(){
     var volumeJour=0;
     try{ var vr=await get('/commissions/volume-jour'); volumeJour=vr.data||0; }catch(ev){}
 
-    // Commissions virables (verse, J-1 et avant)
+    // Commissions virables = commission_journaliere verse uniquement (pas parrainage, pas en_attente)
     var allDepRet=all.filter(function(c){
-      if(c.type_commission==='commission_journaliere'){
-        if(c.statut==='en_attente') return false; // pas encore retirable
-        return true;
-      }
-      return c.type_commission==='parrainage';
+      return c.type_commission==='commission_journaliere' && c.statut==='verse';
     });
-    var disponible=allDepRet.filter(function(c){return c.statut==='verse';}).reduce(function(s,c){return s+Number(c.montant||0);},0);
+    var disponible=allDepRet.reduce(function(s,c){return s+Number(c.montant||0);},0);
 
     // Calculs par période pour les 4 cases
     var now2=new Date();
@@ -1376,7 +1372,9 @@ async function chargerCommissions(){
     }
     function sumPeriode(p){
       var d1=debutPeriode(p), d2=finPeriode(p);
-      return allDepRet.filter(function(c){
+      // Compter toutes les commission_journaliere (verse + en_attente) pour les 4 cases historiques
+      return all.filter(function(c){
+        if(c.type_commission!=='commission_journaliere') return false;
         var d=new Date(c.date_calcul||0);
         return d>=d1&&d<=d2;
       }).reduce(function(s,c){return s+Number(c.montant||0);},0);
@@ -1385,7 +1383,7 @@ async function chargerCommissions(){
     var tSemaine=sumPeriode('semaine');
     var tMois=sumPeriode('mois');
     var tAnnee=sumPeriode('annee');
-    var tTotalAll=allDepRet.reduce(function(s,c){return s+Number(c.montant||0);},0);
+    var tTotalAll=all.filter(function(c){return c.type_commission==='commission_journaliere';}).reduce(function(s,c){return s+Number(c.montant||0);},0);
     // Pour le détail on garde la période sélectionnée
     var comms=allDepRet.filter(function(c){return new Date(c.date_calcul||0)>=debutPeriode(commPeriod==='day'?'hier':commPeriod);});
     var h='';

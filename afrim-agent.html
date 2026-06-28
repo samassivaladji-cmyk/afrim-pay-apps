@@ -432,6 +432,7 @@ function setTab(t){
     <div style="color:rgba(255,255,255,.8);font-size:13px">Analyse compl&#232;te de vos op&#233;rations</div>
     <div style="display:flex;gap:5px;margin-top:10px">
       <button id="stp-day" onclick="setStatPeriod('day')" style="background:transparent;border:1px solid rgba(255,255,255,.4);border-radius:20px;color:rgba(255,255,255,.8);font-size:10px;font-weight:700;padding:4px 8px;cursor:pointer">Auj.</button>
+      <button id="stp-yesterday" onclick="setStatPeriod('yesterday')" style="background:transparent;border:1px solid rgba(255,255,255,.4);border-radius:20px;color:rgba(255,255,255,.8);font-size:10px;font-weight:700;padding:4px 8px;cursor:pointer">Hier</button>
       <button id="stp-week" onclick="setStatPeriod('week')" style="background:transparent;border:1px solid rgba(255,255,255,.4);border-radius:20px;color:rgba(255,255,255,.8);font-size:10px;font-weight:700;padding:4px 8px;cursor:pointer">Semaine</button>
       <button id="stp-month" onclick="setStatPeriod('month')" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.8);border-radius:20px;color:#fff;font-size:10px;font-weight:700;padding:4px 8px;cursor:pointer">Mois</button>
       <button id="stp-year" onclick="setStatPeriod('year')" style="background:transparent;border:1px solid rgba(255,255,255,.4);border-radius:20px;color:rgba(255,255,255,.8);font-size:10px;font-weight:700;padding:4px 8px;cursor:pointer">Année</button>
@@ -1846,7 +1847,7 @@ var statTab='depot';
 
 function setStatPeriod(p){
   statPeriod=p;
-  ['day','week','month','year'].forEach(function(k){
+  ['day','yesterday','week','month','year'].forEach(function(k){
     var btn=document.getElementById('stp-'+k);
     if(!btn)return;
     var isOn=k===p;
@@ -1933,7 +1934,7 @@ function renderStatTab(){
     var vol=d.dep.vol,nb=d.dep.list.length;
     h+='<div style="background:linear-gradient(135deg,#15803d,#22c55e);border-radius:16px;padding:16px 18px;margin-bottom:14px;color:#fff">'
       +'<div style="font-size:10px;font-weight:700;opacity:.7;text-transform:uppercase;margin-bottom:4px">VOLUME D&#201;P&#212;TS</div>'
-      +'<div style="font-size:32px;font-weight:900">'+F(vol)+' <span style="font-size:13px;opacity:.7">FCFA</span></div>'
+      +'<div style="font-size:32px;font-weight:900">'+F(vol)+'</div>'
       +'<div style="font-size:12px;opacity:.8;margin-top:4px">'+nb+' op&#233;rations</div></div>';
     h+=drawCourbe(d.dep.courbe,'val','#22c55e','D&#233;p&#244;ts');
 
@@ -1990,7 +1991,7 @@ function renderStatTab(){
     var nbR=d.comm.list.filter(function(c){return false;}).length;
     h+='<div style="background:linear-gradient(135deg,#b45309,#d97706);border-radius:16px;padding:16px 18px;margin-bottom:14px;color:#fff">'
       +'<div style="font-size:10px;font-weight:700;opacity:.7;text-transform:uppercase;margin-bottom:4px">COMMISSIONS</div>'
-      +'<div style="font-size:32px;font-weight:900">'+F(vol)+' <span style="font-size:13px;opacity:.7">FCFA</span></div>'
+      +'<div style="font-size:32px;font-weight:900">'+F(vol)+'</div>'
       +'<div style="display:flex;gap:12px;margin-top:8px">'
       +'<div><div style="font-size:14px;font-weight:800">'+F(tDep)+'</div><div style="font-size:9px;opacity:.7">D&#233;p&#244;ts ('+nbD+')</div></div>'
       +'<div style="width:1px;background:rgba(255,255,255,.25)"></div>'
@@ -2018,12 +2019,13 @@ async function chargerStats(){
     var now=new Date();
     function debutPeriod(p){
       if(p==='day'){var d=new Date(now);d.setHours(0,0,0,0);return d;}
-      if(p==='week'){var d=new Date(now);d.setDate(d.getDate()-d.getDay());d.setHours(0,0,0,0);return d;}
+      if(p==='yesterday'){var d=new Date(now);d.setDate(d.getDate()-1);d.setHours(0,0,0,0);return d;}
+      if(p==='week'){var d=new Date(now);var _j=d.getDay();d.setDate(d.getDate()+(_j===0?-6:1-_j));d.setHours(0,0,0,0);return d;}
       if(p==='year')return new Date(now.getFullYear(),0,1);
       return new Date(now.getFullYear(),now.getMonth(),1);
     }
     var d1=debutPeriod(statPeriod);
-    var typeParam=statPeriod==='day'?'day':statPeriod==='week'?'week':statPeriod==='year'?'year':'month';
+    var typeParam=statPeriod==='day'?'day':statPeriod==='yesterday'?'day':statPeriod==='week'?'week':statPeriod==='year'?'year':'month';
 
     // Charger transactions + commissions en parallèle
     var results=await Promise.all([
@@ -2040,21 +2042,32 @@ async function chargerStats(){
     var cid=G.compte&&G.compte.id||'';
 
     // Filtrer par période et par compte agent
-    function filterTx(list,d1){return list.filter(function(t){return new Date(t.dateCreation||t.date_creation||0)>=d1;});}
+    function filterTx(list,d1,d2){
+      return list.filter(function(t){
+        var d=new Date(t.dateCreation||t.date_creation||0);
+        return d>=d1&&(!d2||d<=d2);
+      });
+    }
+    var d2=null;
+    if(statPeriod==='yesterday'){
+      var _y=new Date(now);_y.setDate(_y.getDate()-1);_y.setHours(23,59,59,999);d2=_y;
+    }
     
     // Dépôts: l'agent est compte_source (il donne de la liquidité)
-    var depPeriod=filterTx(txDep,d1).filter(function(t){return String(t.compteSourceId||t.compte_source_id||'')===cid;});
+    var depPeriod=filterTx(txDep,d1,d2).filter(function(t){return String(t.compteSourceId||t.compte_source_id||'')===cid;});
     // Retraits: l'agent est compte_dest (il reçoit de la liquidité)
-    var retPeriod=filterTx(txRet,d1).filter(function(t){return String(t.compteDestId||t.compte_dest_id||'')===cid;});
+    var retPeriod=filterTx(txRet,d1,d2).filter(function(t){return String(t.compteDestId||t.compte_dest_id||'')===cid;});
     // Transferts: envoyés ou reçus
-    var trfEnvPeriod=filterTx(txTrf,d1).filter(function(t){return String(t.compteSourceId||t.compte_source_id||'')===cid;});
-    var trfRecPeriod=filterTx(txTrf,d1).filter(function(t){return String(t.compteDestId||t.compte_dest_id||'')===cid;});
+    var trfEnvPeriod=filterTx(txTrf,d1,d2).filter(function(t){return String(t.compteSourceId||t.compte_source_id||'')===cid;});
+    var trfRecPeriod=filterTx(txTrf,d1,d2).filter(function(t){return String(t.compteDestId||t.compte_dest_id||'')===cid;});
 
     var commPeriodData=allComms.filter(function(c){
-      return (c.type_commission==='commission_journaliere'||c.type_commission==='parrainage')&&new Date(c.date_calcul||0)>=d1;
+      var d=new Date(c.date_calcul||0);
+      return c.type_commission==='commission_journaliere'&&d>=d1&&(!d2||d<=d2);
     });
     var gainsPeriodData=allComms.filter(function(c){
-      return c.type_commission==='commission_parrain'&&new Date(c.date_calcul||0)>=d1;
+      var d=new Date(c.date_calcul||0);
+      return (c.type_commission==='parrainage'||c.type_commission==='commission_parrain')&&d>=d1&&(!d2||d<=d2);
     });
 
     function sumTx(list){return list.reduce(function(s,t){return s+Number(t.montant||0);},0);}
@@ -2063,7 +2076,7 @@ async function chargerStats(){
     // Construire courbe selon période
     function getLabel(date,p){
       var d=new Date(date);
-      if(p==='day')return d.getHours()+'h';
+      if(p==='day'||p==='yesterday')return d.getHours()+'h';
       if(p==='week'){var j=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];return j[d.getDay()];}
       if(p==='year'){var m=['Jan','Fev','Mar','Avr','Mai','Jun','Jul','Aou','Sep','Oct','Nov','Dec'];return m[d.getMonth()];}
       return d.getDate()+'';
@@ -2078,7 +2091,7 @@ async function chargerStats(){
       });
       // Build ordered array
       var ordered=[];
-      if(statPeriod==='day'){for(var h=0;h<24;h++){var k=h+'h';ordered.push(map[k]||{label:k,val:0});}}
+      if(statPeriod==='day'||statPeriod==='yesterday'){for(var h=0;h<24;h++){var k=h+'h';ordered.push(map[k]||{label:k,val:0});}}
       else if(statPeriod==='week'){['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'].forEach(function(j){ordered.push(map[j]||{label:j,val:0});});}
       else if(statPeriod==='year'){['Jan','Fev','Mar','Avr','Mai','Jun','Jul','Aou','Sep','Oct','Nov','Dec'].forEach(function(m){ordered.push(map[m]||{label:m,val:0});});}
       else{var n=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();for(var i=1;i<=n;i++){var k=String(i);ordered.push(map[k]||{label:k,val:0});}}
@@ -2088,7 +2101,7 @@ async function chargerStats(){
     var getDate=function(t){return t.dateCreation||t.date_creation||0;};
     var getMontant=function(t){return Number(t.montant||0);};
     var getCommDate=function(c){return c.date_calcul||0;};
-    var getCommMontant=function(c){return Number(c.montant||0);};
+    var getCommMontant=function(c){var mo=Number(c.montant_original||0);var m=Number(c.montant||0);return mo>0?mo:m;};
 
     _statData={
       dep:{list:depPeriod,vol:sumTx(depPeriod),courbe:buildCourbe(depPeriod,getMontant,getDate)},

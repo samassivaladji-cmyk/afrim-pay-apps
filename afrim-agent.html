@@ -1361,7 +1361,12 @@ async function chargerCommissions(){
     function debutPeriode(p){
       var d=new Date(now2);
       if(p==='hier'){d.setDate(d.getDate()-1);d.setHours(0,0,0,0);return d;}
-      if(p==='semaine'){d.setDate(d.getDate()-d.getDay());d.setHours(0,0,0,0);return d;}
+      if(p==='semaine'){
+        // Semaine lundi → dimanche
+        var jour=d.getDay(); // 0=dim,1=lun,...,6=sam
+        var diffLundi=jour===0?-6:1-jour; // ramener au lundi
+        d.setDate(d.getDate()+diffLundi);d.setHours(0,0,0,0);return d;
+      }
       if(p==='mois')return new Date(now2.getFullYear(),now2.getMonth(),1);
       if(p==='annee')return new Date(now2.getFullYear(),0,1);
       return new Date(0);
@@ -1372,12 +1377,13 @@ async function chargerCommissions(){
     }
     function sumPeriode(p){
       var d1=debutPeriode(p), d2=finPeriode(p);
-      // Compter toutes les commission_journaliere (verse + en_attente) pour les 4 cases historiques
+      // Utiliser montant_original si disponible (pour ne pas être affecté par les virements partiels)
+      // sinon fallback sur montant
       return all.filter(function(c){
         if(c.type_commission!=='commission_journaliere') return false;
         var d=new Date(c.date_calcul||0);
         return d>=d1&&d<=d2;
-      }).reduce(function(s,c){return s+Number(c.montant||0);},0);
+      }).reduce(function(s,c){return s+Number(c.montant_original||c.montant||0);},0);
     }
     var tHier=sumPeriode('hier');
     var tSemaine=sumPeriode('semaine');

@@ -1586,11 +1586,11 @@ async function chargerGains(){
     var dMois=new Date(now.getFullYear(),now.getMonth(),1);
     var dAn=new Date(now.getFullYear(),0,1);
 
-    function sumG(d1){return gainsParr.filter(function(c){return new Date(c.date_calcul||0)>=d1;}).reduce(function(s,c){return s+Number(c.montant_original||c.montant||0);},0);}
+    function sumG(d1){return gainsParr.filter(function(c){return new Date(c.date_calcul||0)>=d1;}).reduce(function(s,c){var mo=Number(c.montant_original||0);var m=Number(c.montant||0);return s+(mo>0?mo:m);},0);}
     function nbG(d1){return gainsParr.filter(function(c){return new Date(c.date_calcul||0)>=d1;}).length;}
 
     var tAuj=sumG(dAuj),tSem=sumG(dSem),tMois=sumG(dMois),tAn=sumG(dAn);
-    var tTotal=gainsParr.reduce(function(s,c){return s+Number(c.montant_original||c.montant||0);},0);
+    var tTotal=gainsParr.reduce(function(s,c){var mo=Number(c.montant_original||0);var m=Number(c.montant||0);return s+(mo>0?mo:m);},0);
 
     var codeParrainage=(me.codeParrainage||'').replace(/\s+/g,'').replace(/-/g,'');
     var h='';

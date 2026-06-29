@@ -2856,6 +2856,24 @@ function genererQR(){
   if(tl)tl.textContent=u.telephone||'';
 }
 
+
+function scannerPourOp(op){
+  _scanOp=op;
+  ouvrirPopupQR(function(tel){
+    if(op==='dep'){var el=document.getElementById('dep-tel');if(el){el.value=tel;calcDep();}}
+    else if(op==='ret'){var el=document.getElementById('ret-tel');if(el){el.value=tel;calcRet();}}
+    T('Client identifié : '+tel);
+  });
+}
+function scannerPourTrf(){
+  ouvrirPopupQR(function(tel){
+    var el=document.getElementById('trf-tel');
+    if(el){el.value=tel;T('Destinataire : '+tel);}
+  });
+}
+
+function ouvrirScanner(callback){ouvrirPopupQR(callback);}
+function fermerScanner(){fermerPopupQR();}
 function ouvrirPopupQR(callback){
   _qrCallback=callback||null;
   var popup=document.getElementById('wave-qr-popup');

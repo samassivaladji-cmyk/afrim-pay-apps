@@ -86,6 +86,9 @@ html,body{height:100%;background:#f5f5f5;font-family:'DM Sans',sans-serif;color:
 .wave-qr-popup.on{display:flex;}
 .wave-tab-btn{flex:1;padding:10px;border:none;background:transparent;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;}
 .wave-tab-btn.on{color:#111;border-bottom-color:#111;}
+.wave-qr-popup.on{display:flex;}
+.wave-tab-btn{flex:1;padding:10px;border:none;background:transparent;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;}
+.wave-tab-btn.on{color:#111;border-bottom-color:#111;}
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
@@ -643,6 +646,7 @@ html,body{height:100%;background:#f5f5f5;font-family:'DM Sans',sans-serif;color:
   </div>
 </div>
 
+
 <div class="wave-qr-popup" id="wave-qr-popup">
   <div id="wqr-scanner" style="flex:1;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;">
     <button onclick="fermerPopupQR()" style="position:absolute;top:20px;left:20px;background:rgba(255,255,255,.15);border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;font-size:20px;color:#fff">←</button>
@@ -651,10 +655,10 @@ html,body{height:100%;background:#f5f5f5;font-family:'DM Sans',sans-serif;color:
     <canvas id="wqr-canvas" style="display:none"></canvas>
     <video id="wqr-video" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none" autoplay playsinline muted></video>
     <div id="wqr-overlay" style="position:relative;width:240px;height:240px;z-index:2;pointer-events:none;box-shadow:0 0 0 9999px rgba(0,0,0,.5);border-radius:16px;">
-      <div style="position:absolute;top:0;left:0;width:28px;height:28px;border-top:3px solid #25D366;border-left:3px solid #25D366;border-radius:4px 0 0 0"></div>
-      <div style="position:absolute;top:0;right:0;width:28px;height:28px;border-top:3px solid #25D366;border-right:3px solid #25D366;border-radius:0 4px 0 0"></div>
-      <div style="position:absolute;bottom:0;left:0;width:28px;height:28px;border-bottom:3px solid #25D366;border-left:3px solid #25D366;border-radius:0 0 0 4px"></div>
-      <div style="position:absolute;bottom:0;right:0;width:28px;height:28px;border-bottom:3px solid #25D366;border-right:3px solid #25D366;border-radius:0 0 4px 0"></div>
+      <div style="position:absolute;top:0;left:0;width:28px;height:28px;border-top:3px solid var(--a);border-left:3px solid var(--a);border-radius:4px 0 0 0"></div>
+      <div style="position:absolute;top:0;right:0;width:28px;height:28px;border-top:3px solid var(--a);border-right:3px solid var(--a);border-radius:0 4px 0 0"></div>
+      <div style="position:absolute;bottom:0;left:0;width:28px;height:28px;border-bottom:3px solid var(--a);border-left:3px solid var(--a);border-radius:0 0 0 4px"></div>
+      <div style="position:absolute;bottom:0;right:0;width:28px;height:28px;border-bottom:3px solid var(--a);border-right:3px solid var(--a);border-radius:0 0 4px 0"></div>
     </div>
     <div id="wqr-scan-msg" style="color:rgba(255,255,255,.7);font-size:13px;margin-top:16px;z-index:2">Chargement caméra...</div>
     
@@ -665,13 +669,13 @@ html,body{height:100%;background:#f5f5f5;font-family:'DM Sans',sans-serif;color:
   </div>
   <div id="wqr-carte" style="display:none;flex:1;background:#fff;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;position:relative;">
     <button onclick="fermerPopupQR()" style="position:absolute;top:20px;left:20px;background:#f3f4f6;border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px">←</button>
-    <div style="background:linear-gradient(135deg,var(--a2),#25D366);border-radius:20px;padding:20px;text-align:center;width:100%;max-width:280px;">
+    <div style="background:linear-gradient(135deg,var(--a2),var(--a));border-radius:20px;padding:20px;text-align:center;width:100%;max-width:280px;">
       <div style="background:#fff;border-radius:12px;padding:12px;margin-bottom:12px;">
         <div id="wqr-carte-canvas" style="width:200px;height:200px;margin:0 auto"></div>
       </div>
       <div id="wqr-carte-name" style="color:#fff;font-size:17px;font-weight:800;margin-bottom:4px;"></div>
       <div id="wqr-carte-tel" style="color:rgba(255,255,255,.8);font-size:13px;font-family:monospace;"></div>
-      <div style="color:rgba(255,255,255,.7);font-size:11px;font-weight:700;margin-top:4px;">🌿 Mini-Master AFRIM PAY</div>
+      <div style="color:rgba(255,255,255,.7);font-size:11px;font-weight:700;margin-top:4px;">🔶 Agent AFRIM PAY</div>
     </div>
     <div style="margin-top:14px;text-align:center;color:#6b7280;font-size:13px;">Montrez ce QR pour vous identifier</div>
     <div style="display:flex;width:100%;margin-top:12px;">
@@ -2660,48 +2664,9 @@ function scannerPourTrf(){
   });
 }
 
-function ouvrirScanner(callback){
-  _qrCallback=callback;
-  var inp=document.createElement('input');
-  inp.type='file';inp.accept='image/*';inp.capture='environment';
-  inp.style.position='fixed';inp.style.top='-9999px';
-  document.body.appendChild(inp);
-  inp.onchange=function(){
-    if(!inp.files||!inp.files[0]){
-      try{document.body.removeChild(inp);}catch(e){}
-      return;
-    }
-    var reader=new FileReader();
-    reader.onload=function(e){
-      var img=new Image();
-      img.onload=function(){
-        var c=document.createElement('canvas');
-        // Redimensionner si trop grand
-        var MAX=1024;
-        var w=img.width,h=img.height;
-        if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
-        if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
-        c.width=w;c.height=h;
-        var ctx=c.getContext('2d');
-        ctx.drawImage(img,0,0,w,h);
-        var d=ctx.getImageData(0,0,w,h);
-        var code=jsQR(d.data,d.width,d.height,{inversionAttempts:'attemptBoth'});
-        try{document.body.removeChild(inp);}catch(e){}
-        if(code&&code.data){
-          var raw=code.data;
-          var tel=raw.includes('|')?raw.split('|')[0]:raw;
-          var cb=_qrCallback;_qrCallback=null;
-          if(typeof cb==='function') cb(tel.trim());
-        } else {
-          T('QR non reconnu. Rapprochez-vous et réessayez.',true);
-        }
-      };
-      img.src=e.target.result;
-    };
-    reader.readAsDataURL(inp.files[0]);
-  };
-  inp.click();
-}
+function ouvrirScanner(callback){ouvrirPopupQR(callback);}
+function fermerScanner(){fermerPopupQR();}
+
 function fermerScanner(){_qrCallback=null;}
 function ouvrirPopupQR(callback){
   _qrCallback=callback||null;
@@ -2737,93 +2702,60 @@ function demarrerScan(){
   var video=document.getElementById('wqr-video');
   var msg=document.getElementById('wqr-scan-msg');
   if(!video)return;
-  if(msg)msg.style.display='none';
-
-  var constraints={
-    video:{
-      facingMode:{ideal:'environment'},
-      width:{ideal:1280},
-      height:{ideal:720}
-    },
-    audio:false
-  };
-
-  function startWithStream(stream){
-    video.srcObject=stream;
-    video.style.display='';
-    video.setAttribute('playsinline','');
-    video.setAttribute('autoplay','');
-    video.muted=true;
-
-    video.onloadedmetadata=function(){
-      video.play().catch(function(){});
-      startDetect();
-    };
-    // fallback si onloadedmetadata ne se déclenche pas
-    setTimeout(function(){if(!window._scanAnimFrame) startDetect();},1500);
-  }
-
-  function startDetect(){
-    if('BarcodeDetector' in window){
-      var bd=new BarcodeDetector({formats:['qr_code']});
-      (function loop(){
+  if('BarcodeDetector' in window){
+    var bd=new BarcodeDetector({formats:['qr_code']});
+    navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false}).then(function(stream){
+      video.srcObject=stream;video.style.display='';
+      if(msg)msg.style.display='none';
+      function scanFrame(){
         if(!video.srcObject){return;}
         bd.detect(video).then(function(codes){
           if(codes.length>0){
-            handleResult(codes[0].rawValue);
-          } else {
-            window._scanAnimFrame=setTimeout(loop,200);
+            var raw=codes[0].rawValue;
+            var parts=raw.split('|');var tel=parts[0]||raw;
+            var cb=_qrCallback;_qrCallback=null;
+            fermerPopupQR();
+            setTimeout(function(){
+              if(typeof cb==='function'){cb(tel,parts);}
+              else afficherChoixOp(tel,parts);
+            },300);
+            return;
           }
-        }).catch(function(){
-          window._scanAnimFrame=setTimeout(loop,200);
-        });
-      })();
-    } else {
-      var canvas=document.getElementById('wqr-canvas');
-      var ctx=canvas.getContext('2d');
-      (function tick(){
+          window._scanAnimFrame=requestAnimationFrame(scanFrame);
+        }).catch(function(){window._scanAnimFrame=requestAnimationFrame(scanFrame);});
+      }
+      video.onloadedmetadata=function(){video.play();window._scanAnimFrame=requestAnimationFrame(scanFrame);};
+    }).catch(function(){if(msg)msg.textContent='Caméra non disponible';});
+  } else {
+    navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false}).then(function(stream){
+      video.srcObject=stream;video.style.display='';
+      if(msg)msg.style.display='none';
+      var canvas=document.getElementById('wqr-canvas');var ctx=canvas.getContext('2d');
+      function tick(){
         if(!video.srcObject)return;
-        if(video.readyState>=2){
-          canvas.width=video.videoWidth||320;
-          canvas.height=video.videoHeight||240;
+        if(video.readyState>=2&&window.jsQR){
+          canvas.width=video.videoWidth;canvas.height=video.videoHeight;
           ctx.drawImage(video,0,0);
           var d=ctx.getImageData(0,0,canvas.width,canvas.height);
-          var code=window.jsQR&&jsQR(d.data,d.width,d.height);
+          var code=jsQR(d.data,d.width,d.height);
           if(code&&code.data){
-            handleResult(code.data);
+            var raw=code.data;var parts=raw.split('|');var tel=parts[0]||raw;
+            var cb=_qrCallback;_qrCallback=null;
+            fermerPopupQR();
+            setTimeout(function(){
+              if(typeof cb==='function'){cb(tel,parts);}
+              else afficherChoixOp(tel,parts);
+            },300);
             return;
           }
         }
         window._scanAnimFrame=requestAnimationFrame(tick);
-      })();
-    }
-  }
-
-  function handleResult(raw){
-    var parts=raw.split('|');
-    var tel=parts[0]||raw;
-    var cb=_qrCallback;_qrCallback=null;
-    fermerPopupQR();
-    setTimeout(function(){
-      if(typeof cb==='function'){cb(tel,parts);}
-      else afficherChoixOpScan(tel);
-    },300);
-  }
-
-  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
-    if(msg){msg.textContent='Caméra non supportée sur cet appareil';msg.style.display='';}
-    return;
-  }
-  navigator.mediaDevices.getUserMedia(constraints)
-    .then(startWithStream)
-    .catch(function(err){
-      // Essayer sans contraintes facingMode
-      navigator.mediaDevices.getUserMedia({video:true,audio:false})
-        .then(startWithStream)
-        .catch(function(){
-          if(msg){msg.textContent='Autorisation caméra refusée. Vérifiez les permissions Chrome.';msg.style.display='';}
-        });
+      }
+      video.onloadedmetadata=function(){video.play();window._scanAnimFrame=requestAnimationFrame(tick);};
+    }).catch(function(){
+      if(msg)msg.textContent='Caméra non disponible — utilisez la galerie';
     });
+  }
 }
 
 var _flashOn=false;

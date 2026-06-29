@@ -2696,60 +2696,93 @@ function demarrerScan(){
   var video=document.getElementById('wqr-video');
   var msg=document.getElementById('wqr-scan-msg');
   if(!video)return;
-  if('BarcodeDetector' in window){
-    var bd=new BarcodeDetector({formats:['qr_code']});
-    navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false}).then(function(stream){
-      video.srcObject=stream;video.style.display='';
-      if(msg)msg.style.display='none';
-      function scanFrame(){
+  if(msg)msg.style.display='none';
+
+  var constraints={
+    video:{
+      facingMode:{ideal:'environment'},
+      width:{ideal:1280},
+      height:{ideal:720}
+    },
+    audio:false
+  };
+
+  function startWithStream(stream){
+    video.srcObject=stream;
+    video.style.display='';
+    video.setAttribute('playsinline','');
+    video.setAttribute('autoplay','');
+    video.muted=true;
+
+    video.onloadedmetadata=function(){
+      video.play().catch(function(){});
+      startDetect();
+    };
+    // fallback si onloadedmetadata ne se déclenche pas
+    setTimeout(function(){if(!window._scanAnimFrame) startDetect();},1500);
+  }
+
+  function startDetect(){
+    if('BarcodeDetector' in window){
+      var bd=new BarcodeDetector({formats:['qr_code']});
+      (function loop(){
         if(!video.srcObject){return;}
         bd.detect(video).then(function(codes){
           if(codes.length>0){
-            var raw=codes[0].rawValue;
-            var parts=raw.split('|');var tel=parts[0]||raw;
-            var cb=_qrCallback;_qrCallback=null;
-            fermerPopupQR();
-            setTimeout(function(){
-              if(typeof cb==='function'){cb(tel,parts);}
-              else afficherChoixOp(tel,parts);
-            },300);
-            return;
+            handleResult(codes[0].rawValue);
+          } else {
+            window._scanAnimFrame=setTimeout(loop,200);
           }
-          window._scanAnimFrame=requestAnimationFrame(scanFrame);
-        }).catch(function(){window._scanAnimFrame=requestAnimationFrame(scanFrame);});
-      }
-      video.onloadedmetadata=function(){video.play();window._scanAnimFrame=requestAnimationFrame(scanFrame);};
-    }).catch(function(){if(msg)msg.textContent='Caméra non disponible';});
-  } else {
-    navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false}).then(function(stream){
-      video.srcObject=stream;video.style.display='';
-      if(msg)msg.style.display='none';
-      var canvas=document.getElementById('wqr-canvas');var ctx=canvas.getContext('2d');
-      function tick(){
+        }).catch(function(){
+          window._scanAnimFrame=setTimeout(loop,200);
+        });
+      })();
+    } else {
+      var canvas=document.getElementById('wqr-canvas');
+      var ctx=canvas.getContext('2d');
+      (function tick(){
         if(!video.srcObject)return;
-        if(video.readyState>=2&&window.jsQR){
-          canvas.width=video.videoWidth;canvas.height=video.videoHeight;
+        if(video.readyState>=2){
+          canvas.width=video.videoWidth||320;
+          canvas.height=video.videoHeight||240;
           ctx.drawImage(video,0,0);
           var d=ctx.getImageData(0,0,canvas.width,canvas.height);
-          var code=jsQR(d.data,d.width,d.height);
+          var code=window.jsQR&&jsQR(d.data,d.width,d.height);
           if(code&&code.data){
-            var raw=code.data;var parts=raw.split('|');var tel=parts[0]||raw;
-            var cb=_qrCallback;_qrCallback=null;
-            fermerPopupQR();
-            setTimeout(function(){
-              if(typeof cb==='function'){cb(tel,parts);}
-              else afficherChoixOp(tel,parts);
-            },300);
+            handleResult(code.data);
             return;
           }
         }
         window._scanAnimFrame=requestAnimationFrame(tick);
-      }
-      video.onloadedmetadata=function(){video.play();window._scanAnimFrame=requestAnimationFrame(tick);};
-    }).catch(function(){
-      if(msg)msg.textContent='Caméra non disponible — utilisez la galerie';
-    });
+      })();
+    }
   }
+
+  function handleResult(raw){
+    var parts=raw.split('|');
+    var tel=parts[0]||raw;
+    var cb=_qrCallback;_qrCallback=null;
+    fermerPopupQR();
+    setTimeout(function(){
+      if(typeof cb==='function'){cb(tel,parts);}
+      else afficherChoixOpScan(tel);
+    },300);
+  }
+
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    if(msg){msg.textContent='Caméra non supportée sur cet appareil';msg.style.display='';}
+    return;
+  }
+  navigator.mediaDevices.getUserMedia(constraints)
+    .then(startWithStream)
+    .catch(function(err){
+      // Essayer sans contraintes facingMode
+      navigator.mediaDevices.getUserMedia({video:true,audio:false})
+        .then(startWithStream)
+        .catch(function(){
+          if(msg){msg.textContent='Autorisation caméra refusée. Vérifiez les permissions Chrome.';msg.style.display='';}
+        });
+    });
 }
 
 var _flashOn=false;

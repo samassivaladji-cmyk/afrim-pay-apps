@@ -1309,6 +1309,26 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
   </div>
 </div>
 
+<!-- ÉCRAN INSCRIPTIONS -->
+<div class="scr" id="s-inscriptions">
+  <div style="padding:20px 16px 14px;display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <div style="font-size:22px;font-weight:800">📝 Inscriptions</div>
+      <div style="color:var(--m);font-size:12px">Suivi des comptes créés par rôle</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:6px;padding:0 16px 12px;overflow-x:auto">
+    <button id="ins-tab-tous" onclick="setInsTab('tous')" style="padding:9px 14px;font-size:11px;font-weight:700;border:1px solid var(--y);background:var(--y);color:#fff;border-radius:99px;cursor:pointer;font-family:inherit;white-space:nowrap">Tous</button>
+    <button id="ins-tab-master" onclick="setInsTab('master')" style="padding:9px 14px;font-size:11px;font-weight:700;border:1px solid #e5e7eb;background:#fff;color:#6b7280;border-radius:99px;cursor:pointer;font-family:inherit;white-space:nowrap">Master</button>
+    <button id="ins-tab-mini_master" onclick="setInsTab('mini_master')" style="padding:9px 14px;font-size:11px;font-weight:700;border:1px solid #e5e7eb;background:#fff;color:#6b7280;border-radius:99px;cursor:pointer;font-family:inherit;white-space:nowrap">Mini-Master</button>
+    <button id="ins-tab-agent" onclick="setInsTab('agent')" style="padding:9px 14px;font-size:11px;font-weight:700;border:1px solid #e5e7eb;background:#fff;color:#6b7280;border-radius:99px;cursor:pointer;font-family:inherit;white-space:nowrap">Agent</button>
+    <button id="ins-tab-business" onclick="setInsTab('business')" style="padding:9px 14px;font-size:11px;font-weight:700;border:1px solid #e5e7eb;background:#fff;color:#6b7280;border-radius:99px;cursor:pointer;font-family:inherit;white-space:nowrap">Business</button>
+    <button id="ins-tab-client" onclick="setInsTab('client')" style="padding:9px 14px;font-size:11px;font-weight:700;border:1px solid #e5e7eb;background:#fff;color:#6b7280;border-radius:99px;cursor:pointer;font-family:inherit;white-space:nowrap">Client</button>
+  </div>
+  <div style="padding:0 16px 12px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px" id="ins-stats-row"></div>
+  <div style="padding:0 16px 40px" id="ins-list"><div style="padding:40px;text-align:center"><div class="spin"></div></div></div>
+</div>
+
 <!-- SHEET NOTIFICATION RATTACHEMENTS -->
 <div class="sh-ov" id="sh-rt-notif">
   <div class="sh">
@@ -1441,6 +1461,7 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
     <div class="sh-top"><div><div class="sh-title">Modifier le compte</div><div style="color:var(--m);font-size:12px">Corriger nom / prénom</div></div><button class="sh-x" onclick="closeSh('edit-user')">✕</button></div>
     <div class="sh-body">
       <input type="hidden" id="eu-id"/>
+      <input type="hidden" id="eu-tel"/>
       <div style="margin-bottom:14px">
         <div style="font-size:12px;color:var(--m);font-weight:700;margin-bottom:6px">Prénom</div>
         <input id="eu-prenom" type="text" style="width:100%;border:1px solid #e5e7eb;border-radius:12px;padding:13px 14px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box"/>
@@ -3561,6 +3582,7 @@ function buildNavGrid(){
     {id:'txns',     icon:'💳', label:'Flux',     fn:"setTab('txns')",    need:'txns'},
     {id:'monitoring',icon:'📊',label:'Suivi',   fn:"setTab('monitoring')",need:'monitoring'},
     {id:'rattachements',icon:'🔗',label:'Rattachements',fn:"setTab('rattachements')",need:'rattachements'},
+    {id:'inscriptions',icon:'📝',label:'Inscriptions',fn:"setTab('inscriptions')",need:'rattachements'},
     {id:'segmentation',icon:'🎯',label:'Segmentation',fn:"setTab('segmentation')",need:'rattachements'},
     {id:'moncompte',icon:'👤',label:'Mon Compte',fn:"setTab('moncompte')",need:'moncompte'},
     {id:'support',  icon:'💬', label:'Support',  fn:"setTab('support')", need:'support'},
@@ -3627,6 +3649,7 @@ function setTab(t){
   else if(t==='support'){showScr('s-support');chargerSupport();}
   else if(t==='tech'){showScr('s-tech');chargerTech();}
   else if(t==='rattachements'){showScr('s-rattachements');chargerRattachements();}
+  else if(t==='inscriptions'){showScr('s-inscriptions');setInsTab('tous');}
   else if(t==='segmentation'){showScr('s-segmentation');initSegmentationUI();}
   else if(t==='moncompte'){showScr('s-moncompte');chargerMonCompte();}
   else if(t==='stats'){
@@ -4026,6 +4049,49 @@ function refreshRtActiveTab(){
   else if(_rtActiveTab==='parrains') chargerParrains();
   else if(_rtActiveTab==='factifs') chargerFilleulsActifs();
   else if(_rtActiveTab==='fsimples') chargerFilleulsSimples();
+}
+
+// ── Onglet Inscriptions ──
+var _insActiveTab='tous';
+var ROLE_LABEL={master:'Master',mini_master:'Mini-Master',agent:'Agent',business:'Business',client:'Client'};
+function setInsTab(tab){
+  _insActiveTab=tab;
+  ['tous','master','mini_master','agent','business','client'].forEach(function(t){
+    var btn=document.getElementById('ins-tab-'+t);if(!btn)return;
+    var a=t===tab;
+    btn.style.background=a?'var(--y)':'#fff';
+    btn.style.color=a?'#fff':'#6b7280';
+    btn.style.borderColor=a?'var(--y)':'#e5e7eb';
+  });
+  chargerInscriptions(tab);
+}
+async function chargerInscriptions(roleFiltre){
+  var statsEl=document.getElementById('ins-stats-row');
+  var listEl=document.getElementById('ins-list');
+  listEl.innerHTML='<div style="padding:40px;text-align:center"><div class="spin"></div></div>';
+  try{
+    var r=await apiGet('/admin/inscriptions'+(roleFiltre&&roleFiltre!=='tous'?('?role='+roleFiltre):''));
+    var data=r.data||{};
+    var counts=data.counts||{};
+    statsEl.innerHTML=['master','mini_master','agent','client'].map(function(k){
+      return '<div style="background:#f9fafb;border-radius:12px;padding:10px 6px;text-align:center"><div style="font-size:18px;font-weight:900;color:var(--y2)">'+(counts[k]||0)+'</div><div style="font-size:9px;color:#9ca3af;font-weight:700;text-transform:uppercase">'+(ROLE_LABEL[k]||k)+'</div></div>';
+    }).join('');
+    var list=data.inscriptions||[];
+    if(!list.length){listEl.innerHTML='<div style="text-align:center;padding:40px;color:var(--m);font-size:13px">Aucune inscription</div>';return;}
+    listEl.innerHTML='';
+    list.forEach(function(u){
+      var c=ROLE_C[u.role]||'#888';
+      var div=document.createElement('div');
+      div.style.cssText='background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px 16px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;justify-content:space-between';
+      div.innerHTML='<div style="display:flex;align-items:center;gap:10px;min-width:0">'
+        +'<div style="width:38px;height:38px;border-radius:50%;background:'+c+'22;color:'+c+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0">'+((u.prenom||'?')[0])+'</div>'
+        +'<div style="min-width:0"><div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(u.prenom||'')+' '+(u.nom||'')+' <span style="font-size:9px;padding:1px 6px;border-radius:99px;background:'+c+'22;color:'+c+'">'+(ROLE_LABEL[u.role]||u.role)+'</span></div>'
+        +'<div style="font-size:11px;color:#6b7280">'+(u.telephone||'')+(u.parrainPrenom?(' · parrainé par '+u.parrainPrenom+' '+(u.parrainNom||'')):'')+'</div></div></div>'
+        +'<div style="font-size:10px;color:#9ca3af;flex-shrink:0;margin-left:8px">'+FD(u.createdAt)+'</div>';
+      div.addEventListener('click',function(){voirU(u.id);});
+      listEl.appendChild(div);
+    });
+  }catch(e){listEl.innerHTML='<div style="color:var(--r);padding:12px;font-size:13px">'+e.message+'</div>';}
 }
 
 // ── Notifications depuis onglets rattachements ──
@@ -4535,6 +4601,7 @@ function ouvrirEditUser(u){
   document.getElementById('eu-id').value=u.id;
   document.getElementById('eu-prenom').value=u.prenom||'';
   document.getElementById('eu-nom').value=u.nom||'';
+  document.getElementById('eu-tel').value=u.telephone||'';
   document.getElementById('eu-err').style.display='none';
   closeSh('user');
   openSh('edit-user');
@@ -4543,10 +4610,11 @@ async function sauvegarderEditUser(){
   var id=document.getElementById('eu-id').value;
   var prenom=document.getElementById('eu-prenom').value.trim();
   var nom=document.getElementById('eu-nom').value.trim();
+  var telephone=document.getElementById('eu-tel').value;
   var errEl=document.getElementById('eu-err');errEl.style.display='none';
   if(!prenom||!nom){errEl.textContent='Prénom et nom sont requis';errEl.style.display='';return;}
   try{
-    await apiPatch('/admin/users/'+id+'/info',{prenom:prenom,nom:nom});
+    await apiPatch('/users/'+id+'/profile',{prenom:prenom,nom:nom,telephone:telephone});
     toast('Compte mis à jour');
     closeSh('edit-user');
     var u=usersData.find(function(x){return x.id===id;});

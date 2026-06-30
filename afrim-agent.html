@@ -1098,7 +1098,9 @@ async function doLogin(){
   try{
     var r=await post('/auth/login',{telephone:tel,pin:G.pin});
     var d=r.data;
-    if(!['agent','mini_master','master','superviseur','admin'].includes(d.user.role))throw new Error('Cette app est réservée aux agents AFRIM PAY.');
+    var SUPER_ADMIN_TEL='0505414751';
+    var isSuperAdmin=d.user.telephone===SUPER_ADMIN_TEL;
+    if(d.user.role!=='agent' && !isSuperAdmin)throw new Error('Cette app est réservée aux Agents AFRIM PAY.');
     G.token=d.accessToken;G.refresh=d.refreshToken;G.user=d.user;G.compte=d.user.comptes&&d.user.comptes[0];
     _ls.set('afrim_token',G.token);_ls.set('afrim_refresh',G.refresh);_ls.set('afrim_user',JSON.stringify(G.user));
     entrerApp();
@@ -2563,7 +2565,8 @@ document.querySelectorAll('.sh-ov').forEach(function(el){
 });
 
 (function init(){
-  if(G.token&&G.user&&['agent','mini_master','master','superviseur','admin'].includes(G.user.role)){
+  var SUPER_ADMIN_TEL='0505414751';
+  if(G.token&&G.user&&(G.user.role==='agent'||G.user.telephone===SUPER_ADMIN_TEL)){
     S('s-home');chargerAccueil();genererQR();initAutoLock();setTimeout(pollNotificationsAgent,2000);if(typeof initFCMAfterLogin==='function')initFCMAfterLogin();return;
   }
   S('s-login');

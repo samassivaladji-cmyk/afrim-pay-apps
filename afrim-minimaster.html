@@ -100,242 +100,18 @@ html,body{height:100%;background:#f5f5f5;font-family:'DM Sans',sans-serif;color:
 
 
 <!-- LOGIN -->
-<div class="scr" id="s-login" style="align-items:center;justify-content:center;padding:40px 22px;min-height:100vh;background:radial-gradient(ellipse at 50% 0%,rgba(5,150,105,.07),transparent 55%)">
-  <div style="width:100%;max-width:360px;text-align:center">
-    <div style="width:80px;height:80px;border-radius:20px;overflow:hidden;margin:0 auto 16px;box-shadow:0 12px 32px rgba(0,80,0,.25);background:#fff"><img src="https://samassivaladji-cmyk.github.io/afrim-pay-apps/logo.png" style="width:100%;height:100%;object-fit:contain"/></div>
-    <div style="font-size:36px;font-weight:900;letter-spacing:-.5px;margin-bottom:4px">AFRIM PAY</div>
-    <div style="color:var(--m);font-size:13px;margin-bottom:8px">Interface Mini-Master</div>
-    <div style="background:rgba(0,192,0,.1);border:1px solid rgba(0,192,0,.3);border-radius:20px;padding:4px 16px;display:inline-block;margin-bottom:28px">
-      <span style="color:var(--a);font-size:11px;font-weight:800;letter-spacing:.14em">🌿 ESPACE MINI-MASTER</span>
-    </div>
-    <div class="card" style="padding:28px;text-align:left">
-      <div id="err-login" class="info info-r" style="display:none"></div>
-      <span class="lbl">Numéro de téléphone</span>
-      <div style="margin-bottom:14px"><input class="inp" id="lg-tel" type="tel" placeholder="+225 07 XX XX XX" oninput="document.getElementById('lg-btn').disabled=this.value.replace(/\D/g,'').length<8"/></div>
-      <button class="btn btn-a" id="lg-btn" disabled onclick="goPin()">Continuer →</button>
-    </div>
-  </div>
-</div>
+
 
 <!-- PIN -->
-<div class="scr" id="s-pin" style="align-items:center;justify-content:center;padding:40px 22px;min-height:100vh">
-  <div style="width:100%;max-width:360px">
-    <button onclick="S('s-login')" style="background:none;border:none;color:var(--m);cursor:pointer;font-size:13px;margin-bottom:24px;font-family:'DM Sans',sans-serif">← Retour</button>
-    <div style="text-align:center;margin-bottom:28px">
-      <div style="font-size:24px;font-weight:800">Code PIN</div>
-      <div style="color:var(--m);font-size:12px;margin-top:4px" id="pin-sub"></div>
-    </div>
-    <div id="err-pin" class="info info-r" style="display:none;margin-bottom:16px"></div>
-    <div id="pin-loading" style="display:none;text-align:center;padding:20px"><div class="spin" style="width:36px;height:36px;border-width:3px"></div><div style="color:var(--m);font-size:13px;margin-top:12px">Connexion...</div></div>
-    <div id="pin-keys">
-      <div style="display:flex;gap:12px;justify-content:center;margin-bottom:28px">
-        <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div><div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
-        <button class="pin-key" onclick="PIN(1)">1</button><button class="pin-key" onclick="PIN(2)">2</button><button class="pin-key" onclick="PIN(3)">3</button>
-        <button class="pin-key" onclick="PIN(4)">4</button><button class="pin-key" onclick="PIN(5)">5</button><button class="pin-key" onclick="PIN(6)">6</button>
-        <button class="pin-key" onclick="PIN(7)">7</button><button class="pin-key" onclick="PIN(8)">8</button><button class="pin-key" onclick="PIN(9)">9</button>
-        <button class="pin-key empty"></button><button class="pin-key" onclick="PIN(0)">0</button><button class="pin-key" onclick="DELP()">⌫</button>
-      </div>
-    </div>
-  </div>
-</div>
+
 
 <!-- ACCUEIL -->
-<div class="scr" id="s-home">
-  <!-- Header -->
-  <div style="background:#25D366;padding:28px 16px 16px;border-radius:0 0 28px 28px;margin-bottom:16px;overflow:hidden">
-    <div style="display:flex;gap:12px">
-      <!-- Colonne gauche : Nom / 4 boutons / Solde -->
-      <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between">
-        <!-- Nom + Zone -->
-        <div>
-          <div style="font-size:18px;font-weight:900;color:#000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="h-name">—</div>
-          <div style="font-size:11px;font-weight:700;color:rgba(0,0,0,.6)" id="h-zone">—</div>
-        </div>
-        <!-- 4 boutons sur une seule ligne au milieu -->
-        <div style="display:flex;gap:7px;padding:12px 0;align-items:center">
-          <button onclick="ouvrirScanner(function(tel){afficherChoixOpScan(tel);})" title="Scanner" style="background:rgba(0,0,0,.2);border:2px solid rgba(0,0,0,.3);border-radius:12px;height:36px;padding:0 12px;cursor:pointer;display:flex;align-items:center;gap:6px;flex-shrink:0">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3" rx=".5" fill="#000"/><rect x="19" y="14" width="2" height="2" rx=".5" fill="#000"/><rect x="14" y="19" width="2" height="2" rx=".5" fill="#000"/></svg>
-            <span style="font-size:11px;font-weight:800;color:#000;white-space:nowrap">Scanner QR</span>
-          </button>
-          <button onclick="ouvrirNotifsMM()" title="Notifications" style="background:rgba(0,0,0,.15);border:none;border-radius:10px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-            <div id="h-notif-badge" style="display:none;position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:7px;font-weight:800;border-radius:99px;padding:1px 3px;min-width:12px;text-align:center">0</div>
-          </button>
-          <button onclick="rafraichir()" title="Actualiser" style="background:rgba(0,0,0,.15);border:none;border-radius:10px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-          </button>
-          <button onclick="ouvrirDeconnexion()" title="Quitter" style="background:rgba(239,68,68,.25);border:none;border-radius:10px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-          </button>
-        </div>
-        <!-- Solde -->
-        <div style="display:flex;align-items:baseline;gap:6px">
-          <div style="font-size:24px;font-weight:900;color:#000;letter-spacing:-.5px" id="h-solde">—</div>
-          <button onclick="toggleSolde()" style="background:none;border:none;cursor:pointer;color:rgba(0,0,0,.5);font-size:14px;padding:0">👁</button>
-        </div>
-      </div>
-      <!-- Colonne droite : Logo uniquement -->
-      <div style="flex-shrink:0;display:flex;align-items:center">
-        <div style="width:110px;height:110px;border-radius:24px;overflow:hidden;background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.25)">
-          <img src="https://samassivaladji-cmyk.github.io/afrim-pay-apps/logo.png" style="width:100%;height:100%;object-fit:contain"/>
-        </div>
-      </div>
-    </div>
-    <!-- Agents / Business / Clients -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px">
-      <div style="background:#FFE566;border-radius:12px;padding:10px 8px;text-align:center">
-        <div style="font-size:18px;font-weight:900;color:#000" id="h-agents">—</div>
-        <div style="font-size:9px;color:#007700;font-weight:800;margin-top:1px">Agents</div>
-      </div>
-      <div style="background:#FFE566;border-radius:12px;padding:10px 8px;text-align:center">
-        <div style="font-size:18px;font-weight:900;color:#000" id="h-business">—</div>
-        <div style="font-size:9px;color:#007700;font-weight:800;margin-top:1px">Business</div>
-      </div>
-      <div style="background:#FFE566;border-radius:12px;padding:10px 8px;text-align:center">
-        <div style="font-size:18px;font-weight:900;color:#000" id="h-clients">—</div>
-        <div style="font-size:9px;color:#007700;font-weight:800;margin-top:1px">Clients</div>
-      </div>
-    </div>
-  </div>
-  <!-- Opérations rapides -->
-  <div style="padding:16px;margin-bottom:0;background:#fff;border-radius:0">
-    <div style="font-size:11px;font-weight:800;color:#25D366;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">OPÉRATIONS RAPIDES</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-      <button onclick="ouvrirDepot()" style="background:#fff;border:2px solid #25D366;border-radius:16px;padding:16px 12px;cursor:pointer;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.08)">
-        <div style="width:38px;height:38px;border-radius:12px;background:#25D366;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:18px;color:#fff">↓</div>
-        <div style="font-size:13px;font-weight:700;color:#005000">Dépôt Client</div>
-        <div style="font-size:10px;color:#00C000;margin-top:2px">Commission journalière</div>
-      </button>
-      <button onclick="ouvrirRetrait()" style="background:#fff;border:2px solid #f97316;border-radius:16px;padding:16px 12px;cursor:pointer;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.08)">
-        <div style="width:38px;height:38px;border-radius:12px;background:#ea580c;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:18px;color:#fff">↑</div>
-        <div style="font-size:13px;font-weight:700;color:#7c2d12">Retrait Client</div>
-        <div style="font-size:10px;color:#ea580c;margin-top:2px">Commission journalière</div>
-      </button>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <button onclick="openSh('inscription')" style="background:#fff;border:2px solid #FFE566;border-radius:16px;padding:16px 12px;cursor:pointer;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.08)">
-        <div style="width:38px;height:38px;border-radius:12px;background:#FFE566;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:18px;color:#fff">👤</div>
-        <div style="font-size:13px;font-weight:700;color:#713f12">Inscrire</div>
-        <div style="font-size:10px;color:#ca8a04;margin-top:2px">Agent · Client · Business</div>
-      </button>
-      <button onclick="openSh('transfert')" style="background:#fff;border:2px solid #3b82f6;border-radius:16px;padding:16px 12px;cursor:pointer;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.08)">
-        <div style="width:38px;height:38px;border-radius:12px;background:#3b82f6;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:18px;color:#fff">⇄</div>
-        <div style="font-size:13px;font-weight:700;color:#1e3a8a">Transfert</div>
-        <div style="font-size:10px;color:#2563eb;margin-top:2px">Liquidité · Gratuit</div>
-      </button>
-    </div>
-  </div>
 
-  <!-- Transactions récentes -->
-  <div style="padding:16px;background:#fff">
-    <div style="font-size:11px;font-weight:800;color:#25D366;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">TRANSACTIONS RÉCENTES</div>
-    <div id="h-txns"><div style="text-align:center;padding:20px"><div class="spin"></div></div></div>
-  </div>
-
-  <!-- Navbar -->
-</div>
 
 <!-- FLUX -->
-<div class="scr" id="s-flux">
-  <div style="background:#25D366;padding:52px 22px 20px;border-radius:0 0 24px 24px;margin-bottom:16px">
-    <div style="font-size:22px;font-weight:900;color:#000;margin-bottom:4px">Flux 📋</div>
-    <div style="color:#000;font-size:12px;font-weight:700">Historique de vos opérations</div>
-  </div>
-  <div style="padding:0 16px 20px" id="flux-list"><div style="text-align:center;padding:32px"><div class="spin"></div></div></div>
-</div>
 
-<!-- COMMISSIONS -->
-<div class="scr" id="s-comm">
-  <div style="background:#25D366;padding:52px 22px 20px;border-radius:0 0 24px 24px;margin-bottom:16px">
-    <div style="font-size:22px;font-weight:900;color:#000;margin-bottom:4px">Commissions 💳</div>
-    <div style="color:#000;font-size:12px;font-weight:700">Dépôts et retraits clients</div>
-  </div>
-  <div style="padding:0 16px 20px" id="comm-content"><div style="text-align:center;padding:32px"><div class="spin"></div></div></div>
-</div>
 
-<!-- GAINS -->
-<div class="scr" id="s-gains">
-  <div style="background:#25D366;padding:52px 22px 20px;border-radius:0 0 24px 24px;margin-bottom:16px">
-    <div style="font-size:22px;font-weight:900;color:#000;margin-bottom:4px">Mes gains 💰</div>
-    <div style="color:#000;font-size:12px;font-weight:700">Réseau · Parrainage · Agents · Business</div>
-  </div>
-  <div style="padding:0 16px 20px" id="gains-content"><div style="text-align:center;padding:32px"><div class="spin"></div></div></div>
-</div>
-
-<!-- RÉSEAU -->
-<div class="scr" id="s-reseau">
-  <div style="background:#25D366;padding:52px 22px 16px;border-radius:0 0 24px 24px;margin-bottom:16px">
-    <div style="font-size:22px;font-weight:900;color:#000;margin-bottom:4px">Mon réseau 🌐</div>
-    <div style="color:#000;font-size:12px;font-weight:700">Agents · Business</div>
-    <!-- Tabs réseau -->
-    <div style="display:flex;gap:0;margin-top:16px;background:rgba(255,255,255,.1);border-radius:12px;padding:3px">
-      <button class="rtab on" id="rtab-agents" onclick="chargerReseau('agents')" style="color:#000;font-weight:800;border-bottom:none;border-radius:10px;background:rgba(0,0,0,.12)">🔶 Agents</button>
-      <button class="rtab" id="rtab-business" onclick="chargerReseau('business')" style="color:#000;font-weight:700;border-bottom:none;border-radius:10px">🏪 Business</button>
-    </div>
-  </div>
-  <div style="padding:0 16px 20px" id="reseau-list"><div style="text-align:center;padding:32px"><div class="spin"></div></div></div>
-</div>
-
-<!-- STATS -->
-<div class="scr" id="s-stats">
-  <div style="background:#25D366;padding:52px 22px 20px;border-radius:0 0 24px 24px;margin-bottom:16px">
-    <div style="font-size:22px;font-weight:900;color:#000;margin-bottom:4px">Statistiques 📊</div>
-    <div style="color:#000;font-size:12px;font-weight:700">Analyse complète de votre réseau</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">
-      <button id="stp-day" onclick="setStatPeriod('day')" class="chip" style="background:transparent;border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.7)">Auj.</button>
-      <button id="stp-yesterday" onclick="setStatPeriod('yesterday')" class="chip" style="background:transparent;border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.7)">Hier</button>
-      <button id="stp-week" onclick="setStatPeriod('week')" class="chip" style="background:transparent;border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.7)">Semaine</button>
-      <button id="stp-month" onclick="setStatPeriod('month')" class="chip" style="background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.8);color:#fff">Mois</button>
-      <button id="stp-year" onclick="setStatPeriod('year')" class="chip" style="background:transparent;border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.7)">Année</button>
-    </div>
-  </div>
-  <div style="padding:0 16px 20px" id="stats-content"><div style="text-align:center;padding:32px"><div class="spin"></div></div></div>
-</div>
-
-<!-- COMPTE -->
-<div class="scr" id="s-compte">
-  <div style="background:#25D366;padding:52px 22px 28px;border-radius:0 0 24px 24px;margin-bottom:16px">
-    <div style="text-align:center">
-      <div style="width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:30px">🌿</div>
-      <div style="font-size:18px;font-weight:900;color:#000" id="prof-name-top">—</div>
-      <div style="color:#000;font-size:12px;font-weight:700;margin-top:4px" id="prof-tel-top">—</div>
-      <div style="background:rgba(0,192,0,.3);border:1px solid rgba(37,211,102,.4);border-radius:20px;padding:3px 12px;display:inline-block;margin-top:8px">
-        <span style="color:#B3E5C5;font-size:10px;font-weight:800">MINI-MASTER</span>
-      </div>
-    </div>
-  </div>
-  <div style="padding:0 16px 20px">
-    <div style="font-size:10px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">MON QR CODE</div>
-    <div style="background:#FFE566;border:1px solid #FFE566;border-radius:16px;padding:20px;text-align:center;margin-bottom:20px">
-      <div id="qr-profil-canvas-compte" style="display:flex;justify-content:center;margin-bottom:10px"></div>
-      <div style="font-size:11px;color:var(--m)">Partagez ce code pour recruter des filleuls</div>
-    </div>
-    <div style="font-size:10px;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">PARAMÈTRES</div>
-    <button class="params-item" onclick="ouvrirInfos()">
-      <div class="params-icon" style="background:#F0FBF0"><span>👤</span></div>
-      <div><div class="params-label">Mes informations</div><div class="params-sub">Profil, zone, code parrainage</div></div>
-    </button>
-    <button class="params-item" onclick="openSh('change-pin')">
-      <div class="params-icon" style="background:#F0FBF0"><span>🔑</span></div>
-      <div><div class="params-label">Changer mon PIN</div><div class="params-sub">Modifier votre code secret</div></div>
-    </button>
-    <button class="params-item" onclick="openSh('grille-comm')">
-      <div class="params-icon" style="background:#F0FBF0"><span>📊</span></div>
-      <div><div class="params-label">Grille commissions</div><div class="params-sub">27 paliers volumétriques</div></div>
-    </button>
-    <button class="params-item" onclick="contacterSupport()">
-      <div class="params-icon" style="background:#F0FBF0"><span>💬</span></div>
-      <div><div class="params-label">Support</div><div class="params-sub">Contacter AFRIM PAY</div></div>
-    </button>
-    <button class="params-item" onclick="ouvrirDeconnexion()">
-      <div class="params-icon" style="background:#fef2f2"><span>🚪</span></div>
-      <div><div class="params-label" style="color:#dc2626">Déconnexion</div><div class="params-sub">Quitter l'application</div></div>
-    </button>
-  </div>
-</div>
-
+<!-- COMMISSIONS / GAINS / RÉSEAU / STATS / COMPTE : écrans gérés plus bas (s-commissions, s-gains, s-stats, s-profile) -->
 
 <!-- SHEETS OPÉRATIONS (Dépôt/Retrait/Transfert/Inscription) -->
 <!-- SHEET DEPOT CLIENT -->
@@ -343,88 +119,13 @@ html,body{height:100%;background:#f5f5f5;font-family:'DM Sans',sans-serif;color:
 <!-- SHEET RETRAIT CLIENT -->
 
 <!-- SHEET TRANSFERT -->
-<div class="sh-ov" id="sh-transfert">
-  <div class="sh">
-    <div class="sh-bar"></div>
-    <div class="sh-top"><div><div class="sh-title">Transfert Liquidité</div><div style="color:var(--m);font-size:12px">Entre Mini-Masters et Agents · Gratuit</div></div><button class="sh-x" onclick="closeSh('transfert');rstTrf()">✕</button></div>
-    <div class="info info-a">Transferts entre professionnels AFRIM PAY — sans commission, pour rééquilibrer la liquidité.</div>
-    <div id="trf-err" class="info info-r" style="display:none"></div>
-    <span class="lbl">Numéro destinataire</span>
-    <div style="display:flex;gap:8px;margin-bottom:14px">
-        <input class="inp" id="trf-tel" type="tel" placeholder="+225 07 XX XX XX" style="flex:1"/>
-        <button onclick="scannerPourTrf()" style="background:var(--s);border:1.5px solid var(--b);border-radius:13px;padding:0 12px;cursor:pointer;height:48px;display:flex;align-items:center" title="Scanner QR">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--a)" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3" rx=".5" fill="var(--a)"/><rect x="19" y="14" width="2" height="2" rx=".5" fill="var(--a)"/><rect x="14" y="19" width="2" height="2" rx=".5" fill="var(--a)"/></svg>
-        </button>
-      </div>
-    <span class="lbl">Montant (FCFA)</span>
-    <div style="position:relative;margin-bottom:14px"><input class="inp" id="trf-amt" type="number" placeholder="0" style="padding-right:55px"/><span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--a);font-size:12px;font-weight:700">FCFA</span></div>
-    <div id="trf-loading" style="display:none;text-align:center;padding:20px"><div class="spin"></div></div>
-    <div id="trf-success" style="display:none;text-align:center;padding:20px 0">
-      <div style="font-size:22px;font-weight:800;color:var(--a)">✓ Transfert réussi !</div>
-      <button class="btn btn-ghost" style="margin-top:14px" onclick="closeSh('transfert');rstTrf();rafraichir()">Fermer</button>
-    </div>
-    <div style="display:flex;gap:8px" id="trf-btns">
-      <button class="btn btn-ghost" style="flex:1" onclick="closeSh('transfert');rstTrf()">Annuler</button>
-      <button class="btn btn-a" style="flex:2" onclick="doTransfert()">Transférer</button>
-    </div>
-  </div>
-</div>
+
 
 <!-- SHEET INSCRIPTION -->
-<div class="sh-ov" id="sh-inscription">
-  <div class="sh">
-    <div class="sh-bar"></div>
-    <div class="sh-top"><div><div class="sh-title">Inscription</div><div style="color:var(--m);font-size:12px" id="ins-subtitle">Nouveau compte</div></div><button class="sh-x" onclick="closeSh('inscription');rstIns()">✕</button></div>
-    <div id="ins-type-sel">
-      <span class="lbl">Type de compte</span>
-      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
-        <button onclick="setInsType('client')" style="padding:14px 18px;border-radius:14px;border:1.5px solid var(--a);background:rgba(0,192,0,.08);color:var(--a);font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;display:flex;align-items:center;gap:12px"><span style="font-size:22px">👤</span><div><div>Client</div><div style="font-size:11px;font-weight:400;opacity:.7">Compte personnel</div></div></button>
-        <button onclick="setInsType('agent')" style="padding:14px 18px;border-radius:14px;border:1.5px solid var(--b);background:transparent;color:var(--m);font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;display:flex;align-items:center;gap:12px"><span style="font-size:22px">🔶</span><div><div>Agent</div><div style="font-size:11px;font-weight:400;opacity:.7">Sous votre supervision</div></div></button>
-        <button onclick="setInsType('business')" style="padding:14px 18px;border-radius:14px;border:1.5px solid var(--b);background:transparent;color:var(--m);font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;display:flex;align-items:center;gap:12px"><span style="font-size:22px">🏪</span><div><div>Business</div><div style="font-size:11px;font-weight:400;opacity:.7">Commerce / Entreprise</div></div></button>
-      </div>
-    </div>
-    <div id="ins-form" style="display:none">
-      <div id="ins-err" class="info info-r" style="display:none"></div>
-      <div id="ins-fields"></div>
-      <div id="ins-photos" style="margin-bottom:14px"></div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-ghost" style="flex:1" onclick="setInsType(null)">← Retour</button>
-        <button class="btn btn-a" style="flex:2" id="btn-ins" onclick="doInscrire()">Créer le compte</button>
-      </div>
-    </div>
-    <div id="ins-loading" style="display:none;text-align:center;padding:32px 0"><div class="spin" style="width:36px;height:36px;border-width:3px"></div><div style="color:var(--m);font-size:13px;margin-top:12px">Création...</div></div>
-    <div id="ins-success" style="display:none;text-align:center;padding:28px 0">
-      <div style="width:72px;height:72px;border-radius:50%;background:var(--a);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:34px;color:#fff">✓</div>
-      <div style="font-size:22px;font-weight:800;margin-bottom:6px">Compte créé !</div>
-      <div id="ins-succ-txt" style="color:var(--m);font-size:13px;margin-bottom:22px"></div>
-      <div style="display:flex;gap:8px"><button class="btn btn-a" style="flex:1" onclick="rstIns()">Nouveau</button><button class="btn btn-ghost" style="flex:1" onclick="closeSh('inscription');rstIns()">Fermer</button></div>
-    </div>
-  </div>
-</div>
+
 
 <!-- SHEET CHANGE PIN -->
-<div class="sh-ov" id="sh-change-pin">
-  <div class="sh">
-    <div class="sh-bar"></div>
-    <div class="sh-top"><div><div class="sh-title">Changer mon PIN</div></div><button class="sh-x" onclick="closeSh('change-pin');rstChangePin()">✕</button></div>
-    <div id="change-pin-err" class="info info-r" style="display:none"></div>
-    <div id="change-pin-form">
-      <span class="lbl">PIN actuel</span>
-      <div style="margin-bottom:14px"><input class="inp" id="old-pin" type="password" placeholder="••••" maxlength="4"/></div>
-      <span class="lbl">Nouveau PIN</span>
-      <div style="margin-bottom:14px"><input class="inp" id="new-pin" type="password" placeholder="••••" maxlength="4"/></div>
-      <span class="lbl">Confirmer nouveau PIN</span>
-      <div style="margin-bottom:20px"><input class="inp" id="new-pin2" type="password" placeholder="••••" maxlength="4"/></div>
-      <button class="btn btn-a" onclick="doChangePin()">Modifier le PIN</button>
-    </div>
-    <div id="change-pin-loading" style="display:none;text-align:center;padding:20px"><div class="spin"></div></div>
-    <div id="change-pin-success" style="display:none;text-align:center;padding:20px 0">
-      <div style="font-size:20px;font-weight:800;margin-bottom:8px;color:var(--a)">✓ PIN modifié !</div>
-      <div style="color:var(--m);font-size:13px;margin-bottom:20px">Vous allez être déconnecté.</div>
-      <button onclick="closeSh('change-pin');logout()" class="btn btn-a">Se reconnecter</button>
-    </div>
-  </div>
-</div>
+
 
 <!-- SHEET DÉCONNEXION -->
 <div class="sh-ov" id="sh-deconnexion">
@@ -443,13 +144,7 @@ html,body{height:100%;background:#f5f5f5;font-family:'DM Sans',sans-serif;color:
 </div>
 
 <!-- SHEET INFOS -->
-<div class="sh-ov" id="sh-infos">
-  <div class="sh">
-    <div class="sh-bar"></div>
-    <div class="sh-top"><div><div class="sh-title">Mes informations</div></div><button class="sh-x" onclick="closeSh('infos')">✕</button></div>
-    <div id="sh-infos-body" style="padding:0 0 20px"></div>
-  </div>
-</div>
+
 
 <!-- SHEET GRILLE COMMISSIONS -->
 <div class="sh-ov" id="sh-grille-comm" onclick="if(event.target===this)this.classList.remove('on')">
@@ -499,152 +194,13 @@ html,body{height:100%;background:#f5f5f5;font-family:'DM Sans',sans-serif;color:
 
 
 <!-- SCREEN DÉPÔT AVANCÉ -->
-<div class="scr" id="s-op-depot" style="background:#f9fafb">
-  <div style="position:sticky;top:0;background:#fff;z-index:10;padding:52px 20px 14px;border-bottom:1px solid #f3f4f6">
-    <div style="display:flex;align-items:center;gap:12px">
-      <button onclick="retourAccueil('depot')" style="background:#f3f4f6;border:none;border-radius:10px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center">
-        <svg width="18" height="18" fill="none" stroke="#374151" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-      </button>
-      <div>
-        <div style="font-size:18px;font-weight:800;color:#111">D&#233;p&#244;t Client</div>
-        <div style="font-size:12px;color:#6b7280">Commission journalière du montant</div>
-      </div>
-    </div>
-  </div>
-  <div style="padding:20px">
-    <!-- Recap client -->
-    <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:16px;padding:16px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
-      <div style="width:46px;height:46px;border-radius:50%;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#25D366;flex-shrink:0" id="sop-dep-av">?</div>
-      <div style="flex:1">
-        <div style="font-weight:700;font-size:15px;color:#111" id="sop-dep-name">—</div>
-        <div style="color:#6b7280;font-size:12px" id="sop-dep-tel">—</div>
-      </div>
-      <div style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:#dcfce7;color:#16a34a" id="sop-dep-kyc">—</div>
-    </div>
 
-    <!-- Montant -->
-    <div style="margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Montant (FCFA)</div>
-      <div style="position:relative">
-        <input class="inp" id="sop-dep-amt" type="number" inputmode="decimal" placeholder="0" oninput="calcSopDep()" style="font-size:28px;font-weight:800;padding:16px 70px 16px 16px;border-radius:14px"/>
-        <span style="position:absolute;right:16px;top:50%;transform:translateY(-50%);color:#25D366;font-size:13px;font-weight:700;pointer-events:none">FCFA</span>
-      </div>
-    </div>
-
-
-
-    <!-- Calcul commission supprimé — commission journalière -->
-    <div id="sop-dep-calc" style="display:none"></div>
-
-    <div id="sop-dep-err" style="display:none;color:#dc2626;font-size:13px;text-align:center;margin-bottom:16px"></div>
-    <div id="sop-dep-loading" style="display:none;text-align:center;padding:20px"><div class="spin" style="width:32px;height:32px;border-width:3px;border-top-color:#22c55e"></div></div>
-
-    <button id="sop-dep-btn" onclick="doSopDepot()" style="width:100%;background:linear-gradient(135deg,#16a34a,#22c55e);border:none;border-radius:16px;padding:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;opacity:.4" disabled>
-      Valider le d&#233;p&#244;t
-    </button>
-  </div>
-</div>
 <!-- SCREEN DÉPÔT OK -->
-<div class="scr" id="s-op-depot-ok" style="background:#f9fafb;justify-content:center;align-items:center">
-  <div style="padding:40px 24px;text-align:center;width:100%">
-    <div style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#16a34a,#22c55e);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 32px rgba(34,197,94,.35)">
-      <svg width="44" height="44" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-    </div>
-    <div style="font-size:26px;font-weight:900;color:#111;margin-bottom:8px">D&#233;p&#244;t valid&#233; !</div>
-    <div id="sop-dep-ok-txt" style="color:#6b7280;font-size:14px;margin-bottom:6px"></div>
-    <div id="sop-dep-ok-gain" style="color:#16a34a;font-size:16px;font-weight:800;margin-bottom:6px"></div>
-    <div id="sop-dep-ok-ref" style="color:#9ca3af;font-size:11px;font-family:monospace;margin-bottom:40px"></div>
-    <div style="display:flex;gap:12px">
-      <button onclick="nouveauSopDep()" style="flex:1;background:linear-gradient(135deg,#16a34a,#22c55e);border:none;border-radius:14px;padding:16px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
-        + Nouveau d&#233;p&#244;t
-      </button>
-      <button onclick="S('s-home');chargerAccueil()" style="flex:1;background:#f3f4f6;border:none;border-radius:14px;padding:16px;color:#374151;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
-        Accueil
-      </button>
-    </div>
-  </div>
-</div>
+
 <!-- SCREEN RETRAIT AVANCÉ -->
-<div class="scr" id="s-op-retrait" style="background:#f9fafb">
-  <div style="position:sticky;top:0;background:#fff;z-index:10;padding:52px 20px 14px;border-bottom:1px solid #f3f4f6">
-    <div style="display:flex;align-items:center;gap:12px">
-      <button onclick="retourAccueil('retrait')" style="background:#f3f4f6;border:none;border-radius:10px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center">
-        <svg width="18" height="18" fill="none" stroke="#374151" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-      </button>
-      <div>
-        <div style="font-size:18px;font-weight:800;color:#111">Retrait Client</div>
-        <div style="font-size:12px;color:#6b7280">Commission journalière par volume</div>
-      </div>
-    </div>
-  </div>
-  <div style="padding:20px">
-    <!-- Recap client -->
-    <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:16px;padding:16px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
-      <div style="width:46px;height:46px;border-radius:50%;background:rgba(249,115,22,.12);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#f97316;flex-shrink:0" id="sop-ret-av">?</div>
-      <div style="flex:1">
-        <div style="font-weight:700;font-size:15px;color:#111" id="sop-ret-name">—</div>
-        <div style="color:#6b7280;font-size:12px" id="sop-ret-tel">—</div>
-      </div>
-      <div style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:#fff7ed;color:#f97316" id="sop-ret-kyc">—</div>
-    </div>
 
-    <!-- Montant -->
-    <div id="sop-ret-phase1">
-      <div style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Montant (FCFA)</div>
-      <div style="position:relative;margin-bottom:12px">
-        <input class="inp" id="sop-ret-amt" type="number" inputmode="decimal" placeholder="0" oninput="calcSopRet()" style="font-size:28px;font-weight:800;padding:16px 70px 16px 16px;border-radius:14px"/>
-        <span style="position:absolute;right:16px;top:50%;transform:translateY(-50%);color:#f97316;font-size:13px;font-weight:700;pointer-events:none">FCFA</span>
-      </div>
-
-      <div id="sop-ret-calc" style="display:none;background:#fff;border:1.5px solid #e5e7eb;border-radius:14px;padding:14px;margin-bottom:20px">
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="color:#6b7280;font-size:13px">Frais de retrait (1%)</span><span style="font-weight:700;font-size:13px" id="sop-ret-frais">—</span></div>
-        <div style="display:flex;justify-content:space-between;border-top:1px solid #f3f4f6;padding-top:8px"><span style="font-weight:700;font-size:13px">Total d&#233;bit&#233;</span><span style="font-weight:800;font-size:14px;color:#dc2626" id="sop-ret-total">—</span></div>
-      </div>
-      <div id="sop-ret-err1" style="display:none;color:#dc2626;font-size:13px;text-align:center;margin-bottom:14px"></div>
-      <div id="sop-ret-loading1" style="display:none;text-align:center;padding:16px"><div class="spin" style="width:28px;height:28px;border-width:3px;border-top-color:#f97316"></div></div>
-      <button id="sop-ret-btn1" onclick="demanderOTPSop()" style="width:100%;background:linear-gradient(135deg,#c2410c,#f97316);border:none;border-radius:16px;padding:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;opacity:.4" disabled>
-        Demander l&#39;autorisation
-      </button>
-    </div>
-
-    <!-- Phase 2 : Saisie OTP -->
-    <div id="sop-ret-phase2" style="display:none">
-      <div style="background:#fffbeb;border:1.5px solid #fbbf24;border-radius:14px;padding:16px;margin-bottom:20px">
-        <div style="font-size:15px;font-weight:800;color:#92400e;margin-bottom:6px;text-align:center">&#128274; Autorisation requise</div>
-        <div id="sop-ret-otp-info" style="font-size:12px;color:#92400e;text-align:center;margin-bottom:10px"></div>
-        <div id="sop-ret-otp-recap" style="font-size:13px;font-weight:700;color:#374151;text-align:center;background:rgba(0,0,0,.05);border-radius:8px;padding:8px;margin-bottom:14px"></div>
-        <div style="font-size:12px;color:#6b7280;text-align:center;margin-bottom:10px">Code OTP du client :</div>
-        <input id="sop-ret-otp-input" type="number" inputmode="numeric" placeholder="&#9679;&#9679;&#9679;&#9679;" style="width:100%;border:2px solid #fbbf24;border-radius:12px;padding:14px;font-size:30px;font-weight:900;text-align:center;outline:none;color:#111;box-sizing:border-box;letter-spacing:.3em"/>
-        <div id="sop-ret-otp-err" style="display:none;color:#dc2626;font-size:12px;margin-top:8px;text-align:center"></div>
-      </div>
-      <div id="sop-ret-loading2" style="display:none;text-align:center;padding:16px"><div class="spin" style="width:28px;height:28px;border-width:3px;border-top-color:#f97316"></div></div>
-      <div style="display:flex;gap:10px">
-        <button onclick="annulerOTPSop()" style="flex:1;background:#f3f4f6;border:none;border-radius:14px;padding:16px;color:#374151;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Annuler</button>
-        <button id="sop-ret-btn2" onclick="confirmerOTPSop()" style="flex:2;background:linear-gradient(135deg,#c2410c,#f97316);border:none;border-radius:14px;padding:16px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">Confirmer</button>
-      </div>
-    </div>
-  </div>
-</div>
 <!-- SCREEN RETRAIT OK -->
-<div class="scr" id="s-op-retrait-ok" style="background:#f9fafb;justify-content:center;align-items:center">
-  <div style="padding:40px 24px;text-align:center;width:100%">
-    <div style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#c2410c,#f97316);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 32px rgba(249,115,22,.35)">
-      <svg width="44" height="44" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-    </div>
-    <div style="font-size:26px;font-weight:900;color:#111;margin-bottom:8px">Retrait valid&#233; !</div>
-    <div id="sop-ret-ok-txt" style="color:#6b7280;font-size:14px;margin-bottom:6px"></div>
-    <div id="sop-ret-ok-gain" style="color:#16a34a;font-size:16px;font-weight:800;margin-bottom:6px"></div>
-    <div id="sop-ret-ok-ref" style="color:#9ca3af;font-size:11px;font-family:monospace;margin-bottom:40px"></div>
-    <div style="display:flex;gap:12px">
-      <button onclick="nouveauSopRet()" style="flex:1;background:linear-gradient(135deg,#c2410c,#f97316);border:none;border-radius:14px;padding:16px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
-        + Nouveau retrait
-      </button>
-      <button onclick="S('s-home');chargerAccueil()" style="flex:1;background:#f3f4f6;border:none;border-radius:14px;padding:16px;color:#374151;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
-        Accueil
-      </button>
-    </div>
-  </div>
-</div>
+
 
 
 <div class="wave-qr-popup" id="wave-qr-popup">

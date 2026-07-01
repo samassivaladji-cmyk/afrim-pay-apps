@@ -2409,7 +2409,7 @@ function _drawAgStatShell(el,agents){
   var periods=[['day','Auj.'],['yesterday','Hier'],['week','Semaine'],['month','Mois'],['year','Année']];
   var pBtns=periods.map(function(p){var on=p[0]===_agStatPeriod;return '<button onclick="setAgStatPeriod(\''+p[0]+'\')" style="padding:6px 10px;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;'+(on?'background:#25D366;color:#fff;border:1px solid #25D366':'background:transparent;color:#fff;border:1px solid rgba(255,255,255,.4)')+'">'+p[1]+'</button>';}).join('');
   var types=[['depot','↓ Dépôts'],['retrait','↑ Retraits'],['trfEnv','→ Trf. envoyés'],['trfRec','← Trf. reçus'],['solde','💰 Solde']];
-  var tBtns=types.map(function(t){var on=t[0]===_agStatType;var col=_typeColor(t[0]);return '<button onclick="setAgStatType(\''+t[0]+'\')" style="padding:7px 12px;border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;'+(on?'background:'+col+';color:#fff;border:1px solid '+col:'background:#fff;color:#6b7280;border:1px solid #e5e7eb')+'">'+t[1]+'</button>';}).join('');
+  var tBtns=types.map(function(t){var on=t[0]===_agStatType;var col=_typeColor(t[0]);return '<button id="agstat-btn-'+t[0]+'" onclick="setAgStatType(\''+t[0]+'\')" style="padding:7px 12px;border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;'+(on?'background:'+col+';color:#fff;border:1px solid '+col:'background:#fff;color:#6b7280;border:1px solid #e5e7eb')+'">'+t[1]+'</button>';}).join('');
   // Légende agents
   var legend=agents.slice(0,10).map(function(a,i){return '<div style="display:flex;align-items:center;gap:5px;white-space:nowrap"><div style="width:10px;height:10px;border-radius:3px;background:'+_AG_COLORS[i%_AG_COLORS.length]+';flex-shrink:0"></div><div style="font-size:11px;color:#374151;overflow:hidden;text-overflow:ellipsis;max-width:90px">'+(a.prenom||'')+'</div></div>';}).join('');
   el.innerHTML=''
@@ -2431,8 +2431,39 @@ function _typeColor(t){
   return '#25D366';
 }
 
-function setAgStatPeriod(p){_agStatPeriod=p;_agStatCache={};renderAgentsStats();}
-function setAgStatType(t){_agStatType=t;_renderAgStatChart(getAgents());}
+function setAgStatPeriod(p){
+  _agStatPeriod=p;
+  // Vider seulement le cache de cette période pour forcer le rechargement
+  delete _agStatCache[p];
+  // Mettre à jour visuellement les boutons de période sans tout re-render
+  ['day','yesterday','week','month','year'].forEach(function(k){
+    var btns=document.querySelectorAll('[onclick*="setAgStatPeriod(\''+k+'\')"]');
+    btns.forEach(function(btn){
+      var on=k===p;
+      btn.style.background=on?'#25D366':'transparent';
+      btn.style.color='#fff';
+      btn.style.borderColor=on?'#25D366':'rgba(255,255,255,.4)';
+    });
+  });
+  // Recharger les données
+  var el=document.getElementById('agstat-content');
+  if(el)el.innerHTML='<div style="text-align:center;padding:32px"><div class="spin"></div></div>';
+  _chargerAgStatData(getAgents());
+}
+function setAgStatType(t){
+  _agStatType=t;
+  // Mise à jour visuelle immédiate des boutons (sans re-render complet)
+  ['depot','retrait','trfEnv','trfRec','solde'].forEach(function(k){
+    var btn=document.getElementById('agstat-btn-'+k);
+    if(!btn)return;
+    var on=k===t;
+    var col=_typeColor(k);
+    btn.style.background=on?col:'#fff';
+    btn.style.color=on?'#fff':'#6b7280';
+    btn.style.borderColor=on?col:'#e5e7eb';
+  });
+  _renderAgStatChart(getAgents());
+}
 
 async function _chargerAgStatData(agents){
   var cacheKey=_agStatPeriod;

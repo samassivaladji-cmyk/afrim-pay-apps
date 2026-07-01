@@ -1510,6 +1510,15 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
         <label class="lbl">Telephone *</label><input class="inp" id="ins-tel" type="tel" placeholder="+225 07 XX XX XX" inputmode="numeric" style="margin-bottom:12px"/>
         <label class="lbl">PIN *</label><input class="inp" id="ins-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••" style="margin-bottom:12px"/>
         <label class="lbl">Zone</label><input class="inp" id="ins-zone" type="text" placeholder="Quartier / Ville" style="margin-bottom:12px"/>
+        <!-- Champ parrain visible uniquement pour la création d'un agent -->
+        <div id="ins-parrain-bloc" style="display:none;margin-bottom:12px">
+          <label class="lbl">Mini-Master / Master rattaché <span style="font-weight:400;color:#9ca3af">(optionnel)</span></label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input class="inp" id="ins-parrain-tel" type="tel" placeholder="Numéro du Mini-Master ou Master" inputmode="numeric" style="flex:1" oninput="rechercherParrainAgent()"/>
+          </div>
+          <div id="ins-parrain-result" style="font-size:12px;margin-top:6px;color:var(--m)"></div>
+          <input type="hidden" id="ins-parrain-id"/>
+        </div>
         <!-- Niveau KYC visible uniquement pour client -->
         <div id="ins-kyc-select" style="display:none;margin-bottom:12px">
           <label class="lbl">Niveau KYC</label>
@@ -2389,10 +2398,17 @@ function setInsRole(r){
   var intern=['admin','support_client','support_tech'];
   var warn=document.getElementById('ins-warn-intern');
   if(warn)warn.style.display=intern.indexOf(r)>=0?'':'none';
-  // Afficher sélecteur KYC pour client uniquement
   var kycSel=document.getElementById('ins-kyc-select');
   if(kycSel)kycSel.style.display=r==='client'?'':'none';
-  // Réinitialiser et afficher les photos selon le rôle
+  var parrainBloc=document.getElementById('ins-parrain-bloc');
+  if(parrainBloc){
+    parrainBloc.style.display=r==='agent'?'':'none';
+    if(r!=='agent'){
+      var pt=document.getElementById('ins-parrain-tel');if(pt)pt.value='';
+      var pi=document.getElementById('ins-parrain-id');if(pi)pi.value='';
+      var pr=document.getElementById('ins-parrain-result');if(pr)pr.textContent='';
+    }
+  }
   resetKycPhotos();
   renderKycPhotos('ins-kyc-photos', r, insKycNiveau);
 }
@@ -4670,10 +4686,17 @@ function setInsRole(r){
   var intern=['admin','support_client','support_tech'];
   var warn=document.getElementById('ins-warn-intern');
   if(warn)warn.style.display=intern.indexOf(r)>=0?'':'none';
-  // Afficher sélecteur KYC pour client uniquement
   var kycSel=document.getElementById('ins-kyc-select');
   if(kycSel)kycSel.style.display=r==='client'?'':'none';
-  // Réinitialiser et afficher les photos selon le rôle
+  var parrainBloc=document.getElementById('ins-parrain-bloc');
+  if(parrainBloc){
+    parrainBloc.style.display=r==='agent'?'':'none';
+    if(r!=='agent'){
+      var pt=document.getElementById('ins-parrain-tel');if(pt)pt.value='';
+      var pi=document.getElementById('ins-parrain-id');if(pi)pi.value='';
+      var pr=document.getElementById('ins-parrain-result');if(pr)pr.textContent='';
+    }
+  }
   resetKycPhotos();
   renderKycPhotos('ins-kyc-photos', r, insKycNiveau);
 }
@@ -4690,6 +4713,31 @@ function setInsKyc(niveau){
   resetKycPhotos();
   renderKycPhotos('ins-kyc-photos', insRole, niveau);
 }
+
+var _parrainTimer=null;
+function rechercherParrainAgent(){
+  clearTimeout(_parrainTimer);
+  var tel=document.getElementById('ins-parrain-tel').value.trim();
+  var resEl=document.getElementById('ins-parrain-result');
+  var idEl=document.getElementById('ins-parrain-id');
+  idEl.value='';resEl.textContent='';
+  if(tel.replace(/\D/g,'').length<8)return;
+  resEl.textContent='Recherche...';
+  _parrainTimer=setTimeout(async function(){
+    try{
+      var r=await apiGet('/admin/users/search?q='+encodeURIComponent(tel));
+      var users=(r.data&&r.data.users)||[];
+      var match=users.find(function(u){return u.role==='mini_master'||u.role==='master';});
+      if(match){
+        idEl.value=match.id;
+        resEl.innerHTML='<span style="color:#22c55e;font-weight:700">'+String.fromCodePoint(0x2705)+' '+(match.prenom||'')+' '+(match.nom||'')+' — '+(match.role==='mini_master'?'Mini-Master':'Master')+'</span>';
+      } else {
+        resEl.innerHTML='<span style="color:#ef4444">Aucun Mini-Master ou Master trouvé pour ce numéro</span>';
+      }
+    }catch(e){resEl.innerHTML='<span style="color:#ef4444">'+e.message+'</span>';}
+  },500);
+}
+
 function ouvrirInscription(){
   var u=G.user;if(!u)return;
   var r=u.role;
@@ -4745,6 +4793,7 @@ async function doInscrire(){
   try{
     var body={prenom:prenom,nom:nom,telephone:tel,pin:pin,role:insRole,zone:zone||undefined};
     if(insRole==='client')body.kycNiveau=insKycNiveau;
+    if(insRole==='agent'){var parrainId=document.getElementById('ins-parrain-id').value;if(parrainId)body.parrainId=parrainId;}
     var r=await apiPost('/auth/register',body);
     var userId=r.data.id||r.data.utilisateur_id;
     // Upload photos KYC

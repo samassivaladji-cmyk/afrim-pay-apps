@@ -2236,7 +2236,6 @@ async function chargerReseauTab(){
       +'<div style="background:var(--s);border-radius:14px;padding:14px 8px;text-align:center"><div style="font-size:20px;font-weight:900;color:#25D366">'+nbClients+'</div><div style="font-size:10px;color:var(--m);margin-top:2px;font-weight:700">Clients</div></div>'
     +'</div>';
     h+='<div style="padding:0 0 12px"><div class="srow" style="border:none"><span style="color:var(--m);font-size:13px">Filleuls total</span><span style="color:#25D366;font-size:16px;font-weight:800">'+list.length+'</span></div></div>';
-    h+='<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:#92400e">🔒 Par confidentialité, les noms et numéros des clients ne sont pas affichés ici — seul leur nombre l\'est. Pour les contacter, passez par le Service Client.</div>';
     var agentsBusiness=list.filter(function(f){return f.role==='agent'||f.role==='business';});
     if(agentsBusiness.length){
       h+='<div style="font-size:11px;font-weight:800;color:var(--m);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Agents &amp; Business — suivi</div>';
@@ -2265,14 +2264,27 @@ async function voirStatsReseau(userId){
     var h='<div style="text-align:left">';
     h+='<div style="font-size:18px;font-weight:800;margin-bottom:2px">'+(d.prenom||'')+' '+(d.nom||'')+'</div>';
     h+='<div style="color:var(--m);font-size:13px;margin-bottom:16px">'+(d.telephone||'')+' · '+(d.role==='agent'?'Agent':'Business')+'</div>';
-    h+='<div class="srow"><span style="color:var(--m);font-size:13px">Solde actuel</span><span style="font-weight:800;font-size:14px">'+F(d.solde)+'</span></div>';
     if(d.role==='agent'){
-      h+='<div class="srow"><span style="color:var(--m);font-size:13px">Dépôts traités</span><span style="font-weight:700;font-size:13px">'+(d.nbDepots||0)+' · '+F(d.volDepots)+'</span></div>';
-      h+='<div class="srow"><span style="color:var(--m);font-size:13px">Retraits traités</span><span style="font-weight:700;font-size:13px">'+(d.nbRetraits||0)+' · '+F(d.volRetraits)+'</span></div>';
-      h+='<div class="srow"><span style="color:var(--m);font-size:13px">Transferts</span><span style="font-weight:700;font-size:13px">'+(d.nbTransferts||0)+' · '+F(d.volTransferts)+'</span></div>';
-      h+='<div class="srow" style="border:none"><span style="color:var(--m);font-size:13px">Clients inscrits</span><span style="font-weight:700;font-size:13px">'+(d.nbInscriptions||0)+'</span></div>';
-    }else{
-      h+='<div class="srow"><span style="color:var(--m);font-size:13px">Paiements reçus</span><span style="font-weight:700;font-size:13px">'+(d.nbPaiements||0)+' · '+F(d.volPaiements)+'</span></div>';
+      if(d.isOwner){
+        // Agent appartenant à ce mini-master : vue complète
+        h+='<div class="srow"><span style="color:var(--m);font-size:13px">Solde actuel</span><span style="font-weight:800;font-size:14px">'+F(d.solde)+'</span></div>';
+        h+='<div class="srow"><span style="color:var(--m);font-size:13px">Dépôts traités</span><span style="font-weight:700;font-size:13px">'+(d.nbDepots||0)+' · '+F(d.volDepots)+'</span></div>';
+        h+='<div class="srow"><span style="color:var(--m);font-size:13px">Retraits traités</span><span style="font-weight:700;font-size:13px">'+(d.nbRetraits||0)+' · '+F(d.volRetraits)+'</span></div>';
+        h+='<div class="srow"><span style="color:var(--m);font-size:13px">Transferts</span><span style="font-weight:700;font-size:13px">'+(d.nbTransferts||0)+' · '+F(d.volTransferts)+'</span></div>';
+        h+='<div class="srow" style="border:none"><span style="color:var(--m);font-size:13px">Clients inscrits</span><span style="font-weight:700;font-size:13px">'+(d.nbInscriptions||0)+'</span></div>';
+      } else {
+        // Agent rattaché mais n'appartenant pas à ce mini-master : vue limitée
+        h+='<div class="srow"><span style="color:var(--m);font-size:13px">Clients inscrits</span><span style="font-weight:800;font-size:14px">'+(d.nbInscriptions||0)+'</span></div>';
+        var soldeOk=d.soldeSuffisant;
+        h+='<div class="srow" style="border:none"><span style="color:var(--m);font-size:13px">Niveau de solde</span>';
+        h+=soldeOk
+          ?'<span style="color:#22c55e;font-weight:800;font-size:13px">✅ Suffisant (≥ 1 500 000)</span>'
+          :'<span style="color:#ef4444;font-weight:800;font-size:13px">⚠️ Bas (&lt; 1 500 000)</span>';
+        h+='</div>';
+      }
+    } else if(d.role==='business'){
+      // Business : nom, tél, inscriptions — sans les montants de paiement
+      h+='<div class="srow"><span style="color:var(--m);font-size:13px">Paiements reçus</span><span style="font-weight:700;font-size:13px">'+(d.nbPaiements||0)+' transactions</span></div>';
       h+='<div class="srow" style="border:none"><span style="color:var(--m);font-size:13px">Inscriptions liées</span><span style="font-weight:700;font-size:13px">'+(d.nbInscriptions||0)+'</span></div>';
     }
     h+='</div>';

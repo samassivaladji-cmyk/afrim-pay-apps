@@ -2471,12 +2471,26 @@ async function _chargerAgStatData(agents){
     await Promise.all(agents.slice(0,10).map(async function(a,idx){
       try{
         var results=await Promise.all([
-          get('/transactions?limit=2000&type=depot&userId='+a.id),
-          get('/transactions?limit=2000&type=retrait&userId='+a.id),
-          get('/transactions?limit=1000&type=transfert&userId='+a.id),
+          get('/users/'+a.id+'/transactions?limit=2000&type=depot'),
+          get('/users/'+a.id+'/transactions?limit=2000&type=retrait'),
+          get('/users/'+a.id+'/transactions?limit=1000&type=transfert'),
         ]);
         var nsRes=await get('/users/'+a.id+'/network-stats');
         var solde=nsRes.data.isOwner?nsRes.data.solde:null;
+
+        // Identifier l'ID de compte de l'agent depuis ses transactions
+        var allTxData=(results[0].data||[]).concat(results[1].data||[]).concat(results[2].data||[]);
+        var agCptId=null;
+        // On récupère l'ID du compte via network-stats déjà appelé
+        if(nsRes.data.isOwner){
+          // L'agent a un compte — on le trouve dans ses transactions
+          for(var ti=0;ti<allTxData.length;ti++){
+            var tx=allTxData[ti];
+            // compteSource ou compteDest qui ne correspond pas à l'autre = le compte de l'agent
+            if(tx.compteSourceId||tx.compte_source_id){agCptId=tx.compteSourceId||tx.compte_source_id;break;}
+            if(tx.compteDestId||tx.compte_dest_id){agCptId=tx.compteDestId||tx.compte_dest_id;break;}
+          }
+        }
 
         function filterTx(list){return list.filter(function(t){var d=new Date(t.dateCreation||t.date_creation||0);return d>=d1&&(!d2||d<=d2);});}
         function buildCrb(items){
@@ -2489,9 +2503,10 @@ async function _chargerAgStatData(agents){
         var depP=filterTx(results[0].data||[]);
         var retP=filterTx(results[1].data||[]);
         var trfAll=filterTx(results[2].data||[]);
-        var trfEnv=trfAll.filter(function(t){return String(t.compteSourceId||t.compte_source_id||t.operateurId||'')===a.id;});
-        var trfRec=trfAll.filter(function(t){return String(t.compteDestId||t.compte_dest_id||'')===a.id;});
-        if(!trfEnv.length&&!trfRec.length)trfEnv=trfAll;
+        // Tous les dépôts viennent du compte agent (source) — tous les retraits arrivent au compte agent (dest)
+        // Pour les transferts, on identifie par compteSourceId
+        var trfEnv=agCptId?trfAll.filter(function(t){return String(t.compteSourceId||t.compte_source_id||'')===agCptId;}):trfAll;
+        var trfRec=agCptId?trfAll.filter(function(t){return String(t.compteDestId||t.compte_dest_id||'')===agCptId;}):[];
 
         agentsData[a.id]={
           color:_AG_COLORS[idx%_AG_COLORS.length],

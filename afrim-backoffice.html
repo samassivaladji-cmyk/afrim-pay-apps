@@ -1310,24 +1310,6 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
 </div>
 
 <!-- ÉCRAN INSCRIPTIONS -->
-<div class="scr" id="s-inscriptions">
-  <div style="padding:20px 16px 14px;display:flex;align-items:center;justify-content:space-between">
-    <div>
-      <div style="font-size:22px;font-weight:800">📝 Inscriptions</div>
-      <div style="color:var(--m);font-size:12px">Suivi des comptes créés par rôle</div>
-    </div>
-  </div>
-  <div style="display:flex;gap:6px;padding:0 16px 12px;overflow-x:auto">
-    <button id="ins-tab-tous" onclick="setInsTab('tous')" style="padding:9px 14px;font-size:11px;font-weight:700;border:1px solid var(--y);background:var(--y);color:#fff;border-radius:99px;cursor:pointer;font-family:inherit;white-space:nowrap">Tous</button>
-    <button id="ins-tab-master" onclick="setInsTab('master')" style="padding:9px 14px;font-size:11px;font-weight:700;border:1px solid #e5e7eb;background:#fff;color:#6b7280;border-radius:99px;cursor:pointer;font-family:inherit;white-space:nowrap">Master</button>
-    <button id="ins-tab-mini_master" onclick="setInsTab('mini_master')" style="padding:9px 14px;font-size:11px;font-weight:700;border:1px solid #e5e7eb;background:#fff;color:#6b7280;border-radius:99px;cursor:pointer;font-family:inherit;white-space:nowrap">Mini-Master</button>
-    <button id="ins-tab-agent" onclick="setInsTab('agent')" style="padding:9px 14px;font-size:11px;font-weight:700;border:1px solid #e5e7eb;background:#fff;color:#6b7280;border-radius:99px;cursor:pointer;font-family:inherit;white-space:nowrap">Agent</button>
-    <button id="ins-tab-business" onclick="setInsTab('business')" style="padding:9px 14px;font-size:11px;font-weight:700;border:1px solid #e5e7eb;background:#fff;color:#6b7280;border-radius:99px;cursor:pointer;font-family:inherit;white-space:nowrap">Business</button>
-    <button id="ins-tab-client" onclick="setInsTab('client')" style="padding:9px 14px;font-size:11px;font-weight:700;border:1px solid #e5e7eb;background:#fff;color:#6b7280;border-radius:99px;cursor:pointer;font-family:inherit;white-space:nowrap">Client</button>
-  </div>
-  <div style="padding:0 16px 12px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px" id="ins-stats-row"></div>
-  <div style="padding:0 16px 40px" id="ins-list"><div style="padding:40px;text-align:center"><div class="spin"></div></div></div>
-</div>
 
 <!-- SHEET NOTIFICATION RATTACHEMENTS -->
 <div class="sh-ov" id="sh-rt-notif">
@@ -1654,11 +1636,11 @@ var KYC_CONFIG = {
     label: 'Operateur reseau',
     plafond: 'Illimite',
     docs: [
-      {id:'selfie',    label:'Selfie',                        camera:'user',        requis:false, icon:'🤳'},
-      {id:'cni_recto', label:'CNI Recto',                    camera:'environment', requis:false, icon:'🪪'},
-      {id:'cni_verso', label:'CNI Verso',                    camera:'environment', requis:false, icon:'🪪'},
-      {id:'rccm',      label:'RCCM (Registre de commerce)',  camera:'environment', requis:false, icon:'📋'},
-      {id:'declaration_fiscale', label:'DFE (Declaration fiscale)', camera:'environment', requis:false, icon:'📄'},
+      {id:'selfie',    label:'Selfie',                        camera:'user',        requis:true, icon:'🤳'},
+      {id:'cni_recto', label:'CNI Recto',                    camera:'environment', requis:true, icon:'🪪'},
+      {id:'cni_verso', label:'CNI Verso',                    camera:'environment', requis:true, icon:'🪪'},
+      {id:'rccm',      label:'RCCM (Registre de commerce)',  camera:'environment', requis:true, icon:'📋'},
+      {id:'declaration_fiscale', label:'DFE (Declaration fiscale)', camera:'environment', requis:true, icon:'📄'},
     ]
   }
 };
@@ -3342,11 +3324,11 @@ var KYC_CONFIG = {
     label: 'Operateur reseau',
     plafond: 'Illimite',
     docs: [
-      {id:'selfie',    label:'Selfie',                        camera:'user',        requis:false, icon:'🤳'},
-      {id:'cni_recto', label:'CNI Recto',                    camera:'environment', requis:false, icon:'🪪'},
-      {id:'cni_verso', label:'CNI Verso',                    camera:'environment', requis:false, icon:'🪪'},
-      {id:'rccm',      label:'RCCM (Registre de commerce)',  camera:'environment', requis:false, icon:'📋'},
-      {id:'declaration_fiscale', label:'DFE (Declaration fiscale)', camera:'environment', requis:false, icon:'📄'},
+      {id:'selfie',    label:'Selfie',                        camera:'user',        requis:true, icon:'🤳'},
+      {id:'cni_recto', label:'CNI Recto',                    camera:'environment', requis:true, icon:'🪪'},
+      {id:'cni_verso', label:'CNI Verso',                    camera:'environment', requis:true, icon:'🪪'},
+      {id:'rccm',      label:'RCCM (Registre de commerce)',  camera:'environment', requis:true, icon:'📋'},
+      {id:'declaration_fiscale', label:'DFE (Declaration fiscale)', camera:'environment', requis:true, icon:'📄'},
     ]
   }
 };
@@ -3598,7 +3580,6 @@ function buildNavGrid(){
     {id:'txns',     icon:'💳', label:'Flux',     fn:"setTab('txns')",    need:'txns'},
     {id:'monitoring',icon:'📊',label:'Suivi',   fn:"setTab('monitoring')",need:'monitoring'},
     {id:'rattachements',icon:'🔗',label:'Rattachements',fn:"setTab('rattachements')",need:'rattachements'},
-    {id:'inscriptions',icon:'📝',label:'Inscriptions',fn:"setTab('inscriptions')",need:'rattachements'},
     {id:'segmentation',icon:'🎯',label:'Segmentation',fn:"setTab('segmentation')",need:'rattachements'},
     {id:'moncompte',icon:'👤',label:'Mon Compte',fn:"setTab('moncompte')",need:'moncompte'},
     {id:'support',  icon:'💬', label:'Support',  fn:"setTab('support')", need:'support'},
@@ -3665,7 +3646,6 @@ function setTab(t){
   else if(t==='support'){showScr('s-support');chargerSupport();}
   else if(t==='tech'){showScr('s-tech');chargerTech();}
   else if(t==='rattachements'){showScr('s-rattachements');chargerRattachements();}
-  else if(t==='inscriptions'){showScr('s-inscriptions');setInsTab('tous');}
   else if(t==='segmentation'){showScr('s-segmentation');initSegmentationUI();}
   else if(t==='moncompte'){showScr('s-moncompte');chargerMonCompte();}
   else if(t==='stats'){

@@ -670,13 +670,18 @@ function setTab(t){
     <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:11px 14px;margin-bottom:14px;font-size:13px;color:#92400e;">ℹ️ Transferts entre agents et mini-masters sans commission. Utile pour rééquilibrer la liquidité.</div>
     <div id="trf-err" class="info info-r" style="display:none"></div>
     <span class="lbl">Numéro destinataire</span>
-    <div style="margin-bottom:14px"><input class="inp" id="trf-tel" type="tel" placeholder="+225 07 XX XX XX"/></div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center">
+      <input class="inp" id="trf-tel" type="tel" placeholder="+225 07 XX XX XX" style="flex:1"/>
+      <button onclick="ouvrirScanner(function(tel){document.getElementById('trf-tel').value=tel;})" style="background:var(--s);border:1.5px solid var(--b);border-radius:13px;padding:0 14px;cursor:pointer;display:flex;align-items:center;height:48px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3" rx=".5" fill="#25D366"/><rect x="19" y="14" width="2" height="2" rx=".5" fill="#25D366"/><rect x="14" y="19" width="2" height="2" rx=".5" fill="#25D366"/></svg>
+      </button>
+    </div>
     <span class="lbl">Montant (FCFA)</span>
     <div style="position:relative;margin-bottom:14px"><input class="inp" id="trf-amt" type="number" placeholder="0" style="padding-right:55px"/><span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#25D366;font-size:12px;font-weight:700">FCFA</span></div>
     <div id="trf-loading" style="display:none;text-align:center;padding:20px"><div class="spin"></div></div>
-    <div style="display:flex;gap:8px">
+    <div id="trf-form-btns" style="display:flex;gap:8px">
       <button class="btn btn-ghost" style="flex:1" onclick="closeSh('transfert');rstTrf()">Annuler</button>
-      <button class="btn btn-a" style="flex:2" onclick="doTransfert()">Transférer</button>
+      <button class="btn btn-a" id="trf-btn-valider" style="flex:2" onclick="doTransfert(this)">Transférer</button>
     </div>
     <div id="trf-success" style="display:none;text-align:center;padding:20px 0">
       <div style="font-size:22px;font-weight:800;margin-bottom:6px;color:#25D366">✓ Transfert réussi !</div>
@@ -768,7 +773,7 @@ var PHOTOS_CFG={
   client_KYC2:[{id:'selfie',label:'Selfie',req:true,selfie:true},{id:'cni_r',label:'CNI recto',req:true,selfie:false},{id:'cni_v',label:'CNI verso',req:true,selfie:false}],
   client_KYC3:[{id:'selfie',label:'Selfie',req:true,selfie:true},{id:'cni_r',label:'CNI recto',req:true,selfie:false},{id:'cni_v',label:'CNI verso',req:true,selfie:false},{id:'naissance',label:'Extrait naissance',req:true,selfie:false},{id:'domicile',label:'Justif. domicile',req:true,selfie:false}],
   business:[{id:'selfie_gerant',label:'Selfie gérant',req:true,selfie:true},{id:'cni_r',label:'CNI gérant recto',req:true,selfie:false},{id:'cni_v',label:'CNI gérant verso',req:true,selfie:false},{id:'rccm',label:'RCCM',req:true,selfie:false},{id:'fiscal',label:'Déclaration fiscale',req:false,selfie:false}],
-  agent:[{id:'selfie',label:'Selfie',req:true,selfie:true},{id:'cni_r',label:'CNI recto',req:true,selfie:false},{id:'cni_v',label:'CNI verso',req:true,selfie:false}],
+  agent:[{id:'selfie',label:'Selfie',req:true,selfie:true},{id:'cni_r',label:'CNI recto',req:true,selfie:false},{id:'cni_v',label:'CNI verso',req:true,selfie:false},{id:'dfe',label:'DFE (Décl. fiscale)',req:true,selfie:false},{id:'rccm',label:'Registre de commerce',req:true,selfie:false}],
 };
 var insType=null,insKyc='KYC1',insPhotos={};
 
@@ -1104,20 +1109,24 @@ function rstOp(op){
   document.getElementById(op+'-ok').disabled=true;document.getElementById(op+'-ok').style.opacity='.4';
 }
 
-async function doTransfert(){
+async function doTransfert(btn){
+  if(btn){btn.disabled=true;btn.textContent='...';}
   var tel=document.getElementById('trf-tel').value;var amt=Number(document.getElementById('trf-amt').value);
-  if(!amt||amt<=0){T('Montant invalide',true);return;}
+  if(!amt||amt<=0){T('Montant invalide',true);if(btn){btn.disabled=false;btn.textContent='Transférer';}return;}
   document.getElementById('trf-loading').style.display='';
+  document.getElementById('trf-form-btns').style.display='none';
   try{
     await post('/transactions/transfer',{telephone:tel,montant:amt,motif:'Transfert liquidité agent'});
     document.getElementById('trf-loading').style.display='none';document.getElementById('trf-success').style.display='';
     rafraichir();
   }catch(e){
     document.getElementById('trf-loading').style.display='none';
+    document.getElementById('trf-form-btns').style.display='';
+    if(btn){btn.disabled=false;btn.textContent='Transférer';}
     document.getElementById('trf-err').textContent=e.message;document.getElementById('trf-err').style.display='';
   }
 }
-function rstTrf(){document.getElementById('trf-tel').value='';document.getElementById('trf-amt').value='';document.getElementById('trf-loading').style.display='none';document.getElementById('trf-success').style.display='none';document.getElementById('trf-err').style.display='none';}
+function rstTrf(){document.getElementById('trf-tel').value='';document.getElementById('trf-amt').value='';document.getElementById('trf-loading').style.display='none';document.getElementById('trf-success').style.display='none';document.getElementById('trf-err').style.display='none';document.getElementById('trf-form-btns').style.display='';var b=document.getElementById('trf-btn-valider');if(b){b.disabled=false;b.textContent='Transférer';}}
 
 // ══ LOGIN ════════════════════════════════════════════════════════
 function goPin(){G.pin='';document.getElementById('pin-sub').textContent=document.getElementById('lg-tel').value;document.getElementById('err-pin').style.display='none';rDots();S('s-pin');}

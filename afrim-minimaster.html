@@ -672,7 +672,7 @@ function setTab(t){
     <span class="lbl">Numéro destinataire</span>
     <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center">
       <input class="inp" id="trf-tel" type="tel" placeholder="+225 07 XX XX XX" style="flex:1"/>
-      <button onclick="ouvrirScanner(function(tel){document.getElementById('trf-tel').value=tel;})" style="background:var(--s);border:1.5px solid var(--b);border-radius:13px;padding:0 14px;cursor:pointer;display:flex;align-items:center;height:48px">
+      <button onclick="ouvrirScanner(function(tel){document.getElementById('trf-tel').value=tel;var r=get('/users?telephone='+encodeURIComponent(tel)+'&limit=1');r.then(function(res){var arr=Array.isArray(res.data)?res.data:[res.data];if(arr[0])ouvrirScreenTransfert(arr[0]);});})" style="background:var(--s);border:1.5px solid var(--b);border-radius:13px;padding:0 14px;cursor:pointer;display:flex;align-items:center;height:48px">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3" rx=".5" fill="#25D366"/><rect x="19" y="14" width="2" height="2" rx=".5" fill="#25D366"/><rect x="14" y="19" width="2" height="2" rx=".5" fill="#25D366"/></svg>
       </button>
     </div>
@@ -1109,16 +1109,64 @@ function rstOp(op){
   document.getElementById(op+'-ok').disabled=true;document.getElementById(op+'-ok').style.opacity='.4';
 }
 
+// ══ TRANSFERT — flux plein écran ══
+var _sopTrfClient=null;
+
+function ouvrirScreenTransfert(destinataire){
+  _sopTrfClient=destinataire;
+  document.getElementById('sop-trf-av').textContent=(destinataire.prenom||destinataire.nom||'?')[0].toUpperCase();
+  document.getElementById('sop-trf-name').textContent=(destinataire.prenom||'')+' '+(destinataire.nom||'');
+  document.getElementById('sop-trf-tel').textContent=destinataire.telephone||'';
+  var rl=destinataire.role==='mini_master'?'Mini-Master':destinataire.role==='agent'?'Agent':'—';
+  document.getElementById('sop-trf-role').textContent=rl;
+  document.getElementById('sop-trf-amt').value='';
+  document.getElementById('sop-trf-err').style.display='none';
+  document.getElementById('sop-trf-loading').style.display='none';
+  document.getElementById('sop-trf-btn').disabled=true;document.getElementById('sop-trf-btn').style.opacity='.4';
+  closeSh('transfert');
+  setTimeout(function(){S('s-op-transfert');setTimeout(function(){document.getElementById('sop-trf-amt').focus();},200);},150);
+}
+function calcSopTrf(){
+  var amt=Number(document.getElementById('sop-trf-amt').value)||0;
+  var btn=document.getElementById('sop-trf-btn');
+  if(amt>0){btn.disabled=false;btn.style.opacity='1';}
+  else{btn.disabled=true;btn.style.opacity='.4';}
+}
+async function doSopTransfert(){
+  var client=_sopTrfClient;if(!client)return;
+  var amt=Number(document.getElementById('sop-trf-amt').value);
+  if(!amt||amt<=0){T('Montant invalide',true);return;}
+  var btn=document.getElementById('sop-trf-btn');
+  var loading=document.getElementById('sop-trf-loading');
+  var errEl=document.getElementById('sop-trf-err');
+  btn.disabled=true;btn.style.opacity='.4';loading.style.display='';errEl.style.display='none';
+  try{
+    var r=await post('/transactions/transfer',{telephone:client.telephone,montant:amt,motif:'Transfert liquidité'});
+    loading.style.display='none';
+    var d=r.data||{};
+    document.getElementById('sop-trf-ok-txt').textContent='Transfert de '+F(amt)+' FCFA vers '+(client.prenom||'')+' '+(client.nom||'');
+    document.getElementById('sop-trf-ok-ref').textContent=d.reference||'';
+    rafraichir();S('s-op-transfert-ok');
+  }catch(e){
+    loading.style.display='none';btn.disabled=false;btn.style.opacity='1';
+    errEl.textContent=e.message;errEl.style.display='';
+  }
+}
+function nouveauSopTrf(){if(_sopTrfClient)ouvrirScreenTransfert(_sopTrfClient);else S('s-home');}
+
 async function doTransfert(btn){
   if(btn){btn.disabled=true;btn.textContent='...';}
-  var tel=document.getElementById('trf-tel').value;var amt=Number(document.getElementById('trf-amt').value);
-  if(!amt||amt<=0){T('Montant invalide',true);if(btn){btn.disabled=false;btn.textContent='Transférer';}return;}
+  var tel=document.getElementById('trf-tel').value.trim();
+  if(!tel){T('Numéro requis',true);if(btn){btn.disabled=false;btn.textContent='Transférer';}return;}
   document.getElementById('trf-loading').style.display='';
   document.getElementById('trf-form-btns').style.display='none';
   try{
-    await post('/transactions/transfer',{telephone:tel,montant:amt,motif:'Transfert liquidité agent'});
-    document.getElementById('trf-loading').style.display='none';document.getElementById('trf-success').style.display='';
-    rafraichir();
+    var r=await get('/users?telephone='+encodeURIComponent(tel)+'&limit=1');
+    var arr=Array.isArray(r.data)?r.data:[r.data];
+    if(!arr.length||!arr[0])throw new Error('Destinataire introuvable');
+    document.getElementById('trf-loading').style.display='none';
+    ouvrirScreenTransfert(arr[0]);
+    rstTrf();
   }catch(e){
     document.getElementById('trf-loading').style.display='none';
     document.getElementById('trf-form-btns').style.display='';
@@ -1126,7 +1174,7 @@ async function doTransfert(btn){
     document.getElementById('trf-err').textContent=e.message;document.getElementById('trf-err').style.display='';
   }
 }
-function rstTrf(){document.getElementById('trf-tel').value='';document.getElementById('trf-amt').value='';document.getElementById('trf-loading').style.display='none';document.getElementById('trf-success').style.display='none';document.getElementById('trf-err').style.display='none';document.getElementById('trf-form-btns').style.display='';var b=document.getElementById('trf-btn-valider');if(b){b.disabled=false;b.textContent='Transférer';}}
+function rstTrf(){document.getElementById('trf-tel').value='';document.getElementById('trf-loading').style.display='none';document.getElementById('trf-success').style.display='none';document.getElementById('trf-err').style.display='none';document.getElementById('trf-form-btns').style.display='';var b=document.getElementById('trf-btn-valider');if(b){b.disabled=false;b.textContent='Transférer';}}
 
 // ══ LOGIN ════════════════════════════════════════════════════════
 function goPin(){G.pin='';document.getElementById('pin-sub').textContent=document.getElementById('lg-tel').value;document.getElementById('err-pin').style.display='none';rDots();S('s-pin');}
@@ -3641,6 +3689,63 @@ function nouveauSopRet(){if(_sopClient.ret)ouvrirScreenRetrait(_sopClient.ret);e
     <div style="display:flex;gap:12px">
       <button onclick="nouveauSopRet()" style="flex:1;background:linear-gradient(135deg,#c2410c,#f97316);border:none;border-radius:14px;padding:16px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
         + Nouveau retrait
+      </button>
+      <button onclick="S('s-home');chargerAccueil()" style="flex:1;background:#f3f4f6;border:none;border-radius:14px;padding:16px;color:#374151;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
+        Accueil
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCREEN TRANSFERT — Montant ══ -->
+<div class="scr" id="s-op-transfert" style="background:#f9fafb">
+  <div style="position:sticky;top:0;background:#fff;z-index:10;padding:52px 20px 14px;border-bottom:1px solid #f3f4f6">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button onclick="S('s-home')" style="background:#f3f4f6;border:none;border-radius:10px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center">
+        <svg width="18" height="18" fill="none" stroke="#374151" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      </button>
+      <div>
+        <div style="font-size:18px;font-weight:800;color:#111">Transfert Liquidité</div>
+        <div style="font-size:12px;color:#6b7280">Agent ↔ MM · Gratuit</div>
+      </div>
+    </div>
+  </div>
+  <div style="padding:20px">
+    <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:16px;padding:16px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+      <div style="width:46px;height:46px;border-radius:50%;background:rgba(59,130,246,.12);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#3b82f6;flex-shrink:0" id="sop-trf-av">?</div>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:15px;color:#111" id="sop-trf-name">—</div>
+        <div style="color:#6b7280;font-size:12px" id="sop-trf-tel">—</div>
+      </div>
+      <div style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:#eff6ff;color:#3b82f6" id="sop-trf-role">—</div>
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Montant (FCFA)</div>
+      <div style="position:relative">
+        <input class="inp" id="sop-trf-amt" type="number" inputmode="decimal" placeholder="0" oninput="calcSopTrf()" style="font-size:28px;font-weight:800;padding:16px 70px 16px 16px;border-radius:14px"/>
+        <span style="position:absolute;right:16px;top:50%;transform:translateY(-50%);color:#3b82f6;font-size:13px;font-weight:700;pointer-events:none">FCFA</span>
+      </div>
+    </div>
+    <div id="sop-trf-err" style="display:none;color:#dc2626;font-size:13px;text-align:center;margin-bottom:16px"></div>
+    <div id="sop-trf-loading" style="display:none;text-align:center;padding:20px"><div class="spin" style="width:32px;height:32px;border-width:3px;border-top-color:#3b82f6"></div></div>
+    <button id="sop-trf-btn" onclick="doSopTransfert()" style="width:100%;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border:none;border-radius:16px;padding:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;opacity:.4" disabled>
+      Valider le transfert
+    </button>
+  </div>
+</div>
+
+<!-- ══ SCREEN TRANSFERT — Succès ══ -->
+<div class="scr" id="s-op-transfert-ok" style="background:#f9fafb;justify-content:center;align-items:center">
+  <div style="padding:40px 24px;text-align:center;width:100%">
+    <div style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#1d4ed8,#3b82f6);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 32px rgba(59,130,246,.35)">
+      <svg width="44" height="44" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div style="font-size:26px;font-weight:900;color:#111;margin-bottom:8px">Transfert réussi !</div>
+    <div id="sop-trf-ok-txt" style="color:#6b7280;font-size:14px;margin-bottom:6px"></div>
+    <div id="sop-trf-ok-ref" style="color:#9ca3af;font-size:11px;font-family:monospace;margin-bottom:40px"></div>
+    <div style="display:flex;gap:12px">
+      <button onclick="nouveauSopTrf()" style="flex:1;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border:none;border-radius:14px;padding:16px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
+        + Nouveau transfert
       </button>
       <button onclick="S('s-home');chargerAccueil()" style="flex:1;background:#f3f4f6;border:none;border-radius:14px;padding:16px;color:#374151;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
         Accueil

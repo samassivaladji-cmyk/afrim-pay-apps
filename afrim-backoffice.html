@@ -2988,8 +2988,6 @@ async function chargerTxRemb() {
 }
 
 function confirmerRemboursement(txId, ref, montant, type) {
-  var msg = 'Rembourser ' + F(montant) + ' ?\n\nOpération : ' + ref + '\nType : ' + (type==='depot'?'Dépôt':'Transfert') + '\n\nCette action est irréversible.';
-  if (!confirm(msg)) return;
   effetuerRemboursement(txId, ref, montant);
 }
 
@@ -2998,11 +2996,14 @@ function effetuerRemboursementC(btn){
 }
 
 async function effetuerRemboursement(txId, ref, montant) {
+  if(!confirm('Confirmer le remboursement de '+F(montant)+' ?\n\nRéférence : '+ref+'\n\nCette action est irréversible.'))return;
   try {
     toast('Remboursement en cours...', false);
     await apiPost('/admin/transactions/'+txId+'/rembourser', { motif: 'Erreur opérateur' });
-    toast('✓ Remboursement effectué : ' + F(montant));
-    chargerTxRemb();
+    toast('\u2713 Remboursement effectu\u00e9 : ' + F(montant));
+    // Recharger la bonne vue selon le contexte
+    if(uFilter==='remb'){chargerRembComptes();}
+    else{chargerTxRemb();}
   } catch(e) {
     toast(e.message, true);
   }
@@ -9704,7 +9705,10 @@ async function chargerGainsSysteme(){
     // ══ PAGE AFRIM PAY ══
     var pnl=ap.pnl||{};
     var gainsB=(pnl.gains_retrait||0)+(pnl.gains_paiement||0);
-    var deductions=(pnl.bonus_commission_journaliere||0)+(pnl.commissions_parrain||0);
+    var chargesJourna=pnl.commissions_journalieres||0;
+    var chargesParrain=pnl.commissions_parrainage||0;
+    var chargesReseau=pnl.commissions_reseau||0;
+    var deductions=chargesJourna+chargesParrain+chargesReseau;
     var totalVirements = ap.totalVirements || 0;
     var netAfrim=Math.max(0, gainsB - deductions - totalVirements);
 
@@ -9727,8 +9731,9 @@ async function chargerGainsSysteme(){
     h+='<div style="font-size:13px;font-weight:800;color:#7c3aed">+'+F(gainsB)+'</div></div>';
     // Déductions
     h+='<div style="font-size:10px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">- Charges (versements)</div>';
-    h+=pnlLigne('Commissions journalières agents',pnl.bonus_commission_journaliere||0,pnl.bonus_depot_nb||0,'#ef4444','-');
-    h+=pnlLigne('Commissions parrainage',pnl.commissions_parrain||0,pnl.commissions_parrain_nb||0,'#ef4444','-');
+    h+=pnlLigne('Commissions journalières agents (27 paliers)',chargesJourna,pnl.commissions_journalieres_nb||0,'#ef4444','-');
+    h+=pnlLigne('Commissions parrainage (5%)',chargesParrain,pnl.commissions_parrainage_nb||0,'#ef4444','-');
+    h+=pnlLigne('Commissions réseau Mini-Master/Master (1-2%)',chargesReseau,pnl.commissions_reseau_nb||0,'#ef4444','-');
     h+='<div style="display:flex;justify-content:space-between;padding:8px 0;margin-bottom:10px;border-top:2px solid #ef444422">';
     h+='<div style="font-size:12px;font-weight:800;color:#ef4444">Sous-total charges</div>';
     h+='<div style="font-size:13px;font-weight:800;color:#ef4444">-'+F(deductions)+'</div></div>';

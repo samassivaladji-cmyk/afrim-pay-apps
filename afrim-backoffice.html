@@ -602,6 +602,7 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
       <button id="sup-tab-newticket" onclick="setSupTab('newticket')" style="padding:10px 14px;font-size:12px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">➕ Ticket</button>
       <button id="sup-tab-tickets"   onclick="setSupTab('tickets')"   style="padding:10px 14px;font-size:12px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">📋 Suivi</button>
       <button id="sup-tab-alertes"   onclick="setSupTab('alertes')"   style="padding:10px 14px;font-size:12px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">⚠️ Alertes</button>
+      <button id="sup-tab-remb"      onclick="setSupTab('remb')"      style="padding:10px 14px;font-size:12px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">💸 Remboursements</button>
       <button id="sup-tab-stats"     onclick="setSupTab('stats')"     style="padding:10px 14px;font-size:12px;font-weight:700;border:none;background:none;cursor:pointer;font-family:inherit;color:#6b7280;border-bottom:2px solid transparent;white-space:nowrap">📊 Stats</button>
     </div>
   </div>
@@ -795,7 +796,30 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
     </div>
 
     <!-- PANNEAU 5 : STATS -->
-    <div id="sup-panel-stats" style="display:none">
+    <!-- PANNEAU REMBOURSEMENTS -->
+    <div id="sup-panel-remb" style="display:none">
+      <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px">💸 Remboursements — Dépôts & Transferts erronés</div>
+      <!-- Filtres période + type -->
+      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+        <select id="remb-periode" onchange="chargerTxRemb()" style="padding:8px 10px;border:1px solid #e5e7eb;border-radius:10px;font-size:12px;font-family:inherit;font-weight:700;color:#374151;background:#fff">
+          <option value="7">7 derniers jours (Support)</option>
+          <option value="30">30 derniers jours</option>
+          <option value="90">3 derniers mois (Back-Office)</option>
+        </select>
+        <select id="remb-type" onchange="chargerTxRemb()" style="padding:8px 10px;border:1px solid #e5e7eb;border-radius:10px;font-size:12px;font-family:inherit;font-weight:700;color:#374151;background:#fff">
+          <option value="">Tous types</option>
+          <option value="depot">Dépôts uniquement</option>
+          <option value="transfert">Transferts uniquement</option>
+        </select>
+      </div>
+      <!-- Barre de recherche numéro -->
+      <div style="position:relative;margin-bottom:10px">
+        <input id="remb-search" type="tel" placeholder="Filtrer par numéro de téléphone..." style="width:100%;border:1px solid #e5e7eb;border-radius:10px;padding:10px 14px;font-size:13px;font-family:inherit;box-sizing:border-box" oninput="chargerTxRemb()"/>
+      </div>
+      <div id="remb-list"><div style="text-align:center;padding:32px;color:#9ca3af;font-size:13px">Sélectionnez une période pour afficher les transactions</div></div>
+    </div>
+
+    <!-- PANNEAU STATS -->
       <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px">📊 Statistiques — Support Client</div>
       <!-- Compteurs tickets -->
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px">
@@ -2834,7 +2858,7 @@ async function _chargerSupClientAlertes(gravite, statut) {
 
 function setSupTab(tab) {
   _supTabActif = tab;
-  var tabs = ['notif','search','newticket','tickets','alertes','stats'];
+  var tabs = ['notif','search','newticket','tickets','alertes','remb','stats'];
   tabs.forEach(function(t) {
     var btn = document.getElementById('sup-tab-'+t);
     var panel = document.getElementById('sup-panel-'+t);
@@ -2846,6 +2870,7 @@ function setSupTab(tab) {
     if (panel) panel.style.display = isActive ? 'block' : 'none';
   });
   if (tab === 'notif') setTimeout(function(){ if(typeof chargerCampagnes==='function') chargerCampagnes(); }, 100);
+  if (tab === 'remb') chargerTxRemb();
   if (tab === 'newticket') {
     _tkInitFilters('mytk-filters', 'mytk-', function(v){ _tkLoadList('mytk-list', v, 'support_client'); });
     _tkLoadList('mytk-list', '', 'support_client');
@@ -2903,6 +2928,81 @@ function filtrerTicketsSupport(statut) {
     btn.style.borderColor = isActive ? 'var(--y)' : '#e5e7eb';
   });
   chargerTicketsSupport(statut);
+}
+
+// ══ REMBOURSEMENTS ══════════════════════════════════════════════
+var _rembTxCache = [];
+
+async function chargerTxRemb() {
+  var el = document.getElementById('remb-list');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:24px"><div class="spin"></div></div>';
+  var jours = parseInt(document.getElementById('remb-periode').value) || 7;
+  var type  = document.getElementById('remb-type').value;
+  var tel   = (document.getElementById('remb-search').value || '').trim();
+  try {
+    var url = '/admin/transactions/remboursables?jours=' + jours;
+    if (type) url += '&type=' + type;
+    if (tel)  url += '&telephone=' + encodeURIComponent(tel);
+    var r = await apiGet(url);
+    var list = r.data || [];
+    _rembTxCache = list;
+    if (!list.length) { el.innerHTML = '<div style="text-align:center;padding:32px;color:#9ca3af;font-size:13px">Aucune transaction trouvée sur cette période</div>'; return; }
+    var canRemb30 = ['admin','backoffice'].includes(G.user.role);
+    var html = '';
+    list.forEach(function(tx) {
+      var age = Math.floor((Date.now() - new Date(tx.dateCreation)) / 86400000);
+      var ageLabel = age === 0 ? 'Aujourd\'hui' : age + ' j';
+      var canRemb = age <= 7 || canRemb30;
+      var typeLabel = tx.type === 'depot' ? '↓ Dépôt' : '→ Transfert';
+      var typeBg = tx.type === 'depot' ? '#dcfce7' : '#eff6ff';
+      var typeCol = tx.type === 'depot' ? '#15803d' : '#1d4ed8';
+      html += '<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:14px 16px;margin-bottom:8px">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+          + '<div style="display:flex;align-items:center;gap:8px">'
+            + '<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:'+typeBg+';color:'+typeCol+'">'+typeLabel+'</span>'
+            + '<span style="font-size:11px;font-weight:700;color:#374151">'+FD(tx.dateCreation)+'</span>'
+            + '<span style="font-size:10px;color:#9ca3af">'+ageLabel+'</span>'
+          + '</div>'
+          + '<span style="font-size:11px;font-family:monospace;color:#6b7280">'+tx.reference+'</span>'
+        + '</div>'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+          + '<div>'
+            + '<div style="font-size:13px;font-weight:700">'+(tx.prenomSrc||'')+' '+(tx.nomSrc||'')+' <span style="color:#9ca3af;font-weight:400">→</span> '+(tx.prenomDst||'')+' '+(tx.nomDst||'')+'</div>'
+            + '<div style="font-size:11px;color:#6b7280">'+(tx.telSrc||'')+'</div>'
+          + '</div>'
+          + '<div style="font-size:16px;font-weight:800;color:#374151">'+F(tx.montant)+'</div>'
+        + '</div>';
+      if (tx.rembourse) {
+        html += '<div style="font-size:11px;font-weight:700;color:#9ca3af;text-align:center;padding:6px;background:#f9fafb;border-radius:8px">✓ Déjà remboursé</div>';
+      } else if (canRemb) {
+        html += '<button onclick="confirmerRemboursement(\''+tx.id+'\',\''+tx.reference+'\','+tx.montant+',\''+tx.type+'\')" style="width:100%;background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;padding:9px;color:#dc2626;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">↩ Rembourser</button>';
+      } else {
+        html += '<div style="font-size:11px;color:#9ca3af;text-align:center;padding:6px">Hors délai pour le support (max 7j) — réservé au Back-Office</div>';
+      }
+      html += '</div>';
+    });
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--r);padding:12px;font-size:13px">'+e.message+'</div>';
+  }
+}
+
+function confirmerRemboursement(txId, ref, montant, type) {
+  var msg = 'Rembourser ' + F(montant) + ' ?\n\nOpération : ' + ref + '\nType : ' + (type==='depot'?'Dépôt':'Transfert') + '\n\nCette action est irréversible.';
+  if (!confirm(msg)) return;
+  effetuerRemboursement(txId, ref, montant);
+}
+
+async function effetuerRemboursement(txId, ref, montant) {
+  try {
+    toast('Remboursement en cours...', false);
+    await apiPost('/admin/transactions/'+txId+'/rembourser', { motif: 'Erreur opérateur' });
+    toast('✓ Remboursement effectué : ' + F(montant));
+    chargerTxRemb();
+  } catch(e) {
+    toast(e.message, true);
+  }
 }
 
 async function chargerSupport(){

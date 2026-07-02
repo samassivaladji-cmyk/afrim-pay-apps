@@ -661,23 +661,18 @@ function setTab(t){
     <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:11px 14px;margin-bottom:14px;font-size:13px;color:#92400e;">ℹ️ Transferts entre agents et mini-masters sans commission. Utile pour rééquilibrer la liquidité.</div>
     <div id="trf-err" class="info info-r" style="display:none"></div>
     <span class="lbl">Numéro destinataire</span>
-    <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center">
-      <input class="inp" id="trf-tel" type="tel" placeholder="+225 07 XX XX XX" style="flex:1"/>
+    <div style="display:flex;gap:8px;margin-bottom:18px;align-items:center">
+      <input class="inp" id="trf-tel" type="tel" placeholder="+225 07 XX XX XX" style="flex:1" oninput="document.getElementById('trf-btn-valider').disabled=this.value.replace(/\D/g,'').length<8"/>
       <button onclick="ouvrirScanner(function(tel){document.getElementById('trf-tel').value=tel;var r=get('/users?telephone='+encodeURIComponent(tel)+'&limit=1');r.then(function(res){var arr=Array.isArray(res.data)?res.data:[res.data];if(arr[0])ouvrirScreenTransfert(arr[0]);});closeSh('wave-qr-popup');})" style="background:var(--s);border:1.5px solid var(--b);border-radius:13px;padding:0 14px;cursor:pointer;display:flex;align-items:center;height:48px">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--a)" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3" rx=".5" fill="var(--a)"/><rect x="19" y="14" width="2" height="2" rx=".5" fill="var(--a)"/><rect x="14" y="19" width="2" height="2" rx=".5" fill="var(--a)"/></svg>
       </button>
     </div>
-    <span class="lbl">Montant (FCFA)</span>
-    <div style="position:relative;margin-bottom:14px"><input class="inp" id="trf-amt" type="number" placeholder="0" style="padding-right:55px"/><span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--a);font-size:12px;font-weight:700">FCFA</span></div>
     <div id="trf-loading" style="display:none;text-align:center;padding:20px"><div class="spin"></div></div>
     <div id="trf-form-btns" style="display:flex;gap:8px">
       <button class="btn btn-ghost" style="flex:1" onclick="closeSh('transfert');rstTrf()">Annuler</button>
-      <button class="btn btn-a" id="trf-btn-valider" style="flex:2" onclick="doTransfert(this)">Transférer</button>
+      <button class="btn btn-a" id="trf-btn-valider" style="flex:2" disabled onclick="doTransfert(this)">Continuer →</button>
     </div>
-    <div id="trf-success" style="display:none;text-align:center;padding:20px 0">
-      <div style="font-size:22px;font-weight:800;margin-bottom:6px;color:var(--a)">✓ Transfert réussi !</div>
-      <button class="btn btn-ghost" onclick="closeSh('transfert');rstTrf();rafraichir()">Fermer</button>
-    </div>
+    <div id="trf-success" style="display:none"></div>
   </div>
 </div>
 

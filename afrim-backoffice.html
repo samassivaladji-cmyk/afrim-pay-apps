@@ -801,10 +801,7 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
       <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px">💸 Remboursements — Dépôts & Transferts erronés</div>
       <!-- Filtres période + type -->
       <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
-        <select id="remb-periode" onchange="chargerTxRemb()" style="padding:8px 10px;border:1px solid #e5e7eb;border-radius:10px;font-size:12px;font-family:inherit;font-weight:700;color:#374151;background:#fff">
-          <option value="7">7 derniers jours (Support)</option>
-          <option value="30">30 derniers jours</option>
-          <option value="90">3 derniers mois (Back-Office)</option>
+        <select id="remb-periode" onchange="chargerTxRemb()" style="padding:8px 10px;border:1px solid #e5e7eb;border-radius:10px;font-size:12px;font-family:inherit;font-weight:700;color:#374151;background:#fff" id="remb-periode">
         </select>
         <select id="remb-type" onchange="chargerTxRemb()" style="padding:8px 10px;border:1px solid #e5e7eb;border-radius:10px;font-size:12px;font-family:inherit;font-weight:700;color:#374151;background:#fff">
           <option value="">Tous types</option>
@@ -2191,16 +2188,16 @@ async function chargerUsers(){
     ?['agent','business','mini_master','master']
     :(function(){
       // Super BO voit tout y compris l'onglet dédié super_bo
-      if(isSuperAdmin()) return ['all','client','agent','business','mini_master','master','superviseur','admin','backoffice','super_bo'];
-      if(u.role==='backoffice') return ['all','client','agent','business','mini_master','master','superviseur','admin'];
-      if(u.role==='admin') return ['all','client','agent','business','mini_master','master','superviseur'];
-      return ['all','client','agent','business','mini_master','master','superviseur','backoffice','admin'];
+      if(isSuperAdmin()) return ['all','client','agent','business','mini_master','master','superviseur','admin','backoffice','support_client','support_tech','super_bo'];
+      if(u.role==='backoffice') return ['all','client','agent','business','mini_master','master','superviseur','admin','support_client','support_tech'];
+      if(u.role==='admin') return ['all','client','agent','business','mini_master','master','superviseur','support_client','support_tech'];
+      return ['all','client','agent','business','mini_master','master','superviseur','backoffice','admin','support_client','support_tech'];
     })();
   // Superviseur: forcer le filtre par défaut sur agent si 'all' ou 'client'
   if(u.role==='superviseur'&&(uFilter==='all'||uFilter==='client'))uFilter='agent';
   var chipsEl=document.getElementById('u-chips');chipsEl.innerHTML='';
   rolesVis.forEach(function(r){
-    var on=uFilter===r;var RLBL={'all':'Tous','client':'client','agent':'agent','business':'business','mini_master':'Mini-M.','master':'master','superviseur':'Superv.','backoffice':'Back-office','admin':'Admin','super_bo':'⭐ Super BO'};var lbl=RLBL[r]||r;
+    var on=uFilter===r;var RLBL={'all':'Tous','client':'👤 client','agent':'🔶 agent','business':'🏪 business','mini_master':'🌿 Mini-M.','master':'🏆 master','superviseur':'🔍 Superv.','backoffice':'🖥 Back-office','admin':'⚙️ Admin','support_client':'💬 Support-C.','support_tech':'🔧 Support-T.','super_bo':'⭐ Super BO'};var lbl=RLBL[r]||r;
     var btn=document.createElement('button');
     btn.setAttribute('data-r',r);
     btn.style.cssText='padding:6px 14px;border-radius:99px;border:1.5px solid '+(on?'#ca8a04':'#e5e7eb')+';background:'+(on?'#fef3c7':'#fff')+';color:'+(on?'#a16207':'#6b7280')+';font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;flex-shrink:0';
@@ -2344,7 +2341,6 @@ function voirU(id){
     }
     if(u.statut==='bloque')mkBtn('Debloquer','btn-g','',function(){chgStatut(id,'actif');});
   }
-  if(perm('rembourser'))mkBtn('Rembourser dernier transfert','','background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){toast('Remboursement bientot disponible');});
   if(canResetPin(u))mkBtn('🔐 Réinitialiser le code PIN','','background:#f0fdf4;color:#15803d;border:1px solid #a7f3d0;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){resetPinClient(u.id,(u.prenom||'')+' '+(u.nom||''));});
   if(canActOnUser(u))mkBtn('✏️ Modifier nom / prénom','','background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){ouvrirEditUser(u);});
   mkBtn('🔔 Historique notifications','','background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){afficherHistoriqueNotifs(u.id,(u.prenom||'')+' '+(u.nom||''));});
@@ -2871,7 +2867,18 @@ function setSupTab(tab) {
     if (panel) panel.style.display = isActive ? 'block' : 'none';
   });
   if (tab === 'notif') setTimeout(function(){ if(typeof chargerCampagnes==='function') chargerCampagnes(); }, 100);
-  if (tab === 'remb') chargerTxRemb();
+  if (tab === 'remb') {
+    // Initialiser les options de période selon le rôle
+    var sel = document.getElementById('remb-periode');
+    if (sel && sel.options.length === 0) {
+      var role = G.user ? G.user.role : '';
+      var opts = [{v:'7',l:'7 derniers jours — Support Client'}];
+      if (['admin','backoffice','superviseur'].includes(role)) opts.push({v:'30',l:'30 derniers jours — Admin'});
+      if (['backoffice','superviseur'].includes(role)) opts.push({v:'90',l:'3 derniers mois — Back-Office'});
+      opts.forEach(function(o){ var op = document.createElement('option'); op.value=o.v; op.textContent=o.l; sel.appendChild(op); });
+    }
+    chargerTxRemb();
+  }
   if (tab === 'newticket') {
     _tkInitFilters('mytk-filters', 'mytk-', function(v){ _tkLoadList('mytk-list', v, 'support_client'); });
     _tkLoadList('mytk-list', '', 'support_client');
@@ -3923,16 +3930,16 @@ async function chargerUsers(){
     ?['agent','business','mini_master','master']
     :(function(){
       // Super BO voit tout y compris l'onglet dédié super_bo
-      if(isSuperAdmin()) return ['all','client','agent','business','mini_master','master','superviseur','admin','backoffice','super_bo'];
-      if(u.role==='backoffice') return ['all','client','agent','business','mini_master','master','superviseur','admin'];
-      if(u.role==='admin') return ['all','client','agent','business','mini_master','master','superviseur'];
-      return ['all','client','agent','business','mini_master','master','superviseur','backoffice','admin'];
+      if(isSuperAdmin()) return ['all','client','agent','business','mini_master','master','superviseur','admin','backoffice','support_client','support_tech','super_bo'];
+      if(u.role==='backoffice') return ['all','client','agent','business','mini_master','master','superviseur','admin','support_client','support_tech'];
+      if(u.role==='admin') return ['all','client','agent','business','mini_master','master','superviseur','support_client','support_tech'];
+      return ['all','client','agent','business','mini_master','master','superviseur','backoffice','admin','support_client','support_tech'];
     })();
   // Superviseur: forcer le filtre par défaut sur agent si 'all' ou 'client'
   if(u.role==='superviseur'&&(uFilter==='all'||uFilter==='client'))uFilter='agent';
   var chipsEl=document.getElementById('u-chips');chipsEl.innerHTML='';
   rolesVis.forEach(function(r){
-    var on=uFilter===r;var RLBL={'all':'Tous','client':'client','agent':'agent','business':'business','mini_master':'Mini-M.','master':'master','superviseur':'Superv.','backoffice':'Back-office','admin':'Admin','super_bo':'⭐ Super BO'};var lbl=RLBL[r]||r;
+    var on=uFilter===r;var RLBL={'all':'Tous','client':'👤 client','agent':'🔶 agent','business':'🏪 business','mini_master':'🌿 Mini-M.','master':'🏆 master','superviseur':'🔍 Superv.','backoffice':'🖥 Back-office','admin':'⚙️ Admin','support_client':'💬 Support-C.','support_tech':'🔧 Support-T.','super_bo':'⭐ Super BO'};var lbl=RLBL[r]||r;
     var btn=document.createElement('button');
     btn.setAttribute('data-r',r);
     btn.style.cssText='padding:6px 14px;border-radius:99px;border:1.5px solid '+(on?'#ca8a04':'#e5e7eb')+';background:'+(on?'#fef3c7':'#fff')+';color:'+(on?'#a16207':'#6b7280')+';font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit;flex-shrink:0';
@@ -4680,7 +4687,6 @@ function voirU(id){
     }
     if(u.statut==='bloque')mkBtn('Debloquer','btn-g','',function(){chgStatut(id,'actif');});
   }
-  if(perm('rembourser'))mkBtn('Rembourser dernier transfert','','background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){toast('Remboursement bientot disponible');});
   if(canResetPin(u))mkBtn('🔐 Réinitialiser le code PIN','','background:#f0fdf4;color:#15803d;border:1px solid #a7f3d0;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){resetPinClient(u.id,(u.prenom||'')+' '+(u.nom||''));});
   if(canActOnUser(u))mkBtn('✏️ Modifier nom / prénom','','background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){ouvrirEditUser(u);});
   mkBtn('🔔 Historique notifications','','background:#f5f3ff;color:#7c3aed;border:1px solid #ddd6fe;width:100%;padding:15px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit',function(){afficherHistoriqueNotifs(u.id,(u.prenom||'')+' '+(u.nom||''));});

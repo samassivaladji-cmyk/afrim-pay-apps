@@ -672,7 +672,7 @@ function setTab(t){
     <span class="lbl">Numéro destinataire</span>
     <div style="display:flex;gap:8px;margin-bottom:18px;align-items:center">
       <input class="inp" id="trf-tel" type="tel" placeholder="+225 07 XX XX XX" style="flex:1" oninput="document.getElementById('trf-btn-valider').disabled=this.value.replace(/\D/g,'').length<8"/>
-      <button onclick="ouvrirScanner(function(tel){document.getElementById('trf-tel').value=tel;var r=get('/users/lookup-pro?telephone='+encodeURIComponent(tel));r.then(function(res){var arr=Array.isArray(res.data)?res.data:[res.data];if(arr[0])ouvrirScreenTransfert(arr[0]);});})" style="background:var(--s);border:1.5px solid var(--b);border-radius:13px;padding:0 14px;cursor:pointer;display:flex;align-items:center;height:48px">
+      <button onclick="ouvrirScanner(function(tel){document.getElementById('trf-tel').value=tel;var r=get('/users/lookup-pro?telephone='+encodeURIComponent(tel));r.then(function(res){if(res.data)ouvrirScreenTransfert(res.data);});})" style="background:var(--s);border:1.5px solid var(--b);border-radius:13px;padding:0 14px;cursor:pointer;display:flex;align-items:center;height:48px">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3" rx=".5" fill="#25D366"/><rect x="19" y="14" width="2" height="2" rx=".5" fill="#25D366"/><rect x="14" y="19" width="2" height="2" rx=".5" fill="#25D366"/></svg>
       </button>
     </div>
@@ -898,10 +898,9 @@ async function validerSaisieOp(){
   if(!tel){err.textContent='Numéro requis';err.style.display='';return;}
   loading.style.display='';
   try{
-    var r=await get('/users/lookup-pro?telephone='+encodeURIComponent(tel));
-    var arr=Array.isArray(r.data)?r.data:[r.data];
-    if(!arr.length||!arr[0]) throw new Error('Client introuvable');
-    var u=arr[0];
+    var r=await get('/users/lookup-client?telephone='+encodeURIComponent(tel));
+    var u=r.data;
+    if(!u) throw new Error('Client introuvable');
     loading.style.display='none';
     closeSh('saisie-op');
     document.getElementById('saisie-op-tel').value='';
@@ -939,10 +938,10 @@ async function identClient(op){
   if(!tel){T('Numéro requis',true);return;}
   document.getElementById(op+'-ok').disabled=true;
   try{
-    var r=await get('/users/lookup-pro?telephone='+encodeURIComponent(tel));
-    var arr=Array.isArray(r.data)?r.data:[r.data];
-    if(!arr.length||!arr[0]){throw new Error('Client introuvable');}
-    var u=arr[0];opClients[op]=u;
+    var r=await get('/users/lookup-client?telephone='+encodeURIComponent(tel));
+    var u=r.data;
+    if(!u){throw new Error('Client introuvable');}
+    opClients[op]=u;
     if(!window._sopClient) window._sopClient={dep:null,ret:null};
     window._sopClient[op]=u;
     // Fermer le sheet et ouvrir le screen plein écran
@@ -2912,10 +2911,9 @@ function afficherChoixOp(tel, parts){
   // Identifier le client puis afficher le choix
   (async function(){
     try{
-      var r = await get('/users/lookup-pro?telephone='+encodeURIComponent(tel));
-      var arr = Array.isArray(r.data)?r.data:[r.data];
-      if(!arr.length||!arr[0]) throw new Error('Client introuvable');
-      var u = arr[0];
+      var r = await get('/users/lookup-client?telephone='+encodeURIComponent(tel));
+      var u = r.data;
+      if(!u) throw new Error('Client introuvable');
       _scannedClient = u;
       opClients['scan'] = u;
       opClients['choix'] = u;

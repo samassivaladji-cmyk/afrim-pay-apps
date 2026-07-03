@@ -905,10 +905,10 @@ async function identClient(op){
   if(!tel){T('Numéro requis',true);return;}
   document.getElementById(op+'-ok').disabled=true;
   try{
-    var r=await get('/users/lookup-pro?telephone='+encodeURIComponent(tel));
-    var arr=Array.isArray(r.data)?r.data:[r.data];
-    if(!arr.length||!arr[0]){throw new Error('Client introuvable');}
-    var u=arr[0];opClients[op]=u;
+    var r=await get('/users/lookup-client?telephone='+encodeURIComponent(tel));
+    var u=r.data;
+    if(!u){throw new Error('Client introuvable');}
+    opClients[op]=u;
     if(!window._sopClient) window._sopClient={dep:null,ret:null};
     window._sopClient[op]=u;
     // Fermer le sheet et ouvrir le screen plein écran
@@ -2428,10 +2428,9 @@ function afficherChoixOp(tel, parts){
   // Identifier le client puis afficher le choix
   (async function(){
     try{
-      var r = await get('/users/lookup-pro?telephone='+encodeURIComponent(tel));
-      var arr = Array.isArray(r.data)?r.data:[r.data];
-      if(!arr.length||!arr[0]) throw new Error('Client introuvable');
-      var u = arr[0];
+      var r = await get('/users/lookup-client?telephone='+encodeURIComponent(tel));
+      var u = r.data;
+      if(!u) throw new Error('Client introuvable');
       _scannedClient = u;
       opClients['scan'] = u;
       opClients['choix'] = u;

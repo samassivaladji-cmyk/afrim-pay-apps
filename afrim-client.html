@@ -1614,20 +1614,19 @@ async function chargerCommissions(){
   var u=G.user||{};
   var nbRatt=Number(u.nbRattaches)||0,nbFil=Number(u.nbFilleuls)||0;
 
-  // Squelette HTML avec les 4 blocs période style agent
+  // Squelette HTML avec les 6 blocs période
   var COL='#d97706';
   var h=''
-    // Bloc 4 périodes
+    // Bloc 6 périodes
     +'<div style="background:linear-gradient(135deg,#d97706,#f59e0b);border-radius:16px;padding:20px;margin-bottom:14px;color:#fff">'
     +'<div style="font-size:11px;font-weight:700;opacity:.75;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">MES GAINS — PARRAINAGE</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
     +'<div style="background:rgba(0,0,0,.15);border-radius:12px;padding:12px"><div style="font-size:9px;font-weight:700;opacity:.7;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">AUJOURD\'HUI</div><div id="cm-auj" style="font-size:20px;font-weight:900">0 FCFA</div><div id="cm-auj-nb" style="font-size:10px;opacity:.7">0 ops</div></div>'
+    +'<div style="background:rgba(0,0,0,.15);border-radius:12px;padding:12px"><div style="font-size:9px;font-weight:700;opacity:.7;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">HIER</div><div id="cm-hier" style="font-size:20px;font-weight:900">0 FCFA</div><div id="cm-hier-nb" style="font-size:10px;opacity:.7">0 ops</div></div>'
     +'<div style="background:rgba(0,0,0,.15);border-radius:12px;padding:12px"><div style="font-size:9px;font-weight:700;opacity:.7;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">SEMAINE</div><div id="cm-sem" style="font-size:20px;font-weight:900">0 FCFA</div><div id="cm-sem-nb" style="font-size:10px;opacity:.7">0 ops</div></div>'
     +'<div style="background:rgba(0,0,0,.15);border-radius:12px;padding:12px"><div style="font-size:9px;font-weight:700;opacity:.7;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">CE MOIS</div><div id="cm-mois" style="font-size:20px;font-weight:900">0 FCFA</div><div id="cm-mois-nb" style="font-size:10px;opacity:.7">0 ops</div></div>'
     +'<div style="background:rgba(0,0,0,.15);border-radius:12px;padding:12px"><div style="font-size:9px;font-weight:700;opacity:.7;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">CETTE ANNÉE</div><div id="cm-ann" style="font-size:20px;font-weight:900">0 FCFA</div><div id="cm-ann-nb" style="font-size:10px;opacity:.7">0 ops</div></div>'
-    +'</div>'
-    +'<div style="background:rgba(0,0,0,.15);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center">'
-    +'<div style="font-size:12px;opacity:.8">Total depuis toujours</div><div id="cm-total" style="font-size:16px;font-weight:900">0 FCFA</div>'
+    +'<div style="background:rgba(0,0,0,.15);border-radius:12px;padding:12px"><div style="font-size:9px;font-weight:700;opacity:.7;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">DEPUIS TOUJOURS</div><div id="cm-total" style="font-size:20px;font-weight:900">0 FCFA</div><div id="cm-total-nb" style="font-size:10px;opacity:.7">0 ops</div></div>'
     +'</div></div>'
     // Gains disponibles
     +'<div style="background:#fff;border:2px solid #f59e0b;border-radius:16px;padding:16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">'
@@ -1664,17 +1663,20 @@ async function chargerCommissions(){
     var comms=rd.data||[];
     var now=new Date();
     var dAuj=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    var dHier=new Date(dAuj); dHier.setDate(dHier.getDate()-1);
     var dSem=new Date(now);dSem.setDate(now.getDate()-now.getDay());dSem.setHours(0,0,0,0);
     var dMois=new Date(now.getFullYear(),now.getMonth(),1);
     var dAnn=new Date(now.getFullYear(),0,1);
 
-    var tAuj=0,nAuj=0,tSem=0,nSem=0,tMois=0,nMois=0,tAnn=0,nAnn=0,tTotal=0,tDispo=0,cM=[];
+    var tAuj=0,nAuj=0,tHier=0,nHier=0,tSem=0,nSem=0,tMois=0,nMois=0,tAnn=0,nAnn=0,tTotal=0,nTotal=0,tDispo=0,cM=[];
     comms.forEach(function(c){
       var d=new Date(c.dateCalcul||c.date_calcul||0);
       var m=Number(c.montant||0);
-      tTotal+=m;
+      tTotal+=m; nTotal++;
+      // Gains virables = statut verse uniquement (gains d'hier et avant, passés par le cron de minuit)
       if(c.statut==='verse')tDispo+=m;
       if(d>=dAuj){tAuj+=m;nAuj++;}
+      if(d>=dHier&&d<dAuj){tHier+=m;nHier++;}
       if(d>=dSem){tSem+=m;nSem++;}
       if(d>=dMois){tMois+=m;nMois++;cM.push(c);}
       if(d>=dAnn){tAnn+=m;nAnn++;}
@@ -1683,10 +1685,11 @@ async function chargerCommissions(){
     var F=function(n){return Number(n||0).toLocaleString('fr-FR')+' FCFA';};
     var s=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
     s('cm-auj',F(tAuj));s('cm-auj-nb',nAuj+' ops');
+    s('cm-hier',F(tHier));s('cm-hier-nb',nHier+' ops');
     s('cm-sem',F(tSem));s('cm-sem-nb',nSem+' ops');
     s('cm-mois',F(tMois));s('cm-mois-nb',nMois+' ops');
     s('cm-ann',F(tAnn));s('cm-ann-nb',nAnn+' ops');
-    s('cm-total',F(tTotal));
+    s('cm-total',F(tTotal));s('cm-total-nb',nTotal+' ops');
     s('cm-dispo',F(tDispo));
     s('cm-dispo2',F(tDispo));
 

@@ -10,10 +10,10 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#ffffff;--s:#F0FBF0;--c:#F0FBF0;--b:#DCF8C6;
+  --bg:#ffffff;--s:#f0fdf4;--c:#f0fdf4;--b:#dcfce7;
   --a:#00C000;--a2:#008000;--a3:#005000;
   --t:#003000;--m:#6b7280;--d:#9ca3af;
-  --r:#ef4444;--g:#f59e0b;--bl:#3b82f6;--p:#a855f7;
+  --r:#ef4444;--g:#22c55e;--bl:#3b82f6;--p:#a855f7;
   --em1:#00C000;--em2:#006400;
 }
 html,body{height:100%;background:#f5f5f5;font-family:'DM Sans',sans-serif;color:var(--t);overflow-x:hidden}
@@ -21,21 +21,21 @@ html,body{height:100%;background:#f5f5f5;font-family:'DM Sans',sans-serif;color:
 #app{width:100%;max-width:420px;min-height:100vh;margin:0 auto;background:#f5f5f5}
 .scr{display:none;flex-direction:column;min-height:100vh;padding-bottom:88px}
 .scr.on{display:flex}
-.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;background:#d97706;border-top:1px solid rgba(0,0,0,.08);box-shadow:0 -4px 20px rgba(0,64,0,.2);display:flex;z-index:100;padding:6px 0 20px}
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;background:#F0C800;border-top:1px solid rgba(0,0,0,.08);box-shadow:0 -4px 20px rgba(0,64,0,.2);display:flex;z-index:100;padding:6px 0 20px}
 .nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;cursor:pointer;padding:5px 0;color:rgba(255,255,255,.5);font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;transition:color .2s}
 .nb.on{color:#000;font-weight:900}
 .nb svg{width:20px;height:20px}
-.inp{width:100%;background:#FFE566;border:1.5px solid #FFE566;border-radius:13px;padding:13px 16px;color:#005000;font-size:15px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s}
+.inp{width:100%;background:#25D366;border:1.5px solid #25D366;border-radius:13px;padding:13px 16px;color:#005000;font-size:15px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s}
 .inp:focus{border-color:var(--a)}
 .inp::placeholder{color:var(--d)}
 .btn{width:100%;padding:14px;border-radius:13px;border:none;font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:8px}
 .btn:disabled{opacity:.35;cursor:not-allowed}
-.btn-a{background:linear-gradient(135deg,var(--a2),var(--a));color:#fff}
+.btn-a{background:#F0C800);color:#fff}
 .btn-ghost{background:transparent;border:1.5px solid var(--b);color:var(--a)}
-.btn-g{background:linear-gradient(135deg,#b45309,#f59e0b);color:#fff}
+.btn-g{background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff}
 .btn-r{background:#180404;border:1px solid #7f1d1d;color:#f87171}
 .btn-o{background:linear-gradient(135deg,#c2410c,#f97316);color:#fff}
-.card{background:#FFE566;border:1px solid #FFE566;border-radius:16px;padding:16px}
+.card{background:#25D366;border:1px solid #25D366;border-radius:16px;padding:16px}
 .lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--a);display:block;margin-bottom:6px}
 .info{border-radius:12px;padding:11px 14px;margin-bottom:14px;font-size:13px;font-weight:500;line-height:1.5}
 .info-g{background:#052010;border:1px solid rgba(34,197,94,.2);color:#86efac}
@@ -47,16 +47,16 @@ html,body{height:100%;background:#f5f5f5;font-family:'DM Sans',sans-serif;color:
 .srow{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--b)}
 .spin{width:22px;height:22px;border:2px solid var(--b);border-top-color:var(--a);border-radius:50%;animation:sp .7s linear infinite;display:inline-block}
 @keyframes sp{to{transform:rotate(360deg)}}
-#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:#d97706;border:1px solid #FFE566;border-radius:12px;padding:10px 22px;color:#fff;font-size:13px;font-weight:700;z-index:9999;transition:transform .3s;white-space:nowrap;max-width:90%}
+#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);background:#F0C800;border:1px solid #25D366;border-radius:12px;padding:10px 22px;color:#fff;font-size:13px;font-weight:700;z-index:9999;transition:transform .3s;white-space:nowrap;max-width:90%}
 #toast.on{transform:translateX(-50%) translateY(0)}
 #toast.err{border-color:var(--r);color:var(--r)}
 .sh-ov{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;display:none;align-items:flex-end;justify-content:center}
 .sh-ov.on{display:flex}
 .sh{width:100%;max-width:420px;background:#ffffff;border-radius:22px 22px 0 0;border-top:2px solid var(--a);padding:0 22px 100px;max-height:92vh;overflow-y:auto}
-.sh-bar{width:40px;height:4px;background:#FFE566;border-radius:4px;margin:14px auto}
+.sh-bar{width:40px;height:4px;background:#25D366;border-radius:4px;margin:14px auto}
 .sh-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
 .sh-title{font-size:22px;font-weight:800}
-.sh-x{background:#FFE566;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--m);font-size:15px;display:flex;align-items:center;justify-content:center}
+.sh-x{background:#25D366;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--m);font-size:15px;display:flex;align-items:center;justify-content:center}
 .tx{display:flex;justify-content:space-between;align-items:center;padding:12px 13px;border-radius:13px;margin-bottom:8px}
 .pin-dot{width:52px;height:52px;border-radius:14px;background:var(--s);border:2px solid var(--b);display:flex;align-items:center;justify-content:center;font-size:24px;transition:all .2s}
 .pin-dot.on{border-color:var(--a);background:rgba(0,192,0,.08)}
@@ -68,7 +68,7 @@ html,body{height:100%;background:#f5f5f5;font-family:'DM Sans',sans-serif;color:
 .badge-req{position:absolute;top:5px;left:6px;padding:2px 7px;border-radius:99px;font-size:9px;font-weight:800;background:rgba(0,192,0,.15);color:var(--a)}
 .badge-opt{position:absolute;top:5px;left:6px;padding:2px 7px;border-radius:99px;font-size:9px;font-weight:800;background:rgba(100,100,100,.2);color:var(--m)}
 .photo-ok{position:absolute;top:5px;right:6px;width:20px;height:20px;border-radius:50%;background:var(--a);color:#fff;font-size:10px;font-weight:900;display:flex;align-items:center;justify-content:center}
-.params-item{display:flex;align-items:center;gap:14px;padding:14px 16px;background:#FFE566;border-radius:14px;border:1px solid #FFE566;cursor:pointer;margin-bottom:8px;text-align:left;width:100%;font-family:inherit;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.params-item{display:flex;align-items:center;gap:14px;padding:14px 16px;background:#25D366;border-radius:14px;border:1px solid #25D366;cursor:pointer;margin-bottom:8px;text-align:left;width:100%;font-family:inherit;box-shadow:0 1px 3px rgba(0,0,0,.05)}
 .params-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
 .params-label{font-size:14px;font-weight:700;color:#111827}
 .params-sub{font-size:12px;color:#6b7280;margin-top:1px}
@@ -79,7 +79,7 @@ html,body{height:100%;background:#f5f5f5;font-family:'DM Sans',sans-serif;color:
 .rtab.on{color:var(--a);border-bottom-color:var(--a)}
 
 .nb-badge{position:absolute;top:2px;right:calc(50% - 18px);background:#ef4444;color:#fff;font-size:9px;font-weight:800;border-radius:99px;padding:1px 5px;min-width:16px;text-align:center;display:none}
-#s-lock{position:fixed;inset:0;z-index:250;background:#d97706;display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;}
+#s-lock{position:fixed;inset:0;z-index:250;background:#F0C800;display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;}
 #s-lock.on{display:flex;}
 .scr-op{display:none;flex-direction:column;min-height:100vh;padding-bottom:88px;background:#f5f5f5}
 .scr-op.on{display:flex}
@@ -158,18 +158,18 @@ html,body{height:100%;background:#f5f5f5;font-family:'DM Sans',sans-serif;color:
     <div style="padding:0 0 24px">
       <div style="font-size:12px;color:#6b7280;margin-bottom:14px">Commission calculée une fois par jour selon votre volume total. Disponible à virer le lendemain.</div>
       <div style="border-radius:14px;overflow:hidden;border:1px solid #e5e7eb">
-        <div style="display:grid;grid-template-columns:1fr 1fr;background:#FFE566;padding:9px 14px;font-size:10px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #e5e7eb"><div>Volume journalier</div><div style="text-align:right">Commission</div></div>
-        <div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#FFE566;border-bottom:1px solid #FFE566"><div style="color:#374151;font-weight:500">500 – 9 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">20 F</div></div>
-        <div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#FFE566;border-bottom:1px solid #FFE566"><div style="color:#374151;font-weight:500">10 000 – 19 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">55 F</div></div>
-        <div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#FFE566;border-bottom:1px solid #FFE566"><div style="color:#374151;font-weight:500">20 000 – 49 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">125 F</div></div>
-        <div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#FFE566;border-bottom:1px solid #FFE566"><div style="color:#374151;font-weight:500">50 000 – 99 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">300 F</div></div>
-        <div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#FFE566;border-bottom:1px solid #FFE566"><div style="color:#374151;font-weight:500">100 000 – 199 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">800 F</div></div>
-        <div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#FFE566;border-bottom:1px solid #FFE566"><div style="color:#374151;font-weight:500">200 000 – 499 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">2 100 F</div></div>
-        <div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#FFE566;border-bottom:1px solid #FFE566"><div style="color:#374151;font-weight:500">500 000 – 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">2 950 F</div></div>
-        <div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#FFE566;border-bottom:1px solid #FFE566"><div style="color:#374151;font-weight:500">1 000 000 – 2 499 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">5 500 F</div></div>
-        <div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#FFE566;border-bottom:1px solid #FFE566"><div style="color:#374151;font-weight:500">2 500 000 – 4 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">8 550 F</div></div>
-        <div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#FFE566;border-bottom:1px solid #FFE566"><div style="color:#374151;font-weight:500">5 000 000 – 9 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">14 000 F</div></div>
-        <div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff"><div style="color:#374151;font-weight:500">≥ 10 000 000</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">22 000 F</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;background:#25D366;padding:9px 14px;font-size:10px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #e5e7eb"><div>Volume journalier</div><div style="text-align:right">Commission</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#25D366;border-bottom:1px solid #25D366"><div style="color:#374151;font-weight:500">500 – 9 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">20 F</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#25D366;border-bottom:1px solid #25D366"><div style="color:#374151;font-weight:500">10 000 – 19 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">55 F</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#25D366;border-bottom:1px solid #25D366"><div style="color:#374151;font-weight:500">20 000 – 49 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">125 F</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#25D366;border-bottom:1px solid #25D366"><div style="color:#374151;font-weight:500">50 000 – 99 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">300 F</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#25D366;border-bottom:1px solid #25D366"><div style="color:#374151;font-weight:500">100 000 – 199 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">800 F</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#25D366;border-bottom:1px solid #25D366"><div style="color:#374151;font-weight:500">200 000 – 499 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">2 100 F</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#25D366;border-bottom:1px solid #25D366"><div style="color:#374151;font-weight:500">500 000 – 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">2 950 F</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#25D366;border-bottom:1px solid #25D366"><div style="color:#374151;font-weight:500">1 000 000 – 2 499 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">5 500 F</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#25D366;border-bottom:1px solid #25D366"><div style="color:#374151;font-weight:500">2 500 000 – 4 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">8 550 F</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#25D366;border-bottom:1px solid #25D366"><div style="color:#374151;font-weight:500">5 000 000 – 9 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">14 000 F</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff"><div style="color:#374151;font-weight:500">≥ 10 000 000</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">22 000 F</div></div>
       </div>
     </div>
   </div>
@@ -226,7 +226,7 @@ html,body{height:100%;background:#f5f5f5;font-family:'DM Sans',sans-serif;color:
   </div>
   <div id="wqr-carte" style="display:none;flex:1;background:#fff;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;position:relative;">
     <button onclick="fermerPopupQR()" style="position:absolute;top:20px;left:20px;background:#f3f4f6;border:none;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px">←</button>
-    <div style="background:linear-gradient(135deg,var(--a2),var(--a));border-radius:20px;padding:20px;text-align:center;width:100%;max-width:280px;">
+    <div style="background:#F0C800);border-radius:20px;padding:20px;text-align:center;width:100%;max-width:280px;">
       <div style="background:#fff;border-radius:12px;padding:12px;margin-bottom:12px;">
         <div id="wqr-carte-canvas" style="width:200px;height:200px;margin:0 auto"></div>
       </div>
@@ -312,7 +312,7 @@ function setTab(t){
     <div style="font-size:36px;font-weight:900;letter-spacing:-.5px;margin-bottom:4px">AFRIM PAY</div>
     <div style="color:var(--m);font-size:13px;margin-bottom:8px">Interface Master</div>
     <div style="background:rgba(0,192,0,.1);border:1px solid rgba(0,192,0,.3);border-radius:20px;padding:4px 16px;display:inline-block;margin-bottom:28px">
-      <span style="color:#d97706;font-size:11px;font-weight:800;letter-spacing:.14em">🌿 ESPACE MINI-MASTER</span>
+      <span style="color:#F0C800;font-size:11px;font-weight:800;letter-spacing:.14em">🌿 ESPACE MINI-MASTER</span>
     </div>
     <div class="card" style="padding:28px;text-align:left">
       <div id="err-login" class="info info-r" style="display:none"></div>
@@ -350,7 +350,7 @@ function setTab(t){
 <!-- HOME -->
 <div class="scr" id="s-home">
   <!-- Header -->
-  <div style="background:#d97706;padding:28px 16px 16px;border-radius:0 0 28px 28px;margin-bottom:16px;overflow:hidden">
+  <div style="background:#F0C800;padding:28px 16px 16px;border-radius:0 0 28px 28px;margin-bottom:16px;overflow:hidden">
     <div style="display:flex;gap:12px">
       <!-- Colonne gauche : Nom / 4 boutons / Solde -->
       <div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:space-between">
@@ -391,15 +391,15 @@ function setTab(t){
     </div>
     <!-- Agents / Business / Clients -->
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px">
-      <div style="background:#FFE566;border-radius:12px;padding:10px 8px;text-align:center">
+      <div style="background:#25D366;border-radius:12px;padding:10px 8px;text-align:center">
         <div style="font-size:18px;font-weight:900;color:#000" id="h-agents">—</div>
         <div style="font-size:9px;color:#007700;font-weight:800;margin-top:1px">Agents</div>
       </div>
-      <div style="background:#FFE566;border-radius:12px;padding:10px 8px;text-align:center">
+      <div style="background:#25D366;border-radius:12px;padding:10px 8px;text-align:center">
         <div style="font-size:18px;font-weight:900;color:#000" id="h-business">—</div>
         <div style="font-size:9px;color:#007700;font-weight:800;margin-top:1px">Business</div>
       </div>
-      <div style="background:#FFE566;border-radius:12px;padding:10px 8px;text-align:center">
+      <div style="background:#25D366;border-radius:12px;padding:10px 8px;text-align:center">
         <div style="font-size:18px;font-weight:900;color:#000" id="h-clients">—</div>
         <div style="font-size:9px;color:#007700;font-weight:800;margin-top:1px">Clients</div>
       </div>
@@ -407,10 +407,10 @@ function setTab(t){
   </div>
   <!-- Opérations rapides -->
   <div style="padding:16px;margin-bottom:0;background:#fff;border-radius:0">
-    <div style="font-size:11px;font-weight:800;color:#d97706;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">OPÉRATIONS RAPIDES</div>
+    <div style="font-size:11px;font-weight:800;color:#F0C800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">OPÉRATIONS RAPIDES</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-      <button onclick="ouvrirDepot()" style="background:#fff;border:2px solid #d97706;border-radius:16px;padding:16px 12px;cursor:pointer;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.08)">
-        <div style="width:38px;height:38px;border-radius:12px;background:#d97706;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:18px;color:#fff">↓</div>
+      <button onclick="ouvrirDepot()" style="background:#fff;border:2px solid #F0C800;border-radius:16px;padding:16px 12px;cursor:pointer;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+        <div style="width:38px;height:38px;border-radius:12px;background:#F0C800;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:18px;color:#fff">↓</div>
         <div style="font-size:13px;font-weight:700;color:#005000">Dépôt Client</div>
         <div style="font-size:10px;color:#00C000;margin-top:2px">Commission journalière</div>
       </button>
@@ -421,8 +421,8 @@ function setTab(t){
       </button>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <button onclick="openSh('inscription')" style="background:#fff;border:2px solid #FFE566;border-radius:16px;padding:16px 12px;cursor:pointer;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.08)">
-        <div style="width:38px;height:38px;border-radius:12px;background:#FFE566;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:18px;color:#fff">👤</div>
+      <button onclick="openSh('inscription')" style="background:#fff;border:2px solid #25D366;border-radius:16px;padding:16px 12px;cursor:pointer;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+        <div style="width:38px;height:38px;border-radius:12px;background:#25D366;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:18px;color:#fff">👤</div>
         <div style="font-size:13px;font-weight:700;color:#713f12">Inscrire</div>
         <div style="font-size:10px;color:#ca8a04;margin-top:2px">Agent · Client · Business</div>
       </button>
@@ -436,7 +436,7 @@ function setTab(t){
 
   <!-- Transactions récentes -->
   <div style="padding:16px;background:#fff">
-    <div style="font-size:11px;font-weight:800;color:#d97706;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">TRANSACTIONS RÉCENTES</div>
+    <div style="font-size:11px;font-weight:800;color:#F0C800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">TRANSACTIONS RÉCENTES</div>
     <div id="h-txns"><div style="text-align:center;padding:20px"><div class="spin"></div></div></div>
   </div>
 
@@ -461,6 +461,8 @@ function setTab(t){
       <button class="chip" onclick="setHistFilter('retrait')">Retraits</button>
       <button class="chip" onclick="setHistFilter('transfert')">Transferts</button>
       <button class="chip" onclick="setHistFilter('virement')">Virements</button>
+      <button class="chip" onclick="setHistFilter('commissions')">Commissions</button>
+      <button class="chip" onclick="setHistFilter('gains')">Gains</button>
     </div>
     <div style="display:flex;gap:6px;align-items:center;margin-top:6px">
       <div style="position:relative;flex:5">
@@ -488,7 +490,7 @@ function setTab(t){
 
 <!-- COMMISSIONS -->
 <div class="scr" id="s-commissions">
-  <div style="background:linear-gradient(135deg,var(--a2),#d97706);padding:52px 22px 16px">
+  <div style="background:#F0C800;padding:52px 22px 16px">
     <div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:2px">Commissions 💳</div>
     <div style="color:rgba(255,255,255,.75);font-size:13px">D&#233;p&#244;ts et retraits clients</div>
   </div>
@@ -507,7 +509,7 @@ function setTab(t){
 
 <!-- GAINS / COMMISSIONS -->
 <div class="scr" id="s-gains">
-  <div style="background:linear-gradient(135deg,var(--a2),#d97706);padding:52px 22px 24px">
+  <div style="background:#F0C800;padding:52px 22px 24px">
     <div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:2px">Mes gains 💰</div>
     <div style="color:rgba(255,255,255,.75);font-size:13px">Commissions professionnelles</div>
   </div>
@@ -527,7 +529,7 @@ function setTab(t){
 <!-- RÉSEAU -->
 <div class="scr" id="s-reseau">
   <!-- Header fixe vert avec compteur clients et sous-onglets -->
-  <div style="background:linear-gradient(135deg,var(--a2),#d97706);padding:52px 16px 0">
+  <div style="background:#F0C800;padding:52px 16px 0">
     <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
       <div>
         <div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:2px">Mon réseau 🌐</div>
@@ -538,19 +540,19 @@ function setTab(t){
         <div style="font-size:22px;font-weight:900;color:#fff" id="rn-total-clients">—</div>
       </div>
     </div>
-    <!-- Onglets principaux : Mini-Masters | Agents | Business -->
+    <!-- Onglets principaux : Agent | Business -->
     <div style="display:flex;gap:0;background:rgba(0,0,0,.15);border-radius:12px 12px 0 0;overflow:hidden">
-      <button id="rn-tab-agent" onclick="setReseauTab('agent')" style="flex:1;padding:11px 0;font-size:11px;font-weight:800;color:#fff;background:rgba(255,255,255,.25);border:none;cursor:pointer;font-family:inherit">Mini-Masters</button>
+      <button id="rn-tab-agent" onclick="setReseauTab('agent')" style="flex:1;padding:11px 0;font-size:12px;font-weight:800;color:#fff;background:rgba(255,255,255,.25);border:none;cursor:pointer;font-family:inherit">Mini-Masters</button>
       <button id="rn-tab-agents-mm" onclick="setReseauTab('agents_mm')" style="flex:1;padding:11px 0;font-size:11px;font-weight:800;color:rgba(255,255,255,.65);background:transparent;border:none;cursor:pointer;font-family:inherit">Agents</button>
-      <button id="rn-tab-business" onclick="setReseauTab('business')" style="flex:1;padding:11px 0;font-size:11px;font-weight:800;color:rgba(255,255,255,.65);background:transparent;border:none;cursor:pointer;font-family:inherit">Business</button>
+      <button id="rn-tab-business" onclick="setReseauTab('business')" style="flex:1;padding:11px 0;font-size:12px;font-weight:800;color:rgba(255,255,255,.65);background:transparent;border:none;cursor:pointer;font-family:inherit">Business</button>
     </div>
   </div>
 
-  <!-- Zone Mini-Masters avec sous-onglets -->
+  <!-- Zone Agent avec sous-onglets -->
   <div id="rn-zone-agent">
     <div style="display:flex;gap:6px;padding:12px 16px 6px;overflow-x:auto">
-      <button id="rn-sub-detail" onclick="setReseauSub('detail')" style="padding:7px 14px;font-size:11px;font-weight:700;border:1px solid #d97706;background:#d97706;color:#fff;border-radius:99px;cursor:pointer;font-family:inherit;white-space:nowrap">Vue d&eacute;tail</button>
-      <button id="rn-sub-solde" onclick="setReseauSub('solde')" style="padding:7px 14px;font-size:11px;font-weight:700;border:1px solid #e5e7eb;background:#fff;color:#6b7280;border-radius:99px;cursor:pointer;font-family:inherit;white-space:nowrap">Soldes MM</button>
+      <button id="rn-sub-detail" onclick="setReseauSub('detail')" style="padding:7px 14px;font-size:11px;font-weight:700;border:1px solid #F0C800;background:#F0C800;color:#fff;border-radius:99px;cursor:pointer;font-family:inherit;white-space:nowrap">Vue détail</button>
+      <button id="rn-sub-solde" onclick="setReseauSub('solde')" style="padding:7px 14px;font-size:11px;font-weight:700;border:1px solid #e5e7eb;background:#fff;color:#6b7280;border-radius:99px;cursor:pointer;font-family:inherit;white-space:nowrap">Solde agents</button>
       <button id="rn-sub-inscrits" onclick="setReseauSub('inscrits')" style="padding:7px 14px;font-size:11px;font-weight:700;border:1px solid #e5e7eb;background:#fff;color:#6b7280;border-radius:99px;cursor:pointer;font-family:inherit;white-space:nowrap">Inscrits</button>
       <button id="rn-sub-statsag" onclick="setReseauSub('statsag')" style="padding:7px 14px;font-size:11px;font-weight:700;border:1px solid #e5e7eb;background:#fff;color:#6b7280;border-radius:99px;cursor:pointer;font-family:inherit;white-space:nowrap">Statistiques</button>
     </div>
@@ -559,12 +561,8 @@ function setTab(t){
     </div>
   </div>
 
-  <!-- Zone Agents des Mini-Masters -->
-  <div id="rn-zone-agents-mm" style="display:none">
-    <div id="rn-agents-mm-content" style="padding:16px 16px 100px">
-      <div style="text-align:center;padding:32px"><div class="spin"></div></div>
-    </div>
-  </div>
+  <!-- Zone Agents MM -->
+  <div id="rn-zone-agents-mm" style="display:none"><div id="rn-agents-mm-content" style="padding:16px 16px 100px"><div style="text-align:center;padding:32px"><div class="spin"></div></div></div></div>
 
   <!-- Zone Business -->
   <div id="rn-zone-business" style="display:none">
@@ -585,7 +583,7 @@ function setTab(t){
 
 <!-- STATISTIQUES -->
 <div class="scr" id="s-stats">
-  <div style="background:linear-gradient(135deg,var(--a2),#d97706);padding:52px 22px 14px">
+  <div style="background:#F0C800;padding:52px 22px 14px">
     <div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:2px">Statistiques 📊</div>
     <div style="color:rgba(255,255,255,.8);font-size:13px">Analyse compl&#232;te de vos op&#233;rations</div>
     <div style="display:flex;gap:5px;margin-top:10px">
@@ -617,7 +615,7 @@ function setTab(t){
 
 <!-- PROFIL -->
 <div class="scr" id="s-profile">
-  <div style="background:linear-gradient(135deg,var(--a2),#d97706);padding:28px 22px 24px;text-align:center">
+  <div style="background:#F0C800;padding:28px 22px 24px;text-align:center">
     <div style="color:rgba(255,255,255,.75);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px">ESPACE MINI-MASTER</div>
     <div style="font-size:20px;font-weight:900;color:#fff;margin-bottom:3px" id="prof-name-top">—</div>
     <div style="color:rgba(255,255,255,.7);font-size:13px;font-family:monospace;margin-bottom:20px" id="prof-tel-top">—</div>
@@ -680,13 +678,13 @@ function setTab(t){
   <div class="sh">
     <div class="sh-bar"></div>
     <div class="sh-top"><div><div class="sh-title">Transfert Liquidité</div><div style="color:var(--m);font-size:12px">Agent ↔ Agent/MM · Gratuit</div></div><button class="sh-x" onclick="closeSh('transfert');rstTrf()">✕</button></div>
-    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:11px 14px;margin-bottom:14px;font-size:13px;color:#92400e;">ℹ️ Transferts entre agents et masters sans commission. Utile pour rééquilibrer la liquidité.</div>
+    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:11px 14px;margin-bottom:14px;font-size:13px;color:#92400e;">ℹ️ Transferts entre agents et mini-masters sans commission. Utile pour rééquilibrer la liquidité.</div>
     <div id="trf-err" class="info info-r" style="display:none"></div>
     <span class="lbl">Numéro destinataire</span>
     <div style="display:flex;gap:8px;margin-bottom:18px;align-items:center">
       <input class="inp" id="trf-tel" type="tel" placeholder="+225 07 XX XX XX" style="flex:1" oninput="document.getElementById('trf-btn-valider').disabled=this.value.replace(/\D/g,'').length<8"/>
       <button onclick="ouvrirScanner(function(tel){document.getElementById('trf-tel').value=tel;var r=get('/users/lookup-pro?telephone='+encodeURIComponent(tel));r.then(function(res){if(res.data)ouvrirScreenTransfert(res.data);});})" style="background:var(--s);border:1.5px solid var(--b);border-radius:13px;padding:0 14px;cursor:pointer;display:flex;align-items:center;height:48px">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3" rx=".5" fill="#d97706"/><rect x="19" y="14" width="2" height="2" rx=".5" fill="#d97706"/><rect x="14" y="19" width="2" height="2" rx=".5" fill="#d97706"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F0C800" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3" rx=".5" fill="#F0C800"/><rect x="19" y="14" width="2" height="2" rx=".5" fill="#F0C800"/><rect x="14" y="19" width="2" height="2" rx=".5" fill="#F0C800"/></svg>
       </button>
     </div>
     <div id="trf-loading" style="display:none;text-align:center;padding:20px"><div class="spin"></div></div>
@@ -706,7 +704,7 @@ function setTab(t){
     <div id="ins-type-sel">
       <span class="lbl">Type de compte à créer</span>
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
-        <button onclick="setInsType('client')" style="padding:14px 18px;border-radius:14px;border:1.5px solid #d97706;background:rgba(245,158,11,.08);color:#d97706;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;display:flex;align-items:center;gap:12px"><span style="font-size:22px">👤</span><div><div>Client</div><div style="font-size:11px;font-weight:400;opacity:.7">Compte personnel</div></div></button>
+        <button onclick="setInsType('client')" style="padding:14px 18px;border-radius:14px;border:1.5px solid #F0C800;background:rgba(245,158,11,.08);color:#F0C800;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;display:flex;align-items:center;gap:12px"><span style="font-size:22px">👤</span><div><div>Client</div><div style="font-size:11px;font-weight:400;opacity:.7">Compte personnel</div></div></button>
         <button onclick="setInsType('business')" style="padding:14px 18px;border-radius:14px;border:1.5px solid var(--b);background:transparent;color:var(--m);font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;display:flex;align-items:center;gap:12px"><span style="font-size:22px">🏪</span><div><div>Business</div><div style="font-size:11px;font-weight:400;opacity:.7">Commerce / Entreprise</div></div></button>
         <button onclick="setInsType('agent')" style="padding:14px 18px;border-radius:14px;border:1.5px solid var(--b);background:transparent;color:var(--m);font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;display:flex;align-items:center;gap:12px"><span style="font-size:22px">🔶</span><div><div>Agent</div><div style="font-size:11px;font-weight:400;opacity:.7">Sous votre supervision</div></div></button>
       </div>
@@ -722,7 +720,7 @@ function setTab(t){
     </div>
     <div id="ins-loading" style="display:none;text-align:center;padding:32px 0"><div class="spin" style="width:36px;height:36px;border-width:3px"></div><div style="color:var(--m);font-size:13px;margin-top:12px">Création...</div></div>
     <div id="ins-success" style="display:none;text-align:center;padding:28px 0">
-      <div style="width:72px;height:72px;border-radius:50%;background:#d97706;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:34px;color:#030200">✓</div>
+      <div style="width:72px;height:72px;border-radius:50%;background:#F0C800;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:34px;color:#030200">✓</div>
       <div style="font-size:22px;font-weight:800;margin-bottom:6px">Compte créé !</div>
       <div id="ins-succ-txt" style="color:var(--m);font-size:13px;margin-bottom:22px"></div>
       <div style="display:flex;gap:8px"><button class="btn btn-a" style="flex:1" onclick="rstIns()">Nouveau</button><button class="btn btn-ghost" style="flex:1" onclick="closeSh('inscription');rstIns()">Fermer</button></div>
@@ -802,7 +800,7 @@ function renderInsFields(){
   h+='<span class="lbl">Code PIN (4 chiffres) *</span><div style="margin-bottom:13px"><input class="inp" id="ins-pin" type="password" inputmode="numeric" maxlength="4" placeholder="••••"/></div>';
   if(insType==='client'){
     h+='<span class="lbl">Niveau KYC</span><div style="display:flex;gap:8px;margin-bottom:14px">';
-    ['KYC1','KYC2','KYC3'].forEach(function(k){h+='<button onclick="setInsKyc(\''+k+'\')" id="kyc-btn-'+k+'" style="flex:1;padding:9px 4px;border-radius:11px;border:1.5px solid '+(k===insKyc?'#d97706':'var(--b)')+';background:'+(k===insKyc?'rgba(245,158,11,.08)':'transparent')+';color:'+(k===insKyc?'#d97706':'var(--m)')+';font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">'+k+'</button>';});
+    ['KYC1','KYC2','KYC3'].forEach(function(k){h+='<button onclick="setInsKyc(\''+k+'\')" id="kyc-btn-'+k+'" style="flex:1;padding:9px 4px;border-radius:11px;border:1.5px solid '+(k===insKyc?'#F0C800':'var(--b)')+';background:'+(k===insKyc?'rgba(245,158,11,.08)':'transparent')+';color:'+(k===insKyc?'#F0C800':'var(--m)')+';font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">'+k+'</button>';});
     h+='</div>';
   }
   if(insType==='business') h+='<span class="lbl">Nom de l\'entreprise *</span><div style="margin-bottom:13px"><input class="inp" id="ins-biz" type="text" placeholder="Nom commercial"/></div>';
@@ -830,7 +828,7 @@ function renderInsPhotos(){
     h+='<div class="'+(p.req?'badge-req':'badge-opt')+'">'+(p.req?'Requis':'Optionnel')+'</div>';
     if(done)h+='<div class="photo-ok">✓</div>';
     h+='<div style="font-size:28px">'+(done?'✅':'📷')+'</div>';
-    h+='<div style="font-size:11px;font-weight:600;color:'+(done?'#d97706':'var(--m)')+';text-align:center">'+p.label+'</div>';
+    h+='<div style="font-size:11px;font-weight:600;color:'+(done?'#F0C800':'var(--m)')+';text-align:center">'+p.label+'</div>';
     h+='<input type="file" id="ph-ins-'+p.id+'" accept="image/*" capture="'+(p.selfie?'user':'environment')+'" style="display:none" onchange="phIns(\''+p.id+'\',this)"/></div>';
   });
   if(photos.length)h+='</div>';
@@ -1239,14 +1237,14 @@ async function chargerAccueil(){
     var rRef=await get('/users/'+(G.user&&G.user.id)+'/referrals');
     var filleuls=(rRef.data&&rRef.data.filleuls)||[];
     filleuls=await enrichirRoles(filleuls);
-    var nbAgents=filleuls.filter(function(f){return f.role==='agent';}).length;
+    var nbMM=filleuls.filter(function(f){return f.role==='mini_master';}).length;
+    var nbAg=filleuls.filter(function(f){return f.role==='agent';}).length;
     var nbBusiness=filleuls.filter(function(f){return f.role==='business';}).length;
     var nbClients=filleuls.filter(function(f){return f.role==='client'||!f.role;}).length;
-    var elA=document.getElementById('h-agents');if(elA)elA.textContent=nbAgents;
-    var elB=document.getElementById('h-business');if(elB)elB.textContent=nbBusiness;
-    var elC=document.getElementById('h-clients');if(elC)elC.textContent=nbClients;
+    var s=function(id,v){var el=document.getElementById(id);if(el)el.textContent=v;};
+    s('h-minimasters',nbMM);s('h-agents',nbAg);s('h-business',nbBusiness);s('h-clients',nbClients);
   }catch(e3){
-    ['h-agents','h-business','h-clients'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent='0';});
+    ['h-minimasters','h-agents','h-business','h-clients'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent='0';});
   }
   // Charger txns APRÈS que G.compte est défini
   chargerTxns();
@@ -1332,7 +1330,7 @@ setInterval(function(){
   pollNotificationsAgent();
 },20000);
 
-var TX_CFG={depot:{c:'#f59e0b',i:'↓',l:'D&#233;p&#244;t'},retrait:{c:'#f97316',i:'↑',l:'Retrait'},transfert:{c:'#3b82f6',i:'⇄',l:'Transfert'},paiement_marchand:{c:'#a855f7',i:'◈',l:'Paiement'},commission:{c:'#f59e0b',i:'★',l:'Commission'},commission_depot:{c:'#f59e0b',i:'★',l:'Comm. dépôt'}};
+var TX_CFG={depot:{c:'#22c55e',i:'↓',l:'D&#233;p&#244;t'},retrait:{c:'#f97316',i:'↑',l:'Retrait'},transfert:{c:'#3b82f6',i:'⇄',l:'Transfert'},paiement_marchand:{c:'#a855f7',i:'◈',l:'Paiement'},commission:{c:'#f59e0b',i:'★',l:'Commission'},commission_depot:{c:'#f59e0b',i:'★',l:'Comm. dépôt'}};
 
 function txRow(tx){
   var cid=G.compte?String(G.compte.id):'';
@@ -1343,31 +1341,31 @@ function txRow(tx){
   var label, icon, color, sign, amtColor;
   if(type==='depot'){
     // D&#233;p&#244;t client = l'agent débourse de sa liquidité → SORTIE
-    label='D&#233;p&#244;t client'; icon='↓'; color='#f59e0b';
+    label='D&#233;p&#244;t client'; icon='↓'; color='#22c55e';
     sign='−'; amtColor='#ef4444';
   } else if(type==='retrait'){
     // Retrait client = l'agent reçoit de la liquidité → ENTRÉE
     label='Retrait client'; icon='↑'; color='#f97316';
-    sign='+'; amtColor='#f59e0b';
+    sign='+'; amtColor='#22c55e';
   } else if(type==='transfert'){
     var isSrc=cSrc===cid;
     label=isSrc?'Transfert envoyé':'Transfert reçu';
     icon=isSrc?'→':'←';
     color='#3b82f6';
     sign=isSrc?'−':'+';
-    amtColor=isSrc?'#ef4444':'#f59e0b';
+    amtColor=isSrc?'#ef4444':'#22c55e';
   } else if(['commission','commission_depot','retrait_agent','depot_agent'].includes(type)){
     label='Commission'; icon='★'; color='#f59e0b';
     sign='+'; amtColor='#f59e0b';
   } else if(type==='virement_commission'){
     label='Virement commissions'; icon='💳'; color='#d97706';
-    sign='+'; amtColor='#f59e0b';
+    sign='+'; amtColor='#22c55e';
   } else if(type==='virement_gains'){
     label='Virement gains'; icon='🤝'; color='#8b5cf6';
-    sign='+'; amtColor='#f59e0b';
+    sign='+'; amtColor='#22c55e';
   } else {
     label=type; icon='◈'; color='#6b7280';
-    sign=cDst===cid?'+':'−'; amtColor=cDst===cid?'#f59e0b':'#ef4444';
+    sign=cDst===cid?'+':'−'; amtColor=cDst===cid?'#22c55e':'#ef4444';
   }
   var txId2=tx.id||'';
   return '<div class="tx" style="background:'+color+'0d;border:1px solid '+color+'22;cursor:pointer" onclick="showTxDetail(\''+txId2+'\')">'
@@ -1501,7 +1499,7 @@ async function chargerCommissions(){
     var vTot=comm.reduce(function(t,c){return t+Number(c.montant||0);},0);
     var disponible=comm.filter(function(c){return c.statut==='verse';}).reduce(function(t,c){return t+Number(c.montant||0);},0);
     var h='';
-    h+='<div style="background:linear-gradient(135deg,var(--a2),#d97706);border-radius:20px;padding:20px 18px;margin-bottom:14px;color:#fff">'
+    h+='<div style="background:#F0C800;border-radius:20px;padding:20px 18px;margin-bottom:14px;color:#fff">'
       +'<div style="font-size:11px;font-weight:700;opacity:.6;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">MES COMMISSIONS</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
       +'<div style="background:rgba(0,0,0,.18);border-radius:12px;padding:11px"><div style="font-size:9px;opacity:.7;text-transform:uppercase;margin-bottom:3px">Aujourd&#39;hui</div><div style="font-size:18px;font-weight:900">'+F(vAuj)+'</div></div>'
@@ -1511,17 +1509,17 @@ async function chargerCommissions(){
       +'<div style="background:rgba(0,0,0,.18);border-radius:12px;padding:11px"><div style="font-size:9px;opacity:.7;text-transform:uppercase;margin-bottom:3px">Cette année</div><div style="font-size:18px;font-weight:900">'+F(vAn)+'</div></div>'
       +'<div style="background:rgba(0,0,0,.18);border-radius:12px;padding:11px"><div style="font-size:9px;opacity:.7;text-transform:uppercase;margin-bottom:3px">Depuis toujours</div><div style="font-size:18px;font-weight:900">'+F(vTot)+'</div></div>'
       +'</div></div>';
-    h+='<div style="background:#fff;border:2px solid #d97706;border-radius:16px;padding:14px 16px;margin-bottom:14px">'
-      +'<div style="font-size:11px;font-weight:700;color:#d97706;text-transform:uppercase;letter-spacing:.05em">COMMISSIONS ACTUELLES</div>'
-      +'<div style="font-size:28px;font-weight:900;color:#d97706;margin:4px 0">'+F(disponible)+'</div>'
+    h+='<div style="background:#fff;border:2px solid #F0C800;border-radius:16px;padding:14px 16px;margin-bottom:14px">'
+      +'<div style="font-size:11px;font-weight:700;color:#F0C800;text-transform:uppercase;letter-spacing:.05em">COMMISSIONS ACTUELLES</div>'
+      +'<div style="font-size:28px;font-weight:900;color:#F0C800;margin:4px 0">'+F(disponible)+'</div>'
       +'<div style="font-size:11px;color:#6b7280">Commissions d&#39;hier et avant · En attente de virement</div>'
     +'</div>';
     h+='<div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:16px;padding:14px;margin-bottom:14px">'
       +'<div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:4px">&#128184; Virer vers mon compte</div>'
-      +'<div style="font-size:12px;color:#6b7280;margin-bottom:10px">Disponible : <strong style="color:#d97706">'+F(disponible)+'</strong></div>'
+      +'<div style="font-size:12px;color:#6b7280;margin-bottom:10px">Disponible : <strong style="color:#F0C800">'+F(disponible)+'</strong></div>'
       +'<div style="display:flex;gap:8px">'
       +'<input id="comm-vir-input" type="number" placeholder="Montant en FCFA" style="flex:1;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 12px;font-size:14px;outline:none">'
-      +'<button onclick="virerCommissions()" style="background:#d97706;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:800;cursor:pointer">Virer</button>'
+      +'<button onclick="virerCommissions()" style="background:#F0C800;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:800;cursor:pointer">Virer</button>'
       +'</div>'
       +'<div id="comm-vir-msg" style="margin-top:8px;font-size:12px;display:none"></div>'
     +'</div>';
@@ -1539,7 +1537,7 @@ async function virerCommissions(){
   try{
     var r=await post('/accounts/transfer-commissions',{montant:amt});
     if(r.success){
-      if(msg){msg.style.display='block';msg.style.color='#b45309';msg.textContent='✅ '+F(amt)+' vir&#233;s vers votre compte !';}
+      if(msg){msg.style.display='block';msg.style.color='#16a34a';msg.textContent='✅ '+F(amt)+' vir&#233;s vers votre compte !';}
       if(inp)inp.value='';
       setTimeout(function(){chargerCommissions();},1200);
     } else {
@@ -1582,9 +1580,11 @@ async function chargerGains(){
     var now=new Date();
 
     var gainsParr   =comms.filter(function(c){return c.type_commission==='parrainage'||c.type_commission==='commission_parrain';});
+    var gainsMM      =comms.filter(function(c){return c.type_commission==='reseau_master_retrait';});
     var gainsAgents  =comms.filter(function(c){return c.type_commission==='reseau_master_retrait';});
     var gainsBusiness=comms.filter(function(c){return c.type_commission==='reseau_master_paiement';});
-    var gainsTous    =gainsParr.concat(gainsAgents).concat(gainsBusiness);
+    // Mini-Masters = sous-ensemble de reseau_master_retrait (même pool, affiché séparément)
+    var gainsTous    =gainsMM.concat(gainsBusiness);
 
     var dAuj =new Date(now.getFullYear(),now.getMonth(),now.getDate());
     var dHier=new Date(dAuj); dHier.setDate(dHier.getDate()-1);
@@ -1593,8 +1593,8 @@ async function chargerGains(){
     var dAn  =new Date(now.getFullYear(),0,1);
 
     function gAuj(list){return list.filter(function(c){return new Date(c.date_calcul||0)>=dAuj;}).reduce(function(s,c){return s+Number(c.montant||0);},0);}
-    var parrAuj=gAuj(gainsParr), agAuj=gAuj(gainsAgents), bizAuj=gAuj(gainsBusiness);
-    var totalAuj=parrAuj+agAuj+bizAuj;
+    var parrAuj=gAuj(gainsParr), mmAuj=gAuj(gainsMM), agAuj=gAuj(gainsAgents), bizAuj=gAuj(gainsBusiness);
+    var totalAuj=parrAuj+mmAuj+bizAuj;
 
     var disponible=gainsTous.filter(function(c){return c.statut==='verse';}).reduce(function(s,c){return s+Number(c.montant||0);},0);
 
@@ -1634,15 +1634,16 @@ async function chargerGains(){
       +'</div>';
     }
 
-    h+=c5(gainsParr,'linear-gradient(135deg,var(--a2),#d97706)','#d97706','MES GAINS \u2014 PARRAINAGE (5%)','🤝');
-    h+=c5(gainsAgents,'linear-gradient(135deg,#c2410c,#f97316)','#f97316','MES GAINS \u2014 AGENTS (Retraits \u00b7 1%)','🔶');
-    h+=c5(gainsBusiness,'linear-gradient(135deg,#6d28d9,#8b5cf6)','#8b5cf6','MES GAINS \u2014 BUSINESS (Paiements \u00b7 1%)','🏪');
+    h+=c5(gainsParr,'#F0C800','#F0C800','MES GAINS \u2014 PARRAINAGE (5%)','🤝');
+    h+=c5(gainsMM,'linear-gradient(135deg,#166534,#16a34a)','#16a34a','MES GAINS \u2014 MINI-MASTERS (R\u00e9seau \u00b7 2%)','🌿');
+    h+=c5(gainsAgents,'linear-gradient(135deg,#c2410c,#f97316)','#f97316','MES GAINS \u2014 AGENTS (Retraits \u00b7 2%)','🔶');
+    h+=c5(gainsBusiness,'linear-gradient(135deg,#6d28d9,#8b5cf6)','#8b5cf6','MES GAINS \u2014 BUSINESS (Paiements \u00b7 2%)','🏪');
 
-    h+='<div style="background:#fff;border:2px solid #d97706;border-radius:16px;padding:14px 16px;margin-bottom:14px">'
+    h+='<div style="background:#fff;border:2px solid #F0C800;border-radius:16px;padding:14px 16px;margin-bottom:14px">'
       +'<div style="display:flex;justify-content:space-between;align-items:center">'
         +'<div>'
           +'<div style="font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.05em">GAINS ACTUELS (VIRABLES)</div>'
-          +'<div style="font-size:26px;font-weight:900;color:#d97706;margin:2px 0">'+F(disponible)+'</div>'
+          +'<div style="font-size:26px;font-weight:900;color:#F0C800;margin:2px 0">'+F(disponible)+'</div>'
           +'<div style="font-size:11px;color:#6b7280">Gains d\u2019hier et avant \u00b7 En attente de virement</div>'
         +'</div>'
         +'<div style="font-size:32px">\uD83D\uDCB0</div>'
@@ -1651,10 +1652,10 @@ async function chargerGains(){
 
     h+='<div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:16px;padding:14px;margin-bottom:14px">'
       +'<div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:4px">\uD83D\uDCB8 Virer mes gains</div>'
-      +'<div style="font-size:12px;color:#6b7280;margin-bottom:10px">Disponible : <strong style="color:#d97706">'+F(disponible)+'</strong></div>'
+      +'<div style="font-size:12px;color:#6b7280;margin-bottom:10px">Disponible : <strong style="color:#F0C800">'+F(disponible)+'</strong></div>'
       +'<div style="display:flex;gap:8px;align-items:center">'
         +'<input id="gains-vir-input" type="number" placeholder="Montant en FCFA" style="flex:1;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 12px;font-size:14px;outline:none;color:#111">'
-        +'<button id="gains-vir-btn" onclick="virerGains()" style="background:#d97706;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:800;cursor:pointer">Virer</button>'
+        +'<button id="gains-vir-btn" onclick="virerGains()" style="background:#F0C800;color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:800;cursor:pointer">Virer</button>'
       +'</div>'
       +'<div id="gains-vir-msg" style="margin-top:8px;font-size:12px;display:none"></div>'
     +'</div>';
@@ -1663,7 +1664,7 @@ async function chargerGains(){
       +'<div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">\uD83E\uDD1D Parrainage (5% permanent)</div>'
       +'<div style="padding:10px;background:#fffbeb;border-radius:10px;display:flex;align-items:center;justify-content:space-between">'
         +'<div style="font-size:12px;color:#92400e;font-weight:600">Votre code</div>'
-        +'<div id="gains-code-val" style="font-size:16px;font-weight:900;color:#d97706;letter-spacing:.08em;cursor:pointer">'+codeParrainage+' \uD83D\uDCCB</div>'
+        +'<div id="gains-code-val" style="font-size:16px;font-weight:900;color:#F0C800;letter-spacing:.08em;cursor:pointer">'+codeParrainage+' \uD83D\uDCCB</div>'
       +'</div>'
     +'</div>';
 
@@ -1672,14 +1673,14 @@ async function chargerGains(){
       virements.slice(0,10).forEach(function(v){
         var d=new Date(v.dateCreation||v.date_creation||0);
         var ds=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})+' \u00b7 '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-        h+='<div class="tx" style="background:#f0fdf4;border:1px solid #fde68a">'
+        h+='<div class="tx" style="background:#f0fdf4;border:1px solid #bbf7d0">'
           +'<div style="display:flex;align-items:center;gap:10px">'
-            +'<div style="width:36px;height:36px;border-radius:10px;background:#fef3c7;color:#b45309;display:flex;align-items:center;justify-content:center;font-size:16px">\uD83D\uDCB8</div>'
+            +'<div style="width:36px;height:36px;border-radius:10px;background:#dcfce7;color:#16a34a;display:flex;align-items:center;justify-content:center;font-size:16px">\uD83D\uDCB8</div>'
             +'<div><div style="font-size:13px;font-weight:700">Virement gains</div><div style="color:var(--m);font-size:11px">'+ds+'</div>'
               +'<div style="color:var(--d);font-size:10px">'+(v.reference||'')+'</div>'
             +'</div>'
           +'</div>'
-          +'<div style="color:#b45309;font-size:14px;font-weight:900;font-family:monospace">+'+F(v.montant)+'</div>'
+          +'<div style="color:#16a34a;font-size:14px;font-weight:900;font-family:monospace">+'+F(v.montant)+'</div>'
         +'</div>';
       });
     }
@@ -1706,7 +1707,7 @@ async function virerGains(){
   try{
     var r=await post('/accounts/transfer-gains',{montant:amt});
     if(r.success){
-      if(msg){msg.style.display='block';msg.style.color='#b45309';msg.textContent='✅ '+F(amt)+' vir&#233;s vers votre compte !';}
+      if(msg){msg.style.display='block';msg.style.color='#16a34a';msg.textContent='✅ '+F(amt)+' vir&#233;s vers votre compte !';}
       if(inp)inp.value='';
       setTimeout(function(){chargerGains();},1200);
     } else {
@@ -1737,7 +1738,7 @@ async function showTxDetail(txId){
 
   var type=tx.type||'';
   var typeCfg={
-    depot:{label:'D&#233;p&#244;t client',color:'#f59e0b',icon:'↓'},
+    depot:{label:'D&#233;p&#244;t client',color:'#22c55e',icon:'↓'},
     retrait:{label:'Retrait client',color:'#f97316',icon:'↑'},
     transfert:{label:'Transfert',color:'#3b82f6',icon:'⇄'},
     paiement_marchand:{label:'Paiement marchand',color:'#a855f7',icon:'◈'},
@@ -1775,7 +1776,7 @@ async function showTxDetail(txId){
   h+='<div style="background:'+typeCfg.color+'12;border:1.5px solid '+typeCfg.color+'30;border-radius:16px;padding:16px;margin-bottom:14px;text-align:center">'
     +'<div style="width:52px;height:52px;border-radius:50%;background:'+typeCfg.color+';display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;margin:0 auto 10px">'+typeCfg.icon+'</div>'
     +'<div style="font-size:12px;font-weight:700;color:'+typeCfg.color+';text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">'+typeCfg.label+'</div>'
-    +'<div style="font-size:28px;font-weight:900;color:#d97706">'+F(montant)+'</div>'
+    +'<div style="font-size:28px;font-weight:900;color:#F0C800">'+F(montant)+'</div>'
     +(frais?'<div style="font-size:12px;color:#dc2626;margin-top:2px">Frais : +'+F(frais)+'</div>':'')
     +(frais?'<div style="font-size:13px;font-weight:800;color:#374151;margin-top:2px">Total d&#233;bit&#233; : '+F(total)+'</div>':'')
   +'</div>';
@@ -1785,7 +1786,7 @@ async function showTxDetail(txId){
     h+='<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:14px;padding:14px;margin-bottom:12px">'
       +'<div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;margin-bottom:8px">'+sensClient+'</div>'
       +'<div style="display:flex;align-items:center;gap:10px">'
-      +'<div style="width:40px;height:40px;border-radius:50%;background:#d97706;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0">'+(nomClient.trim()[0]||'?')+'</div>'
+      +'<div style="width:40px;height:40px;border-radius:50%;background:#F0C800;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0">'+(nomClient.trim()[0]||'?')+'</div>'
       +'<div><div style="font-size:14px;font-weight:700">'+nomClient+'</div><div style="color:var(--m);font-size:12px">'+telClient+'</div></div>'
       +'</div>'
     +'</div>';
@@ -1903,11 +1904,11 @@ function renderStatTab(){
 
   if(statTab==='depot'){
     var vol=d.dep.vol,nb=d.dep.list.length;
-    h+='<div style="background:linear-gradient(135deg,#15803d,#f59e0b);border-radius:16px;padding:16px 18px;margin-bottom:14px;color:#fff">'
+    h+='<div style="background:linear-gradient(135deg,#15803d,#22c55e);border-radius:16px;padding:16px 18px;margin-bottom:14px;color:#fff">'
       +'<div style="font-size:10px;font-weight:700;opacity:.7;text-transform:uppercase;margin-bottom:4px">VOLUME D&#201;P&#212;TS</div>'
       +'<div style="font-size:32px;font-weight:900">'+F(vol)+'</div>'
       +'<div style="font-size:12px;opacity:.8;margin-top:4px">'+nb+' op&#233;rations</div></div>';
-    h+=drawCourbe(d.dep.courbe,'val','#f59e0b','D&#233;p&#244;ts');
+    h+=drawCourbe(d.dep.courbe,'val','#22c55e','D&#233;p&#244;ts');
 
   } else if(statTab==='retrait'){
     var vol=d.ret.vol,nb=d.ret.list.length;
@@ -2132,7 +2133,7 @@ async function voirStatsReseau(userId){
     h+='<div style="color:var(--m);font-size:13px;margin-bottom:16px">'+(d.telephone||'')+' · '+(d.role==='agent'?'Agent':'Business')+'</div>';
     if(d.role==='agent'){
       if(d.isOwner){
-        // Agent appartenant à ce master : vue complète
+        // Agent appartenant à ce mini-master : vue complète
         h+='<div class="srow"><span style="color:var(--m);font-size:13px">Solde actuel</span><span style="font-weight:800;font-size:14px">'+F(d.solde)+'</span></div>';
         h+='<div class="srow"><span style="color:var(--m);font-size:13px">Dépôts traités</span><span style="font-weight:700;font-size:13px">'+(d.nbDepots||0)+' · '+F(d.volDepots)+'</span></div>';
         h+='<div class="srow"><span style="color:var(--m);font-size:13px">Retraits traités</span><span style="font-weight:700;font-size:13px">'+(d.nbRetraits||0)+' · '+F(d.volRetraits)+'</span></div>';
@@ -2140,12 +2141,12 @@ async function voirStatsReseau(userId){
         h+='<div class="srow"><span style="color:var(--m);font-size:13px">Transferts reçus</span><span style="font-weight:700;font-size:13px">'+(d.nbTrfRec||0)+' · '+F(d.volTrfRec||0)+'</span></div>';
         h+='<div class="srow" style="border:none"><span style="color:var(--m);font-size:13px">Clients inscrits</span><span style="font-weight:700;font-size:13px">'+(d.nbInscriptions||0)+'</span></div>';
       } else {
-        // Agent rattaché mais n'appartenant pas à ce master : vue limitée
+        // Agent rattaché mais n'appartenant pas à ce mini-master : vue limitée
         h+='<div class="srow"><span style="color:var(--m);font-size:13px">Clients inscrits</span><span style="font-weight:800;font-size:14px">'+(d.nbInscriptions||0)+'</span></div>';
         var soldeOk=d.soldeSuffisant;
         h+='<div class="srow" style="border:none"><span style="color:var(--m);font-size:13px">Niveau de solde</span>';
         h+=soldeOk
-          ?'<span style="color:#f59e0b;font-weight:800;font-size:13px">✅ Suffisant (≥ 1 500 000)</span>'
+          ?'<span style="color:#22c55e;font-weight:800;font-size:13px">✅ Suffisant (≥ 1 500 000)</span>'
           :'<span style="color:#ef4444;font-weight:800;font-size:13px">⚠️ Bas (&lt; 1 500 000)</span>';
         h+='</div>';
       }
@@ -2230,18 +2231,18 @@ async function logout(force){
 var _agStatPeriod='week';
 var _agStatType='retrait';
 var _agStatCache={};
-var _AG_COLORS=['#d97706','#f97316','#3b82f6','#8b5cf6','#ef4444','#eab308','#06b6d4','#ec4899','#14b8a6','#f43f5e'];
+var _AG_COLORS=['#F0C800','#f97316','#3b82f6','#8b5cf6','#ef4444','#eab308','#06b6d4','#ec4899','#14b8a6','#f43f5e'];
 
 
 function _drawAgStatShell(el,agents){
   var periods=[['yesterday','Hier'],['week','Semaine'],['month','Mois'],['year','Année']];
-  var pBtns=periods.map(function(p){var on=p[0]===_agStatPeriod;return '<button onclick="setAgStatPeriod(\''+p[0]+'\')" style="padding:6px 10px;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;'+(on?'background:#d97706;color:#fff;border:1px solid #d97706':'background:transparent;color:#fff;border:1px solid rgba(255,255,255,.4)')+'">'+p[1]+'</button>';}).join('');
+  var pBtns=periods.map(function(p){var on=p[0]===_agStatPeriod;return '<button onclick="setAgStatPeriod(\''+p[0]+'\')" style="padding:6px 10px;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;'+(on?'background:#F0C800;color:#fff;border:1px solid #F0C800':'background:transparent;color:#fff;border:1px solid rgba(255,255,255,.4)')+'">'+p[1]+'</button>';}).join('');
   var types=[['depot','↓ Dépôts'],['retrait','↑ Retraits'],['trfEnv','→ Trf. envoyés'],['trfRec','← Trf. reçus'],['solde','💰 Solde']];
   var tBtns=types.map(function(t){var on=t[0]===_agStatType;var col=_typeColor(t[0]);return '<button id="agstat-btn-'+t[0]+'" onclick="setAgStatType(\''+t[0]+'\')" style="padding:7px 12px;border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;'+(on?'background:'+col+';color:#fff;border:1px solid '+col:'background:#fff;color:#6b7280;border:1px solid #e5e7eb')+'">'+t[1]+'</button>';}).join('');
   // Légende agents
   var legend=agents.slice(0,10).map(function(a,i){return '<div style="display:flex;align-items:center;gap:5px;white-space:nowrap"><div style="width:10px;height:10px;border-radius:3px;background:'+_AG_COLORS[i%_AG_COLORS.length]+';flex-shrink:0"></div><div style="font-size:11px;color:#374151;overflow:hidden;text-overflow:ellipsis;max-width:90px">'+(a.prenom||'')+'</div></div>';}).join('');
   el.innerHTML=''
-    +'<div style="background:linear-gradient(135deg,var(--a2),#d97706);border-radius:16px;padding:14px 16px;margin-bottom:12px">'
+    +'<div style="background:#F0C800;border-radius:16px;padding:14px 16px;margin-bottom:12px">'
       +'<div style="font-size:12px;font-weight:800;color:#fff;margin-bottom:8px">Comparaison agents · '+agents.length+' agent(s)</div>'
       +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+pBtns+'</div>'
     +'</div>'
@@ -2252,11 +2253,11 @@ function _drawAgStatShell(el,agents){
 }
 
 function _typeColor(t){
-  if(t==='depot')return '#f59e0b';
+  if(t==='depot')return '#22c55e';
   if(t==='retrait')return '#f97316';
   if(t==='trfEnv')return '#3b82f6';
   if(t==='trfRec')return '#60a5fa';
-  return '#d97706';
+  return '#F0C800';
 }
 
 function setAgStatPeriod(p){
@@ -2268,9 +2269,9 @@ function setAgStatPeriod(p){
     var btns=document.querySelectorAll('[onclick*="setAgStatPeriod(\''+k+'\')"]');
     btns.forEach(function(btn){
       var on=k===p;
-      btn.style.background=on?'#d97706':'transparent';
+      btn.style.background=on?'#F0C800':'transparent';
       btn.style.color='#fff';
-      btn.style.borderColor=on?'#d97706':'rgba(255,255,255,.4)';
+      btn.style.borderColor=on?'#F0C800':'rgba(255,255,255,.4)';
     });
   });
   // Recharger les données
@@ -2479,20 +2480,14 @@ var _rnData=null;        // cache de la liste filleuls enrichie
 
 async function chargerReseauTab(){
   _rnData=null;
+  // Compteur clients (hors onglet)
   try{
     var rc=await get('/users/'+(G.user&&G.user.id)+'/referrals');
     var all=(rc.data&&rc.data.filleuls)||[];
     all=await enrichirRoles(all);
     _rnData=all;
-    // Clients directs du master
-    var nbDir=all.filter(function(f){return f.role==='client'||!f.role;}).length;
-    // Clients via mini-masters
-    var mms=all.filter(function(f){return f.role==='mini_master';});
-    var nbInd=0;
-    await Promise.all(mms.map(async function(mm){
-      try{var r2=await get('/users/'+mm.id+'/referrals');var fils=(r2.data&&r2.data.filleuls)||[];nbInd+=fils.filter(function(f){return f.role==='client'||!f.role;}).length;}catch(e2){}
-    }));
-    var el=document.getElementById('rn-total-clients');if(el)el.textContent=nbDir+nbInd;
+    var nbClients=all.filter(function(f){return f.role==='client'||!f.role;}).length;
+    var el=document.getElementById('rn-total-clients');if(el)el.textContent=nbClients;
   }catch(e){var el=document.getElementById('rn-total-clients');if(el)el.textContent='0';}
   setReseauTab('agent');
 }
@@ -2512,34 +2507,22 @@ function setReseauTab(tab){
   else if(tab==='agents_mm') renderAgentsMM();
   else renderBusiness();
 }
-
 async function renderAgentsMM(){
   var el=document.getElementById('rn-agents-mm-content');if(!el)return;
   var mms=(_rnData||[]).filter(function(f){return f.role==='mini_master';});
-  if(!mms.length){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--m);font-size:13px">Aucun Mini-Master dans votre réseau</div>';return;}
+  if(!mms.length){el.innerHTML='<div style="text-align:center;padding:32px;color:var(--m)">Aucun Mini-Master dans votre réseau</div>';return;}
   el.innerHTML='<div style="text-align:center;padding:24px"><div class="spin"></div></div>';
-  var allAgents=[];
+  var all=[];
   await Promise.all(mms.map(async function(mm){
-    try{
-      var r=await get('/users/'+mm.id+'/referrals');
-      var fils=(r.data&&r.data.filleuls)||[];
-      var agents=fils.filter(function(f){return f.role==='agent';});
-      agents.forEach(function(a){a._parrainMM=(mm.prenom||'')+' '+(mm.nom||'');});
-      allAgents=allAgents.concat(agents);
-    }catch(e2){}
+    try{var r=await get('/users/'+mm.id+'/referrals');var fils=(r.data&&r.data.filleuls)||[];
+      fils.filter(function(f){return f.role==='agent';}).forEach(function(a){a._mm=(mm.prenom||'')+' '+(mm.nom||'');all.push(a);});
+    }catch(e){}
   }));
-  if(!allAgents.length){el.innerHTML='<div style="text-align:center;padding:32px;color:var(--m);font-size:13px">Aucun agent pour l’instant</div>';return;}
-  var h='<div style="font-size:11px;font-weight:800;color:var(--m);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">'+allAgents.length+' agent(s) dans votre réseau</div>';
-  allAgents.forEach(function(a){
-    h+='<div class="tx" style="margin-bottom:8px;cursor:pointer" onclick="voirStatsReseau(\''+(a.id||'')+'\')">'  
-      +'<div style="display:flex;align-items:center;gap:10px">'
-        +'<div style="width:36px;height:36px;border-radius:50%;background:rgba(217,119,6,.12);color:#d97706;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800">'+((a.prenom||'?')[0])+'</div>'
-        +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+(a.prenom||'')+' '+(a.nom||'')+'</div>'
-          +'<div style="font-size:10px;color:var(--m)">via MM : '+(a._parrainMM||'')+'</div></div>'
-        +'<svg width="14" height="14" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>'
-      +'</div></div>';
+  var h=all.length+'agent(s) dans votre réseau</div>';
+  all.forEach(function(a){
+    h+='<div class="tx" style="margin-bottom:8px;cursor:pointer" onclick="voirStatsReseau(\''+a.id+'\')"><div style="display:flex;align-items:center;gap:10px"><div style="width:34px;height:34px;border-radius:50%;background:#25D36622;color:#25D366;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800">'+((a.prenom||'?')[0])+'</div><div style="flex:1"><div style="font-size:13px;font-weight:700">'+(a.prenom||'')+' '+(a.nom||'')+'</div><div style="font-size:10px;color:var(--m)">MM: '+a._mm+'</div></div></div></div>';
   });
-  el.innerHTML=h;
+  el.innerHTML='<div style="font-size:11px;font-weight:700;color:var(--m);margin-bottom:8px">'+h;
 }
 
 function setReseauSub(sub){
@@ -2547,9 +2530,9 @@ function setReseauSub(sub){
   ['detail','solde','inscrits','statsag'].forEach(function(s){
     var b=document.getElementById('rn-sub-'+s);if(!b)return;
     var on=s===sub;
-    b.style.background=on?'#d97706':'#fff';
+    b.style.background=on?'#F0C800':'#fff';
     b.style.color=on?'#fff':'#6b7280';
-    b.style.borderColor=on?'#d97706':'#e5e7eb';
+    b.style.borderColor=on?'#F0C800':'#e5e7eb';
   });
   if(sub==='detail') renderAgentsDetail();
   else if(sub==='solde') renderAgentsSolde();
@@ -2566,7 +2549,7 @@ function renderAgentsDetail(){
   if(!agents.length){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--m);font-size:13px">Aucun agent pour l\'instant</div>';return;}
   var h='<div style="font-size:11px;font-weight:800;color:var(--m);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px">'+agents.length+' agent(s)</div>';
   agents.forEach(function(f){
-    h+='<div class="tx" style="background:#fff;border:1px solid var(--b);cursor:pointer;margin-bottom:8px" onclick="voirStatsReseau(\''+f.id+'\')"><div style="display:flex;align-items:center;gap:10px"><div style="width:40px;height:40px;border-radius:50%;background:rgba(0,192,0,.12);display:flex;align-items:center;justify-content:center;color:#d97706;font-size:15px;font-weight:800">'+((f.prenom||'?')[0])+'</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+(f.prenom||'')+' '+(f.nom||'')+'</div><div style="color:var(--m);font-size:11px">'+(f.telephone||'')+'</div></div><svg width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div></div>';
+    h+='<div class="tx" style="background:#fff;border:1px solid var(--b);cursor:pointer;margin-bottom:8px" onclick="voirStatsReseau(\''+f.id+'\')"><div style="display:flex;align-items:center;gap:10px"><div style="width:40px;height:40px;border-radius:50%;background:rgba(0,192,0,.12);display:flex;align-items:center;justify-content:center;color:#F0C800;font-size:15px;font-weight:800">'+((f.prenom||'?')[0])+'</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+(f.prenom||'')+' '+(f.nom||'')+'</div><div style="color:var(--m);font-size:11px">'+(f.telephone||'')+'</div></div><svg width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div></div>';
   });
   el.innerHTML=h;
 }
@@ -2586,15 +2569,15 @@ async function renderAgentsSolde(){
     }catch(e){soldes.push({id:f.id,prenom:f.prenom,nom:f.nom,solde:null,isOwner:false});}
   }));
   soldes.sort(function(a,b){return (b.solde||0)-(a.solde||0);});
-  var h='<div style="background:linear-gradient(135deg,#d97706,#008000);border-radius:16px;padding:16px 20px;margin-bottom:14px;color:#fff">'
+  var h='<div style="background:#F0C800;border-radius:16px;padding:16px 20px;margin-bottom:14px;color:#fff">'
     +'<div style="font-size:10px;font-weight:700;opacity:.75;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">💰 TOTAL SOLDE DES AGENTS</div>'
     +'<div style="font-size:26px;font-weight:900">'+F(totalSolde)+'</div>'
     +'<div style="font-size:11px;opacity:.7;margin-top:2px">'+agents.length+' agent(s)</div>'
   +'</div>';
   soldes.forEach(function(a){
     var sAff=a.isOwner?(a.solde!=null?F(a.solde):'—'):(a.soldeSuffisant?'✅ Suffisant':'⚠️ Bas');
-    var col=a.isOwner?'#d97706':(a.soldeSuffisant?'#f59e0b':'#ef4444');
-    h+='<div style="background:#fff;border:1px solid var(--b);border-radius:14px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:rgba(0,192,0,.1);display:flex;align-items:center;justify-content:center;color:#d97706;font-size:13px;font-weight:800">'+((a.prenom||'?')[0])+'</div><div style="font-size:13px;font-weight:700">'+(a.prenom||'')+' '+(a.nom||'')+'</div></div><div style="font-size:13px;font-weight:800;color:'+col+'">'+sAff+'</div></div>';
+    var col=a.isOwner?'#F0C800':(a.soldeSuffisant?'#22c55e':'#ef4444');
+    h+='<div style="background:#fff;border:1px solid var(--b);border-radius:14px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:rgba(0,192,0,.1);display:flex;align-items:center;justify-content:center;color:#F0C800;font-size:13px;font-weight:800">'+((a.prenom||'?')[0])+'</div><div style="font-size:13px;font-weight:700">'+(a.prenom||'')+' '+(a.nom||'')+'</div></div><div style="font-size:13px;font-weight:800;color:'+col+'">'+sAff+'</div></div>';
   });
   el.innerHTML=h;
 }
@@ -2614,13 +2597,13 @@ async function renderAgentsInscrits(){
     }catch(e){inscrits.push({id:f.id,prenom:f.prenom,nom:f.nom,nb:0});}
   }));
   inscrits.sort(function(a,b){return b.nb-a.nb;});
-  var h='<div style="background:linear-gradient(135deg,#d97706,#008000);border-radius:16px;padding:16px 20px;margin-bottom:14px;color:#fff">'
+  var h='<div style="background:#F0C800;border-radius:16px;padding:16px 20px;margin-bottom:14px;color:#fff">'
     +'<div style="font-size:10px;font-weight:700;opacity:.75;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">👥 TOTAL INSCRITS DES AGENTS</div>'
     +'<div style="font-size:26px;font-weight:900">'+totalInscrits+'</div>'
     +'<div style="font-size:11px;opacity:.7;margin-top:2px">'+agents.length+' agent(s)</div>'
   +'</div>';
   inscrits.forEach(function(a){
-    h+='<div style="background:#fff;border:1px solid var(--b);border-radius:14px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:rgba(0,192,0,.1);display:flex;align-items:center;justify-content:center;color:#d97706;font-size:13px;font-weight:800">'+((a.prenom||'?')[0])+'</div><div style="font-size:13px;font-weight:700">'+(a.prenom||'')+' '+(a.nom||'')+'</div></div><div style="font-size:16px;font-weight:900;color:#d97706">'+a.nb+'<span style="font-size:9px;font-weight:700;color:#9ca3af;margin-left:3px">inscrits</span></div></div>';
+    h+='<div style="background:#fff;border:1px solid var(--b);border-radius:14px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:rgba(0,192,0,.1);display:flex;align-items:center;justify-content:center;color:#F0C800;font-size:13px;font-weight:800">'+((a.prenom||'?')[0])+'</div><div style="font-size:13px;font-weight:700">'+(a.prenom||'')+' '+(a.nom||'')+'</div></div><div style="font-size:16px;font-weight:900;color:#F0C800">'+a.nb+'<span style="font-size:9px;font-weight:700;color:#9ca3af;margin-left:3px">inscrits</span></div></div>';
   });
   el.innerHTML=h;
 }
@@ -3281,18 +3264,18 @@ function nouveauSopRet(){if(_sopClient.ret)ouvrirScreenRetrait(_sopClient.ret);e
     <!-- Recap client -->
     <div style="background:var(--s);border:1px solid var(--b);border-radius:14px;padding:14px;margin-bottom:20px">
       <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:44px;height:44px;border-radius:50%;background:rgba(245,158,11,.15);display:flex;align-items:center;justify-content:center;color:#d97706;font-size:18px;font-weight:800" id="choix-av">?</div>
+        <div style="width:44px;height:44px;border-radius:50%;background:rgba(245,158,11,.15);display:flex;align-items:center;justify-content:center;color:#F0C800;font-size:18px;font-weight:800" id="choix-av">?</div>
         <div>
           <div style="font-weight:700;font-size:15px" id="choix-name">—</div>
           <div style="color:var(--m);font-size:12px" id="choix-tel">—</div>
         </div>
-        <div style="margin-left:auto;font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:rgba(245,158,11,.1);color:#d97706" id="choix-kyc">—</div>
+        <div style="margin-left:auto;font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:rgba(245,158,11,.1);color:#F0C800" id="choix-kyc">—</div>
       </div>
     </div>
     <!-- Boutons op&#233;rations -->
     <div style="display:flex;flex-direction:column;gap:10px">
       <button onclick="ouvrirDepotAvecClient()" style="background:#f0fdf4;border:1.5px solid #a7f3d0;border-radius:16px;padding:16px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;font-family:inherit;text-align:left">
-        <div style="width:46px;height:46px;border-radius:13px;background:rgba(34,197,94,.12);display:flex;align-items:center;justify-content:center;color:#f59e0b;font-size:24px;flex-shrink:0">↓</div>
+        <div style="width:46px;height:46px;border-radius:13px;background:rgba(34,197,94,.12);display:flex;align-items:center;justify-content:center;color:#22c55e;font-size:24px;flex-shrink:0">↓</div>
         <div><div style="font-size:14px;font-weight:700;color:#15803d">Effectuer un D&#233;p&#244;t</div><div style="font-size:11px;color:var(--m)">Commission journalière du montant</div></div>
       </button>
       <button onclick="ouvrirRetraitAvecClient()" style="background:#fff7ed;border:1.5px solid #fed7aa;border-radius:16px;padding:16px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;font-family:inherit;text-align:left">
@@ -3339,7 +3322,7 @@ function nouveauSopRet(){if(_sopClient.ret)ouvrirScreenRetrait(_sopClient.ret);e
 
       <!-- Dépôt -->
       <div style="border-radius:14px;overflow:hidden;border:1px solid #e5e7eb;margin-bottom:14px">
-        <div style="background:#f0fdf4;padding:10px 14px;font-size:11px;font-weight:800;color:#166534;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #fde68a">Dépôt client — Gratuit</div>
+        <div style="background:#f0fdf4;padding:10px 14px;font-size:11px;font-weight:800;color:#166534;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #bbf7d0">Dépôt client — Gratuit</div>
         <div style="padding:11px 14px;font-size:12px;background:#fff;color:#374151">Le dépôt est gratuit pour le client. Le dépôt compte dans votre volume journalier.</div>
       </div>
 
@@ -3349,7 +3332,7 @@ function nouveauSopRet(){if(_sopClient.ret)ouvrirScreenRetrait(_sopClient.ret);e
         <div style="display:grid;grid-template-columns:1fr 1fr;background:#f9fafb;padding:9px 14px;font-size:10px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #e5e7eb">
           <div>Volume journalier</div><div style="text-align:right">Commission</div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">500 – 9 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">20 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">10 000 – 19 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">55 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">20 000 – 49 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">125 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">50 000 – 74 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">220 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">75 000 – 99 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">300 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">100 000 – 199 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">800 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">200 000 – 299 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">1 200 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">300 000 – 399 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">2 100 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">400 000 – 599 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">2 200 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">600 000 – 799 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">2 800 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">800 000 – 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">2 950 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">1 000 000 – 1 499 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">3 750 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">1 500 000 – 1 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">4 500 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">2 000 000 – 2 499 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">5 500 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">2 500 000 – 2 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">5 850 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">3 000 000 – 3 499 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">6 800 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">3 500 000 – 3 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">7 200 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">4 000 000 – 4 499 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">7 650 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">4 500 000 – 4 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">8 550 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">5 000 000 – 5 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">9 600 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">6 000 000 – 6 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">11 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">7 000 000 – 7 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">12 500 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">8 000 000 – 9 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">14 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">10 000 000 – 14 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">22 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">15 000 000 – 19 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">28 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">20 000 000 – 24 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">33 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">≥ 25 000 000</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#b45309;font-weight:700;padding-left:10px">42 000 F</div></div>
+        <div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">500 – 9 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">20 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">10 000 – 19 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">55 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">20 000 – 49 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">125 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">50 000 – 74 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">220 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">75 000 – 99 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">300 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">100 000 – 199 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">800 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">200 000 – 299 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">1 200 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">300 000 – 399 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">2 100 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">400 000 – 599 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">2 200 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">600 000 – 799 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">2 800 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">800 000 – 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">2 950 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">1 000 000 – 1 499 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">3 750 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">1 500 000 – 1 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">4 500 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">2 000 000 – 2 499 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">5 500 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">2 500 000 – 2 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">5 850 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">3 000 000 – 3 499 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">6 800 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">3 500 000 – 3 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">7 200 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">4 000 000 – 4 499 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">7 650 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">4 500 000 – 4 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">8 550 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">5 000 000 – 5 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">9 600 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">6 000 000 – 6 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">11 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">7 000 000 – 7 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">12 500 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">8 000 000 – 9 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">14 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">10 000 000 – 14 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">22 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">15 000 000 – 19 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">28 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#f9fafb;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">20 000 000 – 24 999 999</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">33 000 F</div></div><div style="display:grid;grid-template-columns:1fr 1px 1fr;padding:8px 14px;font-size:11px;background:#fff;border-bottom:1px solid #f3f4f6"><div style="color:#374151;font-weight:500">≥ 25 000 000</div><div style="background:#e5e7eb"></div><div style="text-align:right;color:#16a34a;font-weight:700;padding-left:10px">42 000 F</div></div>
       </div>
 
       <!-- Rappel plafonds KYC -->
@@ -3370,7 +3353,7 @@ function nouveauSopRet(){if(_sopClient.ret)ouvrirScreenRetrait(_sopClient.ret);e
     <div class="sh-top">
       <div><div class="sh-title">Notifications</div></div>
       <button class="sh-x" onclick="document.getElementById('sh-notifs').classList.remove('on')">✕</button>
-      <button onclick="marquerToutLuAgent()" style="background:none;border:none;color:#d97706;font-size:12px;font-weight:700;cursor:pointer;padding:4px 8px">Tout lire</button>
+      <button onclick="marquerToutLuAgent()" style="background:none;border:none;color:#F0C800;font-size:12px;font-weight:700;cursor:pointer;padding:4px 8px">Tout lire</button>
     </div>
     <div id="sh-notifs-list" style="overflow-y:auto;flex:1;padding-bottom:20px">
       <div style="text-align:center;padding:32px"><div class="spin"></div></div>
@@ -3395,12 +3378,12 @@ function nouveauSopRet(){if(_sopClient.ret)ouvrirScreenRetrait(_sopClient.ret);e
   <div style="padding:20px">
     <!-- Recap client -->
     <div style="background:#fff;border:1.5px solid #e5e7eb;border-radius:16px;padding:16px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
-      <div style="width:46px;height:46px;border-radius:50%;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#d97706;flex-shrink:0" id="sop-dep-av">?</div>
+      <div style="width:46px;height:46px;border-radius:50%;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#F0C800;flex-shrink:0" id="sop-dep-av">?</div>
       <div style="flex:1">
         <div style="font-weight:700;font-size:15px;color:#111" id="sop-dep-name">—</div>
         <div style="color:#6b7280;font-size:12px" id="sop-dep-tel">—</div>
       </div>
-      <div style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:#fef3c7;color:#b45309" id="sop-dep-kyc">—</div>
+      <div style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:#dcfce7;color:#16a34a" id="sop-dep-kyc">—</div>
     </div>
 
     <!-- Montant -->
@@ -3408,7 +3391,7 @@ function nouveauSopRet(){if(_sopClient.ret)ouvrirScreenRetrait(_sopClient.ret);e
       <div style="font-size:12px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Montant (FCFA)</div>
       <div style="position:relative">
         <input class="inp" id="sop-dep-amt" type="number" inputmode="decimal" placeholder="0" oninput="calcSopDep()" style="font-size:28px;font-weight:800;padding:16px 70px 16px 16px;border-radius:14px"/>
-        <span style="position:absolute;right:16px;top:50%;transform:translateY(-50%);color:#d97706;font-size:13px;font-weight:700;pointer-events:none">FCFA</span>
+        <span style="position:absolute;right:16px;top:50%;transform:translateY(-50%);color:#F0C800;font-size:13px;font-weight:700;pointer-events:none">FCFA</span>
       </div>
     </div>
 
@@ -3418,9 +3401,9 @@ function nouveauSopRet(){if(_sopClient.ret)ouvrirScreenRetrait(_sopClient.ret);e
     <div id="sop-dep-calc" style="display:none"></div>
 
     <div id="sop-dep-err" style="display:none;color:#dc2626;font-size:13px;text-align:center;margin-bottom:16px"></div>
-    <div id="sop-dep-loading" style="display:none;text-align:center;padding:20px"><div class="spin" style="width:32px;height:32px;border-width:3px;border-top-color:#f59e0b"></div></div>
+    <div id="sop-dep-loading" style="display:none;text-align:center;padding:20px"><div class="spin" style="width:32px;height:32px;border-width:3px;border-top-color:#22c55e"></div></div>
 
-    <button id="sop-dep-btn" onclick="doSopDepot()" style="width:100%;background:linear-gradient(135deg,#b45309,#f59e0b);border:none;border-radius:16px;padding:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;opacity:.4" disabled>
+    <button id="sop-dep-btn" onclick="doSopDepot()" style="width:100%;background:linear-gradient(135deg,#16a34a,#22c55e);border:none;border-radius:16px;padding:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;opacity:.4" disabled>
       Valider le d&#233;p&#244;t
     </button>
   </div>
@@ -3429,15 +3412,15 @@ function nouveauSopRet(){if(_sopClient.ret)ouvrirScreenRetrait(_sopClient.ret);e
 <!-- ══ SCREEN DÉPÔT — Étape 3 (succès) ══ -->
 <div class="scr" id="s-op-depot-ok" style="background:#f9fafb;justify-content:center;align-items:center">
   <div style="padding:40px 24px;text-align:center;width:100%">
-    <div style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#b45309,#f59e0b);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 32px rgba(34,197,94,.35)">
+    <div style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,#16a34a,#22c55e);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 32px rgba(34,197,94,.35)">
       <svg width="44" height="44" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
     </div>
     <div style="font-size:26px;font-weight:900;color:#111;margin-bottom:8px">D&#233;p&#244;t valid&#233; !</div>
     <div id="sop-dep-ok-txt" style="color:#6b7280;font-size:14px;margin-bottom:6px"></div>
-    <div id="sop-dep-ok-gain" style="color:#b45309;font-size:16px;font-weight:800;margin-bottom:6px"></div>
+    <div id="sop-dep-ok-gain" style="color:#16a34a;font-size:16px;font-weight:800;margin-bottom:6px"></div>
     <div id="sop-dep-ok-ref" style="color:#9ca3af;font-size:11px;font-family:monospace;margin-bottom:40px"></div>
     <div style="display:flex;gap:12px">
-      <button onclick="nouveauSopDep()" style="flex:1;background:linear-gradient(135deg,#b45309,#f59e0b);border:none;border-radius:14px;padding:16px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
+      <button onclick="nouveauSopDep()" style="flex:1;background:linear-gradient(135deg,#16a34a,#22c55e);border:none;border-radius:14px;padding:16px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
         + Nouveau d&#233;p&#244;t
       </button>
       <button onclick="S('s-home');chargerAccueil()" style="flex:1;background:#f3f4f6;border:none;border-radius:14px;padding:16px;color:#374151;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
@@ -3517,7 +3500,7 @@ function nouveauSopRet(){if(_sopClient.ret)ouvrirScreenRetrait(_sopClient.ret);e
     </div>
     <div style="font-size:26px;font-weight:900;color:#111;margin-bottom:8px">Retrait valid&#233; !</div>
     <div id="sop-ret-ok-txt" style="color:#6b7280;font-size:14px;margin-bottom:6px"></div>
-    <div id="sop-ret-ok-gain" style="color:#b45309;font-size:16px;font-weight:800;margin-bottom:6px"></div>
+    <div id="sop-ret-ok-gain" style="color:#16a34a;font-size:16px;font-weight:800;margin-bottom:6px"></div>
     <div id="sop-ret-ok-ref" style="color:#9ca3af;font-size:11px;font-family:monospace;margin-bottom:40px"></div>
     <div style="display:flex;gap:12px">
       <button onclick="nouveauSopRet()" style="flex:1;background:linear-gradient(135deg,#c2410c,#f97316);border:none;border-radius:14px;padding:16px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
@@ -3635,8 +3618,8 @@ function nouveauSopRet(){if(_sopClient.ret)ouvrirScreenRetrait(_sopClient.ret);e
     </div>
     <div style="font-size:13px;color:var(--m);margin-bottom:18px">Que souhaitez-vous faire ?</div>
     <div style="display:flex;flex-direction:column;gap:10px">
-      <button onclick="choixOpDepot()" style="padding:16px;border-radius:14px;border:2px solid #d97706;background:#f0fdf4;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:14px;text-align:left">
-        <div style="width:44px;height:44px;border-radius:12px;background:#d97706;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;flex-shrink:0">↓</div>
+      <button onclick="choixOpDepot()" style="padding:16px;border-radius:14px;border:2px solid #F0C800;background:#f0fdf4;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:14px;text-align:left">
+        <div style="width:44px;height:44px;border-radius:12px;background:#F0C800;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;flex-shrink:0">↓</div>
         <div><div style="font-size:15px;font-weight:800;color:#065f46">Dépôt Client</div><div style="font-size:12px;color:#059669;margin-top:2px">Créditer le compte client</div></div>
       </button>
       <button onclick="choixOpRetrait()" style="padding:16px;border-radius:14px;border:2px solid #f97316;background:#fff7ed;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:14px;text-align:left">

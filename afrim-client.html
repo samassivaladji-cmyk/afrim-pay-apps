@@ -295,7 +295,18 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
     <div style="font-size:20px;font-weight:800">Historique</div>
   </div>
   <div style="padding:16px">
-    <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:16px" id="hist-chips"></div>
+    <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px" id="hist-chips"></div>
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:14px">
+      <div style="position:relative;flex:5">
+        <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);opacity:.35" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013 8.79a19.79 19.79 0 01-3.07-8.67A2 2 0 011.91 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14z"/></svg>
+        <input id="hist-search-tel" type="tel" inputmode="numeric" placeholder="Num&#233;ro" oninput="filtrerHistorique()" style="width:100%;padding:9px 8px 9px 28px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;background:#f9fafb"/>
+      </div>
+      <div style="position:relative;flex:4">
+        <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);opacity:.35" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 9v1"/></svg>
+        <input id="hist-search-amt" type="tel" inputmode="numeric" placeholder="Montant" oninput="filtrerHistorique()" style="width:100%;padding:9px 8px 9px 28px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;background:#f9fafb"/>
+      </div>
+      <button onclick="document.getElementById('hist-search-tel').value='';document.getElementById('hist-search-amt').value='';filtrerHistorique()" style="padding:9px 10px;background:#f3f4f6;border:none;border-radius:10px;cursor:pointer;font-size:11px;color:#6b7280;font-family:inherit;flex-shrink:0">✕</button>
+    </div>
     <div id="hist-list"></div>
   </div>
   <div style="height:80px"></div>
@@ -1126,6 +1137,8 @@ async function chargerTxns(){
 }
 
 var histFilter='all';
+var _histAllData=[];
+var _histSearchTimer=null;
 async function chargerHistorique(){
   var chips=['all','transfert','paiement_marchand','commission'].map(f=>'<button onclick="setHistFilter(\''+f+'\')" class="chip'+(histFilter===f?' on':'')+'">'
     +{all:'Tous',transfert:'Envois/Reçus',paiement_marchand:'Paiements',commission:'Commissions'}[f]+'</button>').join('');
@@ -1133,12 +1146,46 @@ async function chargerHistorique(){
   var el=document.getElementById('hist-list');
   el.innerHTML='<div style="padding:20px;text-align:center"><div class="spin"></div></div>';
   try{
-    var p='/transactions?limit=50';if(histFilter!=='all')p+='&type='+histFilter;
+    var p='/transactions?limit=500';if(histFilter!=='all')p+='&type='+histFilter;
     var r=await get(p);var list=r.data||[];
     list.forEach(function(tx){_txCache[tx.id]=tx;});
-    el.innerHTML=list.length?list.map(txRow).join(''):'<div style="text-align:center;padding:24px;color:var(--m);font-size:14px">Aucune transaction</div>';
+    _histAllData=list;
+    filtrerHistorique();
   }
   catch(e){el.innerHTML='<div style="background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:12px;border-radius:12px;font-size:13px">'+e.message+'</div>';}
+}
+function filtrerHistorique(){
+  var el=document.getElementById('hist-list');
+  if(!el)return;
+  var qTel=(document.getElementById('hist-search-tel')?.value||'').replace(/\s+/g,'');
+  var qAmt=(document.getElementById('hist-search-amt')?.value||'').replace(/\s+/g,'');
+  var list=_histAllData;
+  if(qTel||qAmt){
+    list=list.filter(function(t){
+      var okTel=true,okAmt=true;
+      if(qTel){
+        var tel1=(t.srcTel||'').replace(/\s+/g,'');
+        var tel2=(t.destTel||'').replace(/\s+/g,'');
+        okTel=tel1.includes(qTel)||tel2.includes(qTel);
+      }
+      if(qAmt){okAmt=String(t.montant||'').includes(qAmt);}
+      return okTel&&okAmt;
+    });
+  }
+  el.innerHTML=list.length?list.map(txRow).join(''):'<div style="text-align:center;padding:24px;color:var(--m);font-size:14px">Aucune transaction trouv\u00e9e</div>';
+  clearTimeout(_histSearchTimer);
+  if(qTel.length>=3){
+    _histSearchTimer=setTimeout(async function(){
+      try{
+        var url='/transactions?limit=500&q='+encodeURIComponent(qTel)+(histFilter!=='all'?'&type='+histFilter:'');
+        var r=await get(url);var srv=r.data||[];
+        srv.forEach(function(t){_txCache[t.id]=t;});
+        _histAllData=srv;
+        var res2=qAmt?srv.filter(function(t){return String(t.montant||'').includes(qAmt);}):srv;
+        el.innerHTML=res2.length?res2.map(txRow).join(''):'<div style="text-align:center;padding:24px;color:var(--m);font-size:14px">Aucune transaction trouv\u00e9e</div>';
+      }catch(e2){}
+    },400);
+  }
 }
 function setHistFilter(f){histFilter=f;chargerHistorique();}
 

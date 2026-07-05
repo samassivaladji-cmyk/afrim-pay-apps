@@ -2342,20 +2342,20 @@ function ouvrirDepotAvecClient(){
 }
 
 function ouvrirTransfertAvecClient(){
-  if(!_scannedClient) return;
-  var tel=_scannedClient.telephone||'';
+  if(!_scannedClient){T('Client non identifié',true);return;}
+  var client=_scannedClient;
+  // Vérifier que c'est bien un professionnel
+  var rolesOk=['agent','mini_master','master','superviseur'];
+  if(!rolesOk.includes(client.role)){
+    closeSh('choix-op');
+    setTimeout(function(){T('Le transfert n\'est possible qu\'entre professionnels (agents, mini-masters)',true);},300);
+    return;
+  }
   closeSh('choix-op');
-  setTimeout(async function(){
-    try{
-      // Chercher la personne comme professionnel (transfert = entre pros)
-      var r=await get('/users/lookup-pro?telephone='+encodeURIComponent(tel));
-      var dest=r.data;
-      if(!dest) throw new Error('Cette personne n\'est pas un agent ou mini-master. Le transfert n\'est possible qu\'entre professionnels.');
-      ouvrirScreenTransfert(dest);
-    }catch(e){
-      T(e.message||'Transfert non disponible pour ce compte', true);
-    }
-  },300);
+  // Ouvrir directement l'écran montant avec les données déjà connues
+  setTimeout(function(){
+    ouvrirScreenTransfert(client);
+  },350);
 }
 
 

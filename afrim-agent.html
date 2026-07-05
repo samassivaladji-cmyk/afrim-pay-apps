@@ -1153,7 +1153,14 @@ async function doTransfert(btn){
     document.getElementById('trf-err').textContent=e.message;document.getElementById('trf-err').style.display='';
   }
 }
-function rstTrf(){document.getElementById('trf-tel').value='';document.getElementById('trf-amt').value='';document.getElementById('trf-loading').style.display='none';document.getElementById('trf-success').style.display='none';document.getElementById('trf-err').style.display='none';document.getElementById('trf-form-btns').style.display='';var b=document.getElementById('trf-btn-valider');if(b){b.disabled=false;b.textContent='Transférer';}}
+function rstTrf(){
+  var inp=document.getElementById('trf-tel');if(inp)inp.value='';
+  var loading=document.getElementById('trf-loading');if(loading)loading.style.display='none';
+  var success=document.getElementById('trf-success');if(success)success.style.display='none';
+  var errEl=document.getElementById('trf-err');if(errEl)errEl.style.display='none';
+  var btns=document.getElementById('trf-form-btns');if(btns)btns.style.display='';
+  var b=document.getElementById('trf-btn-valider');if(b){b.disabled=true;b.textContent='Continuer \u2192';}
+}
 
 // ══ LOGIN ════════════════════════════════════════════════════════
 function goPin(){G.pin='';document.getElementById('pin-sub').textContent=document.getElementById('lg-tel').value;document.getElementById('err-pin').style.display='none';rDots();S('s-pin');}
@@ -2345,20 +2352,19 @@ function ouvrirTransfertAvecClient(){
   if(!_scannedClient){T('Client non identifié',true);return;}
   var client=_scannedClient;
   var rolesOk=['agent','mini_master','master','superviseur'];
-  closeSh('choix-op');
-  setTimeout(function(){
-    if(!rolesOk.includes(client.role)){
-      T('Le transfert n\'est possible qu\'entre professionnels',true);
-      return;
-    }
-    // Ouvrir la sheet transfert avec le numéro pré-rempli
-    rstTrf();
-    var inp=document.getElementById('trf-tel');
-    var btn=document.getElementById('trf-btn-valider');
-    if(inp) inp.value=client.telephone||'';
-    if(btn){btn.disabled=false;btn.textContent='Continuer \u2192';}
-    openSh('transfert');
-  },300);
+  // Fermer le choix
+  document.getElementById('sh-choix-op').classList.remove('on');
+  if(!rolesOk.includes(client.role)){
+    T('Transfert réservé aux professionnels (agents, mini-masters)',true);
+    return;
+  }
+  // Pré-remplir et ouvrir la sheet transfert directement
+  rstTrf();
+  var inp=document.getElementById('trf-tel');
+  var btn=document.getElementById('trf-btn-valider');
+  if(inp) inp.value=client.telephone||'';
+  if(btn){btn.disabled=false;btn.textContent='Continuer \u2192';}
+  document.getElementById('sh-transfert').classList.add('on');
 }
 
 

@@ -2177,6 +2177,8 @@ function genererQR(){
   if(tl)tl.textContent=u.telephone||'';
 }
 
+function ouvrirScanner(callback){ ouvrirPopupQR(callback); }
+
 function ouvrirPopupQR(callback){
   _qrCallback=callback||null;
   var popup=document.getElementById('wave-qr-popup');

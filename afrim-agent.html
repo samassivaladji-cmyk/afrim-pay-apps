@@ -2344,18 +2344,21 @@ function ouvrirDepotAvecClient(){
 function ouvrirTransfertAvecClient(){
   if(!_scannedClient){T('Client non identifié',true);return;}
   var client=_scannedClient;
-  // Vérifier que c'est bien un professionnel
   var rolesOk=['agent','mini_master','master','superviseur'];
-  if(!rolesOk.includes(client.role)){
-    closeSh('choix-op');
-    setTimeout(function(){T('Le transfert n\'est possible qu\'entre professionnels (agents, mini-masters)',true);},300);
-    return;
-  }
   closeSh('choix-op');
-  // Ouvrir directement l'écran montant avec les données déjà connues
   setTimeout(function(){
-    ouvrirScreenTransfert(client);
-  },350);
+    if(!rolesOk.includes(client.role)){
+      T('Le transfert n\'est possible qu\'entre professionnels',true);
+      return;
+    }
+    // Ouvrir la sheet transfert avec le numéro pré-rempli
+    rstTrf();
+    var inp=document.getElementById('trf-tel');
+    var btn=document.getElementById('trf-btn-valider');
+    if(inp) inp.value=client.telephone||'';
+    if(btn){btn.disabled=false;btn.textContent='Continuer \u2192';}
+    openSh('transfert');
+  },300);
 }
 
 

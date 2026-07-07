@@ -1626,9 +1626,9 @@ async function chargerGains(){
       +'</div>';
     }
 
-    h+=c5(gainsParr,'linear-gradient(135deg,var(--a2),#25D366)','#25D366','MES GAINS \u2014 PARRAINAGE (5%)','🤝');
-    h+=c5(gainsAgents,'linear-gradient(135deg,#c2410c,#f97316)','#f97316','MES GAINS \u2014 AGENTS (Retraits \u00b7 1%)','🔶');
-    h+=c5(gainsBusiness,'linear-gradient(135deg,#6d28d9,#8b5cf6)','#8b5cf6','MES GAINS \u2014 BUSINESS (Paiements \u00b7 1%)','🏪');
+    h+=c5(gainsParr,'linear-gradient(135deg,var(--a2),#25D366)','#25D366','MES GAINS \u2014 PARRAINAGE (10%)','🤝');
+    h+=c5(gainsAgents,'linear-gradient(135deg,#c2410c,#f97316)','#f97316','MES GAINS \u2014 AGENTS (Retraits \u00b7 5%)','🔶');
+    h+=c5(gainsBusiness,'linear-gradient(135deg,#6d28d9,#8b5cf6)','#8b5cf6','MES GAINS \u2014 BUSINESS (Paiements \u00b7 10%)','🏪');
 
     h+='<div style="background:#fff;border:2px solid #25D366;border-radius:16px;padding:14px 16px;margin-bottom:14px">'
       +'<div style="display:flex;justify-content:space-between;align-items:center">'
@@ -1652,7 +1652,7 @@ async function chargerGains(){
     +'</div>';
 
     h+='<div style="background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:14px;margin-bottom:14px">'
-      +'<div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">\uD83E\uDD1D Parrainage (5% permanent)</div>'
+      +'<div style="font-size:13px;font-weight:800;color:#374151;margin-bottom:8px">\uD83E\uDD1D Parrainage (10% permanent)</div>'
       +'<div style="padding:10px;background:#fffbeb;border-radius:10px;display:flex;align-items:center;justify-content:space-between">'
         +'<div style="font-size:12px;color:#92400e;font-weight:600">Votre code</div>'
         +'<div id="gains-code-val" style="font-size:16px;font-weight:900;color:#25D366;letter-spacing:.08em;cursor:pointer">'+codeParrainage+' \uD83D\uDCCB</div>'
@@ -3307,10 +3307,12 @@ function nouveauSopRet(){if(_sopClient.ret)ouvrirScreenRetrait(_sopClient.ret);e
 
       <!-- Rappel plafonds KYC -->
       <div style="margin-top:16px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;font-size:12px;color:#92400e">
-        <div style="font-weight:800;margin-bottom:6px">&#128274; Plafonds KYC clients (gains parrainage)</div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>KYC 1</span><span style="font-weight:700">20 000 F/mois</span></div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>KYC 2</span><span style="font-weight:700">50 000 F/mois</span></div>
-        <div style="display:flex;justify-content:space-between"><span>KYC 3</span><span style="font-weight:700">100 000 F/mois</span></div>
+        <div style="font-weight:800;margin-bottom:6px">&#128274; Plafonds de gains parrainage (clients &amp; business)</div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Client — KYC 1</span><span style="font-weight:700">20 000 F/mois</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Client — KYC 2</span><span style="font-weight:700">50 000 F/mois</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Client — KYC 3</span><span style="font-weight:700">100 000 F/mois</span></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span>Business</span><span style="font-weight:700">200 000 F/mois</span></div>
+        <div style="font-size:10px;opacity:.8;border-top:1px solid #fde68a;padding-top:6px">Ces plafonds s'appliquent aux clients et comptes business qui parrainent. Vous, en tant que Mini-Master, n'avez <strong>aucun plafond</strong> sur vos gains de parrainage (10%).</div>
       </div>
     </div>
   </div>

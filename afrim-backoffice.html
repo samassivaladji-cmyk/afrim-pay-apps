@@ -9758,8 +9758,8 @@ async function chargerGainsSysteme(){
     // Déductions
     h+='<div style="font-size:10px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">- Charges (versements)</div>';
     h+=pnlLigne('Commissions journalières agents (27 paliers)',chargesJourna,pnl.commissions_journalieres_nb||0,'#ef4444','-');
-    h+=pnlLigne('Commissions parrainage (5%)',chargesParrain,pnl.commissions_parrainage_nb||0,'#ef4444','-');
-    h+=pnlLigne('Commissions réseau Mini-Master/Master (1-2%)',chargesReseau,pnl.commissions_reseau_nb||0,'#ef4444','-');
+    h+=pnlLigne('Commissions parrainage (5-10% selon r&#244;le)',chargesParrain,pnl.commissions_parrainage_nb||0,'#ef4444','-');
+    h+=pnlLigne('Commissions r&#233;seau Mini-Master/Master (5-20% selon activit&#233;)',chargesReseau,pnl.commissions_reseau_nb||0,'#ef4444','-');
     h+='<div style="display:flex;justify-content:space-between;padding:8px 0;margin-bottom:10px;border-top:2px solid #ef444422">';
     h+='<div style="font-size:12px;font-weight:800;color:#ef4444">Sous-total charges</div>';
     h+='<div style="font-size:13px;font-weight:800;color:#ef4444">-'+F(deductions)+'</div></div>';

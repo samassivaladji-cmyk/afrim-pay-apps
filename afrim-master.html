@@ -2271,8 +2271,8 @@ async function voirStatsReseau(userId){
         h+='</div>';
       }
     } else if(d.role==='business'){
-      // Business : nom, tél, inscriptions — sans les montants de paiement
       h+='<div class="srow"><span style="color:var(--m);font-size:13px">Paiements reçus</span><span style="font-weight:700;font-size:13px">'+(d.nbPaiements||0)+' transactions</span></div>';
+      h+='<div class="srow"><span style="color:var(--m);font-size:13px">Volume total</span><span style="font-weight:800;font-size:14px">'+F(d.volPaiements||0)+'</span></div>';
       h+='<div class="srow" style="border:none"><span style="color:var(--m);font-size:13px">Inscriptions liées</span><span style="font-weight:700;font-size:13px">'+(d.nbInscriptions||0)+'</span></div>';
     }
     h+='</div>';
@@ -2771,23 +2771,27 @@ async function renderBusiness(){
   el.innerHTML='<div style="text-align:center;padding:24px"><div class="spin"></div></div>';
   var list=[];
   var totalInscrits=0;
+  var totalVolume=0;
   await Promise.all(biz.map(async function(f){
     try{
       var r=await get('/users/'+f.id+'/network-stats');
       var n=r.data.nbInscriptions||0;
-      list.push({id:f.id,prenom:f.prenom,nom:f.nom,nb:n});
+      var vol=r.data.volPaiements||0;
+      var nbPay=r.data.nbPaiements||0;
+      list.push({id:f.id,prenom:f.prenom,nom:f.nom,nb:n,vol:vol,nbPay:nbPay});
       totalInscrits+=n;
-    }catch(e){list.push({id:f.id,prenom:f.prenom,nom:f.nom,nb:0});}
+      totalVolume+=vol;
+    }catch(e){list.push({id:f.id,prenom:f.prenom,nom:f.nom,nb:0,vol:0,nbPay:0});}
   }));
-  list.sort(function(a,b){return b.nb-a.nb;});
-  var h='<div style="background:linear-gradient(135deg,#1d4ed8,#3b82f6);border-radius:16px;padding:16px 20px;margin-bottom:14px;color:#fff">'
-    +'<div style="font-size:10px;font-weight:700;opacity:.75;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">👥 TOTAL INSCRITS BUSINESS</div>'
-    +'<div style="font-size:26px;font-weight:900">'+totalInscrits+'</div>'
-    +'<div style="font-size:11px;opacity:.7;margin-top:2px">'+biz.length+' business</div>'
+  list.sort(function(a,b){return b.vol-a.vol;});
+  var h='<div style="background:linear-gradient(135deg,#1d4ed8,#3b82f6);border-radius:16px;padding:16px 20px;margin-bottom:10px;color:#fff">'
+    +'<div style="font-size:10px;font-weight:700;opacity:.75;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">💰 VOLUME TOTAL BUSINESS</div>'
+    +'<div style="font-size:26px;font-weight:900">'+F(totalVolume)+'</div>'
+    +'<div style="font-size:11px;opacity:.7;margin-top:2px">'+biz.length+' business \u00b7 '+totalInscrits+' inscrit(s)</div>'
   +'</div>';
   if(!list.length){h+='<div style="text-align:center;padding:40px;color:var(--m);font-size:13px">Aucun business pour l\'instant</div>';}
   else{list.forEach(function(b){
-    h+='<div style="background:#fff;border:1px solid var(--b);border-radius:14px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:50%;background:rgba(59,130,246,.1);display:flex;align-items:center;justify-content:center;color:#3b82f6;font-size:13px;font-weight:800">'+((b.prenom||'?')[0])+'</div><div><div style="font-size:13px;font-weight:700">'+(b.prenom||'')+' '+(b.nom||'')+'</div></div></div><div style="font-size:16px;font-weight:900;color:#3b82f6">'+b.nb+'<span style="font-size:9px;font-weight:700;color:#9ca3af;margin-left:3px">inscrits</span></div></div>';
+    h+='<div style="background:#fff;border:1px solid var(--b);border-radius:14px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:10px;min-width:0"><div style="width:36px;height:36px;border-radius:50%;background:rgba(59,130,246,.1);display:flex;align-items:center;justify-content:center;color:#3b82f6;font-size:13px;font-weight:800;flex-shrink:0">'+((b.prenom||'?')[0])+'</div><div style="min-width:0"><div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(b.prenom||'')+' '+(b.nom||'')+'</div><div style="font-size:10px;color:#9ca3af">'+b.nbPay+' paiement(s) \u00b7 '+b.nb+' inscrit(s)</div></div></div><div style="font-size:14px;font-weight:900;color:#3b82f6;text-align:right;flex-shrink:0;padding-left:8px">'+F(b.vol)+'</div></div>';
   });}
   el.innerHTML=h;
 }

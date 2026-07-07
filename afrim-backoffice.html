@@ -4495,13 +4495,18 @@ async function chargerSansFilleul(){
   var el=document.getElementById('rt-sans-list');
   el.innerHTML='<div style="padding:40px;text-align:center"><div class="spin"></div></div>';
   try{
-    // S'assurer que rattachData (liste des rattachements) est chargé pour savoir qui est déjà parrain
+    // S'assurer que rattachData (liste des rattachements) est chargé
     if(!rattachData||!rattachData.length){
       var rr=await apiGet('/admin/rattachements');
       if(rr) rattachData=rr.data.rattachements||[];
     }
-    var parrainsActifsSet={};
-    rattachData.forEach(function(x){if(x.parrainTelephone) parrainsActifsSet[x.parrainTelephone]=true;});
+    // "Sans lien" = ni parrain (personne ne les a rattaché) NI filleul (ils n'ont rattaché personne)
+    var estParrainSet={};   // téléphones qui apparaissent comme PARRAIN d'un lien
+    var aUnParrainSet={};   // téléphones qui apparaissent comme FILLEUL d'un lien (= ont déjà un parrain)
+    rattachData.forEach(function(x){
+      if(x.parrainTelephone) estParrainSet[x.parrainTelephone]=true;
+      if(x.filleulTelephone) aUnParrainSet[x.filleulTelephone]=true;
+    });
     // Charger les utilisateurs par rôle (pattern déjà utilisé et fonctionnel ailleurs dans le backoffice)
     var rolesAChercher=sfRoleFilter==='all'?['agent','business','mini_master','master','client','superviseur']:[sfRoleFilter];
     var allUsers=[];
@@ -4509,7 +4514,7 @@ async function chargerSansFilleul(){
       var ru=await apiGet('/users?role='+rolesAChercher[i]+'&limit=500');
       if(ru&&ru.data) allUsers=allUsers.concat(ru.data);
     }
-    var rows=allUsers.filter(function(u){return !parrainsActifsSet[u.telephone];});
+    var rows=allUsers.filter(function(u){return !estParrainSet[u.telephone] && !aUnParrainSet[u.telephone];});
     sansFilleulData=rows;
     renderSansFilleul(sansFilleulData);
   }catch(e){el.innerHTML='<div style="color:var(--r);padding:12px;font-size:13px">'+e.message+'</div>';}

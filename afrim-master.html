@@ -2589,6 +2589,7 @@ function _renderAgStatChart(agents){
 
 async function renderAgentsStats(){
   var el=document.getElementById('rn-agent-content');
+  if(!_rnLoadOk){el.innerHTML=_rnErrorHtml();return;}
   var agents=getAgents();
   if(!agents.length){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--m);font-size:13px">Aucun Mini-Master dans votre réseau</div>';return;}
   _drawAgStatShell(el,agents);
@@ -2597,9 +2598,11 @@ async function renderAgentsStats(){
 var _rnTab='agent';      // 'agent' | 'business'
 var _rnSub='detail';     // 'detail' | 'solde' | 'inscrits'
 var _rnData=null;        // cache de la liste filleuls enrichie
+var _rnLoadOk=true;      // false si le dernier chargement du réseau a échoué
 
 async function chargerReseauTab(){
   _rnData=null;
+  _rnLoadOk=true;
   try{
     var rc=await get('/users/'+(G.user&&G.user.id)+'/referrals');
     var all=(rc.data&&rc.data.filleuls)||[];
@@ -2614,8 +2617,19 @@ async function chargerReseauTab(){
       try{var r2=await get('/users/'+mm.id+'/referrals');var fils=(r2.data&&r2.data.filleuls)||[];nbInd+=fils.filter(function(f){return f.role==='client'||!f.role;}).length;}catch(e2){}
     }));
     var el=document.getElementById('rn-total-clients');if(el)el.textContent=nbDir+nbInd;
-  }catch(e){var el=document.getElementById('rn-total-clients');if(el)el.textContent='0';}
+  }catch(e){
+    _rnLoadOk=false;
+    var el=document.getElementById('rn-total-clients');if(el)el.textContent='—';
+  }
   setReseauTab('agent');
+}
+
+function _rnErrorHtml(){
+  return '<div style="text-align:center;padding:40px 20px">'
+    +'<div style="font-size:13px;color:var(--r);font-weight:700;margin-bottom:10px">⚠️ Échec du chargement de votre réseau</div>'
+    +'<div style="font-size:12px;color:var(--m);margin-bottom:14px">V&#233;rifiez votre connexion et r&#233;essayez.</div>'
+    +'<button onclick="chargerReseauTab()" style="padding:10px 18px;background:#d97706;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">R&#233;essayer</button>'
+  +'</div>';
 }
 
 function setReseauTab(tab){
@@ -2636,6 +2650,7 @@ function setReseauTab(tab){
 
 async function renderAgentsMM(){
   var el=document.getElementById('rn-agents-mm-content');if(!el)return;
+  if(!_rnLoadOk){el.innerHTML=_rnErrorHtml();return;}
   var mms=(_rnData||[]).filter(function(f){return f.role==='mini_master';});
   if(!mms.length){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--m);font-size:13px">Aucun Mini-Master dans votre réseau</div>';return;}
   el.innerHTML='<div style="text-align:center;padding:24px"><div class="spin"></div></div>';
@@ -2683,6 +2698,7 @@ function getBusinessList(){return (_rnData||[]).filter(function(f){return f.role
 
 function renderAgentsDetail(){
   var el=document.getElementById('rn-agent-content');
+  if(!_rnLoadOk){el.innerHTML=_rnErrorHtml();return;}
   var agents=getAgents();
   if(!agents.length){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--m);font-size:13px">Aucun Mini-Master pour l\'instant</div>';return;}
   var h='<div style="font-size:11px;font-weight:800;color:var(--m);text-transform:uppercase;letter-spacing:.06em;margin:12px 0 8px">'+agents.length+' mini-master(s)</div>';
@@ -2694,6 +2710,7 @@ function renderAgentsDetail(){
 
 async function renderAgentsSolde(){
   var el=document.getElementById('rn-agent-content');
+  if(!_rnLoadOk){el.innerHTML=_rnErrorHtml();return;}
   var agents=getAgents();
   el.innerHTML='<div style="text-align:center;padding:24px"><div class="spin"></div></div>';
   var soldes=[];
@@ -2722,6 +2739,7 @@ async function renderAgentsSolde(){
 
 async function renderAgentsInscrits(){
   var el=document.getElementById('rn-agent-content');
+  if(!_rnLoadOk){el.innerHTML=_rnErrorHtml();return;}
   var agents=getAgents();
   el.innerHTML='<div style="text-align:center;padding:24px"><div class="spin"></div></div>';
   var inscrits=[];
@@ -2748,6 +2766,7 @@ async function renderAgentsInscrits(){
 
 async function renderBusiness(){
   var el=document.getElementById('rn-business-content');
+  if(!_rnLoadOk){el.innerHTML=_rnErrorHtml();return;}
   var biz=getBusinessList();
   el.innerHTML='<div style="text-align:center;padding:24px"><div class="spin"></div></div>';
   var list=[];

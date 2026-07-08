@@ -576,17 +576,12 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
           <div style="font-size:12px;color:#b45309;margin-top:2px;">Ce service sera intégré très prochainement.</div>
         </div>
       </div>
-      <label class="lbl" id="pay-det-ref-label">Numéro de référence</label>
-      <input class="inp" id="pay-det-ref" type="text" placeholder="Ex: 12345678" inputmode="numeric" style="margin-bottom:16px;" oninput="calcPayDet()"/>
+      <div id="pay-det-ref-wrap">
+        <label class="lbl" id="pay-det-ref-label">Numéro de référence</label>
+        <input class="inp" id="pay-det-ref" type="text" placeholder="Ex: 12345678" inputmode="numeric" style="margin-bottom:16px;" oninput="calcPayDet()"/>
+      </div>
       <div id="pay-det-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#ef4444;padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:13px;"></div>
       <label class="lbl">Montant</label>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
-        <button onclick="setPayDetAmt(500)"   style="padding:9px 14px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">500</button>
-        <button onclick="setPayDetAmt(1000)"  style="padding:9px 14px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">1 000</button>
-        <button onclick="setPayDetAmt(5000)"  style="padding:9px 14px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">5 000</button>
-        <button onclick="setPayDetAmt(10000)" style="padding:9px 14px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">10 000</button>
-        <button onclick="setPayDetAmt(25000)" style="padding:9px 14px;border-radius:10px;border:1.5px solid #e5e7eb;background:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">25 000</button>
-      </div>
       <input class="inp" id="pay-det-amt" type="number" placeholder="Montant en FCFA" inputmode="numeric" oninput="calcPayDet()" style="margin-bottom:0;"/>
       <div id="pay-det-frais-info" style="font-size:12px;color:#6b7280;margin-top:8px;"></div>
     </div>
@@ -1331,6 +1326,7 @@ function selService(id){
   document.getElementById('pay-det-icon').style.background=s.couleur;
   document.getElementById('pay-det-name').textContent=s.nom;
   document.getElementById('pay-det-cat').textContent=s.cat;
+  document.getElementById('pay-det-ref-wrap').style.display='';
   document.getElementById('pay-det-ref-label').textContent=s.ref;
   document.getElementById('pay-det-ref').placeholder=s.ref;
   var bientot=document.getElementById('pay-det-bientot');
@@ -1346,7 +1342,6 @@ function selService(id){
   setTab('pay-detail');
 }
 function fermerDetailPaiement(){setTab('paiements');renderListePaiements(SERVICES_PAY);}
-function setPayDetAmt(v){document.getElementById('pay-det-amt').value=v;calcPayDet();}
 function calcPayDet(){
   var v=Number(document.getElementById('pay-det-amt').value);
   var ok=v>0&&payServiceActif&&!payServiceActif.bientot;
@@ -1468,21 +1463,29 @@ function _routeQrScan(tel,parts){
         document.getElementById('pay-det-title').textContent='Payer le marchand';
         document.getElementById('pay-det-icon').textContent='🏪';
         document.getElementById('pay-det-icon').style.background='#ecfdf5';
-        document.getElementById('pay-det-name').textContent=parts[0];
-        document.getElementById('pay-det-cat').textContent='Marchand AFRIM PAY';
-        document.getElementById('pay-det-ref-label').textContent='Référence (optionnel)';
-        document.getElementById('pay-det-ref').placeholder='Motif ou référence';
+        document.getElementById('pay-det-name').textContent='Chargement...';
+        document.getElementById('pay-det-cat').textContent=parts[0];
+        // Pas besoin de référence quand le marchand est identifié par scan
+        document.getElementById('pay-det-ref-wrap').style.display='none';
+        document.getElementById('pay-det-ref').value='';
         document.getElementById('pay-det-bientot').style.display='none';
         document.getElementById('pay-det-form').style.display='';
         document.getElementById('pay-det-loading').style.display='none';
         document.getElementById('pay-det-success').style.display='none';
-        document.getElementById('pay-det-ref').value='';
         // Si le business a généré un QR "Encaisser un client" avec montant fixé, on le pré-remplit
         document.getElementById('pay-det-amt').value=montantQR>0?montantQR:'';
         var okAmt=montantQR>0;
         document.getElementById('btn-pay-det').disabled=!okAmt;
         document.getElementById('btn-pay-det').style.opacity=okAmt?'1':'.4';
         setTab('pay-detail');
+        // Récupère le vrai nom du marchand (le QR ne contient que le téléphone + le code)
+        get('/business/lookup?code='+encodeURIComponent(merchantCode)).then(function(r){
+          var u=r.data||{};
+          var nom=((u.prenom||'')+' '+(u.nom||'')).trim();
+          document.getElementById('pay-det-name').textContent=nom||parts[0];
+        }).catch(function(){
+          document.getElementById('pay-det-name').textContent=parts[0];
+        });
       } else {
         // Transfert client → page style Wave
         ouvrirSendWave(parts[0], parts[1]||parts[0]);
@@ -1491,7 +1494,6 @@ function _routeQrScan(tel,parts){
 
 var payMerch=null;
 function selMarchand(code){if(!code)return;payMerch={code};}
-function setPayAmt(v){document.getElementById('pay-det-amt')&&(document.getElementById('pay-det-amt').value=v);calcPayDet();}
 function calcPay(){}
 async function doPay(){}
 function rstPay(){}

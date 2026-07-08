@@ -689,13 +689,6 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
         <input class="inp" id="ins-pin2" type="password" inputmode="numeric" maxlength="4" placeholder="••••" style="margin-bottom:12px"/>
         <label class="lbl">Code parrainage (optionnel)</label>
         <input class="inp" id="ins-parrain" type="text" placeholder="Ex: VAL-430Y" style="margin-bottom:16px"/>
-        <label class="lbl">Niveau KYC</label>
-        <div style="display:flex;gap:8px;margin-bottom:16px">
-          <button onclick="setKyc('KYC1',this)" class="chip on">KYC 1</button>
-          <button onclick="setKyc('KYC2',this)" class="chip">KYC 2</button>
-          <button onclick="setKyc('KYC3',this)" class="chip">KYC 3</button>
-        </div>
-        <div id="photos-kyc" style="margin-bottom:16px"></div>
         <button class="btn btn-g" onclick="doInscrire()">Créer mon compte</button>
       </div>
       <div id="ins-loading" style="display:none;text-align:center;padding:32px"><div class="spin"></div></div>
@@ -1483,18 +1476,7 @@ function calcPay(){}
 async function doPay(){}
 function rstPay(){}
 
-var kycLevel='KYC1';var kycPhotos={};
-function setKyc(lvl,btn){kycLevel=lvl;document.querySelectorAll('.chip').forEach(b=>b.classList.remove('on'));if(btn)btn.classList.add('on');renderPhotos();}
-function renderPhotos(){
-  var photos={KYC1:[{id:'selfie',label:'📸 Selfie'}],KYC2:[{id:'selfie',label:'📸 Selfie'},{id:'cni-r',label:'🪪 CNI Recto'},{id:'cni-v',label:'🪪 CNI Verso'}],KYC3:[{id:'selfie',label:'📸 Selfie'},{id:'cni-r',label:'🪪 CNI Recto'},{id:'cni-v',label:'🪪 CNI Verso'},{id:'justif',label:'📄 Justificatif domicile'}]};
-  var list=photos[kycLevel]||[];
-  document.getElementById('photos-kyc').innerHTML=list.map(function(p){
-    var cam=p.id==='selfie'?'user':'environment';
-    return'<div style="margin-bottom:10px"><label class="lbl">'+p.label+'</label><div class="photo-slot" id="slot-'+p.id+'" onclick="document.getElementById(\'file-'+p.id+'\').click()"><input type="file" id="file-'+p.id+'" accept="image/*" capture="'+cam+'" style="display:none" onchange="photoChange(\''+p.id+'\',this)"/><div id="preview-'+p.id+'" style="color:var(--m);font-size:13px">📷 Appuyer pour prendre une photo</div></div></div>';
-  }).join('');
-}
-function photoChange(id,input){if(!input.files[0])return;var reader=new FileReader();reader.onload=function(e){kycPhotos[id]=e.target.result;document.getElementById('preview-'+id).innerHTML='<img src="'+e.target.result+'" style="width:100%;height:80px;object-fit:cover;border-radius:8px"/>';document.getElementById('slot-'+id).classList.add('done');};reader.readAsDataURL(input.files[0]);}
-function rstIns(){['ins-prenom','ins-nom','ins-tel','ins-pin','ins-parrain'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});document.getElementById('ins-err').style.display='none';document.getElementById('ins-form').style.display='';document.getElementById('ins-loading').style.display='none';document.getElementById('ins-success').style.display='none';kycPhotos={};setKyc('KYC1',null);}
+function rstIns(){['ins-prenom','ins-nom','ins-tel','ins-pin','ins-parrain'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});document.getElementById('ins-err').style.display='none';document.getElementById('ins-form').style.display='';document.getElementById('ins-loading').style.display='none';document.getElementById('ins-success').style.display='none';}
 async function doInscrire(){
   var prenom=document.getElementById('ins-prenom').value.trim();var nom=document.getElementById('ins-nom').value.trim();var telephone=document.getElementById('ins-tel').value.trim();var pin=document.getElementById('ins-pin').value.trim();var parrainCode=document.getElementById('ins-parrain').value.trim();
   var errEl=document.getElementById('ins-err');errEl.style.display='none';
@@ -1503,29 +1485,12 @@ async function doInscrire(){
   if(pin.length!==4){errEl.textContent='Le code secret doit avoir exactement 4 chiffres';errEl.style.display='';return;}
   if(pin2val&&pin!==pin2val){errEl.textContent='Les codes secrets ne correspondent pas';errEl.style.display='';return;}
   if(!/^\d{4}$/.test(pin)){errEl.textContent='Le PIN doit contenir exactement 4 chiffres';errEl.style.display='';return;}
-  // Selfie obligatoire pour KYC1 — vérifier avant de soumettre
-  var selfieFile=kycPhotos['selfie'];
-  if(!selfieFile){errEl.textContent='Veuillez prendre votre selfie avant de créer le compte';errEl.style.display='';return;}
   document.getElementById('ins-form').style.display='none';document.getElementById('ins-loading').style.display='';
   try{
-    // 1. Créer le compte
-    var r=await post('/auth/register',{prenom,nom,telephone,pin,role:'client',kycNiveau:kycLevel,parrainCode:parrainCode||undefined});
-    var userId=r.data.id;
-    // 2. Se connecter pour obtenir le token (nécessaire pour /kyc/documents)
-    var loginR=await post('/auth/login',{telephone,pin});
-    var tempToken=loginR.data.accessToken;
-    // 3. Uploader le selfie sur Cloudinary
-    try{
-      var fd=new FormData();fd.append('file',selfieFile);fd.append('upload_preset','afrim-kyc');fd.append('folder','afrim-pay/kyc');
-      var up=await fetch('https://api.cloudinary.com/v1_1/dzofjvhwu/image/upload',{method:'POST',body:fd});
-      var ud=await up.json();
-      if(up.ok&&ud.secure_url){
-        // 4. Sauvegarder le selfie en base
-        await fetch(API+'/kyc/documents',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tempToken},body:JSON.stringify({userId,typeDocument:'selfie',urlFichier:ud.secure_url})});
-        // 5. Soumettre la demande KYC1
-        await fetch(API+'/kyc/request',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tempToken},body:JSON.stringify({userId,niveauDemande:'KYC1'})});
-      }
-    }catch(eKyc){console.warn('Upload selfie inscription:',eKyc.message);}
+    // Compte créé directement en KYC1 — pas de photo requise à l'inscription.
+    // La mise à niveau KYC2/KYC3 (avec pièce d'identité) se fait plus tard,
+    // via la sheet dédiée, quand le client touche son plafond de gains.
+    var r=await post('/auth/register',{prenom,nom,telephone,pin,role:'client',kycNiveau:'KYC1',parrainCode:parrainCode||undefined});
     document.getElementById('ins-loading').style.display='none';document.getElementById('ins-success').style.display='';
     document.getElementById('ins-succ-txt').textContent='Votre compte a été créé ! Code parrainage : '+(r.data.codeParrainage||'');
   }
@@ -2467,7 +2432,6 @@ async function logout(){try{await post('/auth/logout',{refreshToken:G.refresh});
 document.querySelectorAll('.sh-ov').forEach(function(el){el.addEventListener('click',function(e){if(e.target===el){var id=el.id.replace('sh-','');closeSh(id);if(id==='send')rstSend();if(id==='pay')rstPay();if(id==='inscription')rstIns();}});});
 
 (function init(){
-  setKyc('KYC1',null);
   if(G.token&&G.user&&G.user.role==='client'){
     // Vérifier si l'app doit être verrouillée
     if(checkLockOnLoad()){

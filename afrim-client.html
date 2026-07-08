@@ -1091,25 +1091,31 @@ function voirDetailTx(id) {
   if(!el)return;
   var frais=Number(tx.frais||0);
   var montant=Number(tx.montant||0);
-  var totalDebite=tx.type==='retrait'?montant+frais:montant;
-  var tauxFrais=montant>0&&frais>0?((frais/montant)*100).toFixed(2)+'%':'';
-  var montantRecu=tx.type==='paiement_marchand'?montant-frais:montant;
-  var fraisLabel=tauxFrais?' ('+tauxFrais+')':'';
-  var bigAmt=tx.type==='retrait'&&frais>0?totalDebite:montant;
+  // Les frais paiement_marchand sont partagés 0.5% client / 0.5% marchand (même règle que le serveur)
+  var fraisClientPart = tx.type==='paiement_marchand' ? Math.round(frais/2) : 0;
+  var fraisBusinessPart = tx.type==='paiement_marchand' ? frais - fraisClientPart : 0;
+  var totalDebite = tx.type==='retrait' ? montant+frais : (tx.type==='paiement_marchand' ? montant+fraisClientPart : montant);
+  var tauxFrais = montant>0&&frais>0?((frais/montant)*100).toFixed(2)+'%':'';
+  var montantRecu = tx.type==='paiement_marchand' ? montant-fraisBusinessPart : montant;
+  var fraisLabel = tauxFrais?' ('+tauxFrais+')':'';
+  var bigAmt = (tx.type==='retrait'||tx.type==='paiement_marchand') && frais>0 ? totalDebite : montant;
 
   el.innerHTML=
     '<div style="text-align:center;padding:24px 20px 14px">'
       +'<div style="width:56px;height:56px;border-radius:50%;background:'+col+'20;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:24px">'+((TX_CFG[tx.type]||{i:'◈'}).i)+'</div>'
       +'<div style="font-size:34px;font-weight:900;color:'+col+'">'+sign+F(bigAmt)+'</div>'
-      +(frais>0&&tx.type==='retrait'?'<div style="font-size:12px;color:#6b7280;margin-top:3px">dont '+F(frais)+' de frais</div>':'')
+      +(frais>0&&(tx.type==='retrait'||tx.type==='paiement_marchand')?'<div style="font-size:12px;color:#6b7280;margin-top:3px">dont '+F(tx.type==='paiement_marchand'?fraisClientPart:frais)+' de frais</div>':'')
       +(contre?'<div style="font-size:14px;color:#374151;margin-top:8px;font-weight:600">'+(isIn?'De ':'À ')+contre+'</div>':'')
       +(contreTel?'<div style="font-size:12px;color:#9ca3af;margin-top:2px">'+contreTel+'</div>':'')
     +'</div>'
     +'<div style="margin:0 16px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)">'
-      +'<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6"><span style="color:#6b7280;font-size:13px">Montant '+(isIn?'reçu':'demand&#233;')+'</span><span style="font-weight:700;font-size:13px">'+F(montant)+'</span></div>'
-      +(frais>0?'<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6;background:#fff7f7"><span style="color:#6b7280;font-size:13px">Frais'+fraisLabel+'</span><span style="font-weight:700;font-size:13px;color:#dc2626">'+F(frais)+'</span></div>':'')
+      +'<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6"><span style="color:#6b7280;font-size:13px">Montant de base</span><span style="font-weight:700;font-size:13px">'+F(montant)+'</span></div>'
+      +(tx.type==='paiement_marchand'&&frais>0?'<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6;background:#fff7f7"><span style="color:#6b7280;font-size:13px">Frais &#224; votre charge (0.5%)</span><span style="font-weight:700;font-size:13px;color:#dc2626">'+F(fraisClientPart)+'</span></div>':'')
+      +(tx.type!=='paiement_marchand'&&frais>0?'<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6;background:#fff7f7"><span style="color:#6b7280;font-size:13px">Frais'+fraisLabel+'</span><span style="font-weight:700;font-size:13px;color:#dc2626">'+F(frais)+'</span></div>':'')
       +(tx.type==='retrait'&&frais>0?'<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6;background:#fef2f2"><span style="color:#374151;font-size:13px;font-weight:700">Total d&#233;bit&#233;</span><span style="font-weight:900;font-size:14px;color:#dc2626">'+F(totalDebite)+'</span></div>':'')
-      +(tx.type==='paiement_marchand'&&frais>0?'<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6"><span style="color:#6b7280;font-size:13px">Montant re&#231;u marchand</span><span style="font-weight:700;font-size:13px;color:#059669">'+F(montantRecu)+'</span></div>':'')
+      +(tx.type==='paiement_marchand'&&frais>0?'<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6;background:#fef2f2"><span style="color:#374151;font-size:13px;font-weight:700">Total d&#233;bit&#233; chez vous</span><span style="font-weight:900;font-size:14px;color:#dc2626">'+F(totalDebite)+'</span></div>':'')
+      +(tx.type==='paiement_marchand'&&frais>0?'<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6"><span style="color:#6b7280;font-size:13px">Frais c&#244;t&#233; marchand (0.5%)</span><span style="font-weight:700;font-size:13px;color:#6b7280">'+F(fraisBusinessPart)+'</span></div>':'')
+      +(tx.type==='paiement_marchand'?'<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6"><span style="color:#6b7280;font-size:13px">Montant re&#231;u marchand</span><span style="font-weight:700;font-size:13px;color:#059669">'+F(montantRecu)+'</span></div>':'')
       +'<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6"><span style="color:#6b7280;font-size:13px">Statut</span><span style="font-weight:700;font-size:13px">&#10003; Effectu&#233;</span></div>'
       +'<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6"><span style="color:#6b7280;font-size:13px">Date et heure</span><span style="font-weight:700;font-size:12px;text-align:right;max-width:55%">'+ds+'</span></div>'
       +'<div style="display:flex;justify-content:space-between;align-items:center;padding:13px 16px"><span style="color:#6b7280;font-size:13px">R&#233;f&#233;rence</span><span style="font-weight:600;font-size:11px;font-family:monospace;color:#374151">'+(tx.reference||tx.id||'')+'</span></div>'

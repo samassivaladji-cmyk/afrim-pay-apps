@@ -280,6 +280,17 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
   </nav>
 </div>
 
+<!-- ═══════════════ TICKET (détail transaction) ═══════════════ -->
+<div class="scr" id="s-tx-detail" style="background:#f3f4f6">
+  <div style="background:#fff;padding:52px 20px 12px;border-bottom:1px solid #f3f4f6;position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:14px">
+    <button onclick="setTab('flux')" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center">
+      <svg width="20" height="20" fill="none" stroke="#111" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    </button>
+    <div style="font-size:18px;font-weight:800">Ticket</div>
+  </div>
+  <div id="tx-detail-content" style="flex:1;overflow-y:auto;padding-bottom:100px"></div>
+</div>
+
 <!-- ═══════════════ GAINS ═══════════════ -->
 <div class="scr" id="s-gains">
   <div style="background:var(--claude);padding:52px 20px 20px;position:sticky;top:0;z-index:10">
@@ -640,6 +651,7 @@ function setTab(t){
   else if(t==='gains'){document.getElementById('s-gains').classList.add('on');chargerGains();}
   else if(t==='reseau'){document.getElementById('s-reseau').classList.add('on');chargerReseau();}
   else if(t==='profile'){document.getElementById('s-profile').classList.add('on');chargerProfil();}
+  else if(t==='tx-detail'){document.getElementById('s-tx-detail').classList.add('on');}
 }
 
 function chkLogin(){var v=document.getElementById('login-tel').value.trim();document.getElementById('lg-btn').disabled=!v;document.getElementById('lg-btn').style.opacity=v?'1':'.4';}
@@ -688,7 +700,7 @@ function txRow(tx){
   var montant=Number(tx.montant||0);
   var sign = tx.type==='retrait' ? '-' : '+';
   var col = tx.type==='retrait' ? '#c2410c' : cfg.color;
-  return '<div class="tx" style="background:'+col+'0d;border:1px solid '+col+'22">'
+  return '<div class="tx" onclick="voirDetailTx(\''+tx.id+'\')" style="cursor:pointer;background:'+col+'0d;border:1px solid '+col+'22">'
     +'<div style="display:flex;align-items:center;gap:10px">'
     +'<div style="width:36px;height:36px;border-radius:10px;background:'+col+'18;color:'+col+';display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">'+cfg.icon+'</div>'
     +'<div><div style="font-size:13px;font-weight:600">'+cfg.l+'</div><div style="color:var(--m);font-size:11px">'+FD(tx.dateCreation||tx.date_creation)+'</div></div></div>'
@@ -719,6 +731,50 @@ function commRow(c){
     +'<div style="color:var(--d);font-size:10px">'+statutTxt+'</div></div></div>';
 }
 function renderHistRow(item){return item&&item._kind==='commission'?commRow(item):txRow(item);}
+
+function voirDetailTx(id){
+  var tx=_txCache[id]; if(!tx)return;
+  var cid=G.compte?G.compte.id:'';
+  var srcId=tx.compteSourceId||tx.compte_source_id||'';
+  var dstId=tx.compteDestId||tx.compte_dest_id||'';
+  var isIn = dstId && cid ? (dstId===cid) : (tx.type!=='retrait');
+  var col = isIn?'#137a3f':'#c2410c';
+  var sign = isIn?'+':'-';
+  var d=new Date(tx.dateCreation||tx.date_creation||Date.now());
+  var ds=d.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  var frais=Number(tx.frais||0);
+  var montant=Number(tx.montant||0);
+  var fraisClientPart = tx.type==='paiement_marchand' ? Math.round(frais/2) : 0;
+  var fraisBusinessPart = tx.type==='paiement_marchand' ? frais-fraisClientPart : 0;
+  var totalDebiteClient = tx.type==='paiement_marchand' ? montant+fraisClientPart : montant;
+  var montantRecu = tx.type==='paiement_marchand' ? montant-fraisBusinessPart : montant;
+  var bigAmt = tx.type==='paiement_marchand' ? (isIn?montantRecu:totalDebiteClient) : montant;
+  var cfg=TX_CFG[tx.type]||{l:tx.type,icon:'💳'};
+  var el=document.getElementById('tx-detail-content');
+  if(!el)return;
+  var lignes='';
+  lignes+='<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6"><span style="color:#6b7280;font-size:13px">Montant de base</span><span style="font-weight:700;font-size:13px">'+F(montant)+'</span></div>';
+  if(tx.type==='paiement_marchand'&&frais>0){
+    lignes+='<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6;background:#fff7f7"><span style="color:#6b7280;font-size:13px">Frais client (0.5%)</span><span style="font-weight:700;font-size:13px;color:#dc2626">'+F(fraisClientPart)+'</span></div>';
+    lignes+='<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6"><span style="color:#6b7280;font-size:13px">Frais marchand (0.5%)</span><span style="font-weight:700;font-size:13px;color:#6b7280">'+F(fraisBusinessPart)+'</span></div>';
+    lignes+='<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6;background:#fef2f2"><span style="color:#374151;font-size:13px;font-weight:700">Total débité chez le payeur</span><span style="font-weight:900;font-size:14px;color:#dc2626">'+F(totalDebiteClient)+'</span></div>';
+    lignes+='<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6"><span style="color:#6b7280;font-size:13px">Montant reçu marchand</span><span style="font-weight:700;font-size:13px;color:#059669">'+F(montantRecu)+'</span></div>';
+  } else if(frais>0){
+    lignes+='<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6;background:#fff7f7"><span style="color:#6b7280;font-size:13px">Frais</span><span style="font-weight:700;font-size:13px;color:#dc2626">'+F(frais)+'</span></div>';
+  }
+  lignes+='<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6"><span style="color:#6b7280;font-size:13px">Statut</span><span style="font-weight:700;font-size:13px">✓ Effectué</span></div>';
+  lignes+='<div style="display:flex;justify-content:space-between;padding:13px 16px;border-bottom:1px solid #f3f4f6"><span style="color:#6b7280;font-size:13px">Date et heure</span><span style="font-weight:700;font-size:12px;text-align:right;max-width:55%">'+ds+'</span></div>';
+  lignes+='<div style="display:flex;justify-content:space-between;align-items:center;padding:13px 16px"><span style="color:#6b7280;font-size:13px">Référence</span><span style="font-weight:600;font-size:11px;font-family:monospace;color:#374151">'+(tx.reference||tx.id||'')+'</span></div>';
+  el.innerHTML=
+    '<div style="text-align:center;padding:24px 20px 14px">'
+      +'<div style="width:56px;height:56px;border-radius:50%;background:'+col+'20;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:24px">'+cfg.icon+'</div>'
+      +'<div style="font-size:34px;font-weight:900;color:'+col+'">'+sign+F(bigAmt)+'</div>'
+      +(tx.type==='paiement_marchand'?'<div style="font-size:12px;color:#6b7280;margin-top:3px">'+(isIn?'Paiement reçu':'Paiement effectué')+'</div>':'')
+    +'</div>'
+    +'<div style="margin:0 16px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)">'+lignes+'</div>'
+    +'<div style="text-align:center;color:#9ca3af;font-size:11px;padding:16px">AFRIM PAY</div>';
+  setTab('tx-detail');
+}
 async function chargerHistorique(){
   var chips=['all','paiement_marchand','retrait','gain'].map(f=>'<button onclick="setHistFilter(\''+f+'\')" class="chip'+(histFilter===f?' on':'')+'">'
     +{all:'Tous',paiement_marchand:'Paiements',retrait:'Retraits',gain:'Gains'}[f]+'</button>').join('');

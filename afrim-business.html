@@ -398,6 +398,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
         <div style="font-size:16px;font-weight:800" id="enc-conf-client">—</div>
         <div style="font-size:12px;color:var(--m);font-family:monospace" id="enc-conf-tel">—</div>
       </div>
+      <div id="enc-conf-frais" style="text-align:left;font-size:13px;margin-bottom:16px"></div>
       <div id="enc-conf-err" style="display:none" class="info info-r"></div>
       <button class="btn btn-g" id="enc-conf-btn" onclick="doEncaisserCollect()">Encaisser</button>
       <button class="btn btn-ghost" style="margin-top:10px" onclick="rstEncaisser()">Annuler</button>
@@ -970,6 +971,7 @@ function rstEncaisser(){
   document.getElementById('enc-loading').style.display='none';
   document.getElementById('enc-success').style.display='none';
   document.getElementById('enc-conf-err').style.display='none';
+  var fi=document.getElementById('enc-conf-frais');if(fi)fi.innerHTML='';
 }
 function encTap(v){
   if(_encAmt.length>=9)return;
@@ -987,9 +989,13 @@ function lancerEncaisserScan(){
     var role=parts[2]||'client';
     if(role==='business'){T("Ceci est un QR marchand, pas un QR client",true);openSh('encaisser');return;}
     _encClientTel=tel;_encClientNom=tel;
+    var fraisClient=Math.round(amt*0.005),fraisBusiness=Math.round(amt*0.005);
     document.getElementById('enc-conf-amt').textContent=F(amt);
     document.getElementById('enc-conf-client').textContent='Chargement...';
     document.getElementById('enc-conf-tel').textContent=tel;
+    document.getElementById('enc-conf-frais').innerHTML=
+      '<div style="display:flex;justify-content:space-between;padding:2px 0"><span>Débité chez le client</span><span style="font-weight:900;color:#ef4444">'+F(amt+fraisClient)+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;padding:2px 0"><span>Vous recevrez</span><span style="font-weight:900;color:var(--green-d)">'+F(amt-fraisBusiness)+'</span></div>';
     document.getElementById('enc-amt-view').style.display='none';
     document.getElementById('enc-confirm-view').style.display='';
     document.getElementById('enc-conf-err').style.display='none';
@@ -1010,7 +1016,11 @@ async function doEncaisserCollect(){
     var r=await post('/transactions/collect',{telephone:_encClientTel,montant:amt});
     document.getElementById('enc-loading').style.display='none';
     document.getElementById('enc-success').style.display='';
-    document.getElementById('enc-succ-txt').textContent=F(amt)+' encaissés auprès de '+(r.data.clientNom||_encClientTel);
+    var td=r.data.totalDebitClient!=null?r.data.totalDebitClient:amt;
+    var fb=r.data.fraisBusiness!=null?r.data.fraisBusiness:Math.round(amt*0.005);
+    document.getElementById('enc-succ-txt').innerHTML=
+      '<div style="display:flex;justify-content:space-between;padding:2px 0"><span>Débité chez '+(r.data.clientNom||_encClientTel)+'</span><span style="font-weight:900;color:#ef4444">'+F(td)+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;padding:2px 0"><span>Reçu sur votre compte</span><span style="font-weight:900;color:var(--green-d)">'+F(amt-fb)+'</span></div>';
     document.getElementById('enc-succ-ref').textContent='Réf: '+(r.data.reference||'');
     rafraichir();
   }catch(e){
@@ -1096,16 +1106,20 @@ function calcPayerConfirm(){
   document.getElementById('pc-btn').disabled=!ok;document.getElementById('pc-btn').style.opacity=ok?'1':'.4';
   var info=document.getElementById('pc-frais-info');
   if(amt>0){
-    var frais=Math.round(amt*0.005);
-    info.textContent='Frais (0.5%) : '+F(frais)+' — Total débité : '+F(amt+frais);
+    var fraisClient=Math.round(amt*0.005);
+    var fraisAutre=Math.round(amt*0.005);
+    info.innerHTML=
+      '<div style="display:flex;justify-content:space-between;padding:2px 0"><span>Frais à votre charge (0.5%)</span><span style="font-weight:700">'+F(fraisClient)+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;padding:2px 0;border-top:1px solid #e5e7eb;margin-top:4px;padding-top:6px"><span style="font-weight:700">Total débité chez vous</span><span style="font-weight:900;color:#ef4444">'+F(amt+fraisClient)+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;padding:2px 0"><span>Reçu par le marchand</span><span style="font-weight:700;color:#137a3f">'+F(amt-fraisAutre)+'</span></div>';
   }else{
-    info.textContent='—';
+    info.innerHTML='—';
   }
 }
 function rstPayerConfirm(){
   document.getElementById('pc-code').value='';document.getElementById('pc-amt').value='';
   document.getElementById('pc-code-wrap').style.display='';document.getElementById('pc-name-wrap').style.display='none';
-  document.getElementById('pc-err').style.display='none';document.getElementById('pc-frais-info').textContent='—';
+  document.getElementById('pc-err').style.display='none';document.getElementById('pc-frais-info').innerHTML='—';
   document.getElementById('pc-form').style.display='';document.getElementById('pc-loading').style.display='none';document.getElementById('pc-success').style.display='none';
 }
 async function doPayerConfirm(){
@@ -1120,7 +1134,12 @@ async function doPayerConfirm(){
   try{
     var r=await post('/transactions/pay',{merchantCode:code,montant:amt});
     document.getElementById('pc-loading').style.display='none';document.getElementById('pc-success').style.display='';
-    document.getElementById('pc-succ-txt').textContent=F(amt)+' payés au marchand '+code+' (+ '+F(r.data.fraisClient||frais)+' de frais)';
+    var fc=r.data.fraisClient!=null?r.data.fraisClient:frais;
+    var fb=r.data.fraisBusiness!=null?r.data.fraisBusiness:frais;
+    var td=r.data.totalDebitClient!=null?r.data.totalDebitClient:totalDebit;
+    document.getElementById('pc-succ-txt').innerHTML=
+      '<div style="display:flex;justify-content:space-between;padding:2px 0"><span>Total débité chez vous</span><span style="font-weight:900;color:#ef4444">'+F(td)+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;padding:2px 0"><span>Reçu par '+code+'</span><span style="font-weight:900;color:#137a3f">'+F(amt-fb)+'</span></div>';
     document.getElementById('pc-succ-ref').textContent='Réf: '+(r.data.reference||'');
     rafraichir();
   }catch(e){

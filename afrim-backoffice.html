@@ -7789,11 +7789,31 @@ function _rendrTickets(el, list, ctx) {
     } else { row.appendChild(hd); }
     var desc = document.createElement('div');
     desc.style.cssText = 'font-size:11px;color:#6b7280;margin-bottom:4px;line-height:1.4';
-    desc.textContent = t.description || '';
+    var gpsInfo2 = t.description ? _extraireGPS(t.description) : {texte:''};
+    desc.textContent = gpsInfo2.texte || '';
+    row.appendChild(desc);
+    if (gpsInfo2.gps) {
+      var gpsBox2 = document.createElement('div');
+      gpsBox2.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:8px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:9px;padding:8px 10px;margin-bottom:6px';
+      var gpsTxt2 = document.createElement('div');
+      gpsTxt2.style.cssText = 'font-size:10px;color:#1d4ed8;font-weight:700;line-height:1.4';
+      gpsTxt2.innerHTML = '📍 ' + gpsInfo2.gps.lat.toFixed(6) + ', ' + gpsInfo2.gps.lng.toFixed(6) + (gpsInfo2.gps.acc ? '<br><span style="font-weight:500;color:#3b82f6">précision ~' + gpsInfo2.gps.acc + 'm</span>' : '');
+      var gpsBtn2 = document.createElement('a');
+      gpsBtn2.href = gpsInfo2.gps.lien; gpsBtn2.target = '_blank'; gpsBtn2.rel = 'noopener';
+      gpsBtn2.textContent = '🗺️ Voir sur la carte';
+      gpsBtn2.style.cssText = 'flex-shrink:0;background:#2563eb;color:#fff;padding:6px 10px;border-radius:7px;font-size:10px;font-weight:700;text-decoration:none;white-space:nowrap';
+      gpsBox2.appendChild(gpsTxt2); gpsBox2.appendChild(gpsBtn2);
+      row.appendChild(gpsBox2);
+    } else if (gpsInfo2.indisponible) {
+      var gpsMuted2 = document.createElement('div');
+      gpsMuted2.style.cssText = 'font-size:10px;color:#9ca3af;margin-bottom:6px';
+      gpsMuted2.textContent = '📍 Position non communiquée';
+      row.appendChild(gpsMuted2);
+    }
     var dtEl = document.createElement('div');
     dtEl.style.cssText = 'font-size:9px;color:#9ca3af;margin-bottom:8px';
     dtEl.textContent = ds;
-    row.appendChild(desc); row.appendChild(dtEl);
+    row.appendChild(dtEl);
     // Boutons action
     var btns = document.createElement('div');
     btns.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap';
@@ -7993,6 +8013,24 @@ async function _tkGlobalSupprimerTout() {
   } catch(e) { toast('Erreur: ' + e.message, true); }
 }
 
+// Extrait une éventuelle ligne "Position GPS : lat, lng (précision ~Xm) — lien" de la
+// description d'un ticket (générée par l'app Business), pour l'afficher à part.
+function _extraireGPS(description) {
+  var re = /Position GPS\s*:\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\(précision ~(\d+)m\)\s*—\s*(\S+)/;
+  var m = description.match(re);
+  if (m) {
+    return {
+      texte: description.replace(re, '').trim(),
+      gps: { lat: parseFloat(m[1]), lng: parseFloat(m[2]), acc: parseInt(m[3], 10), lien: m[4] }
+    };
+  }
+  var reAbs = /Position GPS\s*:\s*non communiquée[^.\n]*\.?/;
+  if (reAbs.test(description)) {
+    return { texte: description.replace(reAbs, '').trim(), indisponible: true };
+  }
+  return { texte: description, gps: null };
+}
+
 function _tkRender(el, list, listId) {
   if (!listId) listId = el.id || 'unknown';
   if (!_tkSelIds[listId]) _tkSelIds[listId] = {};
@@ -8066,12 +8104,33 @@ function _tkRender(el, list, listId) {
       svcBadge.textContent = (svcIcons[tk.service]||'📋')+' '+(svcLabels[tk.service]||tk.service);
       card.appendChild(svcBadge);
     }
-    // Ligne 3 : description
+    // Ligne 3 : description (avec extraction de la position GPS si présente)
     if (tk.description) {
-      var rd = document.createElement('div');
-      rd.style.cssText = 'font-size:11px;color:#6b7280;margin-bottom:5px;line-height:1.4';
-      rd.textContent = tk.description;
-      card.appendChild(rd);
+      var gpsInfo = _extraireGPS(tk.description);
+      if (gpsInfo.texte) {
+        var rd = document.createElement('div');
+        rd.style.cssText = 'font-size:11px;color:#6b7280;margin-bottom:5px;line-height:1.4';
+        rd.textContent = gpsInfo.texte;
+        card.appendChild(rd);
+      }
+      if (gpsInfo.gps) {
+        var gpsBox = document.createElement('div');
+        gpsBox.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:8px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:9px;padding:8px 10px;margin-bottom:6px';
+        var gpsTxt = document.createElement('div');
+        gpsTxt.style.cssText = 'font-size:10px;color:#1d4ed8;font-weight:700;line-height:1.4';
+        gpsTxt.innerHTML = '📍 ' + gpsInfo.gps.lat.toFixed(6) + ', ' + gpsInfo.gps.lng.toFixed(6) + (gpsInfo.gps.acc ? '<br><span style="font-weight:500;color:#3b82f6">précision ~' + gpsInfo.gps.acc + 'm</span>' : '');
+        var gpsBtn = document.createElement('a');
+        gpsBtn.href = gpsInfo.gps.lien; gpsBtn.target = '_blank'; gpsBtn.rel = 'noopener';
+        gpsBtn.textContent = '🗺️ Voir sur la carte';
+        gpsBtn.style.cssText = 'flex-shrink:0;background:#2563eb;color:#fff;padding:6px 10px;border-radius:7px;font-size:10px;font-weight:700;text-decoration:none;white-space:nowrap';
+        gpsBox.appendChild(gpsTxt); gpsBox.appendChild(gpsBtn);
+        card.appendChild(gpsBox);
+      } else if (gpsInfo.indisponible) {
+        var gpsMuted = document.createElement('div');
+        gpsMuted.style.cssText = 'font-size:10px;color:#9ca3af;margin-bottom:6px';
+        gpsMuted.textContent = '📍 Position non communiquée';
+        card.appendChild(gpsMuted);
+      }
     }
 
     // Ligne 4 : date + ref

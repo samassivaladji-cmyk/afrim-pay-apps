@@ -7809,6 +7809,11 @@ function _rendrTickets(el, list, ctx) {
       gpsMuted2.style.cssText = 'font-size:10px;color:#9ca3af;margin-bottom:6px';
       gpsMuted2.textContent = '📍 Position non communiquée';
       row.appendChild(gpsMuted2);
+    } else if (gpsInfo2.adresse) {
+      var adrBox2 = document.createElement('div');
+      adrBox2.style.cssText = 'background:#fffbeb;border:1px solid #fde68a;border-radius:9px;padding:8px 10px;margin-bottom:6px';
+      adrBox2.innerHTML = '<div style="font-size:9px;font-weight:700;color:#b45309;text-transform:uppercase;margin-bottom:2px">🏠 Adresse indiquée (pas sur place)</div><div style="font-size:11px;color:#92400e;line-height:1.4">' + gpsInfo2.adresse.replace(/</g,'&lt;') + '</div>';
+      row.appendChild(adrBox2);
     }
     var dtEl = document.createElement('div');
     dtEl.style.cssText = 'font-size:9px;color:#9ca3af;margin-bottom:8px';
@@ -8028,6 +8033,11 @@ function _extraireGPS(description) {
   if (reAbs.test(description)) {
     return { texte: description.replace(reAbs, '').trim(), indisponible: true };
   }
+  var reAdr = /Adresse de livraison indiquée par le marchand[^:]*:\s*(.+?)(?:\n|$)/;
+  var mAdr = description.match(reAdr);
+  if (mAdr) {
+    return { texte: description.replace(reAdr, '').trim(), adresse: mAdr[1].trim() };
+  }
   return { texte: description, gps: null };
 }
 
@@ -8130,6 +8140,11 @@ function _tkRender(el, list, listId) {
         gpsMuted.style.cssText = 'font-size:10px;color:#9ca3af;margin-bottom:6px';
         gpsMuted.textContent = '📍 Position non communiquée';
         card.appendChild(gpsMuted);
+      } else if (gpsInfo.adresse) {
+        var adrBox = document.createElement('div');
+        adrBox.style.cssText = 'background:#fffbeb;border:1px solid #fde68a;border-radius:9px;padding:8px 10px;margin-bottom:6px';
+        adrBox.innerHTML = '<div style="font-size:9px;font-weight:700;color:#b45309;text-transform:uppercase;margin-bottom:2px">🏠 Adresse indiquée (pas sur place)</div><div style="font-size:11px;color:#92400e;line-height:1.4">' + gpsInfo.adresse.replace(/</g,'&lt;') + '</div>';
+        card.appendChild(adrBox);
       }
     }
 
@@ -9821,7 +9836,7 @@ async function chargerGainsSysteme(){
     h+='<div style="font-size:13px;font-weight:800;color:#7c3aed">+'+F(gainsB)+'</div></div>';
     // Déductions
     h+='<div style="font-size:10px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">- Charges (versements)</div>';
-    h+=pnlLigne('Commissions journalières agents (27 paliers)',chargesJourna,pnl.commissions_journalieres_nb||0,'#ef4444','-');
+    h+=pnlLigne('Commissions journalières agents (dépôt 0,2% + retrait dégressif)',chargesJourna,pnl.commissions_journalieres_nb||0,'#ef4444','-');
     h+=pnlLigne('Commissions parrainage (5-10% selon r&#244;le)',chargesParrain,pnl.commissions_parrainage_nb||0,'#ef4444','-');
     h+=pnlLigne('Commissions r&#233;seau Mini-Master/Master (5-20% selon activit&#233;)',chargesReseau,pnl.commissions_reseau_nb||0,'#ef4444','-');
     h+='<div style="display:flex;justify-content:space-between;padding:8px 0;margin-bottom:10px;border-top:2px solid #ef444422">';

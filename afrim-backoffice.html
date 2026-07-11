@@ -1562,6 +1562,37 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
   </div>
 </div>
 
+<!-- SHEET SUPERVISEURS (Super BO) -->
+<div class="sh-ov" id="sh-superviseurs">
+  <div class="sh" style="max-height:88vh;overflow-y:auto">
+    <div class="sh-bar"></div>
+    <div class="sh-top">
+      <div><div class="sh-title">Superviseurs</div><div style="color:var(--m);font-size:12px">Vue d'ensemble — général & régionaux</div></div>
+      <button class="sh-x" onclick="closeSh('superviseurs')">✕</button>
+    </div>
+    <div style="padding:0 0 20px" id="sup-list-container">
+      <div style="padding:20px;text-align:center"><div class="spin"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SHEET AFFECTATION MASTER -> SUPERVISEUR -->
+<div class="sh-ov" id="sh-sup-affecter">
+  <div class="sh">
+    <div class="sh-bar"></div>
+    <div class="sh-top">
+      <div><div class="sh-title">Affecter un Master</div><div style="color:var(--m);font-size:12px" id="sup-affecter-nom">—</div></div>
+      <button class="sh-x" onclick="closeSh('sup-affecter')">✕</button>
+    </div>
+    <div style="padding:0 0 20px">
+      <input type="hidden" id="sup-affecter-id"/>
+      <label class="lbl">Rechercher un Master (nom ou téléphone)</label>
+      <input class="inp" id="sup-affecter-search" oninput="rechercherMasterAffectation()" placeholder="Ex: Koffi, 07..." style="margin-bottom:12px"/>
+      <div id="sup-affecter-results"></div>
+    </div>
+  </div>
+</div>
+
 <!-- SHEET CHANGER PIN -->
 <div class="sh-ov" id="sh-change-pin">
   <div class="sh">
@@ -1844,14 +1875,15 @@ var PERMS={
   admin:         {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:1,rembourser:1,kyc:1,gels:1,logs:1,rattachements:1,rattach_action:0,moncompte:1},
   // Back-office : tout voir + supprimer contenu (notifs/tickets/alertes), PAS les comptes
   backoffice:    {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:1,logs:1,admin_gestionnaire:1,rattachements:1,rattach_action:1,moncompte:1},
-  // Superviseur : sa zone uniquement
-  superviseur:   {home:1,users:1,txns:0,monitoring:1,stats:1,support:0,tech:0,creer:0,soldes:1,supprimer:0,rembourser:0,kyc:0,gels:0,logs:0,superviseur_zone:1,rattachements:0,rattach_action:0,moncompte:0},
+  // Superviseur (général ou régional) : lecture complète sur Master/Mini-Master/Agent/Business
+  // (soldes, transactions, KYC), aucune action (pas de suspension/blocage/remboursement/suppression)
+  superviseur:   {home:1,users:1,txns:1,monitoring:1,stats:1,support:0,tech:0,creer:0,soldes:1,supprimer:0,rembourser:0,kyc:1,gels:0,logs:0,superviseur_zone:1,rattachements:0,rattach_action:0,moncompte:0},
   // Support Client : recherche client, remboursement, tickets
   support_client:{home:0,users:0,txns:0,monitoring:0,support:1,tech:0,creer:0,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:0,logs:0,rattachements:0,rattach_action:0,moncompte:0},
   // Support Tech : logs, transactions, alertes systeme
   support_tech:  {home:0,users:0,txns:0,monitoring:0,stats:0,support:0,tech:1,creer:0,soldes:0,supprimer:0,rembourser:0,kyc:0,gels:0,logs:1,rattachements:0,rattach_action:0,moncompte:0}
 };
-function perm(k){var u=G.user;if(!u)return 0;var p=PERMS[u.role];return p?p[k]||0:0;}
+function perm(k){var u=G.user;if(!u)return 0;if(k==='supprimer')return isSuperAdmin()?1:0;var p=PERMS[u.role];return p?p[k]||0:0;}
 
 var ROLE_C={client:'#059669',agent:'#d97706',business:'#4f46e5',mini_master:'#2563eb',master:'#92400e',superviseur:'#ea580c',admin:'#ca8a04',backoffice:'#ca8a04',support_client:'#2563eb',support_tech:'#7c3aed'};
 
@@ -3580,14 +3612,15 @@ var PERMS={
   admin:         {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:1,rembourser:1,kyc:1,gels:1,logs:1,rattachements:1,rattach_action:0,moncompte:1},
   // Back-office : tout voir + supprimer contenu (notifs/tickets/alertes), PAS les comptes
   backoffice:    {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:1,logs:1,admin_gestionnaire:1,rattachements:1,rattach_action:1,moncompte:1},
-  // Superviseur : sa zone uniquement
-  superviseur:   {home:1,users:1,txns:0,monitoring:1,stats:1,support:0,tech:0,creer:0,soldes:1,supprimer:0,rembourser:0,kyc:0,gels:0,logs:0,superviseur_zone:1,rattachements:0,rattach_action:0,moncompte:0},
+  // Superviseur (général ou régional) : lecture complète sur Master/Mini-Master/Agent/Business
+  // (soldes, transactions, KYC), aucune action (pas de suspension/blocage/remboursement/suppression)
+  superviseur:   {home:1,users:1,txns:1,monitoring:1,stats:1,support:0,tech:0,creer:0,soldes:1,supprimer:0,rembourser:0,kyc:1,gels:0,logs:0,superviseur_zone:1,rattachements:0,rattach_action:0,moncompte:0},
   // Support Client : recherche client, remboursement, tickets
   support_client:{home:0,users:0,txns:0,monitoring:0,support:1,tech:0,creer:0,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:0,logs:0,rattachements:0,rattach_action:0,moncompte:0},
   // Support Tech : logs, transactions, alertes systeme
   support_tech:  {home:0,users:0,txns:0,monitoring:0,stats:0,support:0,tech:1,creer:0,soldes:0,supprimer:0,rembourser:0,kyc:0,gels:0,logs:1,rattachements:0,rattach_action:0,moncompte:0}
 };
-function perm(k){var u=G.user;if(!u)return 0;var p=PERMS[u.role];return p?p[k]||0:0;}
+function perm(k){var u=G.user;if(!u)return 0;if(k==='supprimer')return isSuperAdmin()?1:0;var p=PERMS[u.role];return p?p[k]||0:0;}
 
 var ROLE_C={client:'#059669',agent:'#d97706',business:'#4f46e5',mini_master:'#2563eb',master:'#92400e',superviseur:'#ea580c',admin:'#ca8a04',backoffice:'#ca8a04',support_client:'#2563eb',support_tech:'#7c3aed'};
 var insRole='client';
@@ -3691,14 +3724,16 @@ function buildNavGrid(){
     {id:'inscr',    icon:'➕', label:'Creer',   fn:"ouvrirInscription()",need:'creer'},
     {id:'pin',      icon:'🔐', label:'Mon PIN',  fn:"openSh('change-pin');rstPin()", need:null},
     {id:'quitter',  icon:'🚪', label:'Quitter',  fn:"logout()",                           need:null},
-    {id:'qr',       icon:'📲', label:'Mon QR',   fn:"afficherQrSuperviseur()",            need:null}
+    {id:'qr',       icon:'📲', label:'Mon QR',   fn:"afficherQrSuperviseur()",            need:null},
+    {id:'supviseurs',icon:'🧭', label:'Superviseurs', fn:"openSh('superviseurs');chargerSuperviseurs()", need:'superviseurs_admin'}
   ];
   var grid=document.getElementById('nav-grid');if(!grid)return;
   grid.innerHTML='';
   allItems.forEach(function(it){
     // Stats et suppression réservées au Super Admin
     if(it.need==="stats"&&!perm("stats"))return;
-    if(it.need&&!p[it.need])return;
+    if(it.need==="superviseurs_admin"&&!isSuperAdmin())return;
+    if(it.need&&it.need!=="superviseurs_admin"&&!p[it.need])return;
     var btn=document.createElement('button');
     btn.onclick=new Function(it.fn);
     btn.style.cssText='background:#f9fafb;border:1px solid #e5e7eb;border-radius:14px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;font-family:inherit';
@@ -6213,8 +6248,98 @@ function afficherQrSuperviseur(){
 }
 
 // ════════════════════════════════════════════════════════════
-// STATS ADMIN — moteur complet avec détail par rôle/période
+// SUPERVISEURS — vue d'ensemble Super BO + affectation régionale
 // ════════════════════════════════════════════════════════════
+var _supListCache = [];
+async function chargerSuperviseurs(){
+  var box = document.getElementById('sup-list-container');
+  box.innerHTML = '<div style="padding:20px;text-align:center"><div class="spin"></div></div>';
+  try {
+    var r = await apiGet('/superviseurs');
+    var list = r.data || [];
+    _supListCache = list;
+    if (!list.length) {
+      box.innerHTML = '<div style="padding:20px;text-align:center;color:#6b7280;font-size:13px">Aucun compte superviseur pour le moment.</div>';
+      return;
+    }
+    var general = list.filter(function(s){return s.type==='general';});
+    var regional = list.filter(function(s){return s.type==='regional';});
+    var h = '';
+    h += '<div style="padding:14px 16px 4px;font-size:11px;font-weight:800;color:#6b7280;text-transform:uppercase">🌍 Général ('+general.length+') — voit tout le réseau pro</div>';
+    general.forEach(function(s){ h += _supCard(s); });
+    if (!general.length) h += '<div style="padding:0 16px 8px;font-size:12px;color:#9ca3af">Aucun superviseur général.</div>';
+    h += '<div style="padding:16px 16px 4px;font-size:11px;font-weight:800;color:#6b7280;text-transform:uppercase">📍 Régionaux ('+regional.length+') — scope limité à leurs Masters</div>';
+    regional.forEach(function(s){ h += _supCard(s); });
+    if (!regional.length) h += '<div style="padding:0 16px 8px;font-size:12px;color:#9ca3af">Aucun superviseur régional.</div>';
+    box.innerHTML = h;
+  } catch(e) {
+    box.innerHTML = '<div style="padding:20px;text-align:center;color:var(--r);font-size:13px">'+e.message+'</div>';
+  }
+}
+function _supCard(s){
+  var mastersHtml = (s.masters||[]).map(function(m){
+    return '<div style="display:flex;align-items:center;justify-content:space-between;background:#f9fafb;border-radius:8px;padding:6px 10px;margin-bottom:4px">'
+      +'<span style="font-size:11px;color:#374151">🏆 '+(m.prenom||'')+' '+(m.nom||'')+' · '+(m.telephone||'')+'</span>'
+      +'<button onclick="retirerMasterSuperviseur(\''+s.id+'\',\''+m.id+'\')" style="background:none;border:none;color:var(--r);font-size:11px;cursor:pointer;font-family:inherit">Retirer</button>'
+      +'</div>';
+  }).join('');
+  return '<div style="margin:0 16px 10px;background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:12px 14px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+    +'<div style="font-size:13px;font-weight:800;color:#111827">'+(s.prenom||'')+' '+(s.nom||'')+'</div>'
+    +'<span style="font-size:9px;font-weight:700;padding:2px 8px;border-radius:99px;background:'+(s.type==='general'?'#dbeafe;color:#1e40af':'#fef3c7;color:#92400e')+'">'+(s.type==='general'?'GÉNÉRAL':'RÉGIONAL')+'</span>'
+    +'</div>'
+    +'<div style="font-size:11px;color:#6b7280;margin-bottom:8px">'+(s.telephone||'')+' · '+(s.statut||'')+'</div>'
+    +mastersHtml
+    +'<button onclick="ouvrirAffecterMaster(\''+s.id+'\',\''+((s.prenom||'')+' '+(s.nom||'')).replace(/'/g,"")+'\')" style="width:100%;margin-top:6px;padding:8px;background:#f3f4f6;border:none;border-radius:8px;font-size:11px;font-weight:700;color:#374151;cursor:pointer;font-family:inherit">+ Affecter un Master</button>'
+    +'</div>';
+}
+function ouvrirAffecterMaster(supId, nom){
+  document.getElementById('sup-affecter-id').value = supId;
+  document.getElementById('sup-affecter-nom').textContent = nom;
+  document.getElementById('sup-affecter-search').value = '';
+  document.getElementById('sup-affecter-results').innerHTML = '';
+  openSh('sup-affecter');
+}
+var _supAffecterTimeout = null;
+function rechercherMasterAffectation(){
+  clearTimeout(_supAffecterTimeout);
+  var q = document.getElementById('sup-affecter-search').value.trim();
+  var box = document.getElementById('sup-affecter-results');
+  if (q.length < 2) { box.innerHTML = ''; return; }
+  _supAffecterTimeout = setTimeout(async function(){
+    box.innerHTML = '<div style="padding:12px;text-align:center"><div class="spin"></div></div>';
+    try {
+      var r = await apiGet('/users?q='+encodeURIComponent(q)+'&role=master&limit=10');
+      var list = r.data || [];
+      if (!list.length) { box.innerHTML = '<div style="padding:10px;color:#9ca3af;font-size:12px;text-align:center">Aucun Master trouvé.</div>'; return; }
+      box.innerHTML = list.map(function(m){
+        return '<div onclick="affecterMasterSuperviseur(\''+m.id+'\')" style="display:flex;align-items:center;justify-content:between;padding:10px;background:#f9fafb;border-radius:10px;margin-bottom:6px;cursor:pointer">'
+          +'<div><div style="font-size:12px;font-weight:700;color:#111827">'+(m.prenom||'')+' '+(m.nom||'')+'</div>'
+          +'<div style="font-size:10px;color:#6b7280">'+(m.telephone||'')+'</div></div>'
+          +'</div>';
+      }).join('');
+    } catch(e) { box.innerHTML = '<div style="padding:10px;color:var(--r);font-size:12px">'+e.message+'</div>'; }
+  }, 350);
+}
+async function affecterMasterSuperviseur(masterId){
+  var supId = document.getElementById('sup-affecter-id').value;
+  try {
+    await callAPI('/superviseurs/'+supId+'/masters', {method:'POST', body:JSON.stringify({masterId:masterId})});
+    toast('✓ Master affecté');
+    closeSh('sup-affecter');
+    chargerSuperviseurs();
+  } catch(e) { toast(e.message, true); }
+}
+async function retirerMasterSuperviseur(supId, masterId){
+  if (!confirm('Retirer ce Master de ce superviseur ?')) return;
+  try {
+    await callAPI('/superviseurs/'+supId+'/masters/'+masterId, {method:'DELETE'});
+    toast('✓ Master retiré');
+    chargerSuperviseurs();
+  } catch(e) { toast(e.message, true); }
+}
+
+
 var statsChart = null;
 var statsRawData = [];
 var currentChartType = 'depot_effectue';
@@ -9837,6 +9962,18 @@ async function chargerGainsSysteme(){
     // Déductions
     h+='<div style="font-size:10px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">- Charges (versements)</div>';
     h+=pnlLigne('Commissions journalières agents (dépôt 0,2% + retrait dégressif)',chargesJourna,pnl.commissions_journalieres_nb||0,'#ef4444','-');
+    h+='<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:11px 13px;margin:-4px 0 12px;font-size:11px;color:#374151">';
+    h+='<div style="font-weight:800;margin-bottom:6px;color:#1f2937">&#8505;&#65039; Comment cette commission est calculée</div>';
+    h+='<div style="margin-bottom:6px">Dépôt : agent touche <strong>0,2%</strong> du montant déposé.<br/>Retrait : agent touche un % <strong>du frais retrait (1%)</strong>, dégressif selon le volume total du jour (dépôt+retrait) de l\'agent :</div>';
+    h+='<div style="display:grid;grid-template-columns:1fr auto;gap:3px 10px;font-size:10.5px">';
+    h+='<div>Moins de 1 000 000 F</div><div style="text-align:right;font-weight:800">35%</div>';
+    h+='<div>1 000 000 – 2 499 999 F</div><div style="text-align:right;font-weight:800">28%</div>';
+    h+='<div>2 500 000 – 4 999 999 F</div><div style="text-align:right;font-weight:800">22%</div>';
+    h+='<div>5 000 000 – 9 999 999 F</div><div style="text-align:right;font-weight:800">17%</div>';
+    h+='<div>10 000 000 F et plus</div><div style="text-align:right;font-weight:800">12%</div>';
+    h+='</div>';
+    h+='<div style="margin-top:7px;padding-top:7px;border-top:1px solid #e5e7eb;color:#6b7280">Exemple : 400 000 F dépôt + 400 000 F retrait (800k total, palier 35%) &#8594; 800 F + 1 400 F = <strong>2 200 F</strong>. Le détail des 5 paliers avec exemples complets est visible par les agents/mini-masters/masters dans leur onglet \u00ab Palier et frais \u00bb.</div>';
+    h+='</div>';
     h+=pnlLigne('Commissions parrainage (5-10% selon r&#244;le)',chargesParrain,pnl.commissions_parrainage_nb||0,'#ef4444','-');
     h+=pnlLigne('Commissions r&#233;seau Mini-Master/Master (5-20% selon activit&#233;)',chargesReseau,pnl.commissions_reseau_nb||0,'#ef4444','-');
     h+='<div style="display:flex;justify-content:space-between;padding:8px 0;margin-bottom:10px;border-top:2px solid #ef444422">';

@@ -2088,9 +2088,13 @@ function setTab(t){
       if(subtitleEl)subtitleEl.textContent='Mon réseau — Agents, Business, Masters';
       chargerStatsSuperviseur();
     }else{
-      if(supPanel)supPanel.style.display='none';
+      // Back-office / admin : vue globale existante + comparateur réseau (même module que le superviseur)
+      if(supPanel)supPanel.style.display='block';
       if(adminPanel)adminPanel.style.display='block';
+      if(titleEl)titleEl.textContent='Statistiques';
+      if(subtitleEl)subtitleEl.textContent='Vue globale + comparateur réseau';
       chargerStats();
+      chargerStatsSuperviseur();
     }
   }
 }
@@ -3837,9 +3841,13 @@ function setTab(t){
       if(subtitleEl)subtitleEl.textContent='Mon réseau — Agents, Business, Masters';
       chargerStatsSuperviseur();
     }else{
-      if(supPanel)supPanel.style.display='none';
+      // Back-office / admin : vue globale existante + comparateur réseau (même module que le superviseur)
+      if(supPanel)supPanel.style.display='block';
       if(adminPanel)adminPanel.style.display='block';
+      if(titleEl)titleEl.textContent='Statistiques';
+      if(subtitleEl)subtitleEl.textContent='Vue globale + comparateur réseau';
       chargerStats();
+      chargerStatsSuperviseur();
     }
   }
 }
@@ -8863,7 +8871,13 @@ async function _supStatsLoadData() {
     var rt = await apiGet('/transactions?limit=500');
     var allTxns = rt.data || [];
     var debut = _supStatsGetDebut();
-    _supStatsTxns = allTxns.filter(function(tx){ return new Date(tx.createdAt||tx.created_at) >= debut; });
+    // Restreindre au réseau visible (cohérent avec la restriction régionale du superviseur) :
+    // ne garder que les transactions dont la source ou la destination appartient aux comptes
+    // déjà chargés ci-dessus (agents/business/mini-masters/masters visibles par ce superviseur).
+    var telsVisibles = {};
+    roles.forEach(function(rl){ (_supStatsUsers[rl]||[]).forEach(function(u){ if(u.telephone) telsVisibles[u.telephone]=true; }); });
+    allTxns = allTxns.filter(function(tx){ return telsVisibles[tx.srcTel] || telsVisibles[tx.destTel]; });
+    _supStatsTxns = allTxns.filter(function(tx){ return new Date(tx.dateCreation||tx.date_creation||tx.createdAt) >= debut; });
 
     // Render volumes
     var types = [
@@ -8945,7 +8959,7 @@ function _supStatsRenderChart() {
       var dayStart = new Date(day.getFullYear(),day.getMonth(),day.getDate());
       var dayEnd = new Date(dayStart); dayEnd.setDate(dayEnd.getDate()+1);
       var vol = txns.filter(function(tx){
-        var dt = new Date(tx.createdAt||tx.created_at);
+        var dt = new Date(tx.dateCreation||tx.date_creation||tx.createdAt);
         return tx.type===_supStatsChartType && dt>=dayStart && dt<dayEnd;
       }).reduce(function(s,tx){return s+Number(tx.montant||0);},0);
       data.push(vol);
@@ -8958,7 +8972,7 @@ function _supStatsRenderChart() {
       var dayStart = new Date(now.getFullYear(),now.getMonth(),i);
       var dayEnd = new Date(now.getFullYear(),now.getMonth(),i+1);
       var vol = txns.filter(function(tx){
-        var dt = new Date(tx.createdAt||tx.created_at);
+        var dt = new Date(tx.dateCreation||tx.date_creation||tx.createdAt);
         return tx.type===_supStatsChartType && dt>=dayStart && dt<dayEnd;
       }).reduce(function(s,tx){return s+Number(tx.montant||0);},0);
       data.push(vol);
@@ -8971,7 +8985,7 @@ function _supStatsRenderChart() {
       var mStart = new Date(now.getFullYear(),m,1);
       var mEnd = new Date(now.getFullYear(),m+1,1);
       var vol = txns.filter(function(tx){
-        var dt = new Date(tx.createdAt||tx.created_at);
+        var dt = new Date(tx.dateCreation||tx.date_creation||tx.createdAt);
         return tx.type===_supStatsChartType && dt>=mStart && dt<mEnd;
       }).reduce(function(s,tx){return s+Number(tx.montant||0);},0);
       data.push(vol);
@@ -9002,90 +9016,120 @@ function _supStatsRenderChart() {
   });
 }
 
-function _supStatsRenderDetail() {
+var _cmpMetric = 'depot';
+var _cmpSort = {col:'depot', dir:-1};
+var _cmpData = [];
+var _cmpChartInst = null;
+async function _supStatsRenderDetail() {
   var el = document.getElementById('sup-stats-detail');
   if (!el) return;
-  var users = _supStatsUsers[_supStatsCat] || [];
-  var txns = _supStatsTxns;
+  el.innerHTML = '<div style="text-align:center;padding:20px"><div class="spin"></div></div>';
+  try {
+    var r = await apiGet('/admin/comparateur?role='+_supStatsCat+'&period='+_supStatsPeriod);
+    _cmpData = r.data || [];
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--r);padding:12px;font-size:12px">'+e.message+'</div>';
+    return;
+  }
+  var roleColorsMap = {agent:'#d97706',business:'#4f46e5',mini_master:'#2563eb',master:'#92400e'};
+  var rc = roleColorsMap[_supStatsCat]||'#ea580c';
+  var totalActifs = _cmpData.filter(function(u){return u.statut==='actif';}).length;
+  var h = '<div style="background:'+rc+'08;border:1px solid '+rc+'20;border-radius:12px;padding:11px 13px;margin-bottom:12px;display:flex;justify-content:space-between">'
+    +'<div><div style="font-size:13px;font-weight:800;color:'+rc+'">'+_cmpData.length+' au total</div>'
+    +'<div style="font-size:10px;color:#6b7280">'+totalActifs+' actifs</div></div></div>';
 
-  if (!users.length) {
-    el.innerHTML = '<div style="text-align:center;padding:14px;color:#9ca3af;font-size:12px">Aucun compte dans cette catégorie</div>';
+  if (!_cmpData.length) {
+    el.innerHTML = h + '<div style="text-align:center;padding:14px;color:#9ca3af;font-size:12px">Aucun compte dans cette catégorie</div>';
     return;
   }
 
-  // Build userId set for this category
-  var userIds = {};
-  users.forEach(function(u){ userIds[u.id]=u; });
+  // Sélecteur de métrique (7 éléments), pilote à la fois le graphique et le tri du tableau
+  var metrics = [
+    ['depot','💰 Dépôt','#22c55e'], ['retrait','💸 Retrait','#ef4444'],
+    ['transfertRecu','⬇️ Transf. reçu','#3b82f6'], ['transfertEnvoye','⬆️ Transf. envoyé','#0ea5e9'],
+    ['gain','🎁 Gain','#16a34a'], ['commission','🏆 Commission','#b45309'], ['filleuls','🌿 Filleuls','#7c3aed']
+  ];
+  h += '<div id="cmp-metric-btns" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px"></div>';
+  h += '<div style="background:#fff;border:1px solid #f3f4f6;border-radius:14px;padding:10px;margin-bottom:14px"><canvas id="cmp-chart" height="180"></canvas></div>';
+  h += '<div id="cmp-table-wrap" style="overflow-x:auto"></div>';
+  el.innerHTML = h;
 
-  // Compute per-user stats
-  var userStats = {};
-  users.forEach(function(u){ userStats[u.id]={depot:{n:0,vol:0},retrait:{n:0,vol:0},transfert:{n:0,vol:0},paiement:{n:0,vol:0}}; });
-
-  txns.forEach(function(tx){
-    var uid = tx.compteSource && tx.compteSource.utilisateurId ? tx.compteSource.utilisateurId : (tx.initiateurId||tx.userId||'');
-    if(userStats[uid] && userStats[uid][tx.type]){
-      userStats[uid][tx.type].n++;
-      userStats[uid][tx.type].vol+=Number(tx.montant||0);
-    }
+  var btnBar = document.getElementById('cmp-metric-btns');
+  metrics.forEach(function(m){
+    var btn = document.createElement('button');
+    btn.textContent = m[1];
+    var active = _cmpMetric === m[0];
+    btn.style.cssText = 'padding:6px 12px;border-radius:99px;white-space:nowrap;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;flex-shrink:0;'
+      +(active?'background:'+m[2]+';color:#fff;border:1.5px solid '+m[2]:'background:#f9fafb;color:#6b7280;border:1.5px solid #e5e7eb');
+    btn.addEventListener('click', function(){
+      _cmpMetric = m[0]; _cmpSort = {col:m[0], dir:-1};
+      _supStatsRenderDetail();
+    });
+    btnBar.appendChild(btn);
   });
 
-  var statLabels = {
-    agent: ['depot','retrait'],
-    business: ['paiement'],
-    mini_master: ['depot','retrait'],
-    master: ['depot','retrait']
-  };
-  var showTypes = statLabels[_supStatsCat]||['depot','retrait'];
-  var typeLabels = {depot:'Dépôts',retrait:'Retraits',paiement:'Paiements',transfert:'Transferts'};
-  var typeColors = {depot:'#22c55e',retrait:'#ef4444',paiement:'#8b5cf6',transfert:'#3b82f6'};
-
-  var statCU = {actif:'#22c55e',en_attente:'#f59e0b',suspendu:'#ef4444',bloque:'#9ca3af'};
-  var roleColorsMap = {agent:'#d97706',business:'#4f46e5',mini_master:'#2563eb',master:'#92400e'};
-  var rc = roleColorsMap[_supStatsCat]||'#ea580c';
-
-  // Summary row
-  var totalActifs = users.filter(function(u){return u.statut==='actif';}).length;
-  var summaryHtml = '<div style="background:'+rc+'08;border:1px solid '+rc+'20;border-radius:12px;padding:11px 13px;margin-bottom:10px;display:flex;justify-content:space-between">'
-    +'<div><div style="font-size:13px;font-weight:800;color:'+rc+'">'+users.length+' au total</div>'
-    +'<div style="font-size:10px;color:#6b7280">'+totalActifs+' actifs</div></div>'
-    +'</div>';
-  el.innerHTML = summaryHtml;
-
-  // Per-user cards (top 10 by volume)
-  var sorted = users.slice().sort(function(a,b){
-    var va=(userStats[b.id]||{});
-    var vb=(userStats[a.id]||{});
-    var volA=showTypes.reduce(function(s,t){return s+(va[t]?va[t].vol:0);},0);
-    var volB=showTypes.reduce(function(s,t){return s+(vb[t]?vb[t].vol:0);},0);
-    return volB-volA;
-  });
-
-  var frag = document.createDocumentFragment();
-  sorted.slice(0,15).forEach(function(u){
-    var card = document.createElement('div');
-    card.style.cssText = 'background:#fff;border:1px solid #f3f4f6;border-radius:12px;padding:10px 12px;margin-bottom:7px';
-    var sc = statCU[u.statut]||'#9ca3af';
-    var initials = ((u.prenom||'')[0]||(u.nom||'')[0]||'?').toUpperCase();
-    var st = userStats[u.id]||{};
-    var statsRow = showTypes.map(function(t){
-      var s=st[t]||{n:0,vol:0};
-      return '<span style="margin-right:10px"><span style="color:'+typeColors[t]+';font-weight:700;font-size:10px">'+typeLabels[t]+'</span>'
-        +' <span style="font-size:10px;color:#374151;font-weight:600">'+F(s.vol)+'</span>'
-        +' <span style="font-size:9px;color:#9ca3af">('+s.n+'op)</span></span>';
-    }).join('');
-    card.innerHTML = '<div style="display:flex;align-items:center;gap:9px;margin-bottom:5px">'
-      +'<div style="width:32px;height:32px;border-radius:8px;background:'+rc+'15;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:'+rc+';flex-shrink:0">'+initials+'</div>'
-      +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:11px;font-weight:700;color:#111827">'+((u.prenom||'')+' '+(u.nom||'')).trim()+'</div>'
-        +'<div style="font-size:9px;color:#6b7280">'+u.telephone+'</div>'
-      +'</div>'
-      +'<span style="background:'+sc+'15;color:'+sc+';border-radius:99px;padding:1px 7px;font-size:9px;font-weight:700">'+u.statut+'</span>'
-    +'</div>'
-    +'<div style="font-size:10px;flex-wrap:wrap">'+statsRow+'</div>';
-    frag.appendChild(card);
-  });
-  el.appendChild(frag);
+  _cmpRenderChart();
+  _cmpRenderTable();
 }
+function _cmpVal(u, key) {
+  if (key==='depot') return u.depot?u.depot.vol:0;
+  if (key==='retrait') return u.retrait?u.retrait.vol:0;
+  if (key==='transfertRecu') return u.transfertRecu?u.transfertRecu.vol:0;
+  if (key==='transfertEnvoye') return u.transfertEnvoye?u.transfertEnvoye.vol:0;
+  if (key==='gain') return u.gain||0;
+  if (key==='commission') return u.commission||0;
+  if (key==='filleuls') return u.filleuls||0;
+  return 0;
+}
+function _cmpRenderChart() {
+  var canvas = document.getElementById('cmp-chart');
+  if (!canvas || typeof Chart==='undefined') return;
+  var sorted = _cmpData.slice().sort(function(a,b){return _cmpVal(b,_cmpMetric)-_cmpVal(a,_cmpMetric);}).slice(0,10);
+  var labels = sorted.map(function(u){return (u.nom||'').split(' ')[0]||u.telephone;});
+  var data = sorted.map(function(u){return _cmpVal(u,_cmpMetric);});
+  var metricColors = {depot:'#22c55e',retrait:'#ef4444',transfertRecu:'#3b82f6',transfertEnvoye:'#0ea5e9',gain:'#16a34a',commission:'#b45309',filleuls:'#7c3aed'};
+  if (_cmpChartInst) { _cmpChartInst.destroy(); }
+  _cmpChartInst = new Chart(canvas.getContext('2d'), {
+    type: 'bar',
+    data: { labels: labels, datasets: [{ data: data, backgroundColor: metricColors[_cmpMetric]||'#ea580c', borderRadius: 6 }] },
+    options: { plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } }, responsive:true, maintainAspectRatio:true }
+  });
+}
+function _cmpSortBy(col) {
+  if (_cmpSort.col===col) _cmpSort.dir*=-1; else _cmpSort={col:col,dir:-1};
+  _cmpRenderTable();
+}
+function _cmpRenderTable() {
+  var wrap = document.getElementById('cmp-table-wrap');
+  if (!wrap) return;
+  var cols = [['nom','Nom'],['depot','Dépôt'],['retrait','Retrait'],['transfertRecu','Tr. reçu'],['transfertEnvoye','Tr. envoyé'],['gain','Gain'],['commission','Commission'],['filleuls','Filleuls']];
+  var sorted = _cmpData.slice().sort(function(a,b){
+    var va = _cmpSort.col==='nom' ? (a.nom||'') : _cmpVal(a,_cmpSort.col);
+    var vb = _cmpSort.col==='nom' ? (b.nom||'') : _cmpVal(b,_cmpSort.col);
+    if (typeof va==='number') return (va-vb)*_cmpSort.dir;
+    return String(va).localeCompare(String(vb))*_cmpSort.dir;
+  });
+  var h = '<table style="width:100%;border-collapse:collapse;font-size:11px">';
+  h += '<tr>'+cols.map(function(c){
+    var arrow = _cmpSort.col===c[0] ? (_cmpSort.dir===1?' ▲':' ▼') : '';
+    return '<th onclick="_cmpSortBy(\''+c[0]+'\')" style="text-align:left;padding:8px 7px;background:#f9fafb;color:#6b7280;font-weight:800;cursor:pointer;white-space:nowrap;border-bottom:1px solid #e5e7eb">'+c[1]+arrow+'</th>';
+  }).join('')+'</tr>';
+  sorted.forEach(function(u){
+    h += '<tr style="border-bottom:1px solid #f3f4f6">'
+      +'<td style="padding:8px 7px;font-weight:700;color:#111827;white-space:nowrap">'+(u.nom||u.telephone)+'</td>'
+      +'<td style="padding:8px 7px;color:#22c55e;font-weight:600">'+F(u.depot?u.depot.vol:0)+'</td>'
+      +'<td style="padding:8px 7px;color:#ef4444;font-weight:600">'+F(u.retrait?u.retrait.vol:0)+'</td>'
+      +'<td style="padding:8px 7px;color:#3b82f6;font-weight:600">'+F(u.transfertRecu?u.transfertRecu.vol:0)+'</td>'
+      +'<td style="padding:8px 7px;color:#0ea5e9;font-weight:600">'+F(u.transfertEnvoye?u.transfertEnvoye.vol:0)+'</td>'
+      +'<td style="padding:8px 7px;color:#16a34a;font-weight:600">'+F(u.gain||0)+'</td>'
+      +'<td style="padding:8px 7px;color:#b45309;font-weight:600">'+F(u.commission||0)+'</td>'
+      +'<td style="padding:8px 7px;color:#7c3aed;font-weight:700">'+(u.filleuls||0)+'</td>'
+      +'</tr>';
+  });
+  h += '</table>';
+  wrap.innerHTML = h;
+}
+
 
 
 // ══════════════════════════════════════════════════════

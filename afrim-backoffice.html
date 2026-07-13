@@ -1609,12 +1609,13 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
   <div class="sh">
     <div class="sh-bar"></div>
     <div class="sh-top">
-      <div><div class="sh-title">Affecter un Master</div><div style="color:var(--m);font-size:12px" id="sup-affecter-nom">—</div></div>
+      <div><div class="sh-title">Affecter un compte</div><div style="color:var(--m);font-size:12px" id="sup-affecter-nom">—</div></div>
       <button class="sh-x" onclick="closeSh('sup-affecter')">✕</button>
     </div>
     <div style="padding:0 0 20px">
       <input type="hidden" id="sup-affecter-id"/>
-      <label class="lbl">Rechercher un Master (nom ou téléphone)</label>
+      <div style="font-size:11px;color:var(--m);margin-bottom:10px">Master, Mini-Master ou Agent — utile aussi pour un compte recruté directement par AFRIM PAY, sans Master rattaché.</div>
+      <label class="lbl">Rechercher (nom ou téléphone)</label>
       <input class="inp" id="sup-affecter-search" oninput="rechercherMasterAffectation()" placeholder="Ex: Koffi, 07..." style="margin-bottom:12px"/>
       <div id="sup-affecter-results"></div>
     </div>
@@ -6454,9 +6455,10 @@ async function chargerSuperviseurs(){
   }
 }
 function _supCard(s){
+  var roleIcons = {master:'🏆', mini_master:'🌿', agent:'🔶'};
   var mastersHtml = (s.masters||[]).map(function(m){
     return '<div style="display:flex;align-items:center;justify-content:space-between;background:#f9fafb;border-radius:8px;padding:6px 10px;margin-bottom:4px">'
-      +'<span style="font-size:11px;color:#374151">🏆 '+(m.prenom||'')+' '+(m.nom||'')+' · '+(m.telephone||'')+'</span>'
+      +'<span style="font-size:11px;color:#374151">'+(roleIcons[m.role]||'👤')+' '+(m.prenom||'')+' '+(m.nom||'')+' · '+(m.telephone||'')+'</span>'
       +'<button onclick="retirerMasterSuperviseur(\''+s.id+'\',\''+m.id+'\')" style="background:none;border:none;color:var(--r);font-size:11px;cursor:pointer;font-family:inherit">Retirer</button>'
       +'</div>';
   }).join('');
@@ -6469,7 +6471,7 @@ function _supCard(s){
     +'</div>'
     +'<div style="font-size:11px;color:#6b7280;margin-bottom:8px">'+(s.telephone||'')+' · '+(s.statut||'')+'</div>'
     +(s.type==='regional' ? mastersHtml : '<div style="font-size:10px;color:#9ca3af;font-style:italic;margin-bottom:6px">Voit tout le réseau pro, sans restriction — les Masters listés ci-dessous (le cas échéant) n\u2019ont pas d\u2019effet tant que le statut reste Général.</div>'+mastersHtml)
-    +'<button onclick="ouvrirAffecterMaster(\''+s.id+'\',\''+((s.prenom||'')+' '+(s.nom||'')).replace(/'/g,"")+'\')" style="width:100%;margin-top:6px;padding:8px;background:#f3f4f6;border:none;border-radius:8px;font-size:11px;font-weight:700;color:#374151;cursor:pointer;font-family:inherit">+ Affecter un Master</button>'
+    +'<button onclick="ouvrirAffecterMaster(\''+s.id+'\',\''+((s.prenom||'')+' '+(s.nom||'')).replace(/'/g,"")+'\')" style="width:100%;margin-top:6px;padding:8px;background:#f3f4f6;border:none;border-radius:8px;font-size:11px;font-weight:700;color:#374151;cursor:pointer;font-family:inherit">+ Affecter (Master, Mini-Master ou Agent)</button>'
     +'<button onclick="changerTypeSuperviseur(\''+s.id+'\',\''+autreType+'\')" style="width:100%;margin-top:6px;padding:8px;background:#fff;border:1px solid #d1d5db;border-radius:8px;font-size:11px;font-weight:700;color:#374151;cursor:pointer;font-family:inherit">🔁 '+autreLabel+'</button>'
     +'</div>';
 }
@@ -6498,13 +6500,18 @@ function rechercherMasterAffectation(){
   _supAffecterTimeout = setTimeout(async function(){
     box.innerHTML = '<div style="padding:12px;text-align:center"><div class="spin"></div></div>';
     try {
-      var r = await apiGet('/users?q='+encodeURIComponent(q)+'&role=master&limit=10');
-      var list = r.data || [];
-      if (!list.length) { box.innerHTML = '<div style="padding:10px;color:#9ca3af;font-size:12px;text-align:center">Aucun Master trouvé.</div>'; return; }
+      var roleLabels = {master:'🏆 Master', mini_master:'🌿 Mini-Master', agent:'🔶 Agent'};
+      var results = await Promise.allSettled(['master','mini_master','agent'].map(function(rl){
+        return apiGet('/users?q='+encodeURIComponent(q)+'&role='+rl+'&limit=6');
+      }));
+      var list = [];
+      results.forEach(function(res){ if(res.status==='fulfilled') list = list.concat(res.value.data||[]); });
+      if (!list.length) { box.innerHTML = '<div style="padding:10px;color:#9ca3af;font-size:12px;text-align:center">Aucun compte trouvé.</div>'; return; }
       box.innerHTML = list.map(function(m){
-        return '<div onclick="affecterMasterSuperviseur(\''+m.id+'\')" style="display:flex;align-items:center;justify-content:between;padding:10px;background:#f9fafb;border-radius:10px;margin-bottom:6px;cursor:pointer">'
+        return '<div onclick="affecterMasterSuperviseur(\''+m.id+'\')" style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:#f9fafb;border-radius:10px;margin-bottom:6px;cursor:pointer">'
           +'<div><div style="font-size:12px;font-weight:700;color:#111827">'+(m.prenom||'')+' '+(m.nom||'')+'</div>'
           +'<div style="font-size:10px;color:#6b7280">'+(m.telephone||'')+'</div></div>'
+          +'<span style="font-size:9px;font-weight:700;color:#6b7280;white-space:nowrap">'+(roleLabels[m.role]||m.role)+'</span>'
           +'</div>';
       }).join('');
     } catch(e) { box.innerHTML = '<div style="padding:10px;color:var(--r);font-size:12px">'+e.message+'</div>'; }

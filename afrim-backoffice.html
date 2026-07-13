@@ -397,7 +397,24 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
       <div id="sup-mon-panel-tickets" style="display:none">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <div style="font-size:11px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.05em">🎫 Mes tickets à traiter</div>
-          <button onclick="chargerTicketsSuperviseur()" style="background:#f3f4f6;border:none;border-radius:8px;padding:4px 9px;font-size:10px;font-weight:700;color:#6b7280;cursor:pointer;font-family:inherit">↻</button>
+          <div style="display:flex;gap:6px">
+            <button onclick="creerTicketSupModal()" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">+ Créer</button>
+            <button onclick="chargerTicketsSuperviseur()" style="background:#f3f4f6;border:none;border-radius:8px;padding:4px 9px;font-size:10px;font-weight:700;color:#6b7280;cursor:pointer;font-family:inherit">↻</button>
+          </div>
+        </div>
+        <!-- Formulaire création ticket inline superviseur -->
+        <div id="sup-ticket-create-form" style="display:none;background:#eff6ff;border:1.5px solid #2563eb;border-radius:12px;padding:12px;margin-bottom:12px">
+          <div style="font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:8px">🔵 Nouveau ticket — Superviseur</div>
+          <input class="inp" id="sup-tk-titre-mon" placeholder="Sujet du ticket" style="margin-bottom:6px;font-size:12px">
+          <textarea class="inp" id="sup-tk-desc-mon" placeholder="Description détaillée (compte concerné, ce que vous avez observé...)" rows="3" style="margin-bottom:6px;font-size:12px;resize:none"></textarea>
+          <select class="inp" id="sup-tk-priorite-mon" style="font-size:11px;margin-bottom:8px">
+            <option value="normal" selected>🟡 Normal</option>
+            <option value="urgent">🔴 Urgent</option>
+          </select>
+          <div style="display:flex;gap:6px">
+            <button onclick="envoyerTicketSupMon()" style="flex:1;padding:8px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">🎫 Envoyer</button>
+            <button onclick="document.getElementById('sup-ticket-create-form').style.display='none'" style="padding:8px 12px;background:#f3f4f6;border:none;border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit">✕</button>
+          </div>
         </div>
         <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px" id="sup-tk-sup-filters"></div>
         <div id="sup-tk-sup-list"><div style="padding:14px;text-align:center"><div class="spin"></div></div></div>
@@ -1901,16 +1918,16 @@ function canResetPin(target){
 
 var PERMS={
   // Super Back-office (0505414751) + Admin : tout sans exception
-  admin:         {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:1,rembourser:1,kyc:1,gels:1,logs:1,rattachements:1,rattach_action:0,moncompte:1},
+  admin:         {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:1,rembourser:1,kyc:1,gels:1,logs:1,rattachements:1,rattach_action:0,segmentation:1,moncompte:1},
   // Back-office : tout voir + supprimer contenu (notifs/tickets/alertes), PAS les comptes
-  backoffice:    {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:1,logs:1,admin_gestionnaire:1,rattachements:1,rattach_action:1,moncompte:1},
+  backoffice:    {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:1,logs:1,admin_gestionnaire:1,rattachements:1,rattach_action:1,segmentation:1,moncompte:1},
   // Superviseur (général ou régional) : lecture complète sur Master/Mini-Master/Agent/Business
   // (soldes, transactions, KYC), aucune action (pas de suspension/blocage/remboursement/suppression)
-  superviseur:   {home:1,users:1,txns:1,monitoring:1,stats:1,support:0,tech:0,creer:0,soldes:1,supprimer:0,rembourser:0,kyc:1,gels:0,logs:0,superviseur_zone:1,rattachements:0,rattach_action:0,moncompte:0},
+  superviseur:   {home:1,users:1,txns:1,monitoring:1,stats:1,support:0,tech:0,creer:0,soldes:1,supprimer:0,rembourser:0,kyc:1,gels:0,logs:0,superviseur_zone:1,rattachements:0,rattach_action:0,segmentation:1,ticket_suivi:1,moncompte:0},
   // Support Client : recherche client, remboursement, tickets
-  support_client:{home:0,users:0,txns:0,monitoring:0,support:1,tech:0,creer:0,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:0,logs:0,rattachements:0,rattach_action:0,moncompte:0},
+  support_client:{home:0,users:0,txns:0,monitoring:0,support:1,tech:0,creer:0,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:0,logs:0,rattachements:0,rattach_action:0,segmentation:0,moncompte:0},
   // Support Tech : logs, transactions, alertes systeme
-  support_tech:  {home:0,users:0,txns:0,monitoring:0,stats:0,support:0,tech:1,creer:0,soldes:0,supprimer:0,rembourser:0,kyc:0,gels:0,logs:1,rattachements:0,rattach_action:0,moncompte:0}
+  support_tech:  {home:0,users:0,txns:0,monitoring:0,stats:0,support:0,tech:1,creer:0,soldes:0,supprimer:0,rembourser:0,kyc:0,gels:0,logs:1,rattachements:0,rattach_action:0,segmentation:0,moncompte:0}
 };
 function perm(k){var u=G.user;if(!u)return 0;if(k==='supprimer')return isSuperAdmin()?1:0;var p=PERMS[u.role];return p?p[k]||0:0;}
 
@@ -3649,16 +3666,16 @@ try{G.token=localStorage.getItem('afrim_token');G.refresh=localStorage.getItem('
 
 var PERMS={
   // Super Back-office (0505414751) + Admin : tout sans exception
-  admin:         {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:1,rembourser:1,kyc:1,gels:1,logs:1,rattachements:1,rattach_action:0,moncompte:1},
+  admin:         {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:1,rembourser:1,kyc:1,gels:1,logs:1,rattachements:1,rattach_action:0,segmentation:1,moncompte:1},
   // Back-office : tout voir + supprimer contenu (notifs/tickets/alertes), PAS les comptes
-  backoffice:    {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:1,logs:1,admin_gestionnaire:1,rattachements:1,rattach_action:1,moncompte:1},
+  backoffice:    {home:1,users:1,txns:1,monitoring:1,stats:1,support:1,tech:1,creer:1,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:1,logs:1,admin_gestionnaire:1,rattachements:1,rattach_action:1,segmentation:1,moncompte:1},
   // Superviseur (général ou régional) : lecture complète sur Master/Mini-Master/Agent/Business
   // (soldes, transactions, KYC), aucune action (pas de suspension/blocage/remboursement/suppression)
-  superviseur:   {home:1,users:1,txns:1,monitoring:1,stats:1,support:0,tech:0,creer:0,soldes:1,supprimer:0,rembourser:0,kyc:1,gels:0,logs:0,superviseur_zone:1,rattachements:0,rattach_action:0,moncompte:0},
+  superviseur:   {home:1,users:1,txns:1,monitoring:1,stats:1,support:0,tech:0,creer:0,soldes:1,supprimer:0,rembourser:0,kyc:1,gels:0,logs:0,superviseur_zone:1,rattachements:0,rattach_action:0,segmentation:1,ticket_suivi:1,moncompte:0},
   // Support Client : recherche client, remboursement, tickets
-  support_client:{home:0,users:0,txns:0,monitoring:0,support:1,tech:0,creer:0,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:0,logs:0,rattachements:0,rattach_action:0,moncompte:0},
+  support_client:{home:0,users:0,txns:0,monitoring:0,support:1,tech:0,creer:0,soldes:1,supprimer:0,rembourser:1,kyc:1,gels:0,logs:0,rattachements:0,rattach_action:0,segmentation:0,moncompte:0},
   // Support Tech : logs, transactions, alertes systeme
-  support_tech:  {home:0,users:0,txns:0,monitoring:0,stats:0,support:0,tech:1,creer:0,soldes:0,supprimer:0,rembourser:0,kyc:0,gels:0,logs:1,rattachements:0,rattach_action:0,moncompte:0}
+  support_tech:  {home:0,users:0,txns:0,monitoring:0,stats:0,support:0,tech:1,creer:0,soldes:0,supprimer:0,rembourser:0,kyc:0,gels:0,logs:1,rattachements:0,rattach_action:0,segmentation:0,moncompte:0}
 };
 function perm(k){var u=G.user;if(!u)return 0;if(k==='supprimer')return isSuperAdmin()?1:0;var p=PERMS[u.role];return p?p[k]||0:0;}
 
@@ -3757,7 +3774,7 @@ function buildNavGrid(){
     {id:'txns',     icon:'💳', label:'Flux',     fn:"setTab('txns')",    need:'txns'},
     {id:'monitoring',icon:'📊',label:'Suivi',   fn:"setTab('monitoring')",need:'monitoring'},
     {id:'rattachements',icon:'🔗',label:'Rattachements',fn:"setTab('rattachements')",need:'rattachements'},
-    {id:'segmentation',icon:'🎯',label:'Segmentation',fn:"setTab('segmentation')",need:'rattachements'},
+    {id:'segmentation',icon:'🎯',label:'Segmentation',fn:"setTab('segmentation')",need:'segmentation'},
     {id:'moncompte',icon:'👤',label:'Mon Compte',fn:"setTab('moncompte')",need:'moncompte'},
     {id:'support',  icon:'💬', label:'Support',  fn:"setTab('support')", need:'support'},
     {id:'tech',     icon:'🛠', label:'Technique',fn:"setTab('tech')",    need:'tech'},
@@ -9063,7 +9080,7 @@ async function _supStatsRenderDetail() {
   var rc = roleColorsMap[_supStatsCat]||'#ea580c';
   var totalActifs = _cmpData.filter(function(u){return u.statut==='actif';}).length;
   var h = '';
-  var isolatedLabels = {agent:'🏝️ Agents isolés (sans Master)', business:'🏝️ Business isolés (sans Master)', mini_master:'🏝️ Mini-Masters isolés (sans Master)'};
+  var isolatedLabels = {agent:'🏝️ Agents isolés', business:'🏝️ Business isolés', mini_master:'🏝️ Mini-Masters isolés'};
   // Filtre par Master — utile dès qu'il y a au moins un Master, ou pour repérer les comptes isolés (aucun Master requis pour ça). Pas utile sur l'onglet Master lui-même.
   if (_supStatsCat !== 'master') {
     h += '<select id="cmp-master-filter" onchange="_cmpMasterFilter=this.value;_supStatsRenderDetail()" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid #e5e7eb;font-size:12px;font-family:inherit;margin-bottom:10px;background:#fff;color:#374151">'
@@ -9493,6 +9510,24 @@ async function envoyerAlerte() {
 function creerAlerteSupModal() {
   var f = document.getElementById('sup-alerte-create-form');
   if (f) f.style.display = f.style.display==='none' ? 'block' : 'none';
+}
+function creerTicketSupModal() {
+  var f = document.getElementById('sup-ticket-create-form');
+  if (f) f.style.display = f.style.display==='none' ? 'block' : 'none';
+}
+async function envoyerTicketSupMon() {
+  var titre = document.getElementById('sup-tk-titre-mon').value.trim();
+  var desc  = document.getElementById('sup-tk-desc-mon').value.trim();
+  var priorite = document.getElementById('sup-tk-priorite-mon').value;
+  if (!titre || !desc) { toast('Sujet et description requis', true); return; }
+  try {
+    await callAPI('/tickets', {method:'POST', body:JSON.stringify({sujet:titre, description:desc, service:'backoffice', priorite:priorite})});
+    toast('🎫 Ticket créé');
+    document.getElementById('sup-tk-titre-mon').value = '';
+    document.getElementById('sup-tk-desc-mon').value  = '';
+    document.getElementById('sup-ticket-create-form').style.display = 'none';
+    if (typeof chargerTicketsSuperviseur === 'function') chargerTicketsSuperviseur();
+  } catch(e) { toast(e.message, true); }
 }
 
 async function envoyerAlerteSupMon() {

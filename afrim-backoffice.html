@@ -9063,11 +9063,13 @@ async function _supStatsRenderDetail() {
   var rc = roleColorsMap[_supStatsCat]||'#ea580c';
   var totalActifs = _cmpData.filter(function(u){return u.statut==='actif';}).length;
   var h = '';
-  // Filtre par Master — affiché seulement s'il y en a plus d'un, et pas utile sur l'onglet Master lui-même
-  if (_cmpMasters.length > 1 && _supStatsCat !== 'master') {
+  var isolatedLabels = {agent:'🏝️ Agents isolés (sans Master)', business:'🏝️ Business isolés (sans Master)', mini_master:'🏝️ Mini-Masters isolés (sans Master)'};
+  // Filtre par Master — utile dès qu'il y a au moins un Master, ou pour repérer les comptes isolés (aucun Master requis pour ça). Pas utile sur l'onglet Master lui-même.
+  if (_supStatsCat !== 'master') {
     h += '<select id="cmp-master-filter" onchange="_cmpMasterFilter=this.value;_supStatsRenderDetail()" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid #e5e7eb;font-size:12px;font-family:inherit;margin-bottom:10px;background:#fff;color:#374151">'
       +'<option value="">🌍 Tous les Masters</option>'
       +_cmpMasters.map(function(m){return '<option value="'+m.id+'"'+(_cmpMasterFilter===m.id?' selected':'')+'>🏆 '+(m.prenom||'')+' '+(m.nom||'')+'</option>';}).join('')
+      +'<option value="__isolated__"'+(_cmpMasterFilter==='__isolated__'?' selected':'')+'>'+(isolatedLabels[_supStatsCat]||'🏝️ Comptes isolés')+'</option>'
       +'</select>';
   }
   h += '<div style="background:'+rc+'08;border:1px solid '+rc+'20;border-radius:12px;padding:11px 13px;margin-bottom:12px;display:flex;justify-content:space-between">'

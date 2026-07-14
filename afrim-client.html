@@ -988,7 +988,7 @@ setInterval(function(){
   if(G.token&&G.user&&!G.locked){chargerBadgeNotifs();}
 },20000);
 
-setInterval(function(){
+function _pollSoldeSilencieux(){
   if(!G.token||!G.user||G.locked)return;
   get('/accounts/me').then(function(r){
     if(r&&r.data&&typeof r.data.solde!=='undefined'){
@@ -1002,7 +1002,10 @@ setInterval(function(){
       }
     }
   }).catch(function(){});
-},10000);
+}
+setInterval(_pollSoldeSilencieux,10000);
+// Vérification immédiate dès que l'utilisateur revient sur l'app (cohérent avec les autres apps)
+document.addEventListener('visibilitychange', function(){ if(!document.hidden) _pollSoldeSilencieux(); });
 
 var TX_CFG={
   depot:{c:'#059669',bg:'#ecfdf5',i:'📥',l:'Dépôt'},

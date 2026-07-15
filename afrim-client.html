@@ -97,6 +97,30 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
     <div style="text-align:center;margin-top:20px;font-size:14px;color:var(--m)">
       Pas encore de compte ? <a onclick="openSh('inscription')" style="color:var(--g);font-weight:700;cursor:pointer">S'inscrire</a>
     </div>
+    <div style="text-align:center;margin-top:14px;font-size:12px">
+      <a onclick="S('s-recovery')" style="color:var(--m);font-weight:600;cursor:pointer;text-decoration:underline">J'ai perdu l'accès à mon compte</a>
+    </div>
+  </div>
+</div>
+
+<div class="scr" id="s-recovery" style="justify-content:center;align-items:center;min-height:100vh;padding:40px 24px;background:#fff">
+  <div style="width:100%;max-width:360px">
+    <button onclick="S('s-login')" style="background:none;border:none;color:var(--m);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:24px">← Retour</button>
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:44px;margin-bottom:10px">🔑</div>
+      <div style="font-size:20px;font-weight:800">Récupérer mon compte</div>
+      <div style="color:var(--m);font-size:13px;margin-top:6px">Entrez votre numéro, votre code secret actuel, puis le code de récupération noté à l'inscription.</div>
+    </div>
+    <div id="rec-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:10px 16px;border-radius:12px;margin-bottom:14px;font-size:13px"></div>
+    <label class="lbl">Numéro de téléphone</label>
+    <input class="inp" id="rec-tel" type="tel" placeholder="+225 07 XX XX XX" inputmode="numeric" style="margin-bottom:14px"/>
+    <label class="lbl">Votre code secret actuel (PIN)</label>
+    <input class="inp" id="rec-pin" type="password" placeholder="••••" inputmode="numeric" maxlength="4" style="margin-bottom:14px;letter-spacing:.3em;text-align:center" oninput="this.value=this.value.replace(/\D/g,'').slice(0,4)"/>
+    <label class="lbl">Code de récupération</label>
+    <input class="inp" id="rec-code" type="text" placeholder="XXXX-XXXX-XXXX" style="margin-bottom:20px;text-transform:uppercase;font-family:monospace" oninput="this.value=this.value.toUpperCase()"/>
+    <div id="rec-loading" style="display:none;text-align:center;padding:12px"><div class="spin"></div></div>
+    <button class="btn btn-g" id="rec-btn" onclick="doLoginRecovery()">Récupérer mon compte</button>
+    <div style="text-align:center;margin-top:16px;font-size:12px;color:var(--m)">Vous n'avez pas noté ce code ? <a href="#" onclick="alert('Contactez le support AFRIM PAY : ils vérifieront votre identité et débloqueront votre compte.');return false" style="color:var(--claude);font-weight:700">Contacter le support</a></div>
   </div>
 </div>
 
@@ -414,6 +438,11 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
       <div><div class="params-label">Modifier le code secret</div><div class="params-sub">Changer votre PIN de connexion</div></div>
       <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
     </button>
+    <button class="params-item" onclick="ouvrirRegenererCodeRecup()">
+      <div class="params-icon" style="background:#fef3c7">🔑</div>
+      <div><div class="params-label">Code de récupération</div><div class="params-sub">Générer un nouveau code (perte de téléphone)</div></div>
+      <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
     <button class="params-item" onclick="voirPlafond()">
       <div class="params-icon" style="background:#eff6ff">📊</div>
       <div><div class="params-label">Verifier mon plafond</div><div class="params-sub">Limites KYC et transactions</div></div>
@@ -711,8 +740,17 @@ html,body{height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:
       <div id="ins-success" style="display:none;text-align:center;padding:24px">
         <div style="font-size:48px;margin-bottom:12px">🎉</div>
         <div style="font-size:20px;font-weight:800;margin-bottom:8px">Compte créé !</div>
-        <div id="ins-succ-txt" style="color:var(--m);font-size:14px;margin-bottom:20px"></div>
-        <button class="btn btn-g" onclick="closeSh('inscription');rstIns();S('s-login')">Se connecter →</button>
+        <div id="ins-succ-txt" style="color:var(--m);font-size:14px;margin-bottom:16px"></div>
+        <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:14px;padding:16px;text-align:left;margin-bottom:16px">
+          <div style="font-size:12px;font-weight:800;color:#92400e;margin-bottom:6px">🔑 Votre code de récupération</div>
+          <div style="font-size:11px;color:#78350f;margin-bottom:10px">Notez-le et gardez-le en lieu sûr, en dehors de votre téléphone. Il vous permettra de récupérer l'accès à votre compte si vous perdez ce téléphone — il ne sera plus jamais affiché.</div>
+          <div id="ins-code-recup" style="background:#fff;border-radius:10px;padding:12px;text-align:center;font-size:20px;font-weight:900;font-family:monospace;letter-spacing:.05em;color:#78350f">—</div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;margin-bottom:16px;text-align:left;font-size:12px;color:var(--m)">
+          <input type="checkbox" id="ins-code-confirm" onchange="document.getElementById('ins-btn-continuer').disabled=!this.checked;document.getElementById('ins-btn-continuer').style.opacity=this.checked?'1':'.4'"/>
+          J'ai noté ce code en lieu sûr
+        </label>
+        <button class="btn btn-g" id="ins-btn-continuer" disabled style="opacity:.4" onclick="closeSh('inscription');rstIns();S('s-login')">Se connecter →</button>
       </div>
     </div>
   </div>
@@ -1591,6 +1629,7 @@ async function doInscrire(){
     var r=await post('/auth/register',{prenom,nom,telephone,pin,role:'client',kycNiveau:'KYC1',parrainCode:parrainCode||undefined});
     document.getElementById('ins-loading').style.display='none';document.getElementById('ins-success').style.display='';
     document.getElementById('ins-succ-txt').textContent='Votre compte a été créé ! Code parrainage : '+(r.data.codeParrainage||'');
+    document.getElementById('ins-code-recup').textContent=r.data.codeRecuperation||'—';
   }
   catch(e){document.getElementById('ins-loading').style.display='none';document.getElementById('ins-form').style.display='';errEl.textContent=e.message;errEl.style.display='';}
 }
@@ -1600,6 +1639,37 @@ function PIN(n){if(G.pin.length>=4)return;G.pin+=n;rDots();if(G.pin.length===4)s
 function DELP(){G.pin=G.pin.slice(0,-1);rDots();}
 function rDots(){for(var i=0;i<4;i++){var d=document.getElementById('d'+i);if(d)d.className='pin-dot'+(i<G.pin.length?' on':'');}}
 
+async function doLoginRecovery(){
+  var tel=(document.getElementById('rec-tel').value||'').trim();
+  var pin=(document.getElementById('rec-pin').value||'').trim();
+  var code=(document.getElementById('rec-code').value||'').trim();
+  var errEl=document.getElementById('rec-err');errEl.style.display='none';
+  if(!tel||!pin||!code){errEl.textContent='Numéro, PIN et code requis';errEl.style.display='';return;}
+  document.getElementById('rec-btn').style.display='none';document.getElementById('rec-loading').style.display='';
+  try{
+    var r=await post('/auth/login-recovery',{telephone:tel,pin:pin,codeRecuperation:code});
+    G.token=r.data.accessToken;G.refresh=r.data.refreshToken;G.user=r.data.user;
+    LS.set('afrim_token',G.token);LS.set('afrim_refresh',G.refresh);LS.set('afrim_user',JSON.stringify(G.user));
+    setTab('home');chargerBadgeNotifs();
+    var nouveauCode=r.data.nouveauCodeRecuperation;
+    setTimeout(function(){
+      alert('Compte récupéré ! Nouveau code de récupération (notez-le, il ne sera plus jamais affiché) :\\n\\n'+nouveauCode+'\\n\\nVous devez aussi choisir un nouveau PIN (actuellement 1234).');
+      document.getElementById('cp-old').value='1234';
+      openSh('change-pin');
+    },300);
+  }catch(e){
+    document.getElementById('rec-btn').style.display='';document.getElementById('rec-loading').style.display='none';
+    errEl.textContent=e.message;errEl.style.display='';
+  }
+}
+async function ouvrirRegenererCodeRecup(){
+  var pin=prompt('Entrez votre PIN actuel pour générer un nouveau code de récupération :');
+  if(!pin)return;
+  try{
+    var r=await post('/users/regenerer-code-recuperation',{pin:pin});
+    alert('Nouveau code de récupération (notez-le, il ne sera plus jamais affiché) :\n\n'+r.data.codeRecuperation+'\n\nL\'ancien code ne fonctionne plus.');
+  }catch(e){T(e.message,true);}
+}
 async function doLogin(){
   document.getElementById('pin-keys').style.display='none';document.getElementById('pin-loading').style.display='';document.getElementById('err-pin').style.display='none';
   try{
@@ -1611,6 +1681,13 @@ async function doLogin(){
       return;
     }
     G.token=r.data.accessToken;G.refresh=r.data.refreshToken;G.user=r.data.user;LS.set('afrim_token',G.token);LS.set('afrim_refresh',G.refresh);LS.set('afrim_user',JSON.stringify(G.user));document.getElementById('pin-loading').style.display='none';document.getElementById('pin-keys').style.display='';G.pin='';rDots();if(typeof fbLogLogin==='function')fbLogLogin();setTab('home');chargerBadgeNotifs();
+    if(G.user&&G.user.pinAChanger){
+      setTimeout(function(){
+        alert('Votre PIN a été réinitialisé. Vous devez en choisir un nouveau avant de continuer.');
+        document.getElementById('cp-old').value='1234';
+        openSh('change-pin');
+      },300);
+    }
   }
   catch(e){document.getElementById('pin-loading').style.display='none';document.getElementById('pin-keys').style.display='';document.getElementById('err-pin').textContent=e.message;document.getElementById('err-pin').style.display='';G.pin='';rDots();}
 }

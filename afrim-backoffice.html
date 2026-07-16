@@ -99,6 +99,25 @@ body{min-height:100vh;background:#f9fafb;font-family:-apple-system,BlinkMacSyste
   </div>
 </div>
 
+<div class="scr" id="s-lock-bo" style="justify-content:center;align-items:center;padding:32px 24px;background:#fff">
+  <div style="width:100%;max-width:320px;text-align:center">
+    <div style="font-size:44px;margin-bottom:12px">🔒</div>
+    <h2 style="font-size:20px;font-weight:800;margin-bottom:4px">Session verrouillée</h2>
+    <div id="lockbo-name" style="color:var(--m);font-size:13px;margin-bottom:28px"></div>
+    <div id="lockbo-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:var(--r);padding:10px;border-radius:12px;margin-bottom:14px;font-size:13px"></div>
+    <div style="margin-bottom:28px">
+      <span class="pin-dot" id="lbd0"></span><span class="pin-dot" id="lbd1"></span><span class="pin-dot" id="lbd2"></span><span class="pin-dot" id="lbd3"></span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
+      <button class="pin-key" onclick="lockboPIN(1)">1</button><button class="pin-key" onclick="lockboPIN(2)">2</button><button class="pin-key" onclick="lockboPIN(3)">3</button>
+      <button class="pin-key" onclick="lockboPIN(4)">4</button><button class="pin-key" onclick="lockboPIN(5)">5</button><button class="pin-key" onclick="lockboPIN(6)">6</button>
+      <button class="pin-key" onclick="lockboPIN(7)">7</button><button class="pin-key" onclick="lockboPIN(8)">8</button><button class="pin-key" onclick="lockboPIN(9)">9</button>
+      <button class="pin-key empty"></button><button class="pin-key" onclick="lockboPIN(0)">0</button><button class="pin-key" onclick="lockboDEL()">⌫</button>
+    </div>
+    <button onclick="lockboLogout()" style="background:none;border:none;color:var(--m);font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline">Se déconnecter</button>
+  </div>
+</div>
+
 <!-- HOME -->
 <div class="scr" id="s-home">
   <div style="background:linear-gradient(135deg,var(--y2),var(--y));padding:48px 20px 28px">
@@ -3929,7 +3948,52 @@ function enterApp(){
     };
     toast('Bienvenue '+u.prenom+' | '+(msgs[u.role]||u.role));
   },400);
+  initAutoLockBO();
 }
+
+// ══ AUTO-LOCK (60s d'inactivité OU 60s en arrière-plan) — Back-office ══════════════
+var _lockboTimer=null,_lockboIdleTimer=null,_lockboPin='';
+function _declencherVerrouillageBO(){
+  if(!G.user||G.locked)return;
+  G.locked=true;
+  document.getElementById('lockbo-name').textContent=(G.user.prenom||'')+' '+(G.user.nom||'')+' ('+(G.user.role||'')+')';
+  showScr('s-lock-bo');
+  _lockboPin='';rLockboDots();
+}
+function resetIdleTimerBO(){
+  if(!G.token||!G.user||G.locked)return;
+  if(_lockboIdleTimer)clearTimeout(_lockboIdleTimer);
+  _lockboIdleTimer=setTimeout(function(){_lockboIdleTimer=null;_declencherVerrouillageBO();},60000);
+}
+['touchstart','touchend','click','keydown','scroll','mousemove'].forEach(function(ev){document.addEventListener(ev,resetIdleTimerBO,{passive:true});});
+function initAutoLockBO(){
+  resetIdleTimerBO();
+  document.addEventListener('visibilitychange',function(){
+    if(document.hidden){
+      if(_lockboIdleTimer){clearTimeout(_lockboIdleTimer);_lockboIdleTimer=null;}
+      _lockboTimer=setTimeout(function(){_declencherVerrouillageBO();},60000);
+    } else {
+      if(_lockboTimer){clearTimeout(_lockboTimer);_lockboTimer=null;}
+      resetIdleTimerBO();
+    }
+  });
+}
+function rLockboDots(){for(var i=0;i<4;i++){var d=document.getElementById('lbd'+i);if(d)d.classList.toggle('on',_lockboPin.length>i);}}
+function lockboPIN(n){if(_lockboPin.length>=4)return;_lockboPin+=String(n);rLockboDots();if(_lockboPin.length===4)setTimeout(verifierLockBO,300);}
+function lockboDEL(){_lockboPin=_lockboPin.slice(0,-1);rLockboDots();}
+async function verifierLockBO(){
+  var errEl=document.getElementById('lockbo-err');errEl.style.display='none';
+  try{
+    var r=await apiPost('/auth/login',{telephone:G.user.telephone,pin:_lockboPin});
+    G.token=r.data.accessToken;localStorage.setItem('afrim_token',G.token);
+    G.locked=false;_lockboPin='';rLockboDots();
+    showScr('s-home');
+    resetIdleTimerBO();
+  }catch(e){
+    _lockboPin='';rLockboDots();errEl.textContent='PIN incorrect';errEl.style.display='';
+  }
+}
+function lockboLogout(){ doLogout(); }
 
 // ── ACCUEIL ──
 

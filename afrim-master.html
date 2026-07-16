@@ -767,6 +767,10 @@ function setTab(t){
       <div><div class="params-label">Code de récupération</div><div class="params-sub">Générer un nouveau code (perte de téléphone)</div></div>
       <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
     </button>
+    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:12px 14px;margin:10px 0 4px">
+      <div style="font-size:11px;font-weight:800;color:#1d4ed8;margin-bottom:4px">🛡️ Politique du code secret (PIN)</div>
+      <div style="font-size:11px;color:#1e3a8a;line-height:1.5">Votre PIN à 4 chiffres ne peut pas être : des chiffres identiques (0000, 1111...), une suite logique (1234, 4321...), ni une année entre 1940 et 2025 (souvent une date de naissance, facile à deviner par un proche). Choisissez un code que vous seul pouvez deviner.</div>
+    </div>
     <div style="font-size:12px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;margin-top:18px;margin-bottom:10px">Services</div>
     <button class="params-item" onclick="inviterAmi()">
       <div class="params-icon" style="background:#ecfdf5">🎁</div>
@@ -3185,21 +3189,31 @@ function toggleFlash(){
 }
 
 
-// ══ AUTO-LOCK (60s background) ════════════════════════════════════
-var _lockTimer=null;var _lockPin='';
+// ══ AUTO-LOCK (60s d'inactivité OU 60s en arrière-plan) ════════════════════════════════════
+var _lockTimer=null;var _idleTimer=null;var _lockPin='';
+function _declencherVerrouillage(){
+  if(!G.user||G.locked)return;
+  G.locked=true;
+  var lock=document.getElementById('s-lock');
+  document.getElementById('lock-name').textContent=(G.user.prenom||'')+' '+(G.user.nom||'');
+  lock.classList.add('on');
+  _lockPin='';rLockDots();
+}
+function resetIdleTimer(){
+  if(!G.token||!G.user||G.locked)return;
+  if(_idleTimer)clearTimeout(_idleTimer);
+  _idleTimer=setTimeout(function(){_idleTimer=null;_declencherVerrouillage();},60000);
+}
+['touchstart','touchend','click','keydown','scroll','mousemove'].forEach(function(ev){document.addEventListener(ev,resetIdleTimer,{passive:true});});
 function initAutoLock(){
+  resetIdleTimer();
   document.addEventListener('visibilitychange',function(){
     if(document.hidden){
-      _lockTimer=setTimeout(function(){
-        if(G.user){
-          var lock=document.getElementById('s-lock');
-          document.getElementById('lock-name').textContent=(G.user.prenom||'')+' '+(G.user.nom||'');
-          lock.classList.add('on');
-          _lockPin='';rLockDots();
-        }
-      },60000);
+      if(_idleTimer){clearTimeout(_idleTimer);_idleTimer=null;}
+      _lockTimer=setTimeout(function(){_declencherVerrouillage();},60000);
     } else {
       if(_lockTimer){clearTimeout(_lockTimer);_lockTimer=null;}
+      resetIdleTimer();
     }
   });
 }
@@ -3212,6 +3226,7 @@ async function verifierLock(){
     var r=await post('/auth/login',{telephone:G.user.telephone,pin:_lockPin,deviceId:getDeviceId()});
     document.getElementById('s-lock').classList.remove('on');
     G.token=r.data.accessToken;_ls.set('afrim_token',G.token);
+    G.locked=false;resetIdleTimer();
   }catch(e){
     _lockPin='';rLockDots();errEl.style.display='';
   }

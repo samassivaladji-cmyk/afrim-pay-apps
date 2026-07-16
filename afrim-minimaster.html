@@ -4089,32 +4089,6 @@ function nouveauSopRet(){if(_sopClient.ret)ouvrirScreenRetrait(_sopClient.ret);e
   </div>
 </div>
 
-<!-- SHEET CHOIX OPÉRATION APRÈS SCAN -->
-<div class="sh-ov" id="sh-choix-op-scan">
-  <div class="sh" style="padding-bottom:40px">
-    <div class="sh-bar"></div>
-    <div class="sh-top">
-      <div><div class="sh-title">Client scanné ✅</div><div style="color:var(--m);font-size:12px" id="choix-op-client-info">—</div></div>
-      <button class="sh-x" onclick="closeSh('choix-op-scan')">✕</button>
-    </div>
-    <div style="font-size:13px;color:var(--m);margin-bottom:18px">Que souhaitez-vous faire ?</div>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      <button onclick="choixOpDepot()" style="padding:16px;border-radius:14px;border:2px solid #25D366;background:#f0fdf4;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:14px;text-align:left">
-        <div style="width:44px;height:44px;border-radius:12px;background:#25D366;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;flex-shrink:0">↓</div>
-        <div><div style="font-size:15px;font-weight:800;color:#065f46">Dépôt Client</div><div style="font-size:12px;color:#059669;margin-top:2px">Créditer le compte client</div></div>
-      </button>
-      <button onclick="choixOpRetrait()" style="padding:16px;border-radius:14px;border:2px solid #f97316;background:#fff7ed;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:14px;text-align:left">
-        <div style="width:44px;height:44px;border-radius:12px;background:#ea580c;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;flex-shrink:0">↑</div>
-        <div><div style="font-size:15px;font-weight:800;color:#7c2d12">Retrait Client</div><div style="font-size:12px;color:#ea580c;margin-top:2px">Débiter le compte client</div></div>
-      </button>
-      <button onclick="choixOpTransfert()" style="padding:16px;border-radius:14px;border:2px solid #3b82f6;background:#eff6ff;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:14px;text-align:left">
-        <div style="width:44px;height:44px;border-radius:12px;background:#2563eb;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;flex-shrink:0">⇄</div>
-        <div><div style="font-size:15px;font-weight:800;color:#1e3a8a">Transfert</div><div style="font-size:12px;color:#2563eb;margin-top:2px">Transférer de la liquidité</div></div>
-      </button>
-    </div>
-  </div>
-</div>
-
 <!-- SCANNER QR -->
 <div id="qr-scan-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:24px">
   <div style="color:#fff;font-size:16px;font-weight:700;margin-bottom:16px">Scanner le QR client</div>

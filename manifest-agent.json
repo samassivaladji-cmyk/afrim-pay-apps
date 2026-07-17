@@ -1,0 +1,22 @@
+{
+  "name": "AFRIM PAY Agent",
+  "short_name": "AFRIM Agent",
+  "start_url": "/afrim-pay-apps/afrim-agent.html",
+  "scope": "/afrim-pay-apps/",
+  "display": "standalone",
+  "background_color": "#FFE566",
+  "theme_color": "#25D366",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

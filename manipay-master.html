@@ -2530,7 +2530,7 @@ async function doChangePin(){
   document.getElementById('change-pin-form').style.display='none';
   document.getElementById('change-pin-loading').style.display='';
   try{
-    await post('/users/change-pin',{oldPin,newPin});
+    await post('/users/change-pin',{ancienPin:oldPin,nouveauPin:newPin});
     document.getElementById('change-pin-loading').style.display='none';
     document.getElementById('change-pin-success').style.display='';
   }catch(e){

@@ -1,8 +1,8 @@
 {
-  "name": "AFRIM PAY Agent",
-  "short_name": "AFRIM Agent",
-  "start_url": "/afrim-pay-apps/afrim-agent.html",
-  "scope": "/afrim-pay-apps/",
+  "name": "ManiPay Agent",
+  "short_name": "ManiPay Agent",
+  "start_url": "/manipay-apps/manipay-agent.html",
+  "scope": "/manipay-apps/",
   "display": "standalone",
   "background_color": "#FF7A1A",
   "theme_color": "#FF7A1A",

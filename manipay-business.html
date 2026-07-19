@@ -746,7 +746,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
 </div>
 
 <script>
-const API='https://manipay-backend.onrender.com/api/v1';
+const API='https://afrim-pay-backend.onrender.com/api/v1';
 var LS={get:function(k){try{return localStorage.getItem(k);}catch(e){return null;}},set:function(k,v){try{localStorage.setItem(k,v);}catch(e){}},remove:function(k){try{localStorage.removeItem(k);}catch(e){}}};
 
 function getDeviceId(){var id=LS.get('mani_device_id');if(!id){id='dev_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,10);LS.set('mani_device_id',id);}return id;}let G={token:LS.get('mani_token'),refresh:LS.get('mani_refresh'),user:null,compte:null,pin:'',soldeVisible:false,tab:'home',loginTel:'',locked:false};

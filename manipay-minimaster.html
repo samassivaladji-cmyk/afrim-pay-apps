@@ -296,7 +296,7 @@ html,body{height:100%;background:#f5f5f5;font-family:'DM Sans',sans-serif;color:
 </div>
 
 <script>
-var API='https://manipay-backend.onrender.com/api/v1';
+var API='https://afrim-pay-backend.onrender.com/api/v1';
 var _ls={get:function(k){try{return localStorage.getItem(k);}catch(e){return null;}},set:function(k,v){try{localStorage.setItem(k,v);}catch(e){}},del:function(k){try{localStorage.removeItem(k);}catch(e){}}};
 
 function getDeviceId(){var id=_ls.get('mani_device_id');if(!id){id='dev_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,10);_ls.set('mani_device_id',id);}return id;}let G={token:_ls.get('mani_token'),refresh:_ls.get('mani_refresh'),user:null,compte:null,pin:'',lockPin:'',tab:'home'};
@@ -3462,7 +3462,7 @@ document.querySelectorAll('.sh-ov').forEach(function(el){
                       console.log('[FCM] Token obtenu:', token.substring(0,20)+'...');
                       window._fcmToken=token;
                       // Sauvegarder immédiatement si connecté
-                      var base=window.API_BASE||'https://manipay-backend.onrender.com';
+                      var base=window.API_BASE||'https://afrim-pay-backend.onrender.com';
                       function trySave(){
                         if(typeof G!=='undefined'&&G.token){
                           fetch(base+'/api/v1/users/fcm-token',{
@@ -3502,7 +3502,7 @@ document.querySelectorAll('.sh-ov').forEach(function(el){
     // Sauvegarder le token si déjà obtenu, sinon attendre
     function saveFCMToken(){
       if(window._fcmToken&&typeof G!=='undefined'&&G.token){
-        fetch((window.API_BASE||'https://manipay-backend.onrender.com')+'/api/v1/users/fcm-token',{
+        fetch((window.API_BASE||'https://afrim-pay-backend.onrender.com')+'/api/v1/users/fcm-token',{
           method:'POST',
           headers:{'Content-Type':'application/json','Authorization':'Bearer '+G.token},
           body:JSON.stringify({token:window._fcmToken,deviceId:getDeviceId()})

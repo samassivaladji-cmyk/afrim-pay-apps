@@ -523,7 +523,7 @@ function setTab(t){
       <button onclick="openSh('inscription')" style="background:#fff;border:2px solid #FFE566;border-radius:16px;padding:16px 12px;cursor:pointer;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.08)">
         <div style="width:38px;height:38px;border-radius:12px;background:#FFE566;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:18px;color:#fff">👤</div>
         <div style="font-size:13px;font-weight:700;color:#713f12">Inscrire</div>
-        <div style="font-size:10px;color:#ca8a04;margin-top:2px">Agent · Client · Business</div>
+        <div style="font-size:10px;color:#ca8a04;margin-top:2px">Agent · Mini-Master · Client · Business</div>
       </button>
       <button onclick="openSh('transfert')" style="background:#fff;border:2px solid #3b82f6;border-radius:16px;padding:16px 12px;cursor:pointer;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.08)">
         <div style="width:38px;height:38px;border-radius:12px;background:#3b82f6;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:18px;color:#fff">⇄</div>
@@ -890,6 +890,7 @@ function setTab(t){
         <button onclick="setInsType('client')" style="padding:14px 18px;border-radius:14px;border:1.5px solid #d97706;background:rgba(245,158,11,.08);color:#d97706;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;display:flex;align-items:center;gap:12px"><span style="font-size:22px">👤</span><div><div>Client</div><div style="font-size:11px;font-weight:400;opacity:.7">Compte personnel</div></div></button>
         <button onclick="setInsType('business')" style="padding:14px 18px;border-radius:14px;border:1.5px solid var(--b);background:transparent;color:var(--m);font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;display:flex;align-items:center;gap:12px"><span style="font-size:22px">🏪</span><div><div>Business</div><div style="font-size:11px;font-weight:400;opacity:.7">Commerce / Entreprise</div></div></button>
         <button onclick="setInsType('agent')" style="padding:14px 18px;border-radius:14px;border:1.5px solid var(--b);background:transparent;color:var(--m);font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;display:flex;align-items:center;gap:12px"><span style="font-size:22px">🔶</span><div><div>Agent</div><div style="font-size:11px;font-weight:400;opacity:.7">Sous votre supervision</div></div></button>
+        <button onclick="setInsType('mini_master')" style="padding:14px 18px;border-radius:14px;border:1.5px solid var(--b);background:transparent;color:var(--m);font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;display:flex;align-items:center;gap:12px"><span style="font-size:22px">💎</span><div><div>Mini-Master</div><div style="font-size:11px;font-weight:400;opacity:.7">Sous votre supervision</div></div></button>
       </div>
     </div>
     <div id="ins-form" style="display:none">
@@ -968,6 +969,7 @@ var PHOTOS_CFG={
   client_KYC3:[{id:'selfie',label:'Selfie',req:true,selfie:true},{id:'cni_r',label:'CNI recto',req:true,selfie:false},{id:'cni_v',label:'CNI verso',req:true,selfie:false},{id:'naissance',label:'Extrait naissance',req:true,selfie:false},{id:'domicile',label:'Justif. domicile',req:true,selfie:false}],
   business:[{id:'selfie_gerant',label:'Selfie gérant',req:true,selfie:true},{id:'cni_r',label:'CNI gérant recto',req:true,selfie:false},{id:'cni_v',label:'CNI gérant verso',req:true,selfie:false},{id:'rccm',label:'RCCM',req:true,selfie:false},{id:'fiscal',label:'Déclaration fiscale',req:false,selfie:false}],
   agent:[{id:'selfie',label:'Selfie',req:true,selfie:true},{id:'cni_r',label:'CNI recto',req:true,selfie:false},{id:'cni_v',label:'CNI verso',req:true,selfie:false},{id:'dfe',label:'DFE (Décl. fiscale)',req:true,selfie:false},{id:'rccm',label:'Registre de commerce',req:true,selfie:false}],
+  mini_master:[{id:'selfie',label:'Selfie',req:true,selfie:true},{id:'cni_r',label:'CNI recto',req:true,selfie:false},{id:'cni_v',label:'CNI verso',req:true,selfie:false},{id:'dfe',label:'DFE (Décl. fiscale)',req:true,selfie:false},{id:'rccm',label:'Registre de commerce',req:true,selfie:false}],
 };
 var insType=null,insKyc='KYC1',insPhotos={};
 
@@ -977,7 +979,7 @@ function setInsType(type){
   document.getElementById('ins-type-sel').style.display='none';
   document.getElementById('ins-form').style.display='';
   document.getElementById('ins-err').style.display='none';
-  document.getElementById('ins-subtitle').textContent={client:'Client',business:'Business',agent:'Agent'}[type]||type;
+  document.getElementById('ins-subtitle').textContent={client:'Client',business:'Business',agent:'Agent',mini_master:'Mini-Master'}[type]||type;
   renderInsFields();renderInsPhotos();
 }
 function renderInsFields(){

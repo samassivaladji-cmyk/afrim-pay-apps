@@ -270,7 +270,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
       <button class="act3-btn" onclick="openSh('transfert')">
         <div style="width:36px;height:36px;border-radius:11px;background:#eef2ff;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:16px">⇄</div>
         <div style="font-size:11px;font-weight:700;color:var(--t)">Transfert</div>
-        <div style="font-size:9px;color:var(--m);margin-top:1px">Business ou client</div>
+        <div style="font-size:9px;color:var(--m);margin-top:1px">Vers un autre Business</div>
       </button>
     </div>
 
@@ -405,7 +405,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
     </button>
     <button class="params-item" onclick="ouvrirCreationFilleul()">
       <div class="params-icon" style="background:#ecfdf5">➕</div>
-      <div><div class="params-label">Créer un compte</div><div class="params-sub">Pour un client, rattaché automatiquement à vous</div></div>
+      <div><div class="params-label">Créer un compte</div><div class="params-sub">Pour un client, parrainé automatiquement par vous</div></div>
       <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
     </button>
     <button class="params-item" onclick="openSh('change-pin')">
@@ -451,11 +451,11 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
   </nav>
 </div>
 
-<!-- ═══════════════ SHEET CRÉER UN COMPTE (filleul, rattaché automatiquement) ═══════════════ -->
+<!-- ═══════════════ SHEET CRÉER UN COMPTE (filleul, parrainé automatiquement) ═══════════════ -->
 <div class="sh-ov" id="sh-inscription-filleul">
   <div class="sh">
     <div class="sh-bar"></div>
-    <div class="sh-top"><div><div class="sh-title">Créer un compte</div><div style="color:var(--m);font-size:12px">Rattaché automatiquement à vous</div></div><button class="sh-x" onclick="closeSh('inscription-filleul');rstInsFilleul()">✕</button></div>
+    <div class="sh-top"><div><div class="sh-title">Créer un compte</div><div style="color:var(--m);font-size:12px">Parrainé automatiquement par vous</div></div><button class="sh-x" onclick="closeSh('inscription-filleul');rstInsFilleul()">✕</button></div>
     <div id="insf-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#ef4444;padding:10px 14px;border-radius:10px;margin-bottom:12px;font-size:13px"></div>
     <div id="insf-form">
       <div style="display:flex;gap:10px;margin-bottom:12px">
@@ -470,7 +470,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
       <input class="inp" id="insf-pin2" type="password" inputmode="numeric" maxlength="4" placeholder="••••" style="margin-bottom:12px"/>
       <label class="lbl">Code parrainage</label>
       <input class="inp" id="insf-parrain" type="text" readonly style="margin-bottom:4px;background:#f3f4f6"/>
-      <div style="font-size:11px;color:var(--m);margin-bottom:16px">Rempli automatiquement avec votre propre code — le nouveau compte sera immédiatement rattaché à vous.</div>
+      <div style="font-size:11px;color:var(--m);margin-bottom:16px">Rempli automatiquement avec votre propre code — le nouveau compte sera immédiatement parrainé par vous.</div>
       <button class="btn btn-g" onclick="doInscrireFilleul()">Créer le compte</button>
     </div>
     <div id="insf-loading" style="display:none;text-align:center;padding:32px"><div class="spin"></div></div>
@@ -549,7 +549,7 @@ html,body{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;colo
 <div class="sh-ov" id="sh-transfert">
   <div class="sh">
     <div class="sh-bar"></div>
-    <div class="sh-top"><div><div class="sh-title">Transfert</div><div style="font-size:11px;font-weight:700;color:var(--m)">Vers un autre compte Business uniquement — sans frais</div></div><button class="sh-x" onclick="closeSh('transfert');rstTransfert()">✕</button></div>
+    <div class="sh-top"><div><div class="sh-title">Transfert</div><div style="font-size:11px;font-weight:700;color:var(--m)">Vers un autre Business — gratuit jusqu'à 20 000 F/jour</div></div><button class="sh-x" onclick="closeSh('transfert');rstTransfert()">✕</button></div>
     <div id="tr-form">
       <span class="lbl">Numéro du destinataire</span>
       <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center">
@@ -1025,7 +1025,7 @@ async function doInscrireFilleul(){
   try{
     var r=await post('/auth/register',{prenom,nom,telephone,pin,role:'client',kycNiveau:'KYC1',parrainCode});
     document.getElementById('insf-loading').style.display='none';document.getElementById('insf-success').style.display='';
-    document.getElementById('insf-succ-txt').textContent='Le compte de '+prenom+' '+nom+' a été créé et rattaché à vous.';
+    document.getElementById('insf-succ-txt').textContent='Le compte de '+prenom+' '+nom+' a été créé avec succès et est désormais parrainé par vous. Pour finaliser son rattachement, invitez-le à effectuer un premier dépôt d\'au moins 500 FCFA.';
     document.getElementById('insf-code-recup').textContent=r.data.codeRecuperation||'—';
   }catch(e){
     document.getElementById('insf-loading').style.display='none';document.getElementById('insf-form').style.display='';
@@ -1549,7 +1549,7 @@ async function confirmerOtpEncaissement(){
   }
 }
 
-// ── TRANSFERT (Business → Business ou Client, sans frais) ────────────────
+// ── TRANSFERT (Business → Business uniquement, sans frais) ────────────────
 function rstTransfert(){
   document.getElementById('tr-tel').value='';document.getElementById('tr-amt').value='';
   document.getElementById('tr-err').style.display='none';

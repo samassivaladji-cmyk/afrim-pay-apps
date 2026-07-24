@@ -591,13 +591,6 @@ function setTab(t){
       <div><div class="params-label">Modifier le code secret</div><div class="params-sub">Changer votre PIN de connexion</div></div>
       <svg style="margin-left:auto;flex-shrink:0" width="18" height="18" fill="none" stroke="#9ca3af" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
     </button>
-    <button class="params-item" onclick="toggleVisibiliteCarte()">
-      <div class="params-icon" style="background:#ecfdf5">📍</div>
-      <div><div class="params-label">Visible sur la carte</div><div class="params-sub" id="visibilite-carte-sub">Les clients peuvent vous localiser</div></div>
-      <div id="visibilite-carte-switch" style="margin-left:auto;flex-shrink:0;width:40px;height:24px;background:#1FAA59;border-radius:99px;position:relative;transition:.2s">
-        <div style="position:absolute;top:2px;left:18px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.2s"></div>
-      </div>
-    </button>
     <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:12px 14px;margin:10px 0 4px">
       <div style="font-size:11px;font-weight:800;color:#1d4ed8;margin-bottom:4px">🛡️ Politique du code secret (PIN)</div>
       <div style="font-size:11px;color:#1e3a8a;line-height:1.5">Votre PIN à 4 chiffres ne peut pas être : des chiffres identiques (0000, 1111...), une suite logique (1234, 4321...), ni une année entre 1940 et 2025 (souvent une date de naissance, facile à deviner par un proche). Choisissez un code que vous seul pouvez deviner.</div>
@@ -633,6 +626,19 @@ function setTab(t){
   </nav>
 </div>
 
+<div class="scr" id="s-position-obligatoire" style="background:#fff;justify-content:center;align-items:center;min-height:100vh;padding:32px 24px;">
+  <div style="width:100%;max-width:320px;text-align:center;display:flex;flex-direction:column;align-items:center;">
+    <div style="width:72px;height:72px;border-radius:50%;background:#ecfdf5;display:flex;align-items:center;justify-content:center;margin-bottom:18px;font-size:32px">📍</div>
+    <div style="font-size:20px;font-weight:800;margin-bottom:10px">Position obligatoire</div>
+    <div style="font-size:14px;color:#6b7280;line-height:1.5;margin-bottom:24px">Pour que les clients puissent vous trouver, ManiPay a besoin de connaître le lieu fixe de votre activité. Cette étape est obligatoire et ne peut pas être ignorée.</div>
+    <div id="pos-obl-err" style="display:none;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-size:12.5px;padding:12px;border-radius:10px;margin-bottom:16px;text-align:left"></div>
+    <button id="pos-obl-btn" class="btn btn-a" style="width:100%" onclick="confirmerPositionObligatoire()">Activer ma position</button>
+    <div id="pos-obl-loading" style="display:none">
+      <div class="spin" style="margin:12px auto"></div>
+      <div style="font-size:13px;color:#6b7280">Enregistrement de votre position…</div>
+    </div>
+  </div>
+</div>
 
 <!-- SHEET DEPOT -->
 <div class="sh-ov" id="sh-depot">
@@ -1507,37 +1513,58 @@ async function doLoginRecovery(){
 }
 function entrerApp(){
   document.getElementById('pin-loading').style.display='none';document.getElementById('pin-keys').style.display='';
-  S('s-home');chargerAccueil();
+  afficherEcranApresConnexion();chargerAccueil();
   genererQR();
   initAutoLock();
 }
 
 // ══ ACCUEIL ══════════════════════════════════════════════════════
-// Partage automatique de la position (Agent/Business/Mini-Master/Master) pour la fonctionnalité
-// "Trouver des agents" côté Client. Démarre une seule fois par session, envoie la position
-// immédiatement puis toutes les 5 minutes tant que l'app reste ouverte. Respecte le choix de
-// l'utilisateur s'il a désactivé le partage dans ses paramètres.
-function initPartagePosition(){
-  if(window._positionShareStarted)return;
-  window._positionShareStarted=true;
-  if(!navigator.geolocation)return;
-  if(_ls.get('mani_position_visible')==='false')return;
-  function envoyerPosition(){
-    navigator.geolocation.getCurrentPosition(function(pos){
-      fetch(API+'/position/update',{
+// Position fixe obligatoire (Agent/Business/Mini-Master/Master) pour la fonctionnalité "Trouver
+// des agents" côté Client — comme chez Wave. Ce n'est PAS un suivi en temps réel : la position est
+// enregistrée UNE SEULE FOIS (à l'écran obligatoire affiché tant que le compte n'a pas confirmé
+// sa position) puis reste fixe. Aucune option pour se masquer.
+function afficherEcranApresConnexion(){
+  if(G.user && G.user.positionConfirmee===false){ S('s-position-obligatoire'); }
+  else { S('s-home'); }
+}
+function confirmerPositionObligatoire(){
+  document.getElementById('pos-obl-btn').style.display='none';
+  document.getElementById('pos-obl-loading').style.display='';
+  document.getElementById('pos-obl-err').style.display='none';
+  if(!navigator.geolocation){
+    document.getElementById('pos-obl-loading').style.display='none';
+    document.getElementById('pos-obl-btn').style.display='';
+    document.getElementById('pos-obl-err').textContent="La géolocalisation n'est pas disponible sur cet appareil. Contactez le support.";
+    document.getElementById('pos-obl-err').style.display='';
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(async function(pos){
+    try{
+      var r=await fetch(API+'/position/update',{
         method:'POST',
         headers:{'Content-Type':'application/json','Authorization':'Bearer '+G.token},
         body:JSON.stringify({latitude:pos.coords.latitude,longitude:pos.coords.longitude})
-      }).catch(function(){});
-    },function(){/* permission refusée ou position indisponible — on réessaiera au prochain cycle */},{enableHighAccuracy:false,maximumAge:120000,timeout:15000});
-  }
-  envoyerPosition();
-  setInterval(envoyerPosition,5*60*1000);
+      });
+      if(!r.ok)throw new Error();
+      G.user.positionConfirmee=true;
+      _ls.set('mani_user',JSON.stringify(G.user));
+      S('s-home');chargerAccueil();genererQR();initAutoLock();
+    }catch(e){
+      document.getElementById('pos-obl-loading').style.display='none';
+      document.getElementById('pos-obl-btn').style.display='';
+      document.getElementById('pos-obl-err').textContent="Erreur lors de l'enregistrement. Réessayez.";
+      document.getElementById('pos-obl-err').style.display='';
+    }
+  },function(){
+    document.getElementById('pos-obl-loading').style.display='none';
+    document.getElementById('pos-obl-btn').style.display='';
+    document.getElementById('pos-obl-err').textContent="Vous devez autoriser l'accès à votre position pour continuer. Vérifiez les autorisations de localisation de l'application dans les réglages de votre téléphone, puis réessayez.";
+    document.getElementById('pos-obl-err').style.display='';
+  },{enableHighAccuracy:true,timeout:20000,maximumAge:0});
 }
 
 async function chargerAccueil(){
   var u=G.user;if(!u)return;
-  initPartagePosition();
   document.getElementById('h-name').textContent=(u.prenom||'')+' '+(u.nom||'');
   document.getElementById('h-zone').textContent=(u.zone||'Zone non définie')+' · '+(u.codeParrainage||'');
   var hcp=document.getElementById('h-code-parrainage');if(hcp)hcp.textContent=u.codeParrainage||'—';
@@ -2467,26 +2494,8 @@ function contacterSupport(){
   window.open(url,'_blank');
 }
 
-function toggleVisibiliteCarte(){
-  var cur=_ls.get('mani_position_visible')!=='false';
-  var next=!cur;
-  _ls.set('mani_position_visible',next?'true':'false');
-  majAffichageVisibiliteCarte();
-  fetch(API+'/position/visibilite',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+G.token},body:JSON.stringify({visible:next})}).catch(function(){});
-  if(next){window._positionShareStarted=false;initPartagePosition();}
-}
-function majAffichageVisibiliteCarte(){
-  var visible=_ls.get('mani_position_visible')!=='false';
-  var sw=document.getElementById('visibilite-carte-switch');
-  var sub=document.getElementById('visibilite-carte-sub');
-  if(!sw)return;
-  sw.style.background=visible?'#1FAA59':'#d1d5db';
-  sw.firstElementChild.style.left=visible?'18px':'2px';
-  if(sub)sub.textContent=visible?'Les clients peuvent vous localiser':"Masqué — vous n'apparaissez pas sur la carte";
-}
 function chargerProfil(){
   var u=G.user;if(!u)return;
-  majAffichageVisibiliteCarte();
   document.getElementById('prof-name-top').textContent=(u.prenom||'')+' '+(u.nom||'');
   document.getElementById('prof-tel-top').textContent=u.telephone||'';
   genererQR();
@@ -2982,7 +2991,7 @@ document.querySelectorAll('.sh-ov').forEach(function(el){
 (function init(){
   var SUPER_ADMIN_TEL='0505414751';
   if(G.token&&G.user&&(G.user.role==='agent'||G.user.telephone===SUPER_ADMIN_TEL)){
-    S('s-home');chargerAccueil();genererQR();initAutoLock();setTimeout(pollNotificationsAgent,2000);if(typeof initFCMAfterLogin==='function')initFCMAfterLogin();return;
+    afficherEcranApresConnexion();chargerAccueil();genererQR();initAutoLock();setTimeout(pollNotificationsAgent,2000);if(typeof initFCMAfterLogin==='function')initFCMAfterLogin();return;
   }
   S('s-login');
 })();
